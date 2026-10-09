@@ -1,0 +1,59 @@
+# Weekly external link liveness report.
+#
+# Deliberately NOT part of the pull-request gate. Probing a few hundred
+# third-party servers depends on their availability, their rate limits, and their
+# bot policies, none of which have anything to do with the change under review. A
+# merge blocked by someone else's outage is a gate people learn to bypass, so
+# this reports on a schedule and never blocks.
+#
+# The report is a list of leads. A redirect here means update the href to the
+# destination; an unreachable URL means confirm it in a browser first, because a
+# bot-protection 403 and a genuinely dead page look identical to a script.
+
+name: External Link Liveness
+
+on:
+  schedule:
+    # Mondays, 09:00 UTC.
+    - cron: "0 9 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  liveness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+
+      - name: Read authoritative Hugo version
+        id: hugo
+        run: echo "version=$(tr -d '\n' < .hugo-version)" >> "$GITHUB_OUTPUT"
+
+      - uses: peaceiris/actions-hugo@2752ce1d29631191ea3f27c23495fa06139a5b78 # v3
+        with:
+          hugo-version: ${{ steps.hugo.outputs.version }}
+          extended: true
+
+      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
+        with:
+          node-version: 22
+
+      - run: npm ci
+      - run: hugo --gc --minify
+
+      - name: Probe external links
+        run: node scripts/external-link-audit.mjs --check-liveness | tee link-liveness.txt
+
+      - name: Publish the report to the run summary
+        if: always()
+        run: |
+          {
+            echo '## External link liveness'
+            echo
+            echo '```'
+            cat link-liveness.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

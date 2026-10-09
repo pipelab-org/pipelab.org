@@ -1,0 +1,980 @@
+// ============================================================
+//   /proof/ - bespoke evidence page
+//   ------------------------------------------------------------
+//   Used by themes/pipelab/layouts/proof/single.html only.
+//   Every selector below compiles as a descendant of
+//   .proof-product so class names cannot collide with the rest
+//   of the theme.
+// ============================================================
+
+.proof-product {
+position: relative;
+
+// ── Hero ────────────────────────────────────────────────────
+.proof-hero {
+  padding: 4.5rem 2rem 2.5rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  text-align: center;
+
+  @media (max-width: $bp-mobile) {
+    padding: 3rem 1.5rem 1.5rem;
+  }
+}
+
+.proof-hero-inner {
+  max-width: 880px;
+  margin: 0 auto;
+}
+
+.proof-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-code);
+  color: var(--accent);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  margin: 0 0 1.25rem;
+  padding: 0.4rem 0.95rem;
+  border: 1px solid rgba(0, 229, 160, 0.25);
+  border-radius: 999px;
+  overflow-wrap: anywhere;
+}
+
+.proof-eyebrow-dot {
+  display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 10px rgba(0, 229, 160, 0.7);
+}
+
+.proof-headline {
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-h1);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: var(--tracking-tight);
+  color: var(--text);
+  margin: 0 0 1.25rem;
+  overflow-wrap: anywhere;
+
+  span { display: block; }
+
+  @media (max-width: $bp-mobile) {
+    font-size: var(--fs-stat);
+  }
+}
+
+.proof-headline-accent {
+  color: var(--accent);
+}
+
+.proof-lead {
+  font-size: var(--fs-lead);
+  color: var(--text-muted);
+  line-height: 1.55;
+  margin: 0 auto 1.75rem;
+  max-width: 720px;
+  overflow-wrap: anywhere;
+}
+
+.proof-hero-actions {
+  margin: 0 auto 1.5rem;
+}
+
+.proof-trust-pills {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 0 auto 1.5rem;
+  padding: 0;
+  list-style: none;
+  max-width: 760px;
+
+  li {
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-caption);
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.35rem 0.85rem;
+    letter-spacing: var(--tracking-wide);
+  }
+}
+
+// ── Sticky mini-nav ─────────────────────────────────────────
+.proof-mini-nav {
+  position: sticky;
+  top: 65px;
+  z-index: 50;
+  background: rgba(9, 9, 11, 0.92);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 2.5rem;
+
+  ul {
+    list-style: none;
+    margin: 0 auto;
+    padding: 0.85rem 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.4rem;
+
+    @media (max-width: $bp-tablet) {
+      overflow-x: auto;
+      flex-wrap: nowrap;
+      justify-content: flex-start;
+      padding: 0.65rem 1rem;
+    }
+  }
+
+  li { margin: 0; }
+
+  a {
+    display: inline-block;
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-caption);
+    color: var(--text-muted);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.4rem 0.9rem;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+
+    &:hover, &:focus-visible {
+      color: var(--text);
+      border-color: rgba(255, 255, 255, 0.18);
+    }
+
+    &.is-current {
+      color: var(--bg);
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+  }
+}
+
+// ── Section heading shared chrome ───────────────────────────
+.proof-section-head {
+  text-align: center;
+  margin: 0 auto 2rem;
+  max-width: 760px;
+  padding: 1rem 0 0.5rem;
+  scroll-margin-top: 5.5rem;
+
+  .proof-section-label {
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-caption);
+    color: var(--accent);
+    letter-spacing: var(--tracking-wider);
+    text-transform: uppercase;
+    margin: 0 0 0.85rem;
+  }
+
+  h2 {
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-h2);
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: var(--tracking-tight);
+    color: var(--text);
+    margin: 0 0 0.85rem;
+  }
+
+  .proof-section-sub {
+    font-size: var(--fs-body);
+    color: var(--text-muted);
+    line-height: 1.55;
+    margin: 0;
+  }
+}
+
+// ── Three-pillar band ──────────────────────────────────────
+.proof-pillars {
+  max-width: 1100px;
+  margin: 0 auto 4rem;
+  padding: 0 2rem;
+
+  @media (max-width: $bp-mobile) {
+    padding: 0 1.5rem;
+  }
+}
+
+.proof-pillar-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+  counter-reset: pillar;
+}
+
+.proof-pillar-card {
+  position: relative;
+  overflow: hidden;
+  flex: 0 0 calc((100% - 2rem) / 3);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.012));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.9rem 1.6rem 1.6rem;
+  text-decoration: none;
+  color: inherit;
+  text-align: left;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+
+  // A faint accent wash rising from the receipt line, so each card reads as
+  // a lit instrument rather than a text tile.
+  &::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0;
+    height: 42%;
+    background: linear-gradient(180deg, transparent, rgba(0, 229, 160, 0.05));
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  &:hover, &:focus-visible {
+    border-color: rgba(0, 229, 160, 0.4);
+    transform: translateY(-3px);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+
+    &::after { opacity: 1; }
+    .proof-pillar-num { color: var(--accent); }
+  }
+
+  @media (max-width: $bp-tablet) {
+    flex-basis: calc((100% - 1rem) / 2);
+  }
+  @media (max-width: $bp-mobile) {
+    flex-basis: 100%;
+  }
+}
+
+.proof-pillar-num {
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  color: var(--text-dim);
+  letter-spacing: var(--tracking-wider);
+  margin: 0 0 1.1rem;
+  transition: color 0.2s ease;
+}
+
+.proof-pillar-title {
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-h2);
+  font-weight: 700;
+  color: var(--accent);
+  margin: 0 0 0.7rem;
+  line-height: 1.15;
+  letter-spacing: var(--tracking-tight);
+}
+
+.proof-pillar-claim {
+  font-size: var(--fs-body);
+  color: var(--text-muted);
+  line-height: 1.6;
+  text-wrap: pretty;
+  margin: 0 0 1.1rem;
+  flex: 1;
+}
+
+.proof-pillar-receipt {
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  color: var(--text);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  margin: 0;
+  padding-top: 0.95rem;
+  border-top: 1px solid rgba(0, 229, 160, 0.22);
+}
+
+// ── Per-pillar deep blocks ─────────────────────────────────
+.proof-deep {
+  max-width: 1100px;
+  margin: 0 auto 4rem;
+  padding: 0 2rem;
+  scroll-margin-top: 5.5rem;
+
+  @media (max-width: $bp-mobile) {
+    padding: 0 1.5rem;
+  }
+}
+
+.proof-deep-head {
+  text-align: center;
+  max-width: 760px;
+  margin: 0 auto 1.75rem;
+
+  .proof-deep-label {
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-caption);
+    color: var(--accent);
+    letter-spacing: var(--tracking-wider);
+    text-transform: uppercase;
+    margin: 0 0 0.65rem;
+  }
+
+  h2 {
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-h2);
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.2;
+    letter-spacing: var(--tracking-tight);
+    margin: 0 0 0.85rem;
+    overflow-wrap: anywhere;
+
+    a {
+      color: inherit;
+      text-decoration: none;
+      border-bottom: 1px solid rgba(0, 229, 160, 0.3);
+      transition: border-color 0.15s ease, color 0.15s ease;
+
+      &:hover {
+        color: var(--accent);
+        border-bottom-color: var(--accent);
+      }
+    }
+  }
+
+  .proof-deep-sub {
+    font-size: var(--fs-body);
+    color: var(--text-muted);
+    line-height: 1.55;
+    margin: 0;
+  }
+}
+
+.proof-deep-body {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.75rem 1.75rem 1.5rem;
+
+  @media (max-width: $bp-mobile) {
+    padding: 1.25rem 1.25rem 1rem;
+  }
+}
+
+.proof-claim-list {
+  list-style: none;
+  margin: 0 0 1.5rem;
+  padding: 0;
+
+  li {
+    position: relative;
+    padding: 0.55rem 0 0.55rem 1.5rem;
+    color: var(--text-muted);
+    font-size: var(--fs-body);
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+    // Avoid a lone word or unit orphaned on the last line. Progressive:
+    // browsers without text-wrap:pretty simply keep today's wrapping.
+    text-wrap: pretty;
+
+    &::before {
+      content: "›";
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    strong {
+      color: var(--text);
+    }
+
+    code, .proof-key {
+      font-family: var(--font-mono), monospace;
+      font-size: 0.875em;
+      color: var(--accent);
+      background: rgba(0, 229, 160, 0.06);
+      border-radius: 4px;
+      padding: 0.05em 0.35em;
+      overflow-wrap: anywhere;
+      word-break: break-all;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+      &:hover { text-decoration: underline; }
+    }
+  }
+}
+
+.proof-deep-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+  // The provenance line renders directly above this row; without its own
+  // clearance the caption reads as a label for the first button.
+  margin-top: 1.6rem;
+}
+
+// ── What is signed ─────────────────────────────────────────
+.proof-signed {
+  max-width: 1100px;
+  margin: 0 auto 4rem;
+  padding: 0 2rem;
+  scroll-margin-top: 5.5rem;
+
+  @media (max-width: $bp-mobile) {
+    padding: 0 1.5rem;
+  }
+}
+
+.proof-signed-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+  margin: 0 auto 2rem;
+  counter-reset: signed;
+}
+
+.proof-signed-card {
+  flex: 0 0 calc((100% - 2rem) / 3);
+  min-width: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem 1.4rem;
+  text-align: left;
+
+  @media (max-width: $bp-tablet) {
+    flex-basis: calc((100% - 1rem) / 2);
+  }
+  @media (max-width: $bp-mobile) {
+    flex-basis: 100%;
+  }
+
+  .proof-signed-num {
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-caption);
+    color: var(--text-dim);
+    letter-spacing: var(--tracking-wider);
+    margin: 0 0 0.5rem;
+  }
+
+  h3 {
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-h3);
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 0.65rem;
+    line-height: 1.25;
+  }
+
+  p {
+    font-size: var(--fs-code);
+    color: var(--text-muted);
+    line-height: 1.55;
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+
+  code {
+    font-family: var(--font-mono), monospace;
+    font-size: 0.9em;
+    color: var(--accent);
+    background: rgba(0, 229, 160, 0.06);
+    border-radius: 4px;
+    padding: 0.05em 0.35em;
+  }
+}
+
+.proof-signed-cli {
+  max-width: 760px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.proof-signed-cli-label {
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  color: var(--accent);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  margin: 0 0 0.65rem;
+}
+
+.proof-signed-cli-block {
+  background: var(--bg-elevated, var(--bg-card));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  margin: 0 0 0.85rem;
+  text-align: left;
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-code);
+  color: var(--text);
+  line-height: 1.7;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+
+  code {
+    background: none;
+    border: 0;
+    padding: 0;
+    color: inherit;
+    overflow-wrap: anywhere;
+    word-break: break-all;
+  }
+}
+
+.proof-signed-cli-note {
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-caption);
+  color: var(--text-dim);
+  margin: 0 0 1.1rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+// ── Numbers strip ──────────────────────────────────────────
+.proof-numbers {
+  max-width: 1100px;
+  margin: 0 auto 4rem;
+  padding: 2rem;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+  scroll-margin-top: 5.5rem;
+}
+
+.proof-numbers-label {
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  color: var(--accent);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  margin: 0 0 1.25rem;
+}
+
+.proof-numbers-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.75rem;
+
+  @media (max-width: $bp-tablet) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  @media (max-width: $bp-mobile) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.proof-stat {
+  position: relative;
+  padding: 0.9rem 0.75rem;
+  min-width: 0;
+
+  // Hairline dividers between stats, not boxes around them.
+  & + &::before {
+    content: "";
+    position: absolute;
+    left: -0.375rem;
+    top: 12%;
+    bottom: 12%;
+    width: 1px;
+    background: var(--border);
+
+    @media (max-width: $bp-mobile) {
+      content: none;
+    }
+  }
+}
+
+.proof-stat-value {
+  font-family: var(--font-mono), monospace;
+  font-size: clamp(var(--fs-stat), 3.2vw, var(--fs-display));
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1.05;
+  margin: 0 0 0.45rem;
+  overflow-wrap: anywhere;
+  text-shadow: 0 0 26px rgba(0, 229, 160, 0.25);
+}
+
+.proof-stat-label {
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  color: var(--text-dim);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  margin: 0;
+}
+
+// ── Public evidence band ───────────────────────────────────
+.proof-evidence {
+  max-width: 1100px;
+  margin: 0 auto 4rem;
+  padding: 0 2rem;
+  scroll-margin-top: 5.5rem;
+
+  @media (max-width: $bp-mobile) {
+    padding: 0 1.5rem;
+  }
+}
+
+.proof-evidence-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.proof-evidence-card {
+  flex: 0 0 calc((100% - 2rem) / 3);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem 1.4rem;
+  text-decoration: none;
+  color: inherit;
+  text-align: left;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+
+  &:hover, &:focus-visible {
+    border-color: rgba(0, 229, 160, 0.36);
+    background: var(--bg-card-hover);
+    transform: translateY(-1px);
+  }
+
+  @media (max-width: $bp-tablet) {
+    flex-basis: calc((100% - 1rem) / 2);
+  }
+  @media (max-width: $bp-mobile) {
+    flex-basis: 100%;
+  }
+
+  .proof-evidence-eyebrow {
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-caption);
+    color: var(--accent);
+    letter-spacing: var(--tracking-wider);
+    text-transform: uppercase;
+    margin: 0 0 0.6rem;
+  }
+
+  h3 {
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-h3);
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.25;
+    margin: 0 0 0.6rem;
+  }
+
+  p {
+    font-size: var(--fs-code);
+    color: var(--text-muted);
+    line-height: 1.55;
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+// ── Further reading footer (markdown body slot) ────────────
+.proof-further {
+  max-width: 760px;
+  margin: 0 auto 3rem;
+  padding: 2rem 2rem 0;
+  border-top: 1px solid var(--border);
+
+  @media (max-width: $bp-mobile) {
+    padding: 1.5rem 1.5rem 0;
+  }
+
+  h2 {
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-caption);
+    color: var(--accent);
+    letter-spacing: var(--tracking-wider);
+    text-transform: uppercase;
+    margin: 0 0 1rem;
+  }
+
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  li {
+    position: relative;
+    padding: 0.4rem 0 0.4rem 1.2rem;
+    color: var(--text-muted);
+    font-size: var(--fs-code);
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+
+    &::before {
+      content: "›";
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+    }
+  }
+
+  a {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    overflow-wrap: anywhere;
+
+    &:hover { border-bottom-color: var(--accent); }
+  }
+}
+
+// ── Bottom close ───────────────────────────────────────────
+.proof-product-cta {
+  max-width: 760px;
+  margin: 4rem auto 5rem;
+  padding: 2.5rem 2rem 0;
+  border-top: 1px solid var(--border);
+  text-align: center;
+
+  @media (max-width: $bp-mobile) {
+    margin: 3rem auto 4rem;
+    padding: 2rem 1.5rem 0;
+  }
+}
+
+.proof-product-cta-eyebrow {
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  color: var(--accent);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  margin: 0 0 0.85rem;
+}
+
+.proof-product-cta-copy {
+  font-size: var(--fs-lead);
+  color: var(--text);
+  line-height: 1.5;
+  margin: 0 auto 1.75rem;
+  max-width: 560px;
+}
+
+.proof-product-cta-actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+} // end .proof-product
+
+// == Framework chips ==========================================
+// A seven-item list is a set, not a sentence. Chips wrap as units
+// on their own row, so no framework name can orphan mid-sentence.
+.proof-product {
+  .proof-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin-top: 0.6rem;
+  }
+
+  .proof-chip {
+    padding: 0.24rem 0.6rem;
+    border-radius: 999px;
+    border: 1px solid rgba(0, 229, 160, 0.24);
+    background: rgba(0, 229, 160, 0.05);
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-caption);
+    color: var(--text-muted);
+    white-space: nowrap;
+    text-decoration: none;
+  }
+
+  a.proof-chip {
+    transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+
+    &:hover, &:focus-visible {
+      border-color: rgba(0, 229, 160, 0.6);
+      background: rgba(0, 229, 160, 0.12);
+      color: var(--accent);
+    }
+  }
+}
+
+// == The pipeline ============================================
+// Pipelock is a pipe with a lock in it, and this page's copy
+// already says each pillar feeds the next. So the spine of the
+// middle sections is a literal pipe: a segment spans the gap
+// above each section, ignites when the section reveals, and
+// carries a traveling pulse of light. Evidence flows DOWN the
+// page the way traffic flows through the proxy.
+.proof-product {
+  .proof-deep,
+  .proof-signed,
+  .proof-numbers {
+    position: relative;
+    padding-top: 1.3rem;
+
+    // the pipe segment, spanning the inter-section gap above
+    &::before {
+      content: "";
+      position: absolute;
+      top: -4rem;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 2px;
+      height: 4rem;
+      background: rgba(255, 255, 255, 0.07);
+      transition: background 0.8s ease, box-shadow 0.8s ease;
+      pointer-events: none;
+    }
+
+    // the joint where the pipe meets the section
+    &::after {
+      content: "";
+      position: absolute;
+      top: -5px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--bg);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      transition: border-color 0.6s ease, box-shadow 0.6s ease, background 0.6s ease;
+      pointer-events: none;
+    }
+
+    &.fx-in::before {
+      background:
+        linear-gradient(180deg, rgba(0, 229, 160, 0.12), rgba(0, 229, 160, 0.55));
+      box-shadow: 0 0 12px rgba(0, 229, 160, 0.25);
+    }
+
+    &.fx-in::after {
+      background: var(--accent);
+      border-color: var(--accent);
+      box-shadow: 0 0 14px rgba(0, 229, 160, 0.6);
+    }
+  }
+
+  // the traveling pulse: a bright drop sliding down each lit segment
+  @media (prefers-reduced-motion: no-preference) {
+    .proof-deep.fx-in.fx-live::before,
+    .proof-signed.fx-in.fx-live::before,
+    .proof-numbers.fx-in.fx-live::before {
+      background:
+        linear-gradient(180deg,
+          transparent 0%,
+          rgba(0, 229, 160, 0.95) 12%,
+          rgba(0, 229, 160, 0.2) 26%,
+          rgba(0, 229, 160, 0.28) 100%);
+      background-size: 100% 320%;
+      background-repeat: no-repeat;
+      animation: proof-pipe-pulse 2.8s linear infinite;
+    }
+  }
+}
+
+@keyframes proof-pipe-pulse {
+  0%   { background-position: 0 -220%; }
+  100% { background-position: 0 220%; }
+}
+
+// == Depth: pointer tilt on the evidence cards ===============
+// JS sets --tx/--ty; without it the cards simply do not tilt.
+.proof-deep-body {
+  transform: perspective(950px) rotateX(var(--tx, 0deg)) rotateY(var(--ty, 0deg));
+  transition: transform 0.18s ease-out;
+  will-change: transform;
+}
+
+// == Terminal cursor for the self-typing verify block ========
+@media (prefers-reduced-motion: no-preference) {
+  .proof-signed-cli-block.fx-typing code::after {
+    content: "▋";
+    color: var(--accent);
+    animation: proof-cursor 0.9s steps(1) infinite;
+  }
+}
+
+@keyframes proof-cursor {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+// The body itself: deeper, lit, and the claims separated by
+// hairlines instead of floating in one grey pool.
+.proof-product .proof-deep-body {
+  position: relative;
+  overflow: hidden;
+  padding: 1.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background:
+    radial-gradient(ellipse 90% 60% at 50% -10%, rgba(0, 229, 160, 0.05), transparent 60%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.01));
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+
+  .proof-claim-list li + li {
+    border-top: 1px solid var(--border);
+  }
+
+  .proof-claim-list li {
+    padding-top: 0.9rem;
+    padding-bottom: 0.9rem;
+
+    strong {
+      color: var(--text);
+      font-family: var(--font-mono), monospace;
+      font-size: var(--fs-code);
+      letter-spacing: var(--tracking-snug);
+    }
+  }
+}
+
+// == Exhibits =================================================
+// The pillar sections stop being boxes of bullets. Each becomes
+// an exhibit: the REAL artifact the pillar produces, floating as
+// a tilted document beside the claim. Every byte in a document
+// panel is quoted from a real file named in its caption.
+
+.proof-mini-term {
+  margin: 0.7rem 0 0;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(0, 229, 160, 0.18);
+  border-left: 3px solid var(--accent);
+  border-radius: 8px;
+  background: rgba(5, 6, 7, 0.92);
+  overflow-x: auto;
+
+  code {
+    display: block;
+    font-family: var(--font-mono), monospace;
+    font-size: 0.7rem;
+    line-height: 1.6;
+    color: var(--text-muted);
+    background: none;
+    padding: 0;
+    white-space: pre;
+  }
+}

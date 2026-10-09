@@ -1,0 +1,1459 @@
+// ============================================================
+//   /pricing/ enterprise band — used inside content/pricing.md
+//   ------------------------------------------------------------
+//   The .assess-band / .assess-badge / .assess-inner / .assess-left /
+//   .assess-compare* selectors below style an inline upsell band that
+//   currently lives in /pricing/. They have nothing to do with the
+//   /assess/ page itself; do not remove them when reworking the
+//   bespoke /assess/ template.
+//
+//   The bespoke /assess/ template scopes everything under
+//   .assess-product, which lives at the bottom of this file.
+// ============================================================
+
+.assess-band {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2.5rem 3rem;
+  margin-top: 2.5rem;
+  position: relative;
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+
+  &:hover {
+    border-color: rgba(0, 229, 160, 0.12);
+  }
+
+  @media (max-width: $bp-mobile) {
+    padding: 2rem 1.5rem;
+  }
+}
+
+.assess-badge {
+  position: absolute;
+  top: -12px;
+  left: 2.5rem;
+  background: var(--purple);
+  color: #fff;
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 0.3rem 1rem;
+  border-radius: 20px;
+  white-space: nowrap;
+
+  @media (max-width: $bp-mobile) {
+    left: 1.5rem;
+  }
+}
+
+.assess-inner {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2.25rem;
+  justify-items: center;
+
+  @media (max-width: $bp-mobile) {
+    gap: 1.5rem;
+  }
+}
+
+.assess-left {
+  text-align: center;
+  padding: 0;
+  max-width: 600px;
+  margin: 0 auto;
+
+  .assess-title {
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-lead);
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 0.3rem;
+  }
+
+  .assess-price {
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-h1);
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1.2;
+    margin-bottom: 0.2rem;
+
+    .currency {
+      font-size: var(--fs-lead);
+      vertical-align: super;
+      margin-right: 2px;
+    }
+
+    .period {
+      font-size: var(--fs-code);
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+  }
+
+  .assess-desc {
+    color: var(--text-muted);
+    font-size: var(--fs-code);
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+  }
+}
+
+.assess-compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  align-items: stretch;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+
+  @media (max-width: $bp-mobile) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.assess-compare-card {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.5rem 1.2rem;
+  text-align: center;
+
+  &.paid {
+    border-color: rgba(0, 229, 160, 0.2);
+
+    h3 {
+      color: var(--accent);
+    }
+
+    li::before {
+      color: var(--accent);
+    }
+  }
+
+  h3 {
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-caption);
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0 auto;
+    display: inline-block;
+    text-align: left;
+  }
+
+  li {
+    color: var(--text-muted);
+    font-size: var(--fs-code);
+    line-height: 1.5;
+    padding: 0.4rem 0 0.4rem 1.2rem;
+    position: relative;
+
+    &::marker {
+      content: none;
+    }
+
+    &::before {
+      content: '\2713';
+      position: absolute;
+      left: 0;
+      color: var(--text-dim);
+      font-size: var(--fs-caption);
+    }
+  }
+}
+
+// ============================================================
+//   /assess/ — bespoke two-product page
+//   ------------------------------------------------------------
+//   Used by themes/pipelab/layouts/assess/single.html only.
+//   Every selector below compiles as a descendant of
+//   .assess-product so class names cannot collide with the rest
+//   of the theme. Mirrors the /proof/ + /enterprise/ pattern.
+//
+//   Token discipline: only var() calls for tokens defined in
+//   _variables.scss. Everything else is a literal. /enterprise/
+//   shipped with phantom tokens (--accent-border, --bg-overlay-strong,
+//   --backdrop-blur, --t-base, --t-mid, --danger, --warn, --bg-elevated,
+//   --border-strong, --radius-md) that browsers silently dropped;
+//   Codex caught it. Don't repeat it.
+// ============================================================
+
+.assess-product {
+  position: relative;
+
+  // ── Hero ────────────────────────────────────────────────────
+  .assess-hero {
+    padding: 4.5rem 2rem 3rem;
+    border-bottom: 1px solid var(--border);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+
+    @media (max-width: $bp-mobile) {
+      padding: 3rem 1.5rem 2rem;
+    }
+  }
+
+  .assess-hero-inner {
+    max-width: 920px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+
+  .assess-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-code);
+    color: var(--accent);
+    letter-spacing: var(--tracking-wider);
+    text-transform: uppercase;
+    margin: 0 0 1.25rem;
+    padding: 0.4rem 0.95rem;
+    border: 1px solid rgba(0, 229, 160, 0.20);
+    border-radius: 999px;
+    overflow-wrap: anywhere;
+  }
+
+  .assess-eyebrow-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 10px rgba(0, 229, 160, 0.7);
+  }
+
+  .assess-headline {
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-h1);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: var(--tracking-tight);
+    color: var(--text);
+    margin: 0 0 1rem;
+    text-wrap: balance;
+
+    span { display: block; }
+  }
+
+  .assess-headline-accent {
+    color: var(--accent);
+  }
+
+  .assess-tagline {
+    font-family: var(--font-body), sans-serif;
+    font-weight: 400;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.286em;
+    margin: 0 0 1.5rem;
+  }
+
+  .assess-lead {
+    font-size: var(--fs-lead);
+    color: var(--text-muted);
+    line-height: 1.6;
+    max-width: 720px;
+    margin: 0 auto 2rem;
+    text-wrap: pretty;
+
+    code {
+      color: var(--accent);
+      font-family: var(--font-mono), monospace;
+      font-size: 0.9em;
+    }
+  }
+
+  .assess-hero-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 2rem;
+  }
+
+  // Two-question header band
+  .assess-twoq {
+    position: relative;
+    max-width: 980px;
+    margin: 2.5rem auto 0;
+    display: grid;
+    grid-template-columns: 1fr 56px 1fr;
+    align-items: stretch;
+    column-gap: 0.9rem;
+    text-align: left;
+
+    @media (max-width: 980px) {
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+    }
+  }
+
+  .assess-twoq-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.4rem 1.5rem;
+    backdrop-filter: blur(8px);
+    min-width: 0;
+  }
+
+  .assess-twoq-card-audit {
+    border-left: 2px solid rgba(124, 58, 237, 0.45);
+  }
+
+  .assess-twoq-card-assess {
+    border-left: 2px solid rgba(0, 229, 160, 0.45);
+  }
+
+  .assess-twoq-role {
+    font-family: var(--font-mono), monospace;
+    font-size: 0.71875rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    margin: 0 0 0.625rem;
+  }
+
+  .assess-twoq-mark {
+    font-family: var(--font-mono), monospace;
+    font-size: 1.125rem;
+    color: var(--text);
+    line-height: 1.35;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin: 0 0 0.5rem;
+  }
+
+  .assess-twoq-cmd {
+    font-family: var(--font-mono), monospace;
+    font-size: 0.78125rem;
+    color: var(--accent);
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .assess-twoq-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono), monospace;
+    font-size: 0.6875rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    position: relative;
+
+    &::before, &::after {
+      content: "";
+      position: absolute;
+      height: 1px;
+      width: 18px;
+      background: linear-gradient(90deg, transparent, rgba(0, 229, 160, 0.20));
+      top: 50%;
+    }
+    &::before { left: 0; }
+    &::after  { right: 0; transform: scaleX(-1); }
+
+    @media (max-width: 980px) {
+      &::before, &::after { display: none; }
+      padding: 0.25rem 0;
+    }
+
+    span {
+      background: var(--bg);
+      padding: 0.25rem 0.5rem;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--accent);
+      font-size: 0.625rem;
+    }
+  }
+
+  // ── Sticky mini-nav ────────────────────────────────────────
+  .assess-mini-nav {
+    position: sticky;
+    top: 65px;
+    z-index: 100;
+    background: rgba(9, 9, 11, 0.92);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+
+    ul {
+      list-style: none;
+      margin: 0 auto;
+      padding: 0 2rem;
+      display: flex;
+      gap: 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+
+      &::-webkit-scrollbar { display: none; }
+    }
+
+    li { flex-shrink: 0; }
+
+    a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--font-mono), monospace;
+      font-size: var(--fs-caption);
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: var(--tracking-wide);
+      padding: 0.875rem 1rem;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s ease, border-color 0.15s ease;
+      white-space: nowrap;
+    }
+
+    li:first-child a { padding-left: 0; }
+
+    a:hover,
+    a.is-current {
+      color: var(--accent);
+      border-color: var(--accent);
+      opacity: 1;
+    }
+
+    a:hover .assess-mini-num,
+    a.is-current .assess-mini-num {
+      color: var(--accent);
+      opacity: 1;
+    }
+
+    @media (max-width: $bp-mobile) {
+      ul { padding: 0 1.5rem; }
+    }
+  }
+
+  .assess-mini-num {
+    color: var(--text-dim);
+    opacity: 0.6;
+  }
+
+  // ── Section scaffolding ────────────────────────────────────
+  .assess-section {
+    padding: 5rem 2rem;
+    scroll-margin-top: 5.5rem;
+    border-bottom: 1px solid var(--border);
+
+    &:last-of-type { border-bottom: none; }
+
+    @media (max-width: $bp-mobile) {
+      padding: 3.5rem 1.5rem;
+    }
+  }
+
+  .assess-section-elev {
+    background: linear-gradient(
+      180deg,
+      transparent,
+      rgba(255, 255, 255, 0.012) 8%,
+      rgba(255, 255, 255, 0.012) 92%,
+      transparent
+    );
+  }
+
+  .assess-section-inner {
+    max-width: var(--max-width);
+    margin: 0 auto;
+  }
+
+  .assess-section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 1.125rem;
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.2rem;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+
+  .assess-section-head-center {
+    display: block;
+    text-align: center;
+    max-width: 760px;
+    margin: 0 auto 2.5rem;
+    padding: 0 0 0.5rem;
+    border-bottom: none;
+
+    h2 {
+      margin: 0.5rem 0 0.875rem;
+      font-size: 1.875rem;
+      line-height: 1.15;
+      letter-spacing: var(--tracking-tight);
+      text-wrap: balance;
+
+      @media (max-width: $bp-mobile) {
+        font-size: 1.5rem;
+      }
+    }
+
+    > p {
+      margin: 0 auto;
+      max-width: 720px;
+      font-size: 1rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      text-wrap: pretty;
+    }
+  }
+
+  .assess-section-num {
+    font-family: var(--font-mono), monospace;
+    color: var(--accent);
+    font-size: var(--fs-code);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wider);
+    line-height: 1;
+  }
+
+  // ── Two product lanes ─────────────────────────────────────
+  .assess-lanes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.75rem;
+    align-items: stretch;
+
+    @media (max-width: 900px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .assess-lane {
+    position: relative;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.125rem;
+    min-width: 0;
+  }
+
+  .assess-lane-audit {
+    border-top: 2px solid rgba(124, 58, 237, 0.45);
+  }
+
+  .assess-lane-assess {
+    border-top: 2px solid var(--accent);
+    box-shadow: 0 0 30px rgba(0, 229, 160, 0.08);
+  }
+
+  .assess-lane-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono), monospace;
+    font-size: 0.6875rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+  }
+
+  .assess-lane-tag-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .assess-lane-audit .assess-lane-tag-dot {
+    background: #7c3aed;
+    box-shadow: 0 0 8px rgba(124, 58, 237, 0.6);
+  }
+
+  .assess-lane-assess .assess-lane-tag-dot {
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+  }
+
+  .assess-lane h3 {
+    font-family: var(--font-mono), monospace;
+    font-size: 1.375rem;
+    margin: 0;
+    letter-spacing: -0.01em;
+    color: var(--text);
+    font-weight: 700;
+  }
+
+  .assess-lane-cmdbar {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--border);
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius);
+    font-family: var(--font-mono), monospace;
+    font-size: 0.8125rem;
+    color: var(--accent);
+    width: max-content;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  .assess-lane-cmdbar-pr {
+    color: var(--text-dim);
+  }
+
+  .assess-lane-q {
+    font-family: var(--font-mono), monospace;
+    font-size: 0.9375rem;
+    color: var(--text-muted);
+    margin: 0;
+    font-style: italic;
+    line-height: 1.5;
+  }
+
+  .assess-lane-body {
+    font-size: 0.9375rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin: 0;
+    text-wrap: pretty;
+  }
+
+  .assess-lane-meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0.625rem;
+    padding-top: 0.875rem;
+    border-top: 1px solid var(--border);
+    margin-top: auto;
+  }
+
+  .assess-lane-meta-cell {
+    min-width: 0;
+  }
+
+  .assess-lane-meta-label {
+    display: block;
+    font-family: var(--font-mono), monospace;
+    font-size: 0.65625rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.25rem;
+  }
+
+  .assess-lane-meta-value {
+    display: block;
+    font-family: var(--font-mono), monospace;
+    font-size: 0.84375rem;
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .assess-lane-meta-value-accent {
+    color: var(--accent);
+  }
+
+  .assess-lane-cta {
+    display: flex;
+    gap: 0.625rem;
+    flex-wrap: wrap;
+    padding-top: 0.375rem;
+  }
+
+  // Evidence chain bridge
+  .assess-chain {
+    position: relative;
+    margin: 2.5rem auto 0;
+    max-width: 760px;
+    border: 1px dashed rgba(0, 229, 160, 0.20);
+    border-radius: var(--radius);
+    padding: 1rem 1.375rem;
+    text-align: center;
+    font-family: var(--font-mono), monospace;
+    font-size: 0.78125rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+
+    strong {
+      color: var(--accent);
+      font-weight: 600;
+    }
+  }
+
+  // ── Demo cards ────────────────────────────────────────────
+  .assess-demos {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.125rem;
+
+    @media (max-width: 980px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .assess-demo {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+    text-decoration: none;
+    color: inherit;
+    min-width: 0;
+
+    &:hover {
+      background: var(--bg-card-hover);
+      border-color: rgba(0, 229, 160, 0.20);
+      transform: translateY(-2px);
+      opacity: 1;
+    }
+  }
+
+  .assess-demo-thumb {
+    aspect-ratio: 16 / 10;
+    background: #050507;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top;
+      display: block;
+      filter: saturate(1.05);
+    }
+  }
+
+  // Placeholder treatment for the free-summary card. Pipelock does
+  // not ship a screenshot of the free-tier summary page; reusing the
+  // paid screenshot would misrepresent the free output (Codex caught
+  // this in the first review pass).
+  .assess-demo-thumb-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background:
+      radial-gradient(ellipse at 30% 30%, rgba(0, 229, 160, 0.08), transparent 60%),
+      #050507;
+  }
+
+  .assess-demo-thumb-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    text-align: center;
+    padding: 0 1rem;
+  }
+
+  .assess-demo-thumb-tag {
+    font-family: var(--font-mono), monospace;
+    font-size: 0.625rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    padding: 0.25rem 0.625rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+  }
+
+  .assess-demo-thumb-glyph {
+    font-family: var(--font-mono), monospace;
+    font-size: 1.25rem;
+    color: var(--accent);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .assess-demo-thumb-note {
+    font-family: var(--font-mono), monospace;
+    font-size: 0.6875rem;
+    color: var(--text-dim);
+    letter-spacing: 0.04em;
+  }
+
+  .assess-demo-body {
+    padding: 1.125rem 1.25rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+  }
+
+  .assess-demo-ribbon {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono), monospace;
+    font-size: 0.65625rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin: 0;
+  }
+
+  .assess-demo-ribbon-audit { color: #c4b5fd; }
+  .assess-demo-ribbon-assess { color: var(--accent); }
+  .assess-demo-ribbon-summary { color: var(--text-dim); }
+
+  .assess-demo-ribbon-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .assess-demo-ribbon-audit .assess-demo-ribbon-dot { background: #7c3aed; }
+  .assess-demo-ribbon-assess .assess-demo-ribbon-dot { background: var(--accent); }
+  .assess-demo-ribbon-summary .assess-demo-ribbon-dot { background: var(--text-dim); }
+
+  .assess-demo h4 {
+    font-family: var(--font-mono), monospace;
+    font-size: 0.90625rem;
+    margin: 0;
+    color: var(--text);
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    overflow-wrap: anywhere;
+  }
+
+  .assess-demo p {
+    font-size: 0.84375rem;
+    color: var(--text-muted);
+    line-height: 1.55;
+    margin: 0;
+    text-wrap: pretty;
+
+    code {
+      font-family: var(--font-mono), monospace;
+      color: var(--accent);
+      font-size: 0.9em;
+    }
+  }
+
+  .assess-demo-open {
+    margin-top: auto;
+    font-family: var(--font-mono), monospace;
+    font-size: 0.75rem;
+    color: var(--accent);
+  }
+
+  // ── Free vs Paid tiers ────────────────────────────────────
+  .assess-tiers {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+    align-items: stretch;
+
+    @media (max-width: 900px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .assess-tier {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.875rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    backdrop-filter: blur(8px);
+    transition: border-color 0.2s ease;
+    position: relative;
+    min-width: 0;
+
+    @media (max-width: $bp-mobile) {
+      padding: 1.5rem;
+    }
+  }
+
+  .assess-tier-free::before {
+    content: "FREE · SIGNED";
+    position: absolute;
+    top: -10px;
+    left: 1.75rem;
+    background: var(--bg);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--text-muted);
+    font-family: var(--font-mono), monospace;
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+
+    @media (max-width: $bp-mobile) {
+      left: 1.375rem;
+    }
+  }
+
+  .assess-tier-paid {
+    border-color: var(--accent);
+    box-shadow: 0 0 30px rgba(0, 229, 160, 0.08);
+
+    &::before {
+      content: "PAID · LICENSED";
+      position: absolute;
+      top: -10px;
+      left: 1.75rem;
+      background: var(--accent);
+      color: #09090b;
+      font-family: var(--font-mono), monospace;
+      font-size: 0.625rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+
+      @media (max-width: $bp-mobile) {
+        left: 1.375rem;
+      }
+    }
+  }
+
+  .assess-tier-name {
+    font-family: var(--font-mono), monospace;
+    font-size: 0.8125rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin: 0;
+  }
+
+  .assess-tier-price {
+    font-family: var(--font-mono), monospace;
+    font-size: 2rem;
+    color: var(--text);
+    font-weight: 700;
+    line-height: 1;
+    margin: 0;
+
+    @media (max-width: 420px) {
+      font-size: 1.75rem;
+    }
+  }
+
+  .assess-tier-per {
+    font-size: 0.8125rem;
+    color: var(--text-dim);
+    font-weight: 400;
+    margin-left: 0.25rem;
+  }
+
+  .assess-tier-desc {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin: 0;
+    text-wrap: pretty;
+
+    code {
+      color: var(--accent);
+      font-family: var(--font-mono), monospace;
+      font-size: 0.9em;
+    }
+  }
+
+  .assess-tier-cli {
+    font-family: var(--font-mono), monospace;
+    font-size: 0.75rem;
+    color: var(--accent);
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--border);
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius);
+    width: max-content;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  .assess-tier-cli-pr {
+    color: var(--text-dim);
+  }
+
+  .assess-tier-out {
+    font-family: var(--font-mono), monospace;
+    font-size: 0.71875rem;
+    color: var(--text-dim);
+    margin: 0;
+
+    strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+  }
+
+  .assess-tier-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    li {
+      position: relative;
+      padding-left: 1.375rem;
+      font-size: 0.84375rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+
+      &::before {
+        content: "✓";
+        position: absolute;
+        left: 0;
+        top: 0;
+        color: var(--accent);
+        font-family: var(--font-mono), monospace;
+        font-weight: 700;
+      }
+
+      &.is-dim {
+        color: var(--text-dim);
+
+        // Use a hyphen (not an em dash, which would ship as U+2014 in
+        // generated content). Rendered "-" reads cleanly next to the
+        // checkmarks above for the absent-feature rows.
+        &::before {
+          color: var(--text-dim);
+          content: "-";
+        }
+
+        code { color: var(--text-dim); }
+      }
+
+      code {
+        font-family: var(--font-mono), monospace;
+        color: var(--accent);
+        font-size: 0.9em;
+      }
+    }
+  }
+
+  .assess-tier-cta {
+    margin-top: auto;
+    display: flex;
+    gap: 0.625rem;
+    flex-wrap: wrap;
+    padding-top: 0.25rem;
+  }
+
+  // ── Reciprocal terminal pair ──────────────────────────────
+  .assess-terms {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.375rem;
+
+    @media (max-width: 900px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .assess-term {
+    background: #060608;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .assess-term-audit {
+    border-top: 2px solid rgba(124, 58, 237, 0.45);
+  }
+
+  .assess-term-assess {
+    border-top: 2px solid var(--accent);
+  }
+
+  .assess-term-head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6875rem 0.875rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .assess-term-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .assess-term-dot-1 { background: #ef4444; }
+  .assess-term-dot-2 { background: #f59e0b; }
+  .assess-term-dot-3 { background: var(--accent); }
+
+  .assess-term-name {
+    margin-left: 0.625rem;
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-caption);
+    color: var(--text-dim);
+  }
+
+  .assess-term-tag {
+    margin-left: auto;
+    font-family: var(--font-mono), monospace;
+    font-size: 0.625rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    padding: 0.1875rem 0.5rem;
+    border-radius: 999px;
+    border: 1px solid;
+  }
+
+  .assess-term-tag-audit {
+    color: #c4b5fd;
+    border-color: rgba(124, 58, 237, 0.40);
+  }
+
+  .assess-term-tag-assess {
+    color: var(--accent);
+    border-color: rgba(0, 229, 160, 0.20);
+  }
+
+  .assess-term-body {
+    margin: 0;
+    padding: 1.125rem 1.25rem;
+    font-family: var(--font-mono), monospace;
+    font-size: 0.8125rem;
+    line-height: 1.85;
+    color: var(--text);
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    overflow-x: auto;
+    white-space: pre;
+    flex: 1;
+
+    code {
+      font-family: inherit;
+      color: inherit;
+      font-size: inherit;
+    }
+
+    @media (max-width: $bp-mobile) {
+      font-size: 0.75rem;
+      padding: 0.875rem;
+    }
+  }
+
+  // ── What's inside (3-stat stack) ──────────────────────────
+  .assess-stack-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.125rem;
+
+    @media (max-width: 980px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .assess-what {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+    min-width: 0;
+
+    h4 {
+      font-family: var(--font-mono), monospace;
+      font-size: 0.875rem;
+      margin: 0;
+      color: var(--text);
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    p {
+      font-size: 0.84375rem;
+      color: var(--text-muted);
+      margin: 0;
+      line-height: 1.6;
+      text-wrap: pretty;
+
+      code {
+        color: var(--accent);
+        font-family: var(--font-mono), monospace;
+        font-size: 0.9em;
+      }
+    }
+  }
+
+  .assess-what-stat {
+    font-family: var(--font-mono), monospace;
+    font-size: 2.25rem;
+    color: var(--accent);
+    font-weight: 700;
+    line-height: 1;
+    margin: 0;
+
+    @media (max-width: 420px) {
+      font-size: 1.875rem;
+    }
+  }
+
+  .assess-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+  }
+
+  .assess-chip {
+    display: inline-block;
+    font-family: var(--font-mono), monospace;
+    font-size: 0.6875rem;
+    padding: 0.25rem 0.5625rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.02);
+    text-decoration: none;
+  }
+
+  // ── Bottom CTA ────────────────────────────────────────────
+  .assess-cta {
+    background: #0e0e11;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 3rem;
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 2.25rem;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(ellipse at 100% 0%, rgba(0, 229, 160, 0.10), transparent 50%);
+    }
+
+    @media (max-width: 900px) {
+      grid-template-columns: 1fr;
+      padding: 2.25rem;
+    }
+
+    @media (max-width: $bp-mobile) {
+      padding: 1.625rem;
+    }
+
+    h2 {
+      margin: 0 0 0.75rem;
+      font-size: 1.625rem;
+      letter-spacing: var(--tracking-tight);
+      line-height: 1.15;
+      text-wrap: balance;
+
+      @media (max-width: $bp-mobile) {
+        font-size: 1.375rem;
+      }
+    }
+
+    > .assess-cta-left > p {
+      font-size: 0.9375rem;
+      color: var(--text-muted);
+      margin: 0 0 1.25rem;
+      line-height: 1.6;
+      max-width: 420px;
+      text-wrap: pretty;
+
+      code {
+        color: var(--accent);
+        font-family: var(--font-mono), monospace;
+        font-size: 0.9em;
+      }
+    }
+  }
+
+  .assess-cta-left, .assess-cta-right {
+    position: relative;
+    min-width: 0;
+  }
+
+  .assess-cta-eyebrow {
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-code);
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wider);
+    margin-bottom: 0.75rem;
+    display: block;
+  }
+
+  .assess-cta-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .assess-cta-meta {
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-caption);
+    color: var(--text-dim);
+    display: grid;
+    gap: 0.625rem;
+    margin: 0;
+
+    a { color: var(--accent); }
+
+    code {
+      color: var(--accent);
+      font-family: var(--font-mono), monospace;
+      font-size: 0.95em;
+    }
+  }
+
+  .assess-cta-meta-row {
+    display: flex;
+    gap: 0.625rem;
+    align-items: baseline;
+    margin: 0;
+
+    dt {
+      color: var(--text-dim);
+      min-width: 110px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 0.6875rem;
+      margin: 0;
+    }
+
+    dd {
+      color: var(--text);
+      margin: 0;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  // ── Markdown body (link list / audit hook) ────────────────
+  .assess-further {
+    padding: 3rem 2rem 4rem;
+    border-top: 1px solid var(--border);
+
+    @media (max-width: $bp-mobile) {
+      padding: 2.5rem 1.5rem 3rem;
+    }
+  }
+
+  .assess-further-inner {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    font-size: 0.84375rem;
+    color: var(--text-dim);
+    line-height: 1.7;
+
+    h2, h3, h4 {
+      font-family: var(--font-mono), monospace;
+      font-size: 0.6875rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: var(--tracking-wider);
+      font-weight: 600;
+      margin: 0 0 0.875rem;
+    }
+
+    a { color: var(--accent); }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1.5rem;
+    }
+
+    li::before { content: none; }
+  }
+}
+
+// Custom scrollbar branding for the inner terminal blocks (matches /proof/ + /enterprise/).
+.assess-product .assess-term-body,
+.assess-product .assess-tier-cli,
+.assess-product .assess-lane-cmdbar {
+  @extend %pl-scrollbar;
+}
+
+// Visual-system rollout: continuous chapter surfaces and plated report media.
+.assess-product {
+  overflow-x: clip;
+
+  .assess-hero {
+    isolation: isolate;
+    background: var(--bg);
+  }
+
+  .assess-section {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .assess-section-elev {
+    background:
+      radial-gradient(ellipse 46% 38% at 12% 15%, rgba(0, 229, 160, 0.045), transparent 68%),
+      radial-gradient(ellipse 42% 34% at 88% 80%, rgba(124, 58, 237, 0.05), transparent 70%),
+      linear-gradient(180deg, #0c0e0e 0%, #0a0b0d 56%, #0b0a0e 100%);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .assess-section-head-center h2 {
+    font-family: var(--font-mono), monospace;
+    font-size: unquote("clamp(1.8rem, 3vw, 2.4rem)");
+  }
+
+  .assess-demo-thumb {
+    margin: 0.8rem 0.8rem 0;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 9px;
+    background:
+      linear-gradient(140deg, rgba(0, 229, 160, 0.10), rgba(124, 58, 237, 0.08) 72%),
+      #08080a;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 18px 32px rgba(0, 0, 0, 0.24);
+  }
+
+  .assess-demo:hover .assess-demo-thumb,
+  .assess-demo:focus-visible .assess-demo-thumb {
+    border-color: rgba(0, 229, 160, 0.28);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 18px 38px rgba(0, 229, 160, 0.08);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .assess-demo,
+    .assess-demo-thumb {
+      transition: none;
+    }
+  }
+}

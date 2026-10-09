@@ -1,0 +1,127 @@
+{{ define "main" }}
+{{ $id := .Params.scenario_id }}
+<div class="playground-page playground-detail" data-playground-scenario="{{ $id }}" data-manifest="/playground-replay/{{ $id }}/manifest.json" data-packet="/playground-replay/{{ $id }}/packet.json" data-evidence="/playground-replay/{{ $id }}/evidence.jsonl" data-appraisal="/playground-replay/{{ $id }}/appraisal.json">
+  <section class="playground-hero playground-detail-hero" data-hero="utility" data-fx="reveal">
+    <div class="playground-hero-inner">
+      <p class="playground-eyebrow">{{ .Params.category }}</p>
+      <h1 data-fx="decrypt">{{ .Title }}</h1>
+      {{ with .Params.subtitle }}<p class="playground-lead">{{ . }}</p>{{ end }}
+      <div class="playground-actions">
+        <a class="btn btn-primary" href="/playground-replay/{{ $id }}/packet.json" download>Download packet</a>
+        <a class="btn btn-secondary" href="/playground/replay/">All recordings</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="playground-band">
+    <div class="playground-split">
+      <article class="playground-compare playground-with">
+        <span class="playground-card-kicker">With Pipelock</span>
+        <h2>Mediated traffic</h2>
+        <p data-field="with">Loading recording...</p>
+      </article>
+      <article class="playground-compare playground-without">
+        <span class="playground-card-kicker">Without Pipelock</span>
+        <h2>Bare agent</h2>
+        <p data-field="without">Loading recording...</p>
+        <p class="playground-redacted" data-field="redacted-shape"></p>
+      </article>
+    </div>
+  </section>
+
+  <section class="playground-band">
+    <div class="playground-section-head">
+      <p class="playground-label">Timeline</p>
+      <h2>Step through the recorded decisions.</h2>
+      <p>The transcript is playback metadata. The receipts below come from the signed chain.</p>
+    </div>
+    <div class="playground-player">
+      <div class="playground-stepper" aria-label="Timeline controls">
+        <button type="button" class="playground-step-button" data-step-prev>Previous</button>
+        <span data-step-counter>Step 0 of 0</span>
+        <button type="button" class="playground-step-button" data-step-next>Next</button>
+      </div>
+      <div class="playground-timeline" data-timeline></div>
+      <article class="playground-receipt" data-active-receipt>
+        <span class="playground-card-kicker">Receipt</span>
+        <h3 data-receipt-title>Loading receipt...</h3>
+        <dl data-receipt-fields></dl>
+        <details>
+          <summary>Signed receipt JSON</summary>
+          <pre><code data-receipt-json>{}</code></pre>
+        </details>
+      </article>
+    </div>
+  </section>
+
+  <section class="playground-band">
+    <div class="playground-verify-grid">
+      <article class="playground-verify">
+        <span class="playground-card-kicker">Download</span>
+        <h2 data-fx="decrypt">Audit Packet files</h2>
+        <ul>
+          <li><a href="/playground-replay/{{ $id }}/packet.json" download>packet.json</a></li>
+          <li><a href="/playground-replay/{{ $id }}/evidence.jsonl" download>evidence.jsonl</a></li>
+          <li><a href="/playground-replay/{{ $id }}/manifest.json" download>manifest.json</a></li>
+          <li><a href="/playground-replay/{{ $id }}/verifier.txt" download>verifier.txt</a></li>
+        </ul>
+      </article>
+      <article class="playground-verify">
+        <span class="playground-card-kicker">Verify</span>
+        <h2 data-fx="decrypt">Run the shipped verifier</h2>
+        <p>Verify the signed decision chain in the packet:</p>
+        <pre data-command><code data-field="verifier-command">pipelock-verifier audit-packet . --key ...</code></pre>
+        <p>Or appraise the assurance envelope and reproduce the panel below:</p>
+        <pre data-command><code>pipelock-verifier aarp assurance.json --trust ../appraiser-trust.json --json</code></pre>
+        <dl data-packet-binding></dl>
+      </article>
+    </div>
+  </section>
+
+  <section class="playground-band playground-appraisal">
+    <div class="playground-section-head">
+      <p class="playground-label">Assurance appraisal</p>
+      <h2>What the receipt does <em>not</em> prove comes first.</h2>
+      <p>This panel renders the AARP v0.1 appraisal generated for a lab-signed assurance envelope built for this scenario. The appraiser never returns &ldquo;trusted&rdquo; or &ldquo;safe.&rdquo; It confirms only the narrow facts a signature mechanically supports, and it leads with what it refuses to assert. That applies to a valid Pipelock receipt as readily as to a forged one. <a href="/playground-replay/{{ $id }}/assurance.json" download>assurance.json</a> &middot; <a href="/playground-replay/{{ $id }}/appraisal.json" download>appraisal.json</a> &middot; <a href="/playground-replay/appraiser-trust.json" download>appraiser-trust.json</a></p>
+    </div>
+    <div class="playground-appraisal-card" data-appraisal-panel>
+      <p class="playground-appraisal-signed" data-appraisal-signed>Loading appraisal&hellip;</p>
+
+      <div class="playground-appraisal-block playground-appraisal-negative">
+        <h3>Does not assert</h3>
+        <p>No matter how strong the signature, this appraisal never proves any of these:</p>
+        <ul data-appraisal-dna></ul>
+      </div>
+
+      <div class="playground-appraisal-block playground-appraisal-risk" data-appraisal-risk-wrap hidden>
+        <h3>Overclaim risks</h3>
+        <p>Properties a reader might wrongly read into the evidence that is present:</p>
+        <ul data-appraisal-risks></ul>
+      </div>
+
+      <div class="playground-appraisal-block playground-appraisal-refused" data-appraisal-unverified-wrap hidden>
+        <h3>Producer claims the appraiser refused</h3>
+        <p>The envelope claimed these, but the evidence does not support them, so they stay unverified:</p>
+        <ul data-appraisal-unverified></ul>
+      </div>
+
+      <div class="playground-appraisal-block playground-appraisal-positive">
+        <h3>What the evidence mechanically supports</h3>
+        <ul data-appraisal-verified></ul>
+        <dl data-appraisal-signatures></dl>
+      </div>
+    </div>
+  </section>
+
+  <section class="playground-band playground-honesty">
+    <div class="playground-section-head">
+      <p class="playground-label">Scope</p>
+      <h2>Verified mediated decisions.</h2>
+      <p data-field="completeness-note">Loading completeness note...</p>
+    </div>
+  </section>
+</div>
+{{ $script := resources.Get "js/playground.js" | minify | fingerprint }}
+<script src="{{ $script.RelPermalink }}" integrity="{{ $script.Data.Integrity }}" defer></script>
+{{ partial "site-fx.html" . }}
+{{ end }}

@@ -1,0 +1,2 @@
+{{- $editorialIndex := resources.Get "js/editorial-index.js" | minify | fingerprint -}}
+<script src="{{ $editorialIndex.RelPermalink }}" integrity="{{ $editorialIndex.Data.Integrity }}" defer></script>

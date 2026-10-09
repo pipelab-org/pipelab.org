@@ -1,0 +1,24 @@
+{
+  "name": "pipelab-org",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "gauntlet:prepare": "node scripts/prepare-gauntlet-promotion.mjs",
+    "test": "node --test test/*.test.mjs",
+    "site:build": "hugo --gc --minify",
+    "site:corpus-counts": "node scripts/corpus-count-audit.mjs",
+    "site:version-claims": "node scripts/pipelock-version-audit.mjs",
+    "site:render-diff": "node scripts/render-diff.mjs",
+    "site:capability-details": "node scripts/capability-detail-audit.mjs",
+    "site:audit": "node scripts/gauntlet-evidence-audit.mjs && node scripts/verify-playground-assurances.mjs && node scripts/capability-detail-audit.mjs && node scripts/site-audit.mjs",
+    "site:links": "node scripts/external-link-audit.mjs",
+    "indexnow:submit": "node scripts/indexnow-submit.mjs"
+  },
+  "dependencies": {
+    "pg": "^8.13.1"
+  },
+  "devDependencies": {
+    "smol-toml": "1.8.0",
+    "yaml": "2.9.0"
+  }
+}

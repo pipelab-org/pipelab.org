@@ -1,0 +1,77 @@
+name: Site Audit
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version: 22
+      - run: npm ci
+      - id: capability-source
+        name: Resolve authoritative capability source
+        run: node scripts/resolve-capability-source.mjs >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          repository: luckyPipewrench/pipelock
+          ref: ${{ steps.capability-source.outputs.checkout_ref }}
+          path: .capability-source
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Verify capability snapshot against authoritative source
+        run: node scripts/verify-capability-source.mjs --source .capability-source
+      - id: hugo-version
+        name: Read authoritative Hugo version
+        run: echo "version=$(tr -d '\n' < .hugo-version)" >> "$GITHUB_OUTPUT"
+      - uses: peaceiris/actions-hugo@2752ce1d29631191ea3f27c23495fa06139a5b78 # v3
+        with:
+          # .hugo-version is authoritative. Cloudflare's dashboard HUGO_VERSION
+          # must be changed to match, but its configuration is not readable here.
+          hugo-version: ${{ steps.hugo-version.outputs.version }}
+          extended: true
+      - id: hugo-pinned
+        name: Refuse to run unless Hugo matches .hugo-version
+        run: |
+          pinned=$(tr -d '\n' < .hugo-version)
+          version_output=$(hugo version)
+          found=$(printf '%s\n' "$version_output" | sed -n 's/.*v\([0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\).*/\1/p' | head -1)
+          printf 'pinned=%s\nfound=%s\n' "$pinned" "$found"
+          test -n "$found"
+          test "$found" = "$pinned"
+          case "$version_output" in
+            *+extended*) ;;
+            *) echo 'Hugo must be the extended build' >&2; exit 1 ;;
+          esac
+          mkdir -p "$RUNNER_TEMP/hugo-pinned-bin"
+          cp "$(command -v hugo)" "$RUNNER_TEMP/hugo-pinned-bin/hugo"
+          chmod +x "$RUNNER_TEMP/hugo-pinned-bin/hugo"
+          echo "binary=$RUNNER_TEMP/hugo-pinned-bin/hugo" >> "$GITHUB_OUTPUT"
+      # Same installer as the pin (and as indexnow.yml). A raw GitHub Releases
+      # download without a token 403s from Actions and never reaches the two-build.
+      - uses: peaceiris/actions-hugo@2752ce1d29631191ea3f27c23495fa06139a5b78 # v3
+        with:
+          hugo-version: latest
+          extended: true
+      - name: Compare pinned Hugo output to latest
+        env:
+          CI_RENDER_DIFF: "1"
+          HUGO_PINNED: ${{ steps.hugo-pinned.outputs.binary }}
+          HUGO_LOCAL: hugo
+        run: npm run site:render-diff
+      - name: Install pinned Pipelock verifier
+        run: scripts/install-pipelock-verifier.sh
+      # Preflight is separate from site:audit because its git-enumerating guards
+      # must not run on the deploy path, where git may be unavailable.
+      - run: make preflight
+      - run: npm run site:audit
+      - run: npm run site:links -- --fail-on-blocked

@@ -1,0 +1,129 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 490" fill="none">
+  <style>
+    text { font-family: 'Inter', system-ui, sans-serif; }
+    .mono { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+  </style>
+
+  <defs>
+    <marker id="ah" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#00e5a0"/>
+    </marker>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#00e5a0" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#00e5a0" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="960" height="490" fill="#09090b"/>
+
+  <!-- Title — larger, less letter-spaced, reads as headline -->
+  <text x="480" y="30" text-anchor="middle" style="font-family: 'JetBrains Mono', monospace; font-size: 13px; fill: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em;">Agent Firewall Runtime</text>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- TOP ROW: The Boundary                      -->
+  <!-- ══════════════════════════════════════════ -->
+
+  <!-- Agent (quieter — thinner border, smaller text) -->
+  <rect x="50" y="70" width="170" height="80" rx="8" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.04)"/>
+  <text x="135" y="103" text-anchor="middle" style="font-family: 'JetBrains Mono', monospace; font-size: 14px; fill: #94a3b8; font-weight: 600;">Agent</text>
+  <text x="135" y="121" text-anchor="middle" style="font-size: 10px; fill: #64748b;">Secrets · No network</text>
+
+  <!-- Arrow Agent → Pipelock -->
+  <line x1="220" y1="110" x2="296" y2="110" stroke="#00e5a0" stroke-width="2" marker-end="url(#ah)"/>
+
+  <!-- Pipelock glow (stronger) -->
+  <ellipse cx="480" cy="115" rx="210" ry="110" fill="url(#glow)"/>
+
+  <!-- Pipelock (dominant — larger, bolder border) -->
+  <rect x="306" y="48" width="348" height="140" rx="10" fill="rgba(0,229,160,0.05)" stroke="rgba(0,229,160,0.18)" stroke-width="1.5"/>
+  <text x="480" y="80" text-anchor="middle" style="font-family: 'JetBrains Mono', monospace; font-size: 22px; fill: #00e5a0; font-weight: 700;">Pipelock</text>
+  <text x="480" y="100" text-anchor="middle" style="font-size: 10px; fill: #64748b; text-transform: uppercase; letter-spacing: 0.1em;">multi-layer scanner pipeline</text>
+
+  <!-- Detection chips -->
+  <rect x="328" y="115" width="52" height="20" rx="10" fill="rgba(0,229,160,0.08)" stroke="rgba(0,229,160,0.2)"/>
+  <text x="354" y="129" text-anchor="middle" style="font-size: 9px; fill: #00e5a0; font-weight: 600;">DLP</text>
+
+  <rect x="388" y="115" width="52" height="20" rx="10" fill="rgba(0,229,160,0.08)" stroke="rgba(0,229,160,0.2)"/>
+  <text x="414" y="129" text-anchor="middle" style="font-size: 9px; fill: #00e5a0; font-weight: 600;">SSRF</text>
+
+  <rect x="448" y="115" width="68" height="20" rx="10" fill="rgba(0,229,160,0.08)" stroke="rgba(0,229,160,0.2)"/>
+  <text x="482" y="129" text-anchor="middle" style="font-size: 9px; fill: #00e5a0; font-weight: 600;">Injection</text>
+
+  <rect x="524" y="115" width="44" height="20" rx="10" fill="rgba(0,229,160,0.08)" stroke="rgba(0,229,160,0.2)"/>
+  <text x="546" y="129" text-anchor="middle" style="font-size: 9px; fill: #00e5a0; font-weight: 600;">A2A</text>
+
+  <rect x="576" y="115" width="50" height="20" rx="10" fill="rgba(0,229,160,0.08)" stroke="rgba(0,229,160,0.2)"/>
+  <text x="601" y="129" text-anchor="middle" style="font-size: 9px; fill: #00e5a0; font-weight: 600;">MCP</text>
+
+  <!-- Enforcement chips -->
+  <rect x="362" y="145" width="68" height="20" rx="10" fill="rgba(124,58,237,0.08)" stroke="rgba(124,58,237,0.2)"/>
+  <text x="396" y="159" text-anchor="middle" style="font-size: 9px; fill: #7c3aed; font-weight: 600;">Sandbox</text>
+
+  <rect x="438" y="145" width="56" height="20" rx="10" fill="rgba(124,58,237,0.08)" stroke="rgba(124,58,237,0.2)"/>
+  <text x="466" y="159" text-anchor="middle" style="font-size: 9px; fill: #7c3aed; font-weight: 600;">Policy</text>
+
+  <rect x="502" y="145" width="78" height="20" rx="10" fill="rgba(124,58,237,0.08)" stroke="rgba(124,58,237,0.2)"/>
+  <text x="541" y="159" text-anchor="middle" style="font-size: 9px; fill: #7c3aed; font-weight: 600;">Kill Switch</text>
+
+  <!-- Arrow Pipelock → Internet -->
+  <line x1="654" y1="110" x2="730" y2="110" stroke="#00e5a0" stroke-width="2" marker-end="url(#ah)"/>
+
+  <!-- Internet (quieter) -->
+  <rect x="740" y="70" width="170" height="80" rx="8" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.04)"/>
+  <text x="825" y="103" text-anchor="middle" style="font-family: 'JetBrains Mono', monospace; font-size: 14px; fill: #94a3b8; font-weight: 600;">Internet</text>
+  <text x="825" y="121" text-anchor="middle" style="font-size: 10px; fill: #64748b;">APIs · MCP · Services</text>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- Chapter break (stronger)                    -->
+  <!-- ══════════════════════════════════════════ -->
+  <line x1="100" y1="228" x2="860" y2="228" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+  <rect x="370" y="218" width="220" height="20" rx="4" fill="#09090b"/>
+  <text x="480" y="232" text-anchor="middle" style="font-family: 'JetBrains Mono', monospace; font-size: 11px; fill: #64748b; text-transform: uppercase; letter-spacing: 0.1em;">Runtime Capabilities</text>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- BOTTOM ROW                                  -->
+  <!-- ══════════════════════════════════════════ -->
+
+  <!-- Detect -->
+  <rect x="80" y="260" width="240" height="180" rx="10" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.06)"/>
+  <text x="200" y="295" text-anchor="middle" style="font-family: 'JetBrains Mono', monospace; font-size: 17px; fill: #00e5a0; font-weight: 700;">Detect</text>
+
+  <rect x="118" y="312" width="76" height="22" rx="11" fill="rgba(0,229,160,0.06)" stroke="rgba(0,229,160,0.15)"/>
+  <text x="156" y="327" text-anchor="middle" style="font-size: 10px; fill: #00e5a0; font-weight: 600;">DLP patterns</text>
+
+  <rect x="202" y="312" width="76" height="22" rx="11" fill="rgba(0,229,160,0.06)" stroke="rgba(0,229,160,0.15)"/>
+  <text x="240" y="327" text-anchor="middle" style="font-size: 10px; fill: #00e5a0; font-weight: 600;">injection</text>
+
+  <text x="200" y="362" text-anchor="middle" style="font-size: 11px; fill: #94a3b8;">A2A protocol scanning</text>
+  <text x="200" y="380" text-anchor="middle" style="font-size: 11px; fill: #94a3b8;">Canary token detection</text>
+  <text x="200" y="398" text-anchor="middle" style="font-size: 11px; fill: #94a3b8;">Encoded payload decoding</text>
+
+  <!-- Enforce -->
+  <rect x="360" y="260" width="240" height="180" rx="10" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.06)"/>
+  <text x="480" y="295" text-anchor="middle" style="font-family: 'JetBrains Mono', monospace; font-size: 17px; fill: #7c3aed; font-weight: 700;">Enforce</text>
+
+  <rect x="398" y="312" width="76" height="22" rx="11" fill="rgba(124,58,237,0.06)" stroke="rgba(124,58,237,0.15)"/>
+  <text x="436" y="327" text-anchor="middle" style="font-size: 10px; fill: #7c3aed; font-weight: 600;">Kill switch</text>
+
+  <rect x="482" y="312" width="76" height="22" rx="11" fill="rgba(124,58,237,0.06)" stroke="rgba(124,58,237,0.15)"/>
+  <text x="520" y="327" text-anchor="middle" style="font-size: 10px; fill: #7c3aed; font-weight: 600;">Escalation</text>
+
+  <text x="480" y="362" text-anchor="middle" style="font-size: 11px; fill: #94a3b8;">Process sandbox</text>
+  <text x="480" y="380" text-anchor="middle" style="font-size: 11px; fill: #94a3b8;">tool policy rules</text>
+  <text x="480" y="398" text-anchor="middle" style="font-size: 11px; fill: #94a3b8;">Session binding</text>
+
+  <!-- Prove -->
+  <rect x="640" y="260" width="240" height="180" rx="10" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.06)"/>
+  <text x="760" y="295" text-anchor="middle" style="font-family: 'JetBrains Mono', monospace; font-size: 17px; fill: #00e5a0; font-weight: 700;">Prove</text>
+
+  <rect x="678" y="312" width="76" height="22" rx="11" fill="rgba(0,229,160,0.06)" stroke="rgba(0,229,160,0.15)"/>
+  <text x="716" y="327" text-anchor="middle" style="font-size: 10px; fill: #00e5a0; font-weight: 600;">Hash-chain</text>
+
+  <rect x="762" y="312" width="76" height="22" rx="11" fill="rgba(0,229,160,0.06)" stroke="rgba(0,229,160,0.15)"/>
+  <text x="800" y="327" text-anchor="middle" style="font-size: 10px; fill: #00e5a0; font-weight: 600;">Ed25519</text>
+
+  <text x="760" y="362" text-anchor="middle" style="font-size: 11px; fill: #94a3b8;">Flight recorder</text>
+  <text x="760" y="380" text-anchor="middle" style="font-size: 11px; fill: #94a3b8;">Signed assessments</text>
+  <text x="760" y="398" text-anchor="middle" style="font-size: 11px; fill: #94a3b8;">compliance mappings</text>
+</svg>

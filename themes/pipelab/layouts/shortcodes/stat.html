@@ -1,0 +1,9 @@
+{{- $key := .Get "key" -}}
+{{- if not $key -}}
+  {{- errorf "stat shortcode requires a key" -}}
+{{- end -}}
+{{- $value := index site.Data.stats $key -}}
+{{- if not $value -}}
+  {{- errorf "stat shortcode: data/stats.yaml has no %q value" $key -}}
+{{- end -}}
+{{- with .Get "prefix" -}}{{ . }}{{- end -}}{{ $value }}{{- with .Get "suffix" -}}{{ . }}{{- end -}}

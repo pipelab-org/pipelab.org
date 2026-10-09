@@ -1,0 +1,80 @@
+# Compare hub editorial state.
+# Drives the /compare/ index (themes/pipelab/layouts/compare/list.html) and the
+# shared Pipelock column of every comparison ledger (compare/single.html).
+# Per-page categories live in each page's frontmatter as `compare_cat: "<key>"`.
+# Counts come from real .Pages at build time.
+#
+# Categories are grouped by the JOB the other product does, not by vendor
+# size or licence, because that is the question a reader arrives with.
+
+pipelock:
+  job: "Agent firewall. Mediates HTTP, WebSocket, and MCP traffic routed through it, scans it for secret leaks, prompt injection, SSRF, and tool poisoning, and can emit signed action receipts for mediated decisions when a signing key is configured."
+  boundary: "Network path, outside the agent process"
+  source: "Open source, Apache-2.0 core; Enterprise under ELv2"
+  pricing: "Free core; paid Pro and Enterprise tiers"
+  deploy: "Single Go binary, self-hosted; container and Helm"
+  pricing_url: "/pricing/"
+  source_label: "Pipelock README at v3.6.0"
+  source_url: "https://github.com/luckyPipewrench/pipelock/blob/v3.6.0/README.md"
+
+routes:
+  - situation: "I need to explain the category to a security team"
+    label: "Agent firewall vs guardrails"
+    href: "/compare/agent-firewall-vs-guardrails/"
+    note: "Where enforcement happens and why the two layers fail differently."
+  - situation: "I already run an egress proxy or an MCP gateway"
+    label: "Pipelock vs iron-proxy"
+    href: "/compare/pipelock-vs-iron-proxy/"
+    note: "Content inspection next to allowlists, credential brokering, and routing."
+  - situation: "My agents run in a sandbox or a governed framework"
+    label: "Pipelock vs DefenseClaw"
+    href: "/compare/pipelock-vs-defenseclaw/"
+    note: "Framework hooks and sandboxes control actions. Pipelock inspects the wire."
+  - situation: "I need evidence an auditor can check without trusting me"
+    label: "Pipelock vs agent evidence tools"
+    href: "/compare/pipelock-vs-agent-evidence-tools/"
+    note: "Who holds the signing key, and whether verification works offline."
+  - situation: "My identity team is solving who may call which tool"
+    label: "Agent firewall vs authorization gateway"
+    href: "/compare/agent-firewall-vs-agent-authorization-gateway/"
+    note: "Permission is one half. What the permitted call carries is the other."
+  - situation: "Procurement wants one platform for all of it"
+    label: "Agent firewall vs AI security platform"
+    href: "/compare/agent-firewall-vs-ai-security-platform/"
+    note: "Broad and managed, or narrow and verifiable."
+
+categories:
+  - key: concept
+    label: Concepts
+    summary: "Category definitions. Read these before comparing products."
+    adds: "Pipelock is the open-source reference for the agent firewall category on these pages."
+  - key: egress
+    label: Proxies and gateways
+    summary: "Egress proxies, AI gateways, and MCP gateways that sit on the network path."
+    adds: "Pipelock adds payload inspection and signed receipts to allowlists, routing, and credential handling."
+  - key: sandbox
+    label: Sandboxes and scanners
+    summary: "Sandboxes, pre-deploy scanners, and framework-side governance that control what an agent can do before and while it runs."
+    adds: "Pipelock inspects what crosses the network boundary those tools draw."
+  - key: inference
+    label: Inference guardrails
+    summary: "Classifiers and guardrail libraries that sit between the application and the model."
+    adds: "Pipelock covers the tool calls and HTTP traffic that never pass through the model API."
+  - key: platform
+    label: Platforms
+    summary: "Enterprise platforms and control planes bought through procurement."
+    adds: "Pipelock is the focused, self-hosted piece you can read, run, and verify."
+  - key: evidence
+    label: Evidence and receipts
+    summary: "Tools that produce signed or hash-chained records of agent actions."
+    adds: "Pipelock signs from outside the agent process with a key the operator holds."
+
+featured:
+  - agent-firewall-vs-guardrails
+  - pipelock-vs-iron-proxy
+  - pipelock-vs-agent-evidence-tools
+
+subscribe:
+  - label: GitHub
+    url: https://github.com/luckyPipewrench/pipelock
+    external: true

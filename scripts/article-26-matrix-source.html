@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>EU AI Act Article 26 Deployer Obligations Matrix</title>
+<style>
+  @page {
+    size: A4;
+    margin: 18mm 16mm 20mm 16mm;
+    @bottom-left {
+      content: "Pipelock — open-source agent firewall — pipelab.org";
+      font-family: "Helvetica", "Arial", sans-serif;
+      font-size: 8pt;
+      color: #5a6470;
+    }
+    @bottom-right {
+      content: "Page " counter(page) " of " counter(pages);
+      font-family: "Helvetica", "Arial", sans-serif;
+      font-size: 8pt;
+      color: #5a6470;
+    }
+  }
+  html { font-family: "Helvetica", "Arial", sans-serif; color: #1a1f29; }
+  body { margin: 0; line-height: 1.42; font-size: 9.5pt; }
+  h1 { font-size: 17pt; margin: 0 0 4pt 0; color: #0d3b66; letter-spacing: -0.01em; }
+  h2 { font-size: 11pt; margin: 14pt 0 5pt 0; color: #0d3b66; border-bottom: 1px solid #c8d2dc; padding-bottom: 3pt; }
+  .subtitle { font-size: 10pt; color: #4a5567; margin: 0 0 10pt 0; }
+  .intro { margin: 8pt 0 12pt 0; }
+  table { width: 100%; border-collapse: collapse; margin: 4pt 0 8pt 0; font-size: 8.5pt; }
+  th { background: #e8eef5; color: #0d3b66; text-align: left; padding: 5pt 6pt; border-bottom: 1px solid #b6c2cf; font-weight: 600; vertical-align: top; }
+  td { padding: 5pt 6pt; border-bottom: 1px solid #e2e8ee; vertical-align: top; }
+  td.par { font-weight: 600; color: #0d3b66; white-space: nowrap; }
+  tr:nth-child(even) td { background: #f7f9fb; }
+  pre { background: #f1f4f8; border: 1px solid #d8dee6; border-radius: 3pt; padding: 7pt 9pt; font-family: "Menlo", "Consolas", monospace; font-size: 8pt; line-height: 1.32; overflow: hidden; white-space: pre-wrap; word-break: break-word; }
+  .note { background: #fff8e6; border-left: 3pt solid #d4a017; padding: 6pt 9pt; margin: 6pt 0; font-size: 8.8pt; }
+  .note strong { color: #8a5a00; }
+  .footer { margin-top: 12pt; padding-top: 8pt; border-top: 1px solid #c8d2dc; font-size: 8pt; color: #4a5567; }
+  .footer p { margin: 3pt 0; }
+  .footer a { color: #0d3b66; text-decoration: none; }
+  .framing { font-style: italic; color: #4a5567; }
+  ul { margin: 4pt 0 0 16pt; padding: 0; }
+  li { margin: 2pt 0; }
+</style>
+</head>
+<body>
+
+<h1>EU AI Act — Article 26 Deployer Obligations Matrix</h1>
+<p class="subtitle">Runtime-facing duties and how Pipelock evidence maps</p>
+
+<p class="intro">This matrix summarises the runtime-facing duties of Article 26 for deployers of high-risk AI systems and explains what Pipelock evidence supports under each paragraph. Pipelock is an evidence substrate, not a compliance solution. The deployer retains policy ownership, retention period, review cadence, and formal sign-off. Always read the official Official Journal text and consult qualified legal counsel before relying on any single page as a compliance checklist.</p>
+
+<h2>Runtime-facing duties of Article 26 (paragraphs 1, 2, 4, 5, 6)</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width: 14%;">Article 26 paragraph</th>
+      <th style="width: 28%;">Obligation (paraphrased from the OJ text)</th>
+      <th style="width: 31%;">Pipelock evidence that supports it</th>
+      <th style="width: 27%;">What the deployer still owns</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="par">26(1)</td>
+      <td>Take appropriate technical and organisational measures to use the system in accordance with the provider's instructions for use.</td>
+      <td>Posture-verify CLI with score model and CI gate, configuration validation at startup, deployment guidance, configuration hash recorded in each emitted record.</td>
+      <td>Operating within the documented deployment profile, training staff on approved configurations, change management for config drift.</td>
+    </tr>
+    <tr>
+      <td class="par">26(2)</td>
+      <td>Assign human oversight to natural persons with the necessary competence, training, authority, and support.</td>
+      <td>HITL approval flow on the <code>ask</code> action with terminal prompts, kill switch from four independent sources (config, API, SIGUSR1, sentinel file), per-action audit trail.</td>
+      <td>Selecting oversight personnel, training and authorisation policy, escalation runbooks, on-call coverage.</td>
+    </tr>
+    <tr>
+      <td class="par">26(4)</td>
+      <td>Ensure input data is relevant and sufficiently representative of the intended purpose, to the extent the input is under the deployer's control.</td>
+      <td>Input scanning on MCP tool arguments, fetch-proxy URL parameters, forward-proxy bodies, request-body scanning with class-preserving redaction.</td>
+      <td>Defining what "relevant and representative" means for the use case, dataset curation, input governance upstream of the proxy.</td>
+    </tr>
+    <tr>
+      <td class="par">26(5)</td>
+      <td>Monitor the system's operation based on the instructions for use and inform the provider and, for serious incidents or identified risks, the market surveillance authority without undue delay.</td>
+      <td>Prometheus metrics endpoint, <code>/health</code> and <code>/ready</code> endpoints, hardcoded event severity taxonomy with configurable emission threshold, webhook and syslog sinks to any SIEM, real-time block-reason headers.</td>
+      <td>Defining the serious-incident threshold, operating the SIEM, drafting incident notifications, regulator and provider communication.</td>
+    </tr>
+    <tr>
+      <td class="par">26(6)</td>
+      <td>Keep the logs automatically generated by the system for at least six months, to the extent those logs are under the deployer's control. Longer retention applies where other Union or national law requires it, in particular data-protection law.</td>
+      <td>Structured JSON event lines with stable field names, hash-chained flight recorder, optional Ed25519 signed receipts, no vendor-locked binary format, exportable to any retention-controlled store.</td>
+      <td><strong>The retention period itself.</strong> Pipelock emits to the sinks the deployer configures; it does not enforce storage duration. Ship to S3 with Object Lock, Loki with retention, Splunk, or an equivalent store set to at least six months.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="note"><strong>Article 12 versus Article 26(6).</strong> Article 12 is the design-time obligation on the provider to make a high-risk system technically capable of automatic logging. Article 26(6) is the runtime obligation on the deployer to keep those logs. Pipelock contributes evidence toward both: it generates structured logs that support the Article 12 capability requirement, and it emits those logs to the retention sink the deployer operates in support of the Article 26(6) six-month floor. Pipelock does not by itself satisfy either obligation; the deployer's program does.</div>
+
+<h2>Sample retention setup</h2>
+
+<p>Minimal emit configuration paired with a retention-controlled sink:</p>
+
+<pre>emit:
+  sinks:
+    - type: webhook
+      url: https://logs.example.invalid/ingest
+      min_severity: info
+    - type: syslog
+      address: syslog.example.invalid:514
+      protocol: udp
+      min_severity: info
+
+# Pair with one of these on the storage side, set to >= 6 months:
+#   - AWS S3 + Object Lock (compliance mode) with 6-month retention rule
+#   - Google Cloud Storage with retention policy >= 6 months
+#   - Azure Blob immutable storage with 6-month retention
+#   - Grafana Loki with retention configured >= 6 months
+#   - Splunk index lifecycle policy >= 6 months
+# Sector law (financial services internal-governance rules, GDPR) may
+# require longer retention. Configure the storage side to the longest
+# applicable rule.
+</pre>
+
+<h2>What Pipelock does not cover</h2>
+
+<ul>
+  <li>Article 9 risk-management process (organisational), Article 10 training-data governance, Article 11 technical documentation (system level).</li>
+  <li>Article 27 fundamental rights impact assessment.</li>
+  <li>Article 43 conformity assessment and certification.</li>
+  <li>Conditional paragraphs 7-12 of Article 26 (workplace notice, public-authority registration, GDPR DPIA linkage, post-remote biometric identification, notice to natural persons affected by Annex III decisions, authority cooperation). Check the full OJ text and qualified legal advice.</li>
+</ul>
+
+<div class="footer">
+  <p><strong>Source:</strong> Regulation (EU) 2024/1689, Article 26. Official Journal text: <a href="https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=OJ:L_202401689">eur-lex.europa.eu/legal-content/EN/TXT/?uri=OJ:L_202401689</a></p>
+  <p><strong>When the obligations apply:</strong> Regulation (EU) 2026/1744, the Digital Omnibus on AI, amends Regulation (EU) 2024/1689. It was published in the Official Journal on 24 July 2026 and entered into force on 27 July 2026. Annex III stand-alone high-risk obligations apply from 2 December 2027. Annex I embedded-in-product safety-component obligations apply from 2 August 2028. Article 5 prohibited practices have been in force since 2 February 2025.</p>
+  <p><strong>Amendment history.</strong> The European Parliament endorsed Regulation (EU) 2026/1744 on 16 June 2026 and the Council gave final approval on 29 June 2026. It is the first major amendment to Regulation (EU) 2024/1689. Earlier versions of this matrix cited the pre-amendment high-risk date, which this amendment superseded.</p>
+  <p class="framing"><strong>Framing.</strong> Pipelock supplies runtime evidence inside the deployer's existing compliance programme. Pipelock does not "solve" or "satisfy" the EU AI Act. The Article 12 framing is "provides evidence toward the technical-capability requirement," not "satisfies it."</p>
+  <p><strong>Full mapping:</strong> <a href="https://pipelab.org/learn/eu-ai-act-compliance/">pipelab.org/learn/eu-ai-act-compliance/</a></p>
+</div>
+
+</body>
+</html>

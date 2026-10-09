@@ -1,0 +1,231 @@
+{{ define "main" }}
+{{ $dateLabel := .Lastmod.Format "Jan 2, 2006" }}
+{{ $va := partial "verifier-assets.html" . }}
+
+<article id="top" class="proof-product evidence-product">
+
+  {{/* ── Hero ─────────────────────────────────────────── */}}
+  <header class="proof-hero site-hero brand-field-hero brand-field-hero-standard" data-hero="brand-standard">
+    <div class="proof-hero-inner site-hero-inner">
+      <p class="proof-eyebrow">
+        <span class="proof-eyebrow-dot" aria-hidden="true"></span>
+        Runtime evidence{{ if $dateLabel }} · {{ $dateLabel }}{{ end }}
+      </p>
+      <h1 class="proof-headline">
+        <span>{{ with .Params.headline }}{{ . }}{{ else }}{{ .Title }}{{ end }}</span>
+        {{ with .Params.headline_accent }}<span class="proof-headline-accent">{{ . }}</span>{{ end }}
+      </h1>
+      <p class="proof-lead">Pipelock records what an AI agent's traffic did as signed, hash-linked receipts, from a boundary outside the agent process. Verify a real capture in your browser below. No account, no vendor service, and the verifier prints its own limits with the verdict.</p>
+      <div class="hero-buttons proof-hero-actions">
+        <a href="#verify" class="btn btn-primary" data-event="agent_evidence_verify_click" data-event-placement="agent-evidence-hero">Verify the capture</a>
+        <a href="#coverage" class="btn btn-ghost">See AIUC-1 control coverage</a>
+      </div>
+      <ul class="proof-trust-pills" aria-label="Evidence guarantees">
+        <li>Operator-held key</li>
+        <li>Offline verification</li>
+        <li>Reproducible capture</li>
+        <li>Stated limits</li>
+        <li>Apache-2.0 verifiers</li>
+      </ul>
+    </div>
+  </header>
+
+  {{ partial "site-fx.html" . }}
+
+  <nav class="ev-route" data-fx="mininav" aria-label="Agent evidence sections">
+    <div class="ev-route-inner">
+      <a href="#proves"><span>01</span> Scope</a>
+      <a href="#boundary"><span>02</span> Boundary</a>
+      <a href="#coverage"><span>03</span> Coverage</a>
+      <a href="#mapping"><span>04</span> Mapping</a>
+      <a href="#verify"><span>05</span> Verify</a>
+    </div>
+  </nav>
+
+  {{/* ── Chapter: the argument ────────────────────────── */}}
+  <div class="ev-chapter">
+
+    <section class="ev-section ev-scope" id="proves">
+      <div class="ev-inner">
+        <div class="ev-head">
+          <p class="ev-eyebrow" data-fx="reveal">The short version</p>
+          <h2 class="ev-h2" data-fx="decrypt">What this proves, and what it does not</h2>
+        </div>
+        <div class="ev-split" data-fx="reveal">
+          <div class="ev-split-col is-proves" data-fx="spotlight">
+            <h3>Proves</h3>
+            <p>Every allow and deny decision on routed HTTP, WebSocket, MCP, and agent-to-agent traffic becomes an Ed25519-signed receipt in a hash-linked chain with signed checkpoints. Anyone with the operator's public key verifies the signature, integrity, and ordering offline. The deployer holds the signing key. We never see it.</p>
+          </div>
+          <div class="ev-split-col is-limit" data-fx="spotlight">
+            <h3>Does not prove</h3>
+            <p>A valid chain covers the records supplied. An operator who holds the key could omit records before signing. Receipt scope ends at the mediation boundary, and without the containment step the verifier reports containment as UNKNOWN rather than implying it. Pipelock emits evidence a SIEM consumes; it does not run the alerting or incident process.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="ev-section ev-boundary" id="boundary">
+      <div class="ev-inner">
+        <div class="ev-head">
+          <p class="ev-eyebrow" data-fx="reveal">Where the evidence comes from</p>
+          <h2 class="ev-h2" data-fx="decrypt">The mediation boundary</h2>
+          <p class="ev-sub" data-fx="reveal">The recorder sits outside the agent process. A prompt-injected agent cannot skip a boundary it does not operate. It can only bypass the proxy if the containment step was skipped, and that state is disclosed, never assumed.</p>
+        </div>
+        <div class="ev-plate ev-boundary-plate" data-fx="reveal scan">
+          <div class="ev-artifact-bar">
+            <span class="ev-artifact-dots" aria-hidden="true"><span></span><span></span><span></span></span>
+            <span class="ev-artifact-title">mediation boundary</span>
+            <span class="ev-artifact-state">routed traffic only</span>
+          </div>
+          <div class="ev-flow" aria-label="Traffic flows from the agent through Pipelock to external services">
+            <div class="ev-node">
+              <span class="ev-node-kicker">01 · source</span>
+              <strong>Agent process</strong>
+              <span>prompts, tool calls, MCP client</span>
+            </div>
+            <span class="ev-flow-link" aria-hidden="true"><span>routed</span></span>
+            <div class="ev-node is-core">
+              <span class="ev-node-kicker">02 · enforcement boundary</span>
+              <strong>Pipelock</strong>
+              <span>policy and scanners: ALLOW or DENY</span>
+              <span>receipt signer, operator-held key</span>
+            </div>
+            <span class="ev-flow-link" aria-hidden="true"><span>mediated</span></span>
+            <div class="ev-node">
+              <span class="ev-node-kicker">03 · destination</span>
+              <strong>External services</strong>
+              <span>APIs, MCP servers</span>
+            </div>
+          </div>
+          <p class="ev-plate-foot">
+            <span class="ev-plate-foot-label">Evidence output</span>
+            <span>Every decision becomes a signed receipt in a <strong>hash-linked chain</strong>, verified offline with the operator public key, no vendor service.</span>
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="ev-section ev-controls" id="coverage">
+      {{ $map := site.Data.aiuc1_mapping }}
+      {{ $mc := dict }}
+      {{ $mtotal := 0 }}
+      {{ range $map.groups }}
+        {{ $mc = merge $mc (dict .key (len .rows)) }}
+        {{ $mtotal = add $mtotal (len .rows) }}
+      {{ end }}
+      <div class="ev-inner">
+        <div class="ev-head">
+          <p class="ev-eyebrow" data-fx="reveal">Mapped to the standard</p>
+          <h2 class="ev-h2" data-fx="decrypt">AIUC-1 accountability control coverage</h2>
+          <p class="ev-sub" data-fx="reveal">{{ $mtotal }} controls reviewed against the AIUC-1 {{ $map.aiuc_version }} text. An evidence mapping, not a certification claim. Every row, with the honest limit stated, is <a href="#mapping">below on this page</a> and in the packet PDF.</p>
+        </div>
+        <div class="ev-coverage" data-fx="reveal spotlight">
+          <div class="ev-coverage-head">
+            <span>AIUC-1 control map</span>
+            <strong><span data-fx="count">{{ $mtotal }}</span> controls reviewed</strong>
+          </div>
+          <div class="ev-coverage-track" role="img" style="grid-template-columns: {{ $mc.direct }}fr {{ $mc.conditional }}fr {{ $mc.partial }}fr {{ $mc.none }}fr" aria-label="{{ $mtotal }} controls reviewed: {{ $mc.direct }} direct, {{ $mc.conditional }} conditional, {{ $mc.partial }} partial, and {{ $mc.none }} not covered">
+            <span class="is-direct" aria-hidden="true"></span>
+            <span class="is-cond" aria-hidden="true"></span>
+            <span class="is-partial" aria-hidden="true"></span>
+            <span class="is-none" aria-hidden="true"></span>
+          </div>
+          <div class="ev-coverage-legend">
+            <div class="ev-stat is-direct"><span class="ev-stat-n" data-fx="count">{{ $mc.direct }}</span><span class="ev-stat-l">Direct</span></div>
+            <div class="ev-stat is-cond"><span class="ev-stat-n" data-fx="count">{{ $mc.conditional }}</span><span class="ev-stat-l">Conditional</span></div>
+            <div class="ev-stat is-partial"><span class="ev-stat-n" data-fx="count">{{ $mc.partial }}</span><span class="ev-stat-l">Partial</span></div>
+            <div class="ev-stat is-none"><span class="ev-stat-n" data-fx="count">{{ $mc.none }}</span><span class="ev-stat-l">Not covered</span></div>
+          </div>
+        </div>
+        <div class="ev-cta" data-fx="reveal">
+          <a href="/evidence/pipelock-aiuc1-evidence-packet.pdf" class="btn btn-primary" data-event="agent_evidence_packet_download" data-event-placement="agent-evidence-coverage">Download the technical review packet (PDF)</a>
+          <a href="/contact/" class="btn btn-ghost">Request a walkthrough</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="ev-section ev-mapping" id="mapping">
+      <div class="ev-inner">
+        <div class="ev-head">
+          <p class="ev-eyebrow" data-fx="reveal">Row by row</p>
+          <h2 class="ev-h2" data-fx="decrypt">The full control mapping</h2>
+          <p class="ev-sub" data-fx="reveal">Every reviewed control, the capability behind it, the artifact an auditor receives, and the honest limit. Mapped means Pipelock can supply the stated evidence for the traffic it mediates, never that Pipelock alone satisfies the requirement.</p>
+        </div>
+        {{ range site.Data.aiuc1_mapping.groups }}
+        {{ $group := . }}
+        <div class="ev-map-group is-{{ .key }}" data-fx="reveal">
+          <div class="ev-map-group-head">
+            <span class="ev-map-dot" aria-hidden="true"></span>
+            <h3>{{ .label }}</h3>
+            <span class="ev-map-count">{{ len .rows }} controls</span>
+            <p class="ev-map-lede">{{ .lede }}</p>
+          </div>
+          <div class="ev-map-rows">
+            {{ range .rows }}
+            <details class="ev-map-row">
+              <summary>
+                <span class="ev-map-id">{{ .id }}</span>
+                <span class="ev-map-name">{{ .name }}</span>
+                <span class="ev-map-badge">{{ $group.label }}</span>
+                <span class="ev-map-caret" aria-hidden="true"></span>
+              </summary>
+              <div class="ev-map-body">
+                {{ with .capability }}<div class="ev-map-slot"><h4>Pipelock capability</h4><p>{{ . }}</p></div>{{ end }}
+                {{ with .artifact }}<div class="ev-map-slot"><h4>Evidence artifact</h4><p>{{ . }}</p></div>{{ end }}
+                <div class="ev-map-slot is-limit"><h4>Honest limit</h4><p>{{ .limit }}</p></div>
+              </div>
+            </details>
+            {{ end }}
+          </div>
+        </div>
+        {{ end }}
+      </div>
+    </section>
+
+    <section class="ev-section ev-verify" id="verify">
+      <div class="ev-inner">
+        <div class="ev-head">
+          <p class="ev-eyebrow" data-fx="reveal">Run the check</p>
+          <h2 class="ev-h2" data-fx="decrypt">Verify it yourself, in your browser</h2>
+          <p class="ev-sub" data-fx="reveal">This capture came from the shipped release binary and was frozen after shutdown sealed the chain. The verifier runs as WebAssembly in your browser. Nothing is uploaded. To check a receipt of your own, use the <a href="/verify/">receipt verifier</a>.</p>
+        </div>
+        <div class="ev-console" data-fx="reveal"
+             data-wasm="{{ $va.wasm.url }}" data-wasm-exec="{{ $va.wasmExec.url }}"
+             data-wasm-integrity="{{ $va.wasm.integrity }}" data-wasm-exec-integrity="{{ $va.wasmExec.integrity }}"
+             data-capture="{{ $va.capture.url }}" data-capture-integrity="{{ $va.capture.integrity }}"
+             data-key="{{ $va.key.url }}" data-key-integrity="{{ $va.key.integrity }}">
+          <div class="ev-console-bar">
+            <span class="ev-artifact-dots" aria-hidden="true"><span></span><span></span><span></span></span>
+            <span class="ev-console-title">pipelock verify-receipt</span>
+            <span class="ev-console-mode">WASM · browser-local</span>
+          </div>
+          <div class="ev-console-body">
+            <div class="ev-console-actions">
+              <button type="button" class="btn btn-primary ev-verify-run" data-event="agent_evidence_verify_run">Verify the reference capture</button>
+              <a class="btn btn-ghost" href="/evidence/reference-capture/reference-capture-2026-08-31.zip" download>Download capture and key</a>
+            </div>
+            <div class="ev-console-output-head" aria-hidden="true">
+              <span>Verifier output</span>
+              <span>stdout</span>
+            </div>
+            <pre class="ev-console-out" aria-live="polite" data-state="idle"><code>Ready. Click verify to run the check in your browser.</code></pre>
+            <p class="ev-console-note">Or from a terminal: <code>pipelock verify-receipt --key &lt;public-key&gt; evidence-proxy-0.jsonl</code></p>
+          </div>
+        </div>
+        <div class="ev-cta" data-fx="reveal">
+          <a href="/verify/" class="btn btn-primary">Verify your own receipt</a>
+          <a href="/learn/verify-a-receipt/" class="btn btn-ghost">How verification works</a>
+          <a href="https://github.com/luckyPipewrench/agent-evidence-levels" class="btn btn-ghost">Agent Evidence Levels spec</a>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  {{ with .Content }}<section class="ev-section ev-content"><div class="ev-inner proof-prose">{{ . }}</div></section>{{ end }}
+
+</article>
+
+{{ $verifyJS := resources.Get "js/agent-evidence-verify.js" | minify | fingerprint }}
+<script src="{{ $verifyJS.RelPermalink }}" integrity="{{ $verifyJS.Data.Integrity }}" defer></script>
+{{ end }}

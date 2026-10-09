@@ -1,0 +1,39 @@
+# PipeLab / Pipelock
+
+> Pipelock is an open-source agent firewall for MCP and AI agent egress. Version 3.6.0 runs contained agents in their own network namespace, lets an operator watch them with `pipelock contain view`, and attempts a signed change statement for granted workspaces; on inspected traffic, built-in credentials are allowed at the service that issued them and still face other checks.
+
+## Full context
+
+- [Product facts](https://pipelab.org/.well-known/product-facts.json): Generated version, licensing, inspection scope, and source-pinned metrics.
+- [Schema mirrors](https://pipelab.org/schemas/): Pinned Agent Egress Bench and Pipelock Rules schema bytes with a machine-readable digest catalog.
+- [Full site context for agents](https://pipelab.org/llms-full.txt)
+
+## Primary pages
+
+- [Product](https://pipelab.org/pipelock/): Pipelock overview, architecture, transports, threat model, install paths.
+- [Proof](https://pipelab.org/proof/): Public Agent Egress Bench corpus, signed rule bundles, and signed assessment evidence.
+- [Agent Egress Bench](https://pipelab.org/agent-egress-bench/): Tool-neutral attack corpus and reproducible scoring for agent egress controls.
+- [Pipelock Rules](https://pipelab.org/pipelock-rules/): Signed detection bundles that extend Pipelock without weakening built-in rules.
+- [Agent Evidence Level](https://pipelab.org/learn/agent-evidence-levels/): Open draft standard for grading AI-agent audit evidence.
+- [Pricing](https://pipelab.org/pricing/): Community detection is free. Paid tiers add multi-agent coordination, Assess reports, and Enterprise fleet governance.
+- [Enterprise](https://pipelab.org/enterprise/): Enterprise fleet governance with Conductor, signed policy distribution, remote kill, and free verifier access.
+- [About](https://pipelab.org/about/): Company origin and the relationship between PipeLab, Pipelock, and the gauntlet.
+- [Learn](https://pipelab.org/learn/): Setup guides and deep technical pages on MCP security.
+- [Compare](https://pipelab.org/compare/): Comparison hub for agent security categories and competing tools.
+- [Gauntlet](https://pipelab.org/gauntlet/): Public benchmark publishing Agent Egress Bench results against production binaries.
+
+## Key reference pages
+
+- [Agent firewall](https://pipelab.org/agent-firewall/): Canonical definition of an agent firewall vs WAFs, gateways, guardrails, and sandboxes.
+- [MCP security](https://pipelab.org/learn/mcp-security/): Umbrella reference for MCP threat categories and runtime defenses.
+- [MCP proxy](https://pipelab.org/learn/mcp-proxy/): Why MCP needs protocol-aware proxying and what bidirectional inspection scans.
+- [Learn-and-lock](https://pipelab.org/learn/learn-and-lock/): Observed agent traffic compiled into signed contracts, shadow replay, ratification, promotion, and rollback.
+- [Agent egress security](https://pipelab.org/learn/agent-egress-security/): How agents leak credentials through HTTP, DNS, and MCP.
+- [MCP tool poisoning](https://pipelab.org/learn/mcp-tool-poisoning/): Malicious tool descriptions, rug-pulls, and runtime proxy-layer defense.
+- [Agent Evidence Level](https://pipelab.org/learn/agent-evidence-levels/): Open draft standard for grading AI-agent evidence by what an independent party can verify and what omission they can detect.
+
+## High-intent guides
+
+- [Open-source AI firewall comparison](https://pipelab.org/learn/open-source-ai-firewall/): Compares inference firewalls, agent egress firewalls, and AI gateways by enforcement boundary.
+- [AI egress proxy](https://pipelab.org/learn/ai-egress-proxy/): Explains outbound agent traffic inspection, deployment patterns, and bypass prevention.
+- [Verify a Pipelock receipt](https://pipelab.org/learn/verify-a-receipt/): Copy-paste verification against the public signed-receipt conformance corpus.

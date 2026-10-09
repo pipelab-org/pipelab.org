@@ -1,0 +1,9 @@
+Pipelock audit packet — receipt chain verification
+scenario: secret-exfil-url-blocked
+receipts: 2
+verdict: valid (trusted)
+root_hash: e46ce69a5c3ca1f83320f905eb6583e5477bad41f752ed3d201ce56fe3e045a3
+signer_key: 91dfb23882a8acf28f624985030ca1798a3efbbcee2bb8bdda8f452612eb755a
+
+Verify it yourself from this directory:
+  pipelock-verifier audit-packet . --key 91dfb23882a8acf28f624985030ca1798a3efbbcee2bb8bdda8f452612eb755a

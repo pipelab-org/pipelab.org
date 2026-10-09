@@ -1,0 +1,1470 @@
+// ============================================================
+//   /playground/ replay gallery
+//   Scoped playback UI for signed Audit Packet recordings.
+// ============================================================
+
+.playground-page {
+  color: var(--text);
+
+  .btn {
+    min-width: 0;
+  }
+}
+
+.playground-hero {
+  padding: 4.5rem 2rem 2.5rem;
+  border-bottom: 1px solid var(--border);
+  background:
+    radial-gradient(ellipse at 35% 0%, rgba(0, 229, 160, 0.08) 0%, transparent 58%),
+    radial-gradient(ellipse at 78% 12%, rgba(124, 58, 237, 0.08) 0%, transparent 50%);
+  text-align: center;
+
+  @media (max-width: $bp-mobile) {
+    padding: 3rem 1.25rem 1.75rem;
+  }
+}
+
+.playground-hero-inner {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.playground-eyebrow,
+.playground-label,
+.playground-card-kicker {
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  color: var(--accent);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+}
+
+.playground-eyebrow {
+  margin: 0 0 1rem;
+}
+
+.playground-hero h1 {
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-h1);
+  line-height: 1.15;
+  letter-spacing: var(--tracking-tight);
+  margin: 0 0 1rem;
+  overflow-wrap: anywhere;
+}
+
+.playground-lead {
+  max-width: 720px;
+  margin: 0 auto 1.5rem;
+  color: var(--text-muted);
+  font-size: var(--fs-lead);
+  line-height: 1.55;
+}
+
+.playground-actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 1.25rem 0 0;
+}
+
+.playground-proof-flow {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  max-width: 860px;
+  margin: 2rem auto 0;
+  padding: 0;
+  list-style: none;
+
+  @media (max-width: $bp-mobile) {
+    grid-template-columns: 1fr;
+  }
+
+  li {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.1rem;
+    text-align: left;
+  }
+
+  strong,
+  span {
+    display: block;
+  }
+
+  strong {
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-h2);
+    color: var(--accent);
+    overflow-wrap: anywhere;
+  }
+
+  span {
+    margin-top: 0.35rem;
+    color: var(--text-muted);
+    font-size: var(--fs-body);
+    line-height: 1.45;
+  }
+}
+
+.playground-band {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 4rem 2rem;
+
+  @media (max-width: $bp-mobile) {
+    padding: 3rem 1.25rem;
+  }
+}
+
+.playground-card-summary {
+  color: var(--text-muted);
+  line-height: 1.55;
+  margin: -0.25rem 0 1rem;
+}
+
+.playground-section-head {
+  max-width: 760px;
+  margin: 0 auto 2rem;
+  text-align: center;
+
+  h2 {
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-h2);
+    line-height: 1.2;
+    letter-spacing: var(--tracking-tight);
+    margin: 0 0 0.8rem;
+  }
+
+  p {
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+}
+
+.playground-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+
+  // With an odd number of cards, center the lone trailing one instead of
+  // leaving it stuck to the left of an empty cell.
+  > :last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+    justify-self: center;
+    width: 100%;
+    max-width: calc(50% - 0.5rem);
+  }
+
+  @media (max-width: $bp-mobile) {
+    grid-template-columns: 1fr;
+
+    > :last-child:nth-child(odd) {
+      grid-column: auto;
+      justify-self: stretch;
+      max-width: none;
+    }
+  }
+}
+
+.playground-card,
+.playground-compare,
+.playground-receipt,
+.playground-verify {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.playground-card {
+  display: block;
+  padding: 1.25rem;
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+
+  &:hover,
+  &:focus-visible {
+    border-color: rgba(0, 229, 160, 0.35);
+    background: var(--bg-card-hover);
+    transform: translateY(-1px);
+  }
+
+  h3 {
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-h3);
+    line-height: 1.25;
+    margin: 0.6rem 0 1rem;
+    overflow-wrap: anywhere;
+  }
+}
+
+.playground-card dl,
+.playground-receipt dl,
+.playground-verify dl {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+
+  div {
+    display: grid;
+    grid-template-columns: 7.5rem minmax(0, 1fr);
+    gap: 0.75rem;
+
+    @media (max-width: $bp-mobile) {
+      grid-template-columns: 1fr;
+      gap: 0.15rem;
+    }
+  }
+
+  dt {
+    color: var(--text-dim);
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-caption);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wide);
+  }
+
+  dd {
+    margin: 0;
+    color: var(--text-muted);
+    overflow-wrap: anywhere;
+  }
+}
+
+.playground-split,
+.playground-verify-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+
+  @media (max-width: $bp-tablet) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.playground-compare,
+.playground-receipt,
+.playground-verify {
+  min-width: 0;
+  padding: 1.4rem;
+
+  h2,
+  h3 {
+    font-family: var(--font-mono), monospace;
+    margin: 0.55rem 0 0.8rem;
+    line-height: 1.25;
+  }
+
+  p {
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+}
+
+.playground-without {
+  border-color: rgba(239, 68, 68, 0.22);
+}
+
+.playground-with {
+  border-color: rgba(0, 229, 160, 0.3);
+}
+
+
+.playground-redacted {
+  font-family: var(--font-mono), monospace;
+  color: var(--accent);
+  background: rgba(0, 229, 160, 0.08);
+  border: 1px solid rgba(0, 229, 160, 0.18);
+  border-radius: 8px;
+  padding: 0.7rem;
+  overflow-wrap: anywhere;
+
+  // Scenarios with nothing redacted leave this field empty; without this the
+  // bordered box still draws as a stray empty bar.
+  &:empty {
+    display: none;
+  }
+}
+
+.playground-player {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.8fr) minmax(0, 1.2fr);
+  gap: 1rem;
+
+  @media (max-width: $bp-tablet) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.playground-stepper {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  margin-bottom: 0.5rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+}
+
+.playground-step-button,
+.playground-timeline-item {
+  font: inherit;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.playground-step-button {
+  padding: 0.55rem 0.8rem;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
+}
+
+.playground-timeline {
+  display: grid;
+  gap: 0.65rem;
+  // Size to the steps, not to the (often taller) receipt card beside it, so a
+  // short timeline (1-2 steps) doesn't leave a tall empty column.
+  align-self: start;
+}
+
+.playground-timeline-item {
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr);
+  grid-template-areas:
+    "seq verdict"
+    "seq layer";
+  gap: 0.15rem 0.75rem;
+  width: 100%;
+  padding: 0.8rem;
+  text-align: left;
+  transition: border-color 0.15s ease, background 0.15s ease;
+
+  span {
+    grid-area: seq;
+    color: var(--accent);
+    font-family: var(--font-mono), monospace;
+  }
+
+  strong {
+    grid-area: verdict;
+    font-family: var(--font-mono), monospace;
+    text-transform: uppercase;
+  }
+
+  em {
+    grid-area: layer;
+    color: var(--text-muted);
+    font-style: normal;
+    overflow-wrap: anywhere;
+  }
+
+  &.is-active,
+  &:hover,
+  &:focus-visible {
+    border-color: rgba(0, 229, 160, 0.35);
+    background: rgba(0, 229, 160, 0.06);
+  }
+}
+
+.playground-receipt {
+  min-width: 0;
+
+  details {
+    margin-top: 1rem;
+  }
+
+  summary {
+    color: var(--accent);
+    cursor: pointer;
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-caption);
+  }
+}
+
+.playground-receipt pre,
+.playground-verify pre {
+  max-width: 100%;
+  overflow: auto;
+  margin: 0.75rem 0 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: var(--fs-caption);
+
+  code {
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+  }
+}
+
+.playground-verify ul {
+  margin: 0.75rem 0 0;
+  padding-left: 1.1rem;
+  color: var(--text-muted);
+
+  li + li {
+    margin-top: 0.45rem;
+  }
+}
+
+.playground-honesty {
+  padding-top: 1rem;
+}
+
+// Assurance appraisal panel.
+// The honesty surface. The negative blocks (does-not-assert, overclaim
+// risks, refused claims) lead and carry an amber edge; the verified block
+// is the accent-edged footnote. --danger/--warn are phantom tokens, so the
+// caution edge is a literal amber.
+.playground-appraisal-card {
+  margin-top: 1.5rem;
+  display: grid;
+  gap: 1rem;
+}
+
+.playground-appraisal-signed {
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-code);
+  padding: 0.6rem 0.9rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-muted);
+
+  &.is-signed { color: var(--accent); border-color: var(--accent-dim); }
+  &.is-unsigned { color: #f59e0b; border-color: rgba(245, 158, 11, 0.35); }
+}
+
+.playground-appraisal-block {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.1rem 1.25rem;
+  // Appraisal claims are long snake_case identifiers. Without this they set a
+  // min-content floor wider than a phone and push the whole page sideways.
+  min-width: 0;
+  overflow-wrap: anywhere;
+
+  h3 {
+    margin: 0 0 0.35rem;
+    font-size: var(--fs-h3);
+    font-family: var(--font-mono), monospace;
+    color: var(--text);
+  }
+
+  > p {
+    margin: 0 0 0.75rem;
+    color: var(--text-muted);
+    font-size: var(--fs-body);
+  }
+
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  li {
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-code);
+  }
+
+  code {
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-code);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.15rem 0.45rem;
+    color: var(--text);
+  }
+}
+
+// Negative / refused / risk blocks lead and carry the caution edge.
+.playground-appraisal-negative,
+.playground-appraisal-refused {
+  border-left-color: #f59e0b;
+}
+
+.playground-appraisal-risk {
+  border-left-color: var(--purple);
+
+  ul { flex-direction: column; gap: 0.6rem; }
+
+  li {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  li span {
+    font-family: var(--font-body), sans-serif;
+    color: var(--text-muted);
+    font-size: var(--fs-body);
+  }
+}
+
+// The verified block is the accent-edged footnote, not the headline.
+.playground-appraisal-positive {
+  border-left-color: var(--accent);
+
+  dl {
+    margin: 0.75rem 0 0;
+    display: grid;
+    gap: 0.4rem;
+  }
+
+  dl div {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-code);
+  }
+
+  dt { color: var(--text-muted); }
+  dd { margin: 0; }
+}
+
+.playground-sig-verified { color: var(--accent); }
+.playground-sig-unknown_key,
+.playground-sig-failed,
+.playground-sig-malformed,
+.playground-sig-unknown_suite,
+.playground-sig-unimplemented { color: #f59e0b; }
+
+// Contrast card on the gallery index: the hostile, downgraded example.
+.playground-killsuite {
+  border-left: 3px solid #f59e0b;
+  padding: 1.75rem 2rem;
+
+  // Keep prose at a comfortable reading measure; code blocks can run wider.
+  h3,
+  p {
+    max-width: 68ch;
+  }
+
+  .playground-card-kicker {
+    color: #f59e0b; // amber to match the "downgraded" framing
+  }
+
+  .playground-killsuite-outcome {
+    display: inline-block;
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-code);
+    color: #f59e0b;
+    margin: 1rem 0 0;
+    padding: 0.5rem 0.8rem;
+    background: rgba(245, 158, 11, 0.07);
+    border: 1px solid rgba(245, 158, 11, 0.25);
+    border-radius: 6px;
+  }
+
+  ul {
+    margin: 1.25rem 0 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 0.55rem;
+    max-width: 68ch;
+    color: var(--text-muted);
+
+    li {
+      position: relative;
+      padding-left: 1.25rem;
+      line-height: 1.5;
+    }
+
+    li::before {
+      content: "\2193"; // downward arrow: these are downloads
+      position: absolute;
+      left: 0;
+      color: #f59e0b;
+    }
+
+    li + li {
+      margin-top: 0;
+    }
+
+    a {
+      color: var(--accent);
+    }
+  }
+}
+
+// ============================================================
+//   /playground/ interactive demo band (full-bleed iframe)
+//   The animated 4-column replay viewer is a self-contained app
+//   under /playground/demo/, embedded in an iframe for full style
+//   isolation. The demo IS the top of the page (no hero); it fills
+//   the viewport below the 65px sticky site header so it reads the
+//   same as the standalone full-screen app.
+// ============================================================
+
+// Visually hidden, kept for the document outline / SEO since the
+// visible page title now lives inside the iframe's own header.
+.playground-sr-title {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.playground-demo-frame-wrap {
+  width: 100%;
+}
+
+.playground-demo-frame {
+  display: block;
+  width: 100%;
+  // Keep Replay and Live in one stable viewport. Live sessions can grow long,
+  // but they scroll inside the demo columns instead of stretching the page.
+  height: 720px;
+  min-height: 420px;
+  border: 0;
+  background: #09090b;
+}
+
+// Full-width "verify it yourself" band, pulled out of the demo's Proof column
+// so the four columns stay balanced and the steps get room to be readable.
+.playground-verify-yourself {
+  .vy-steps {
+    list-style: none;
+    margin: 2rem auto 0;
+    padding: 0;
+    max-width: 820px;
+    display: grid;
+    gap: 1.25rem;
+  }
+
+  .vy-step {
+    display: grid;
+    grid-template-columns: 2.25rem minmax(0, 1fr);
+    gap: 1rem;
+    align-items: start;
+  }
+
+  .vy-num {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono), monospace;
+    font-weight: 700;
+    color: var(--accent);
+    background: rgba(0, 229, 160, 0.1);
+    border: 1px solid rgba(0, 229, 160, 0.35);
+  }
+
+  .vy-body {
+    min-width: 0;
+
+    h3 {
+      font-family: var(--font-mono), monospace;
+      font-size: var(--fs-h3);
+      margin: 0.1rem 0 0.4rem;
+    }
+
+    p {
+      color: var(--text-muted);
+      line-height: 1.55;
+      margin: 0 0 0.75rem;
+    }
+
+    .btn {
+      display: inline-block;
+    }
+  }
+
+  .vy-cmd {
+    display: flex;
+    align-items: stretch;
+    gap: 0.5rem;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.65rem 0.75rem;
+    overflow: hidden;
+
+    code {
+      flex: 1 1 auto;
+      min-width: 0;
+      overflow-x: auto;
+      white-space: nowrap;
+      font-family: var(--font-mono), monospace;
+      font-size: var(--fs-caption);
+      color: var(--text);
+      align-self: center;
+    }
+  }
+
+  .vy-copy {
+    flex: 0 0 auto;
+    cursor: pointer;
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-caption);
+    color: var(--accent);
+    background: rgba(0, 229, 160, 0.08);
+    border: 1px solid rgba(0, 229, 160, 0.3);
+    border-radius: 6px;
+    padding: 0.35rem 0.7rem;
+
+    &:hover {
+      background: rgba(0, 229, 160, 0.16);
+    }
+  }
+
+  .vy-keyline {
+    margin: 0.75rem 0 0;
+    font-size: var(--fs-caption);
+    color: var(--text-muted);
+
+    code {
+      font-family: var(--font-mono), monospace;
+      color: var(--text);
+    }
+  }
+}
+
+// ============================================================
+//  pg-* namespaced classes for the unified /playground/ page
+//  Translate of the Claude Design prototype into real SCSS.
+//  All new classes prefixed `pg-` to avoid collisions with the
+//  existing `.playground-*` classes above.
+// ============================================================
+
+// ── Shared helpers ──────────────────────────────────────────
+
+.pg-accent {
+  color: var(--accent);
+}
+
+.pg-eyebrow {
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-code);
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  margin: 0 0 1rem;
+}
+
+.pg-h1 {
+  font-family: var(--font-mono), monospace;
+  font-weight: 700;
+  font-size: clamp(1.45rem, 2.35vw, 2.25rem);
+  line-height: 1.22;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  margin: 0 auto 1.125rem;
+  max-width: 820px;
+  overflow-wrap: anywhere;
+}
+
+.pg-lockup {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(1rem, 2vw, 1.6rem);
+  margin: 0 auto 2rem;
+}
+
+.pg-lockup-mark {
+  display: block;
+  width: clamp(72px, 6.5vw, 96px);
+  height: clamp(72px, 6.5vw, 96px);
+  color: var(--accent);
+
+  svg { display: block; width: 100%; height: 100%; }
+}
+
+.pg-lockup-name {
+  margin: 0;
+  color: var(--text);
+  font: 700 clamp(2.35rem, 5vw, 4.7rem)/.98 var(--font-mono);
+  letter-spacing: -.06em;
+  white-space: nowrap;
+
+  em { color: var(--accent); font-style: normal; }
+  strong { font: inherit; }
+
+  @media (max-width: $bp-mobile) {
+    white-space: normal;
+    font-size: clamp(2rem, 10vw, 3rem);
+  }
+}
+
+.pg-h2 {
+  font-family: var(--font-mono), monospace;
+  font-weight: 700;
+  font-size: var(--fs-h2);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  margin: 0 0 0.75rem;
+}
+
+.pg-lead {
+  font-size: var(--fs-lead);
+  color: var(--text-muted);
+  max-width: 660px;
+  margin: 0 auto 1.625rem;
+  line-height: 1.6;
+}
+
+.pg-section-head {
+  max-width: 760px;
+  margin: 0 auto 2rem;
+  text-align: center;
+}
+
+.pg-shield-svg {
+  flex: 0 0 auto;
+}
+
+// ── 1. HERO ─────────────────────────────────────────────────
+
+.pg-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 5rem 2rem 0;
+  text-align: center;
+  background: var(--bg);
+
+  @media (max-width: $bp-mobile) {
+    padding: 3rem 1.25rem 0;
+  }
+}
+
+.pg-hero-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+@media (max-width: $bp-mobile) {
+  .pg-lockup { flex-direction: column; gap: 1rem; }
+}
+
+// Pill badge with pulsing dot
+.pg-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  padding: 7px 18px;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 1.25rem;
+}
+
+.pg-pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pgPulse 2s ease-in-out infinite;
+}
+
+@keyframes pgPulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(0, 229, 160, 0.5); }
+  50% { opacity: 0.7; box-shadow: 0 0 0 6px rgba(0, 229, 160, 0); }
+}
+
+// Honesty callout
+.pg-honesty-callout {
+  max-width: 660px;
+  margin: 0 auto 1.375rem;
+  background: rgba(0, 229, 160, 0.05);
+  border: 1px solid rgba(0, 229, 160, 0.20);
+  border-radius: 12px;
+  padding: 20px 24px;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  text-align: left;
+
+  @media (max-width: $bp-mobile) {
+    padding: 16px 18px;
+    gap: 12px;
+  }
+}
+
+.pg-honesty-title {
+  font-family: var(--font-mono), monospace;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 6px;
+}
+
+.pg-honesty-body {
+  font-size: 14.5px;
+  color: var(--text-muted);
+  line-height: 1.55;
+  margin: 0;
+
+  b {
+    color: var(--text);
+  }
+}
+
+// Fixtures row
+.pg-fixtures {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+}
+
+.pg-fixture {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+  padding: 7px 14px;
+}
+
+.pg-fixture-label {
+  font-family: var(--font-mono), monospace;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-dim);
+}
+
+.pg-fixture-val {
+  font-family: var(--font-mono), monospace;
+  font-size: 12.5px;
+}
+
+.pg-fixture-amber { color: #f59e0b; }
+.pg-fixture-green { color: var(--accent); }
+.pg-fixture-red   { color: #ef4444; }
+
+// Hero CTA
+.pg-hero-cta {
+  margin: 1.25rem 0;
+}
+
+.pg-btn-arrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+// Disclaimer
+.pg-disclaimer {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-dim);
+  margin: 0.5rem 0 2.5rem;
+
+  svg {
+    flex: 0 0 auto;
+    color: var(--text-dim);
+  }
+}
+
+// Gradient divider
+.pg-divider {
+  position: relative;
+  z-index: 1;
+  width: 200px;
+  height: 1px;
+  margin: 0 auto;
+  background: linear-gradient(90deg, transparent, rgba(0, 229, 160, 0.3), transparent);
+}
+
+// ── 2. APP SECTION ──────────────────────────────────────────
+
+.pg-app {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 4rem 2rem;
+  scroll-margin-top: 70px;
+
+  @media (max-width: $bp-mobile) {
+    padding: 3rem 1.25rem;
+  }
+}
+
+// Legend cards
+.pg-legend {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+  margin-bottom: 1.5rem;
+
+  @media (max-width: $bp-mobile) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pg-legend-card {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.pg-legend-amber { border-top: 2px solid #f59e0b; }
+.pg-legend-blue  { border-top: 2px solid #38bdf8; }
+.pg-legend-green { border-top: 2px solid var(--accent); }
+
+.pg-legend-idx {
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.pg-legend-title {
+  font-family: var(--font-mono), monospace;
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.pg-legend-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 2px 0 0;
+  line-height: 1.45;
+}
+
+.pg-color-amber { color: #f59e0b; }
+.pg-color-blue  { color: #38bdf8; }
+.pg-color-green { color: var(--accent); }
+
+// Truth-frame echo strip
+.pg-truth-echo {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  max-width: 860px;
+  margin: 1.5rem auto 0;
+  background: rgba(0, 229, 160, 0.04);
+  border: 1px solid rgba(0, 229, 160, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+
+  p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.55;
+  }
+
+  b {
+    color: var(--text);
+  }
+
+  @media (max-width: $bp-mobile) {
+    padding: 14px 16px;
+    gap: 10px;
+  }
+}
+
+// Sandbox watermark
+.pg-watermark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  margin: 2rem 0 0;
+}
+
+.pg-watermark-rule {
+  display: block;
+  width: 40px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+// ── 3. PROOF CLIMAX ─────────────────────────────────────────
+
+.pg-prove {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 4rem 2rem;
+  text-align: center;
+  scroll-margin-top: 70px;
+
+  @media (max-width: $bp-mobile) {
+    padding: 3rem 1.25rem;
+  }
+}
+
+.pg-verify-card {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(0, 229, 160, 0.25);
+  border-radius: 16px;
+  box-shadow: 0 0 50px rgba(0, 229, 160, 0.10);
+  padding: 36px 32px;
+  text-align: left;
+
+  @media (max-width: $bp-mobile) {
+    padding: 28px 20px;
+  }
+}
+
+.pg-verify-card::before,
+.pg-cta-card::before {
+  content: '';
+  position: absolute;
+  right: -7rem;
+  bottom: -4rem;
+  width: 44rem;
+  height: 22rem;
+  background: center / cover no-repeat url('/images/brand/pipelab-particle-field.svg');
+  opacity: .34;
+  mask-image: linear-gradient(135deg, transparent 0%, rgba(0, 0, 0, .22) 36%, #000 100%);
+  pointer-events: none;
+}
+
+.pg-verify-card > :not(.pg-stamp),
+.pg-cta-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+// VERIFY OK stamp
+.pg-stamp {
+  position: absolute;
+  top: 26px;
+  right: 26px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 2.5px solid var(--accent);
+  color: var(--accent);
+  font-family: var(--font-mono), monospace;
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.06em;
+  padding: 9px 16px;
+  border-radius: 10px;
+  transform: rotate(-12deg);
+  box-shadow: 0 0 24px rgba(0, 229, 160, 0.25);
+  animation: pgStamp 0.7s ease-out both;
+
+  @media (max-width: $bp-mobile) {
+    font-size: 13px;
+    padding: 7px 12px;
+    top: 16px;
+    right: 16px;
+  }
+}
+
+@keyframes pgStamp {
+  0%   { opacity: 0; transform: rotate(-12deg) scale(1.3); }
+  100% { opacity: 1; transform: rotate(-12deg) scale(1); }
+}
+
+.pg-verify-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.pg-verify-title {
+  font-family: var(--font-mono), monospace;
+  font-weight: 700;
+  font-size: var(--fs-h3);
+  color: var(--text);
+  margin: 0;
+}
+
+.pg-verify-sub {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin: 0 0 22px;
+  font-family: var(--font-mono), monospace;
+}
+
+// Checks grid
+.pg-checks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 8px;
+  margin-bottom: 26px;
+
+  @media (max-width: $bp-mobile) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pg-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 229, 160, 0.05);
+  border: 1px solid rgba(0, 229, 160, 0.15);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-family: var(--font-mono), monospace;
+  font-size: 12.5px;
+  color: #cbd5e1;
+}
+
+.pg-check-icon {
+  color: var(--accent);
+}
+
+// Terminal box
+.pg-terminal {
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  margin-bottom: 18px;
+  overflow: hidden;
+}
+
+.pg-terminal-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.pg-terminal-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  opacity: 0.6;
+}
+
+.pg-dot-red   { background: #ef4444; }
+.pg-dot-amber { background: #f59e0b; }
+.pg-dot-green { background: #00e5a0; }
+
+.pg-terminal-label {
+  margin-left: 8px;
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.pg-terminal-body {
+  padding: 14px 16px;
+  font-family: var(--font-mono), monospace;
+  font-size: 13px;
+  line-height: 1.7;
+  overflow-x: auto;
+}
+
+.pg-prompt {
+  color: #475569;
+}
+
+.pg-cmd {
+  color: var(--text);
+}
+
+.pg-cmd-cont {
+  padding-left: 14px;
+  color: var(--text);
+}
+
+.pg-result {
+  color: var(--accent);
+  margin-top: 6px;
+}
+
+.pg-result-detail {
+  color: var(--text-dim);
+}
+
+// Published key line
+.pg-pubkey {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-family: var(--font-mono), monospace;
+  font-size: 11.5px;
+  color: var(--text-dim);
+  margin: 0 0 24px;
+
+  b {
+    color: var(--text-muted);
+  }
+}
+
+.pg-key-match {
+  color: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+// Verify action buttons
+.pg-verify-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+
+  @media (max-width: $bp-mobile) {
+    flex-direction: column;
+  }
+}
+
+.pg-verify-primary-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pg-btn-download {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.pg-os-links {
+  font-size: 12px;
+  color: var(--text-dim);
+
+  a {
+    color: var(--accent);
+    margin-left: 4px;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.pg-btn-bundle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pg-bundle-name {
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.pg-verify-inline-link {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin: 16px 0 0;
+
+  a {
+    color: var(--accent);
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+// Methodology line
+.pg-methodology {
+  font-family: var(--font-mono), monospace;
+  font-size: 13px;
+  color: var(--text-dim);
+  margin: 2rem 0 0;
+  text-align: center;
+}
+
+// ── 5. CLOSING CTA ──────────────────────────────────────────
+
+.pg-cta {
+  padding: 0 2rem 4.5rem;
+
+  @media (max-width: $bp-mobile) {
+    padding: 0 1.25rem 3.5rem;
+  }
+}
+
+.pg-cta-card {
+  position: relative;
+  overflow: hidden;
+  max-width: 880px;
+  margin: 0 auto;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 44px 32px;
+
+  p {
+    font-size: var(--fs-body);
+    color: var(--text-muted);
+    max-width: 560px;
+    margin: 0 auto 1.75rem;
+    line-height: 1.55;
+  }
+
+  @media (max-width: $bp-mobile) {
+    padding: 32px 20px;
+  }
+}
+
+.pg-cta-actions {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Codex review fixes: wrap the long verifier key on mobile; respect reduced-motion. */
+.pg-cmd-cont { overflow-wrap: anywhere; }
+@media (prefers-reduced-motion: reduce) {
+  .pg-stamp { animation: none; }
+}
+
+/* Live-host embed: the demo now loads cross-origin from playground.pipelab.org,
+   so the postMessage height-sync is gone; give the frame a tall fixed height
+   (it scrolls internally for longer live sessions). */
+.playground-demo-frame { height: clamp(640px, 86vh, 1000px); }
+.pg-demo-popout { text-align: center; font-size: 13px; color: #64748b; margin: 12px 0 0; }
+.pg-demo-popout a { color: #00e5a0; }

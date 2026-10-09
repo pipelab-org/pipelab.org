@@ -1,0 +1,455 @@
+// ============================================================
+//   Learn article layout
+//   ------------------------------------------------------------
+//   Used by themes/pipelab/layouts/learn/single.html only.
+//   Three-zone layout: header / (TOC + body) / CTAs.
+//   Right meta rail is intentionally not rendered. Add later
+//   only if there are real share / discuss targets to wire up.
+// ============================================================
+
+.learn-article {
+  position: relative;
+}
+
+// ── Reading progress bar (top of viewport) ──────────────────
+.reading-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: transparent;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.reading-progress-fill {
+  height: 100%;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.05s linear;
+}
+
+// ── Article header (replaces .page-header for learn pages) ──
+.learn-article-header {
+  padding: 4rem 2rem 1.75rem;
+  border-bottom: 1px solid var(--border);
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(0, 229, 160, 0.04) 0%, transparent 50%);
+
+  .learn-article-header-inner {
+    max-width: 760px;
+    margin: 0 auto;
+  }
+
+  .learn-eyebrow {
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-code);
+    color: var(--accent);
+    letter-spacing: var(--tracking-wider);
+    text-transform: uppercase;
+    margin: 0 0 1rem;
+  }
+
+  .learn-project-mark {
+    display: block;
+    width: 88px;
+    height: 88px;
+    margin: 0 0 1.25rem;
+
+    > svg,
+    > img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+  }
+
+  h1 {
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-h1);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: var(--tracking-tight);
+    color: var(--text);
+    margin: 0 0 1rem;
+  }
+
+  .learn-lead {
+    font-size: var(--fs-lead);
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin: 0 0 1.5rem;
+  }
+
+  .learn-article-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem 2rem;
+    margin: 0 0 1.25rem;
+    padding: 0;
+
+    > div {
+      display: flex;
+      align-items: baseline;
+      gap: 0.5rem;
+      margin: 0;
+    }
+
+    dt {
+      font-family: var(--font-mono), monospace;
+      font-size: var(--fs-caption);
+      color: var(--text-dim);
+      letter-spacing: var(--tracking-wide);
+      text-transform: uppercase;
+      margin: 0;
+    }
+
+    dd {
+      font-family: var(--font-mono), monospace;
+      font-size: var(--fs-caption);
+      color: var(--text);
+      margin: 0;
+    }
+  }
+
+  // Reuse the .page-formats pill treatment from .page-header. Existing
+  // styling is scoped under .page-header in _layout.scss, so duplicate
+  // the link rules here to keep the Markdown / RSS pills visible.
+  .page-formats {
+    display: flex;
+    justify-content: flex-start;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-top: 0;
+
+    a {
+      font-family: var(--font-mono), monospace;
+      font-size: var(--fs-caption);
+      color: var(--accent);
+      text-decoration: none;
+      border: 1px solid rgba(0, 229, 160, 0.18);
+      border-radius: 999px;
+      padding: 0.35rem 0.9rem;
+      transition: border-color 0.2s ease, background 0.2s ease;
+    }
+
+    a:hover,
+    a:focus-visible {
+      border-color: rgba(0, 229, 160, 0.36);
+      background: rgba(0, 229, 160, 0.06);
+    }
+  }
+
+  @media (max-width: $bp-mobile) {
+    padding: 3rem 1.5rem 1.5rem;
+    h1 { font-size: var(--fs-stat); }
+  }
+}
+
+// ── Two-column grid: TOC left, body center ──────────────────
+.learn-article-grid {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 760px);
+  gap: 2.5rem;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 2rem 4rem;
+
+  @media (max-width: $bp-tablet) {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+    padding: 1.5rem 1.5rem 3rem;
+  }
+}
+
+// Pages without a TOC: collapse to single column at every breakpoint.
+.learn-article:not(.learn-article-has-toc) .learn-article-grid {
+  grid-template-columns: minmax(0, 760px);
+  justify-content: center;
+}
+
+// ── Sticky TOC sidebar ──────────────────────────────────────
+.learn-article-toc {
+  font-family: var(--font-mono), monospace;
+  position: sticky;
+  top: 1.5rem;
+  align-self: start;
+  max-height: calc(100vh - 3rem);
+  overflow-y: auto;
+
+  @media (max-width: $bp-tablet) {
+    position: static;
+    max-height: none;
+    overflow: visible;
+    background: var(--bg);
+  }
+
+  .learn-toc-disclosure {
+    summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      padding: 0.5rem 0;
+      list-style: none;
+
+      &::-webkit-details-marker { display: none; }
+    }
+
+    .learn-toc-label {
+      font-size: var(--fs-caption);
+      color: var(--text-dim);
+      letter-spacing: var(--tracking-wider);
+      text-transform: uppercase;
+    }
+
+    .learn-toc-chevron {
+      color: var(--text-dim);
+      font-size: var(--fs-body);
+      display: none;
+    }
+
+    @media (max-width: $bp-tablet) {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.75rem 1rem;
+      background: var(--bg-card);
+
+      .learn-toc-chevron {
+        display: inline-block;
+        transition: transform 0.2s ease;
+      }
+
+      &[open] .learn-toc-chevron { transform: rotate(45deg); }
+    }
+  }
+
+  // Hugo .TableOfContents emits <nav id="TableOfContents"><ul>...</ul></nav>
+  nav, ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  ul ul {
+    margin-left: 0.75rem;
+    border-left: 1px solid var(--border);
+    padding-left: 0.5rem;
+    margin-top: 0.25rem;
+  }
+
+  li { margin: 0; }
+
+  a {
+    display: block;
+    font-size: var(--fs-caption);
+    color: var(--text-muted);
+    text-decoration: none;
+    padding: 0.4rem 0 0.4rem 0.85rem;
+    border-left: 2px solid transparent;
+    line-height: 1.4;
+    transition: color 0.15s ease, border-color 0.15s ease;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--text);
+      border-left-color: var(--border-strong, rgba(255, 255, 255, 0.18));
+    }
+
+    &.is-current {
+      color: var(--accent);
+      border-left-color: var(--accent);
+    }
+  }
+
+  .learn-toc-back {
+    display: inline-block;
+    margin-top: 1rem;
+    padding-left: 0;
+    border-left: none;
+    font-size: var(--fs-caption);
+    color: var(--text-dim);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+
+    &:hover { color: var(--accent); }
+  }
+}
+
+// ── Article body ────────────────────────────────────────────
+.learn-article-body {
+  counter-reset: learn-section;
+  // min-width: 0 lets the grid track shrink below its content width,
+  // which is what allows inner pre / code / table to scroll instead of
+  // pushing the whole page wide on narrow viewports.
+  min-width: 0;
+
+  // Long inline code, URLs, and identifiers wrap rather than overflow.
+  code, a {
+    overflow-wrap: anywhere;
+  }
+
+  // Visual numbered prefix on h2s. The prefix is a CSS counter,
+  // so it stays out of Markdown mirrors, RSS, JSON-LD, and copied text.
+  h2 {
+    counter-increment: learn-section;
+    position: relative;
+    margin-top: 3.5rem;
+    margin-bottom: 1.25rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border);
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-h2);
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.25;
+    letter-spacing: var(--tracking-tight);
+
+    &::before {
+      content: counter(learn-section, decimal-leading-zero);
+      display: inline-block;
+      margin-right: 0.6rem;
+      font-size: var(--fs-code);
+      color: var(--accent);
+      font-weight: 400;
+      letter-spacing: var(--tracking-wide);
+      vertical-align: 0.18em;
+    }
+
+    &:first-of-type {
+      margin-top: 1.5rem;
+      padding-top: 0;
+      border-top: 0;
+    }
+  }
+
+  h3 {
+    margin-top: 2.25rem;
+    margin-bottom: 0.75rem;
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-h3);
+    color: var(--text);
+  }
+
+  p {
+    color: var(--text-muted);
+    font-size: var(--fs-body);
+    line-height: 1.7;
+    margin-bottom: 1.1rem;
+  }
+
+  ul, ol {
+    color: var(--text-muted);
+    font-size: var(--fs-body);
+    line-height: 1.7;
+    margin: 1rem 0 1.25rem 1.5rem;
+  }
+
+  li { margin-bottom: 0.45rem; }
+
+  ul li::marker { color: var(--accent); }
+  ol li::marker { color: var(--accent); font-weight: 600; }
+
+  strong { color: var(--text); }
+
+  // Wide tables scroll horizontally on mobile rather than overflowing
+  // the viewport. Mirrors the existing rule for .page-content table.
+  table {
+    @media (max-width: $bp-mobile) {
+      display: block;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+  }
+
+  // Markdown blockquote becomes a soft note callout.
+  blockquote {
+    margin: 2rem 0;
+    padding: 1rem 1.25rem;
+    background: rgba(0, 229, 160, 0.04);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    color: var(--text);
+
+    p { margin-bottom: 0.5rem; color: var(--text); }
+    p:last-child { margin-bottom: 0; }
+  }
+}
+
+// ── Related guides 3-up at the article footer ───────────────
+.learn-related {
+  max-width: 1100px;
+  margin: 1rem auto 0;
+  padding: 1.5rem 2rem 0;
+
+  @media (max-width: $bp-mobile) {
+    padding: 1rem 1.5rem 0;
+  }
+}
+
+.learn-related-label {
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  color: var(--text-dim);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  margin: 0 0 0.75rem;
+}
+
+.learn-related-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+
+  @media (max-width: $bp-tablet) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.learn-related-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.1rem;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+
+  &:hover,
+  &:focus-visible {
+    border-color: rgba(0, 229, 160, 0.36);
+    background: var(--bg-card-hover);
+    transform: translateY(-1px);
+  }
+}
+
+.learn-related-cat {
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  color: var(--accent);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.learn-related-title {
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-h3);
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.25;
+  margin: 0;
+}
+
+.learn-related-desc {
+  font-size: var(--fs-code);
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: 0;
+}

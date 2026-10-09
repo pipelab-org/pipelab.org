@@ -1,0 +1,77 @@
+{{ define "main" }}
+{{ $hasToc := and .TableOfContents (gt (len (string .TableOfContents)) 16) }}
+<article id="top" class="blog-article{{ if $hasToc }} blog-article-has-toc{{ end }}">
+  <div class="reading-progress" aria-hidden="true"><div class="reading-progress-fill"></div></div>
+
+  <header class="blog-article-header" data-hero="editorial-article" data-fx="reveal">
+    <div class="blog-article-header-inner">
+      {{ $eyebrow := .Params.eyebrow }}
+      {{ if not $eyebrow }}
+        {{ with .Params.blog_cat }}
+          {{ $cat := . }}
+          {{ range site.Data.blog_index.categories }}
+            {{ if eq .key $cat }}{{ $eyebrow = .label }}{{ end }}
+          {{ end }}
+        {{ end }}
+      {{ end }}
+      {{ with $eyebrow }}<p class="blog-eyebrow">{{ . }}</p>{{ end }}
+      <h1 data-fx="decrypt">{{ .Title }}</h1>
+      {{ with .Params.summary }}<p class="blog-lead">{{ . }}</p>{{ end }}
+      <dl class="blog-article-meta">
+        {{ with .Params.author }}<div><dt>Author</dt><dd><span class="blog-meta-dot" aria-hidden="true"></span>{{ . }}</dd></div>{{ end }}
+        {{ $isUpdated := and (not .Lastmod.IsZero) (not (.Lastmod.Equal .Date)) }}
+        {{ $dateLabel := cond $isUpdated "Updated" "Published" }}
+        {{ $dateValue := cond $isUpdated .Lastmod .Date }}
+        {{ if not $dateValue.IsZero }}<div><dt>{{ $dateLabel }}</dt><dd><time datetime="{{ $dateValue.Format "2006-01-02" }}">{{ $dateValue.Format "Jan 2, 2006" }}</time></dd></div>{{ end }}
+        {{ if .ReadingTime }}<div><dt>Read</dt><dd>{{ .ReadingTime }} min</dd></div>{{ end }}
+        {{ with .Params.tags }}<div><dt>Tags</dt><dd>{{ delimit (first 3 .) " · " }}</dd></div>{{ end }}
+      </dl>
+      {{ partial "page-formats.html" . }}
+    </div>
+  </header>
+
+  {{ partial "article-cta.html" (dict "page" . "placement" "top" "fx" "spotlight") }}
+
+  <div class="blog-article-grid">
+    {{ if $hasToc }}
+    <aside class="blog-article-toc" aria-label="Table of contents" data-fx="mininav">
+      <details class="blog-toc-disclosure">
+        <summary>
+          <span class="blog-toc-label">On this page</span>
+          <span class="blog-toc-chevron" aria-hidden="true">+</span>
+        </summary>
+        {{ .TableOfContents }}
+        <a class="blog-toc-back" href="#top">Back to top</a>
+      </details>
+    </aside>
+    {{ end }}
+
+    <div class="blog-article-body">
+      {{ partial "blog-updates.html" (dict "page" . "format" "html") }}
+      {{ .Content }}
+      {{ partial "faq.html" . }}
+    </div>
+  </div>
+
+  {{ $shareTitle := urlquery (printf "%s | Pipelock" .Title) }}
+  {{ $shareUrl := urlquery .Permalink }}
+  {{ $twitterHref := printf "https://x.com/intent/tweet?text=%s&url=%s" $shareTitle $shareUrl | safeURL }}
+  {{ $linkedinHref := printf "https://www.linkedin.com/sharing/share-offsite/?url=%s" $shareUrl | safeURL }}
+  {{ $mastodonHref := printf "https://infosec.exchange/share?text=%s%%20%s" $shareTitle $shareUrl }}
+  <div class="blog-share" aria-label="Share this article">
+    <span class="blog-share-label">Share</span>
+    <button class="blog-share-btn" id="blog-share-copy" type="button" aria-label="Copy link to article">
+      <span class="blog-share-btn-label">Copy link</span>
+    </button>
+    <a class="blog-share-btn" href="{{ $twitterHref }}" target="_blank" rel="noopener noreferrer nofollow">X / Twitter</a>
+    <a class="blog-share-btn" href="{{ $linkedinHref }}" target="_blank" rel="noopener noreferrer nofollow">LinkedIn</a>
+    <button class="blog-share-btn" type="button" data-share-href="{{ $mastodonHref }}" aria-label="Share on Mastodon (infosec.exchange)">Mastodon</button>
+  </div>
+
+  {{ partial "blog-related.html" . }}
+  {{ partial "article-cta.html" (dict "page" . "placement" "bottom") }}
+</article>
+
+{{ partial "blog-article-script.html" . }}
+{{ partial "site-fx.html" . }}
+{{ end }}

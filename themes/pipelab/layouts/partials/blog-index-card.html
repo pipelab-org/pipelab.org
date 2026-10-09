@@ -1,0 +1,20 @@
+{{ $page := .page }}
+{{ $cat := $page.Params.blog_cat | default "" }}
+{{ $catLabel := $cat | humanize }}
+{{ if $cat }}
+  {{ range site.Data.blog_index.categories }}
+    {{ if eq .key $cat }}{{ $catLabel = .label }}{{ end }}
+  {{ end }}
+{{ end }}
+{{ $meta := "" }}
+{{ if $page.ReadingTime }}{{ $meta = printf "%d min read" $page.ReadingTime }}{{ end }}
+{{ partial "editorial-index-card.html" (dict
+  "page" $page
+  "kind" "blog"
+  "cat" $cat
+  "catLabel" ($catLabel | default "Field note")
+  "summary" ($page.Description | default "")
+  "featured" (.featured | default false)
+  "tags" ($page.Params.tags | default slice)
+  "meta" $meta
+) }}

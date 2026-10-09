@@ -1,0 +1,23 @@
+{{ define "main" }}
+<header class="page-header" data-hero="editorial-index" data-fx="reveal">
+  <h1 data-fx="decrypt">{{ .Title }}</h1>
+  {{ with .Params.subtitle }}<p class="subtitle">{{ . }}</p>{{ end }}
+  {{ partial "page-formats.html" . }}
+</header>
+<section class="page-content"{{ if eq .Section "gauntlet" }} data-fx="reveal scan"{{ end }}>
+  {{ .Content }}
+  {{ if and .Pages (not .Params.hide_list) }}
+  <ul class="post-list" data-fx="reveal">
+    {{ range .Pages }}
+    <li class="post-item">
+      {{ if not .Date.IsZero }}<span class="post-date">{{ .Date.Format "January 2, 2006" }}</span>{{ end }}
+      <h2 class="post-title"><a href="{{ .Permalink }}">{{ .Title }}</a></h2>
+      {{ with .Params.summary }}<p class="post-summary">{{ . }}</p>{{ end }}
+    </li>
+    {{ end }}
+  </ul>
+  {{ end }}
+  {{ partial "section-cta.html" . }}
+</section>
+{{ partial "site-fx.html" . }}
+{{ end }}

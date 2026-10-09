@@ -1,0 +1,52 @@
+{{/*
+  Renders a visible FAQ section from .Params.faq frontmatter as a native
+  <details>/<summary> accordion, matching the site-wide accordion shortcode
+  style. Pair with the FAQPage JSON-LD emitted from the same .Params.faq in
+  baseof.html so schema and visible content always come from a single source.
+
+  Frontmatter shape:
+    faq:
+      - q: "Question text?"
+        a: "Answer text with **markdown** support."
+
+  The <summary> text is the exact schema `name` value, so an audit that checks
+  "every FAQPage.name appears verbatim in the rendered HTML" always succeeds
+  by construction. Do not add a bespoke FAQ UI alongside this partial; migrate
+  the bespoke Q/As into .Params.faq and let the partial render them.
+*/}}
+{{ $page := . }}
+{{ with .Params.faq }}
+{{ $isPricing := eq $page.RelPermalink "/pricing/" }}
+<section class="faq{{ if $isPricing }} pricing-faq-stage{{ end }}" id="faq" aria-labelledby="faq-heading"{{ if or $isPricing (eq $page.RelPermalink "/agent-firewall-checklist/") }} data-fx="reveal"{{ end }}>
+  {{ if $isPricing }}
+  <div class="pricing-faq-shell">
+    <div class="pricing-faq-intro">
+      <p class="pricing-faq-eyebrow">Pricing FAQ · {{ len . }} answers</p>
+      <h2 id="faq-heading">Answers before you buy</h2>
+      <p class="pricing-faq-lead">Straight answers about plans, trials, renewals, and refunds.</p>
+      <div class="pricing-license-plate" data-fx="spotlight" aria-label="30-day Pro trial">
+        <div class="pricing-license-plate-head"><span>Try Pro</span><span>30 days</span></div>
+        <dl>
+          <div><dt>Card required</dt><dd>No</dd></div>
+          <div><dt>Automatic charge</dt><dd>No</dd></div>
+          <div><dt>Available now</dt><dd>Yes</dd></div>
+        </dl>
+        <a class="pricing-license-plate-action" href="https://buy.polar.sh/polar_cl_ff23dTaTesK9RZrtU3nJqsjQJjRS3pFJCTRcR129P9L" target="_blank" rel="noopener noreferrer" data-event="checkout_started" data-event-placement="pricing-faq-trial" data-event-value="pro_trial">Start the trial <span aria-hidden="true">→</span></a>
+      </div>
+    </div>
+  {{ else }}
+  <h2 id="faq-heading">Frequently asked questions</h2>
+  {{ end }}
+  <div class="accordion">
+  {{ range $index, $item := . }}
+    <details class="accordion-item"{{ if $isPricing }} data-fx="spotlight"{{ end }}{{ if and $isPricing (eq $index 0) }} open{{ end }}>
+      <summary>{{ .q }}</summary>
+      <div class="accordion-body">
+        {{ .a | markdownify }}
+      </div>
+    </details>
+  {{ end }}
+  </div>
+  {{ if $isPricing }}</div>{{ end }}
+</section>
+{{ end }}

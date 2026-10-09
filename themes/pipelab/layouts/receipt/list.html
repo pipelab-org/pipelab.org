@@ -1,0 +1,12 @@
+{{ define "main" }}
+<article class="receipt-article">
+<header class="receipt-header" data-hero="utility" data-fx="reveal">
+    <h1 data-fx="decrypt">{{ .Title }}</h1>
+    {{ with .Params.subtitle }}<p class="receipt-lead">{{ . }}</p>{{ end }}
+  </header>
+  <div class="receipt-section" data-fx="reveal">
+    {{ .Content }}
+  </div>
+</article>
+{{ partial "site-fx.html" . }}
+{{ end }}

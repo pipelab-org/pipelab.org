@@ -1,0 +1,59 @@
+{{ define "main" }}
+{{/* Hidden launch / directory landing page (noindex, framed by BuildHop only,
+     scoped in static/_headers). It combines the shared homepage hero with the
+     self-hosted, no-Turnstile interactive replay demo (/playground/demo/). */}}
+
+<div class="home-product">
+
+  {{/* ── Shared homepage hero ──────────────────────────── */}}
+  {{ partial "hero-home.html" . }}
+  {{ $constellationScript := resources.Get "js/receipt-constellation.js" | minify | fingerprint }}
+  <script src="{{ $constellationScript.RelPermalink }}" integrity="{{ $constellationScript.Data.Integrity }}" defer></script>
+
+  {{/* ── Interactive replay demo (self-hosted, no Turnstile) ─── */}}
+  <section class="bh-demo" data-fx="reveal">
+    <div class="bh-demo-head" data-fx="reveal">
+      <p class="bh-demo-eyebrow">Live replay · no account · fake secret</p>
+      <h2 data-fx="decrypt">Watch an agent try to leak a secret. Watch the firewall stop it.</h2>
+      <p>Step through one real recorded run below, then verify the signed decision yourself, offline.</p>
+    </div>
+    <div class="bh-demo-embed" data-fx="reveal spotlight" data-buildhop-demo>
+      <iframe src="/playground/demo/" title="Pipelock interactive replay: an agent tries to exfiltrate a secret and Pipelock blocks it" loading="lazy"></iframe>
+    </div>
+    <p class="bh-demo-foot">
+      <a class="hp-btn hp-btn-primary" href="/pipelock/">Protect your agent free</a>
+      <a class="hp-btn hp-btn-ghost" href="/playground/">Open the full playground</a>
+    </p>
+    <div class="bh-directory-badges" aria-label="Directory badges">
+      <a class="bh-buildhop-badge" href="https://buildhop.io/discover/pipelock" target="_blank" rel="noopener noreferrer">
+        <span>Trending on</span>
+        <strong>BuildHop</strong>
+      </a>
+      <a class="bh-verifieddr-badge" href="https://verifieddr.com/website/pipelab-org" target="_blank" rel="noopener noreferrer"><img src="https://verifieddr.com/badge/pipelab-org-dark.svg?style=minimal&amp;metric=truedr" alt="Verified DR - Verified Domain Rating for pipelab.org" width="200" height="24"></a>
+    </div>
+  </section>
+
+</div>
+
+<style>
+  .bh-demo { max-width:1180px; margin:0 auto; padding:1rem 1.25rem 0; }
+  .bh-demo-head { text-align:center; max-width:660px; margin:0 auto 1.75rem; }
+  .bh-demo-eyebrow { text-transform:uppercase; letter-spacing:.08em; font-size:.75rem; color:#00e5a0; margin:0 0 .5rem; }
+  .bh-demo-head h2 { font-size:1.7rem; line-height:1.2; margin:0 0 .6rem; }
+  .bh-demo-head p { color:var(--muted,#94a3b8); font-size:1rem; line-height:1.5; margin:0; }
+  .bh-demo-embed { border:1px solid var(--border,#233044); border-radius:14px; overflow:hidden; background:#0b0f16; box-shadow:0 24px 60px -24px rgba(0,0,0,.65); }
+  .bh-demo-embed iframe { display:block; width:100%; height:820px; border:0; }
+  @media(max-width:760px){ .bh-demo-embed iframe { height:1180px; } }
+  .bh-demo-foot { display:flex; flex-wrap:wrap; gap:.75rem; justify-content:center; margin:2.25rem 0 0; }
+  .bh-directory-badges { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:.75rem; margin:1.25rem 0 0; }
+  .bh-buildhop-badge { display:inline-flex; align-items:center; gap:.5rem; padding:.45rem .8rem; border:1px solid var(--border,#233044); border-radius:8px; color:var(--muted,#94a3b8); font:600 .72rem/1.1 var(--font-mono,monospace); letter-spacing:.06em; text-transform:uppercase; text-decoration:none; background:rgba(255,255,255,.04); transition:border-color .2s ease,transform .2s ease; }
+  .bh-buildhop-badge:hover { border-color:var(--accent,#00e5a0); transform:translateY(-2px); }
+  .bh-buildhop-badge strong { color:var(--accent,#00e5a0); }
+  .bh-verifieddr-badge { display:inline-flex; transition:transform .2s ease; }
+  .bh-verifieddr-badge:hover { transform:translateY(-2px); }
+  .bh-verifieddr-badge img { display:block; width:200px; height:24px; }
+</style>
+
+{{ partial "site-fx.html" . }}
+
+{{ end }}

@@ -1,0 +1,80 @@
+{{/* blog-related.html
+     3-up related posts at the blog article footer.
+     Driven by frontmatter override (related: [slug, slug, slug]) with a
+     fallback by shared tags + same blog_cat. Skips self. */}}
+{{ $page := . }}
+{{ $section := where .Site.RegularPages "Section" "blog" }}
+
+{{/* Build a slug -> *Page map for the override path. */}}
+{{ $bySlug := dict }}
+{{ range $section }}
+  {{ if .File }}
+    {{ $bySlug = merge $bySlug (dict .File.BaseFileName .) }}
+  {{ end }}
+{{ end }}
+
+{{ $picks := slice }}
+
+{{/* 1. Frontmatter override wins. */}}
+{{ with $page.Params.related }}
+  {{ range . }}
+    {{ $p := index $bySlug . }}
+    {{ if $p }}{{ $picks = $picks | append $p }}{{ end }}
+  {{ end }}
+{{ end }}
+
+{{/* 2. Fallback: score by shared tags + same blog_cat, exclude self. */}}
+{{ if lt (len $picks) 3 }}
+  {{ $selfPath := $page.Path }}
+  {{ $selfCat := $page.Params.blog_cat }}
+  {{ $selfTags := $page.Params.tags | default slice }}
+  {{ $candidates := slice }}
+  {{ range $section }}
+    {{ if ne .Path $selfPath }}
+      {{ $score := 0 }}
+      {{ if and $selfCat (eq .Params.blog_cat $selfCat) }}{{ $score = add $score 2 }}{{ end }}
+      {{ $tags := .Params.tags | default slice }}
+      {{ range $selfTags }}
+        {{ if in $tags . }}{{ $score = add $score 3 }}{{ end }}
+      {{ end }}
+      {{ if gt $score 0 }}
+        {{ $candidates = $candidates | append (dict "page" . "score" $score) }}
+      {{ end }}
+    {{ end }}
+  {{ end }}
+  {{ $sorted := sort $candidates "score" "desc" }}
+  {{ range $sorted }}
+    {{ if lt (len $picks) 3 }}
+      {{ $p := .page }}
+      {{ $alreadyIn := false }}
+      {{ range $picks }}{{ if eq .Path $p.Path }}{{ $alreadyIn = true }}{{ end }}{{ end }}
+      {{ if not $alreadyIn }}{{ $picks = $picks | append $p }}{{ end }}
+    {{ end }}
+  {{ end }}
+{{ end }}
+
+{{ if gt (len $picks) 0 }}
+<aside class="blog-related" data-fx="reveal" aria-label="Related posts">
+  <p class="blog-related-label">Related posts</p>
+  <div class="blog-related-grid">
+    {{ range $picks }}
+    <a class="blog-related-card" href="{{ .RelPermalink }}">
+      {{ $cat := .Params.blog_cat | default "" }}
+      {{ if $cat }}
+        {{ $catLabel := $cat }}
+        {{ range site.Data.blog_index.categories }}
+          {{ if eq .key $cat }}{{ $catLabel = .label }}{{ end }}
+        {{ end }}
+        <p class="blog-related-cat">{{ $catLabel }}</p>
+      {{ end }}
+      <p class="blog-related-title">{{ .LinkTitle | default .Title }}</p>
+      {{ with .Description }}<p class="blog-related-desc">{{ . }}</p>{{ end }}
+      <p class="blog-related-meta">
+        {{ if .ReadingTime }}<span>{{ .ReadingTime }} min</span>{{ end }}
+        {{ if not .Date.IsZero }}<span>{{ .Date.Format "Jan 2, 2006" }}</span>{{ end }}
+      </p>
+    </a>
+    {{ end }}
+  </div>
+</aside>
+{{ end }}

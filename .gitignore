@@ -1,0 +1,21 @@
+public/
+resources/
+.hugo_build.lock
+*.devto.md
+*.dzone.md
+*.dzone.html
+node_modules/
+__pycache__/
+*.py[cod]
+.idea/
+.dev.vars
+.dev.vars.prod
+.wrangler/
+.codex
+.pipelock-verifier
+# Playground browser-verifier WASM build artifacts: built from pipelock
+# (deploy/wasm-verify/build.sh) into the served demo dir at deploy time, never
+# committed (the .wasm is ~10MB; both must match the building Go toolchain).
+static/playground/demo/pipelock-verifier.wasm
+static/playground/demo/wasm_exec.js
+static/playground/demo/test-bundle.tar.gz

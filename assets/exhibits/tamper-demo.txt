@@ -1,0 +1,9 @@
+$ pipelock rules verify
+OK    pipelock-community (signature OK)
+
+All 1 bundle(s) verified.
+
+# flip ONE byte in bundle.yaml, then verify again:
+$ pipelock rules verify
+FAIL  pipelock-community: integrity check: bundle signature: no matching signer found
+1 bundle(s) failed verification

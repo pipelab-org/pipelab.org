@@ -1,0 +1,123 @@
+// ============================================================
+//   PipeLab / Pipelock brand tokens (SCSS reference)
+//   ------------------------------------------------------------
+//   This file mirrors the design system tokens in SCSS form for
+//   tools or future migrations that prefer SCSS variables. The
+//   live Hugo theme uses CSS custom properties at
+//   themes/pipelab/assets/scss/_variables.scss.
+//
+//   Brand identity tokens (do not change without a brand review):
+//     accent       #00e5a0  teal
+//     backgrounds  #09090b -> #0e0e11   near-black ramp
+//     purple       #7c3aed  hero radial companion only
+//     wordmark     two-tone Pipe-slate / Lab-accent
+//
+//   Type scale: 12 / 14 / 16 / 17 / 20 / 26 / 36 / 52 px.
+// ============================================================
+
+// Brand color
+$accent:           #00e5a0;
+$accent-dim:       rgba(0, 229, 160, 0.15);
+$accent-glow:      rgba(0, 229, 160, 0.08);
+$accent-border:    rgba(0, 229, 160, 0.20);
+
+// Hero radial companion (hero glow only, never type or button or border)
+$purple:           #7c3aed;
+$purple-dim:       rgba(124, 58, 237, 0.10);
+
+// Surfaces (near-black ramp)
+$bg:               #09090b;
+$bg-elevated:      #0e0e11;
+$bg-card:          rgba(255, 255, 255, 0.04);
+$bg-card-hover:    rgba(255, 255, 255, 0.07);
+$bg-overlay:       rgba(9, 9, 11, 0.85);
+$bg-overlay-strong: rgba(9, 9, 11, 0.92);
+
+// Borders
+$border:           rgba(255, 255, 255, 0.06);
+$border-strong:    rgba(255, 255, 255, 0.12);
+
+// Text
+$text:             #e2e8f0;   // primary
+$text-muted:       #94a3b8;   // body and secondary, also tagline color
+$text-dim:         #64748b;   // captions and meta
+$text-inverse:     #09090b;   // text on accent surfaces
+
+// Semantic and status
+$success:          #00e5a0;   // brand owns "good"
+$warn:             #f59e0b;
+$danger:           #ef4444;
+$info:             #38bdf8;
+
+// Type families
+$font-body:        'Inter', system-ui, -apple-system, sans-serif;
+$font-mono:        'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+$font-display:     $font-mono; // headings are mono
+
+// Type scale
+$fs-caption:       0.75rem;    // 12px
+$fs-code:          0.875rem;   // 14px (code, eyebrow body)
+$fs-tagline:       0.875rem;   // 14px (AGENT SECURITY)
+$fs-body:          1rem;       // 16px
+$fs-lead:          1.0625rem;  // 17px (lead body, hero subhead)
+$fs-h3:            1.25rem;    // 20px (card title)
+$fs-h2:            1.625rem;   // 26px (section h2)
+$fs-h1:            2.25rem;    // 36px (page or section h1)
+$fs-display:       3.25rem;    // 52px (wordmark, featured display)
+$fs-stat:          1.75rem;    // 28px (stat numerics)
+
+// Back-compat aliases (older templates referenced t-shirt names)
+$fs-xs:            $fs-caption;
+$fs-sm:            $fs-code;
+$fs-base:          $fs-body;
+$fs-md:            $fs-lead;
+$fs-lg:            $fs-h3;
+$fs-xl:            $fs-h2;
+$fs-2xl:           $fs-h1;
+$fs-3xl:           $fs-h1;     // h1 ceiling on body pages
+$fs-4xl:           $fs-display;
+$fs-5xl:           $fs-display;
+
+// Line-height
+$lh-tight:         1.15;
+$lh-snug:          1.35;
+$lh-body:          1.6;
+$lh-loose:         1.75;
+
+// Tracking
+$tracking-tight:   -0.02em;    // h1, h2
+$tracking-snug:    -0.01em;    // h3
+$tracking-tagline: 0.286em;    // +4px @ 14px (AGENT SECURITY)
+$tracking-wide:    0.08em;     // stat labels
+$tracking-wider:   0.15em;     // section eyebrows
+
+// Spacing
+$space-1:          0.25rem;
+$space-2:          0.5rem;
+$space-3:          0.8rem;
+$space-4:          1rem;
+$space-5:          1.5rem;
+$space-6:          2rem;
+$space-7:          3rem;
+$space-8:          5rem;
+
+// Radii
+$radius-sm:        4px;
+$radius:           8px;        // buttons, inputs, pre
+$radius-md:        12px;       // cards, terminals
+$radius-pill:      999px;
+
+// Shadows and glows
+$shadow-card:      0 1px 2px rgba(0, 0, 0, 0.3);
+$shadow-feature:   0 0 30px rgba(0, 229, 160, 0.08);
+$shadow-button:    0 0 20px $accent-dim;
+$backdrop-blur:    blur(12px);
+
+// Layout
+$max-width:        1100px;
+
+// Motion
+$t-fast:           0.15s ease;
+$t-base:           0.2s ease;
+$t-mid:            0.3s ease;
+$t-slow:           0.6s ease-out;

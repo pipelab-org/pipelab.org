@@ -1,0 +1,38 @@
+{
+  "schema_version": "2",
+  "version": "3.6.0",
+  "build_sha": "unknown",
+  "run_id": "3fb02d78-a73c-40b4-8227-d6fb0cc5c335",
+  "config_file": "configs/balanced.yaml",
+  "config_hash": "907c7f31920de261bfbb2d799da419bfa8fff74465050ee0521cf84a6faa8c56",
+  "license_tier": "assess",
+  "started_at": "2026-10-03T02:12:10.954596325Z",
+  "completed_at": "2026-10-03T02:12:11.471262197Z",
+  "finalized_at": "2026-10-03T02:12:11.605832352Z",
+  "git_commit": "3e868ac5d5b62d3a2790958542171143af8a0e38",
+  "platform": "linux/amd64",
+  "status": "finalized",
+  "skipped_primitives": [
+    "discover"
+  ],
+  "allow_partial": true,
+  "renderer_version": "2.0",
+  "scoring_version": "2",
+  "artifacts": {
+    "assessment.html": "9e03035780cab8d045c684e9919e8fcd1000af469144d7c075acbe08bd51d8f2",
+    "assessment.json": "eb410852d1e37f247fdfc2ff21775a34eb244b2e575bd2011949025a1644705e",
+    "evidence/audit-score.jsonl": "8b6133cf9e10915c7bae80d3e40c6cbfae5647b4208cf41c11ae28c727d935ae",
+    "evidence/simulate.jsonl": "47ee8fc662ae05093aab551db2b319e309f09f915f79ad9aefae29974aadf072",
+    "evidence/verify-install.jsonl": "1f22d97a28a7bca67d4e387982c1ea3f6763447f840be9b3933bd380fab498a1",
+    "index.html": "9e03035780cab8d045c684e9919e8fcd1000af469144d7c075acbe08bd51d8f2",
+    "signer.pub": "1039e15b79cbc4b9ee0ba9aa6514d1937a7b3b99ba1b1d8f9942ac5e726af091"
+  },
+  "signer_agent": "sample-agent",
+  "signer_key_fingerprint": "679648e529389f8da53b33bdca27a70cdf00749341db4a74f64ecd2cd7ea5d0e",
+  "evidence_hashes": {
+    "audit-score.jsonl": "8b6133cf9e10915c7bae80d3e40c6cbfae5647b4208cf41c11ae28c727d935ae",
+    "simulate.jsonl": "47ee8fc662ae05093aab551db2b319e309f09f915f79ad9aefae29974aadf072",
+    "verify-install.jsonl": "1f22d97a28a7bca67d4e387982c1ea3f6763447f840be9b3933bd380fab498a1"
+  },
+  "compliance_omitted_reason": "assessment finalized with --allow-partial; framework coverage is only attached to fully-evidenced runs"
+}

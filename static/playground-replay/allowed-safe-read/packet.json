@@ -1,0 +1,61 @@
+{
+  "schema_version": "pipelock.audit_packet.v0",
+  "packet_id": "ap-allowed-safe-read",
+  "generated_at": "2026-08-05T01:16:25Z",
+  "run": {
+    "provider": "local",
+    "agent_identity": "pipelock-lab-agent",
+    "started_at": "2026-08-05T01:16:25Z",
+    "completed_at": "2026-08-05T01:16:25Z"
+  },
+  "policy": {
+    "policy_hashes": [
+      "sha256:442b8977b202f99d989520446a43643eebb6e1e06f37db4eae3e3c2ccd8d04f8"
+    ]
+  },
+  "summary": {
+    "receipt_count": 2,
+    "totals": {
+      "allow": 2,
+      "block": 0,
+      "warn": 0,
+      "ask": 0,
+      "strip": 0,
+      "forward": 0,
+      "redirect": 0,
+      "other": 0
+    },
+    "transports": {
+      "fetch": 1,
+      "receipt_session": 1
+    },
+    "domains_touched": [
+      "docs.fixture.test"
+    ]
+  },
+  "verifier": {
+    "verdict": "valid",
+    "trusted": true,
+    "receipt_count": 2,
+    "root_hash": "b6fad7bb5c53a7ce68503ed913de5244cce35428e5bc1b98e53158c956823c5e",
+    "final_seq": 1,
+    "signer_key": "91dfb23882a8acf28f624985030ca1798a3efbbcee2bb8bdda8f452612eb755a",
+    "output_file": "verifier.txt"
+  },
+  "posture": {
+    "enforcement_mode": "synthetic_lab",
+    "runner_os": "linux",
+    "raw_socket_status": "unknown",
+    "docker_socket_status": "unknown",
+    "dns_udp_status": "unknown",
+    "browser_proxy_status": "unknown",
+    "websocket_frame_scanning": "off",
+    "unsupported_paths": []
+  },
+  "artifacts": {
+    "packet": "packet.json",
+    "summary": "summary.md",
+    "evidence": "evidence.jsonl",
+    "verifier": "verifier.txt"
+  }
+}

@@ -1,0 +1,47 @@
+Fixtures: HTTP=127.0.0.1:37209 TLS=127.0.0.1:44733 WS=127.0.0.1:45171 DNS=127.0.0.1:37514 MCP_HTTP=127.0.0.1:42963
+2026/10/03 18:11:28 http: TLS handshake error from 127.0.0.1:45638: EOF
+2026/10/03 18:11:48 http: TLS handshake error from 127.0.0.1:47086: EOF
+2026/10/03 18:12:09 http: TLS handshake error from 127.0.0.1:52952: EOF
+2026/10/03 18:12:09 http: TLS handshake error from 127.0.0.1:52958: EOF
+2026/10/03 18:19:10 http: TLS handshake error from 127.0.0.1:42542: EOF
+2026/10/03 18:19:10 http: TLS handshake error from 127.0.0.1:42558: EOF
+2026/10/03 18:19:10 http: TLS handshake error from 127.0.0.1:42572: EOF
+2026/10/03 18:19:10 http: TLS handshake error from 127.0.0.1:42580: EOF
+2026/10/03 18:19:10 http: TLS handshake error from 127.0.0.1:42586: EOF
+2026/10/03 18:19:10 http: TLS handshake error from 127.0.0.1:42592: EOF
+2026/10/03 18:19:10 http: TLS handshake error from 127.0.0.1:42604: EOF
+2026/10/03 18:19:10 http: TLS handshake error from 127.0.0.1:42618: EOF
+2026/10/03 18:19:10 http: TLS handshake error from 127.0.0.1:42630: EOF
+2026/10/03 18:19:10 http: TLS handshake error from 127.0.0.1:42636: EOF
+2026/10/03 18:19:10 http: TLS handshake error from 127.0.0.1:42650: EOF
+2026/10/03 18:19:10 http: TLS handshake error from 127.0.0.1:42664: EOF
+2026/10/03 18:19:10 http: TLS handshake error from 127.0.0.1:42668: EOF
+2026/10/03 18:19:10 http: TLS handshake error from 127.0.0.1:42676: EOF
+2026/10/03 18:19:10 http: TLS handshake error from 127.0.0.1:42688: EOF
+2026/10/03 18:19:10 http: TLS handshake error from 127.0.0.1:42694: EOF
+2026/10/03 18:19:10 http: TLS handshake error from 127.0.0.1:42704: EOF
+2026/10/03 18:19:10 http: TLS handshake error from 127.0.0.1:42718: EOF
+2026/10/03 18:19:10 http: TLS handshake error from 127.0.0.1:42728: EOF
+2026/10/03 18:20:50 http: TLS handshake error from 127.0.0.1:37656: EOF
+2026/10/03 18:20:50 http: TLS handshake error from 127.0.0.1:37676: EOF
+2026/10/03 18:20:50 http: TLS handshake error from 127.0.0.1:37694: EOF
+2026/10/03 18:20:50 http: TLS handshake error from 127.0.0.1:37710: EOF
+2026/10/03 18:20:50 http: TLS handshake error from 127.0.0.1:37712: EOF
+2026/10/03 18:20:50 http: TLS handshake error from 127.0.0.1:37728: EOF
+
+--- Gauntlet Summary ---
+Tool:       pipelock 3.6.0
+Adapter:    proxy
+Cases:      266 total, 266 routed, 0 unreachable, 0 N/A, 0 errors
+Outcomes:   261 passed, 5 failed, 0 errors
+
+  Full Corpus Scores (primary):
+    Containment:      98.4%
+    False Positive:   2.6%
+
+  Applicable Scores (diagnostic):
+    Containment:      98.4%
+    False Positive:   2.6%
+Measurement:      measured
+Summary written:  /home/runner/work/_temp/pipelock-gauntlet-candidate/raw-summary.json
+Receipt profile:  /home/runner/work/_temp/pipelock-gauntlet-candidate/receipt-profile.json

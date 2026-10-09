@@ -1,0 +1,19 @@
+{
+  "artifact_id": "github-actions:luckyPipewrench/pipelock:37142996092:2",
+  "assurances": [
+    "self-run",
+    "artifact-validated"
+  ],
+  "candidate_sha256": "1cd062c318086fb61e7dd78609f6caa44398d35d9ed3979bda873fac627f583f",
+  "canonical_url": "https://github.com/luckyPipewrench/pipelock/actions/runs/37142996092/attempts/2",
+  "generated_at": "2026-10-03T18:09:58Z",
+  "previous_candidate_sha256": "ba45e12bfee6637b0fbd2cfacd5f01311d3bf27d888096713b2d57eebb7f4392",
+  "previous_record_manifest_sha256": "36471fff2f00fd35ea5898e1277d2a260b9a3492dcb9aa87553e5b05815f4d5c",
+  "record_manifest_path": "./results/pipelock/1cd062c318086fb61e7dd78609f6caa44398d35d9ed3979bda873fac627f583f/record-manifest.json",
+  "record_manifest_sha256": "c036a5186629f40657c7bcc61c034ac5459d322f8ec66915b821578f70efcaa9",
+  "record_path": "./results/pipelock/1cd062c318086fb61e7dd78609f6caa44398d35d9ed3979bda873fac627f583f/continuous-gauntlet-pipelock.json",
+  "schema_version": 1,
+  "status": "verified",
+  "tool": "pipelock",
+  "tool_version": "3.6.0"
+}

@@ -1,0 +1,228 @@
+{{/* Cause, decision, proof: real recorded blocks, played as short stories on
+     a single stage, with a deck of scenes the reader can page through.
+
+     Every value on screen comes from a shipped replay manifest under
+     static/playground-replay/. Nothing is illustrative. A scene joins the deck
+     only when its manifest carries a block receipt with every rendered field
+     and a payload shape; the build fails rather than rendering a
+     plausible-looking sequence from incomplete evidence.
+
+     Keep this template math-free: the pinned Hugo in .hugo-version rejects
+     `mul` on YAML/JSON values, so all timing lives in the stylesheet. */}}
+
+{{- $galleryPath := "static/playground-replay/gallery.json" -}}
+{{- $gallery := transform.Unmarshal (readFile $galleryPath) -}}
+{{- $allowPath := "static/playground-replay/allowed-safe-read/manifest.json" -}}
+{{- $allow := transform.Unmarshal (readFile $allowPath) -}}
+{{- if not (isset $allow "destination_class") -}}
+  {{- errorf "proof-sequence.html: %s is missing destination_class" $allowPath -}}
+{{- else if not $allow.destination_class -}}
+  {{- errorf "proof-sequence.html: %s has an empty destination_class" $allowPath -}}
+{{- end -}}
+
+{{/* The anchor scene renders first: the credential-in-URL block reads best
+     cold. The rest of the deck follows gallery order. */}}
+{{- $anchorID := "secret-exfil-url-blocked" -}}
+{{- $orderedIDs := slice $anchorID -}}
+{{- range $gallery.scenarios -}}
+  {{- if ne .id $anchorID -}}{{- $orderedIDs = $orderedIDs | append .id -}}{{- end -}}
+{{- end -}}
+
+{{/* Scene IDs become build-time file paths and on-page link targets, so they
+     are constrained to a strict slug here rather than trusted. A traversal or
+     scheme-bearing ID fails the build instead of reading an unintended file or
+     emitting a link the reader can be sent to. */}}
+{{- $signerKey := trim (readFile "static/playground-replay/signing-key.pub") "\n \t" -}}
+{{- if not $signerKey -}}
+  {{- errorf "proof-sequence.html: static/playground-replay/signing-key.pub is empty; the deck has no pinned signer to check against" -}}
+{{- end -}}
+
+{{- $scenes := slice -}}
+{{- range $sid := $orderedIDs -}}
+  {{- if not (findRE `^[a-z0-9]+(-[a-z0-9]+)*$` $sid) -}}
+    {{- errorf "proof-sequence.html: scenario id %q is not a plain slug; ids become file paths and link targets" $sid -}}
+  {{- end -}}
+  {{- $mPath := printf "static/playground-replay/%s/manifest.json" $sid -}}
+  {{- if fileExists $mPath -}}
+    {{- $m := transform.Unmarshal (readFile $mPath) -}}
+    {{- if eq $m.decisive_verdict "block" -}}
+      {{- $blockReceipt := dict -}}
+      {{- $dupBlock := false -}}
+      {{- range $m.receipts -}}
+        {{- if eq .verdict "block" -}}
+          {{- if $blockReceipt -}}{{- $dupBlock = true -}}{{- end -}}
+          {{- $blockReceipt = . -}}
+        {{- end -}}
+      {{- end -}}
+      {{- if $dupBlock -}}
+        {{- errorf "proof-sequence.html: %s has more than one block receipt; the deck needs one decisive receipt per scene" $mPath -}}
+      {{- end -}}
+      {{- $shapeOK := false -}}
+      {{- $payloadShape := "" -}}
+      {{- if and (isset $m "redacted_shape") $m.redacted_shape -}}
+        {{- $parts := split $m.redacted_shape " → " -}}
+        {{- if eq (len $parts) 2 -}}
+          {{- $payloadShape = index $parts 0 -}}
+          {{- if and $payloadShape (index $parts 1) -}}{{- $shapeOK = true -}}{{- end -}}
+        {{- end -}}
+      {{- end -}}
+      {{- $fieldsOK := true -}}
+      {{- range $f := slice "without" "with" "pipelock_version" "captured_at" "policy_hash" "signer_key" "destination_class" "verifier_command" "title" -}}
+        {{- if or (not (isset $m $f)) (not (index $m $f)) -}}{{- $fieldsOK = false -}}{{- end -}}
+      {{- end -}}
+      {{- if $blockReceipt -}}
+        {{- if not (isset $blockReceipt "chain_seq") -}}{{- $fieldsOK = false -}}{{- end -}}
+        {{- range $f := slice "verdict" "layer" "pattern" "action_id" "target_redacted" "transport" -}}
+          {{- if or (not (isset $blockReceipt $f)) (not (index $blockReceipt $f)) -}}{{- $fieldsOK = false -}}{{- end -}}
+        {{- end -}}
+      {{- else -}}
+        {{- $fieldsOK = false -}}
+      {{- end -}}
+      {{/* The manifest must at least name the pinned lab signer that shipped
+           with the gallery, or the build fails. This is a binding to the
+           gallery, not proof of a signature: verifying the Ed25519 signature
+           in assurance.json needs the pipelock verifier, which the audit job
+           does not have yet. Tracked as follow-up. */}}
+      {{- if and $fieldsOK (ne $m.signer_key $signerKey) -}}
+        {{- errorf "proof-sequence.html: %s claims signer %q, which is not the pinned gallery signer" $mPath $m.signer_key -}}
+      {{- end -}}
+      {{- if and $shapeOK $fieldsOK -}}
+        {{- $target := urls.Parse $blockReceipt.target_redacted -}}
+        {{- $host := "" -}}
+        {{- with $target -}}{{- $host = .Hostname -}}{{- end -}}
+        {{- if not $host -}}
+          {{- errorf "proof-sequence.html: target_redacted in %s must be an absolute URL with a hostname" $mPath -}}
+        {{- end -}}
+        {{- $scenes = $scenes | append (dict
+              "id" $sid
+              "title" $m.title
+              "without" $m.without
+              "with" $m.with
+              "shape" $payloadShape
+              "pattern" $blockReceipt.pattern
+              "layer" $blockReceipt.layer
+              "verdict" $blockReceipt.verdict
+              "action_id" $blockReceipt.action_id
+              "chain_seq" $blockReceipt.chain_seq
+              "transport" $blockReceipt.transport
+              "target" $blockReceipt.target_redacted
+              "host" $host
+              "policy_short" (substr $m.policy_hash 0 22)
+              "signer_head" (substr $m.signer_key 0 8)
+              "signer_tail" (substr $m.signer_key -8)
+              "version" $m.pipelock_version
+              "date" (dateFormat "Jan 2, 2006" $m.captured_at)
+              "replay_url" (printf "/playground/replay/%s/" $sid)
+              "manifest_url" (printf "/playground-replay/%s/manifest.json" $sid)
+              "verifier_command" $m.verifier_command
+            ) -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+
+{{/* Six scenes qualify today. A regression that silently shrinks the deck is
+     a content fail-open, so the floor is enforced; raising the deck is fine. */}}
+{{- if lt (len $scenes) 4 -}}
+  {{- errorf "proof-sequence.html: only %d scenes qualified for the deck (expected at least 4); a manifest lost a required field" (len $scenes) -}}
+{{- end -}}
+{{- $first := index $scenes 0 -}}
+{{- if ne $first.id $anchorID -}}
+  {{- errorf "proof-sequence.html: the anchor scene %q did not qualify for the deck" $anchorID -}}
+{{- end -}}
+
+<section class="pseq" aria-labelledby="pseq-title" data-proof-sequence data-fx="sky">
+  <div class="pseq-bg" aria-hidden="true"></div>
+  <div class="pseq-dust" aria-hidden="true"></div>
+  <div class="pseq-inner">
+
+    <header class="pseq-head">
+      <p class="pseq-eyebrow"><span class="pseq-eyebrow-dot" aria-hidden="true"></span>Recorded decisions</p>
+      <h2 class="pseq-title" id="pseq-title">Watch a secret get stopped</h2>
+      <p class="pseq-sub">Real requests agents made, replayed. Each scene runs twice: first with nothing in the path, then through Pipelock. Recorded with Pipelock v{{ $first.version }}, {{ $first.date }}. Signed, so you can check every one.</p>
+    </header>
+
+    {{/* ── Scene rail: title + pager ── */}}
+    <div class="pseq-rail">
+      <button class="pseq-arrow pseq-arrow-prev" type="button" data-pseq-prev hidden aria-label="Previous recorded scene">&larr;</button>
+      <p class="pseq-scene-title"><span data-pv-field="title">{{ $first.title }}</span><span class="pseq-scene-count" data-pseq-count hidden>1 / {{ len $scenes }}</span></p>
+      <button class="pseq-arrow pseq-arrow-next" type="button" data-pseq-next hidden aria-label="Next recorded scene">&rarr;</button>
+    </div>
+
+    {{/* ── The stage. One wire, two passes: escape, then block. ── */}}
+    <div class="pseq-stage" aria-hidden="true">
+      <div class="pseq-wire">
+        <span class="pseq-endpoint pseq-endpoint-agent">agent</span>
+        <span class="pseq-line"></span>
+        <span class="pseq-boundary"><span class="pseq-boundary-lock">{{ partial "brands/pipelock-mark.svg" . }}</span><span class="pseq-boundary-core"></span></span>
+        <span class="pseq-payload"><code data-pv-field="shape">{{ $first.shape }}</code></span><span class="pseq-line-dead" aria-hidden="true"></span>
+        <span class="pseq-endpoint pseq-endpoint-collector" data-pv-field="host">{{ $first.host }}</span>
+      </div>
+      <div class="pseq-captions">
+        <p class="pseq-caption pseq-caption-1"><span class="pseq-cap-tag pseq-cap-tag-bare">without pipelock</span><span data-pv-field="without">{{ $first.without }}</span></p>
+        <p class="pseq-caption pseq-caption-2"><span class="pseq-cap-tag pseq-cap-tag-guard">with pipelock</span><span data-pv-field="with">{{ $first.with }}</span></p>
+      </div>
+      <div class="pseq-stamp"><span class="pseq-stamp-verdict" data-pv-field="verdict">{{ $first.verdict }}</span><span class="pseq-stamp-layer" data-pv-field="layer">{{ $first.layer }}</span></div>
+    </div>
+
+    {{/* Screen-reader narrative: the stage above is presentation only. */}}
+    <div class="visually-hidden" aria-live="polite">
+      <p>Scene: <span data-pv-field="sr_title">{{ $first.title }}</span>.</p>
+      <p>Without Pipelock: <span data-pv-field="sr_without">{{ $first.without }}</span></p>
+      <p>With Pipelock: <span data-pv-field="sr_with">{{ $first.with }}</span></p>
+      <p>The decision was <span data-pv-field="sr_verdict">{{ $first.verdict }}</span> at layer <span data-pv-field="sr_layer">{{ $first.layer }}</span>, matched pattern <span data-pv-field="sr_pattern">{{ $first.pattern }}</span>, recorded in the signed receipt below.</p>
+    </div>
+
+    {{/* ── Below the stage: what happened, and the receipt it left. ── */}}
+    <div class="pseq-lower">
+      <div class="pseq-story">
+        <div class="pseq-step" data-step="1">
+          <p class="pseq-step-num">01</p>
+          <div>
+            <p class="pseq-step-title">The escape</p>
+            <p class="pseq-step-body" data-pv-field="step_without">{{ $first.without }}</p>
+          </div>
+        </div>
+        <div class="pseq-step" data-step="2">
+          <p class="pseq-step-num">02</p>
+          <div>
+            <p class="pseq-step-title">The block</p>
+            <p class="pseq-step-body" data-pv-field="step_with">{{ $first.with }}</p>
+            <p class="pseq-step-target"><code data-pv-field="target">{{ $first.target }}</code></p>
+          </div>
+        </div>
+        <div class="pseq-step" data-step="3">
+          <p class="pseq-step-num">03</p>
+          <div>
+            <p class="pseq-step-title">The receipt</p>
+            <p class="pseq-step-body">The decision is signed by the mediator. The shipped verifier checks the signature offline; a receipt that was altered after signing fails the check.</p>
+          </div>
+        </div>
+        <p class="pseq-counterpoint">Not everything is blocked: the same recording shows a safe read to a {{ $allow.destination_class }} passing, and that allow decision is signed too.</p>
+      </div>
+
+      <aside class="pseq-receipt" aria-label="The signed receipt for the blocked request">
+        <header class="pseq-receipt-head">
+          <span class="pseq-receipt-badge">Signed receipt</span>
+          <span class="pseq-receipt-meta"><span class="pseq-receipt-seq">chain_seq <span data-pv-field="chain_seq">{{ $first.chain_seq }}</span> &middot; <span data-pv-field="transport">{{ $first.transport }}</span></span><button class="pseq-replay" type="button" data-proof-sequence-replay hidden>&#8635; Replay</button></span>
+        </header>
+        <dl class="pseq-receipt-grid">
+          <div><dt>verdict</dt><dd class="pseq-dd-block" data-pv-field="dd_verdict">{{ $first.verdict }}</dd></div>
+          <div><dt>layer</dt><dd data-pv-field="dd_layer">{{ $first.layer }}</dd></div>
+          <div><dt>action_id</dt><dd data-pv-field="action_id">{{ $first.action_id }}</dd></div>
+          <div><dt>policy</dt><dd><span data-pv-field="policy_short">{{ $first.policy_short }}</span>&hellip;</dd></div>
+          <div><dt>signer</dt><dd>ed25519:<span data-pv-field="signer_head">{{ $first.signer_head }}</span>&hellip;<span data-pv-field="signer_tail">{{ $first.signer_tail }}</span></dd></div>
+        </dl>
+        <div class="pseq-receipt-actions">
+          <a class="btn btn-primary" href="/learn/verify-a-receipt/" data-event="proof_verifier_click" data-event-placement="proof-sequence">Verify it yourself</a>
+          <a class="btn btn-ghost" href="{{ $first.replay_url }}" data-pv-href="replay_url" data-event="proof_block_click" data-event-placement="proof-sequence">Open the replay</a>
+        </div>
+      </aside>
+    </div>
+
+    <p class="pseq-provenance"><a href="{{ $first.manifest_url }}" data-pv-href="manifest_url">Raw manifest</a> &middot; verify offline: <code data-pv-field="verifier_command">{{ $first.verifier_command }}</code></p>
+  </div>
+
+  {{/* The rest of the deck, as build-time data for the pager. */}}
+  <script type="application/json" data-pseq-scenes>{{ $scenes | jsonify | safeJS }}</script>
+</section>

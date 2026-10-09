@@ -1,0 +1,39 @@
+{{/* Shared card/row for the Learn and Compare editorial indexes.
+     Pass: page, kind, cat, catLabel, summary, featured, level, tags, meta. */}}
+{{ $page := .page }}
+{{ $kind := .kind }}
+{{ $cat := .cat }}
+{{ $catLabel := .catLabel }}
+{{ $summary := .summary }}
+{{ $featured := .featured | default false }}
+{{ $level := .level | default "" }}
+{{ $tags := .tags | default slice }}
+{{ $meta := .meta | default "" }}
+{{ $title := $page.LinkTitle | default $page.Title }}
+{{ $blob := printf "%s %s %s %s %s" $title ($page.Description | default "") $summary $cat (delimit $tags " ") | lower }}
+
+<a class="editorial-index-card editorial-index-card--{{ if $featured }}featured{{ else }}directory{{ end }} editorial-index-card--{{ $kind }}"
+   href="{{ $page.RelPermalink }}"
+   {{ if $featured }}data-fx="reveal spotlight"{{ else }}data-directory-card{{ end }}
+   data-cat="{{ $cat }}"
+   data-searchblob="{{ $blob }}">
+  <span class="editorial-index-card-marker" aria-hidden="true"><span></span></span>
+  <span class="editorial-index-card-copy">
+    <span class="editorial-index-card-eyebrow">
+      {{ if $featured }}<span class="editorial-index-card-featured">Featured</span>{{ end }}
+      {{ $catLabel }}
+    </span>
+    <span class="editorial-index-card-title">{{ $title }}</span>
+    {{ if $featured }}
+      {{ with $summary }}<span class="editorial-index-card-summary">{{ . }}</span>{{ end }}
+    {{ end }}
+    {{ if or $level $meta (gt (len $tags) 0) }}
+      <span class="editorial-index-card-meta">
+        {{ with $level }}<span class="editorial-index-level editorial-index-level--{{ . }}">{{ . }}</span>{{ end }}
+        {{ with $meta }}<span>{{ . }}</span>{{ end }}
+        {{ range first 2 $tags }}<span>{{ . }}</span>{{ end }}
+      </span>
+    {{ end }}
+  </span>
+  <span class="editorial-index-card-arrow" aria-hidden="true">&#8599;</span>
+</a>

@@ -1,0 +1,178 @@
+{{ define "main" }}
+{{/* Capability content files bind stable routes. The pinned manifest and reference map supply the documentation below. */}}
+{{- $inventory := site.Data.pipelock_capabilities -}}
+{{- $families := site.Data.pipelock_capability_families.families -}}
+{{- $capabilityMatches := where $inventory.capabilities "id" .Params.capability -}}
+{{- if ne (len $capabilityMatches) 1 -}}
+  {{- errorf "capability detail %q must resolve exactly once" .Params.capability -}}
+{{- end -}}
+{{- $capability := index $capabilityMatches 0 -}}
+{{- $familyMatches := where $families "id" $capability.detail.family -}}
+{{- if ne (len $familyMatches) 1 -}}
+  {{- errorf "capability family %q must resolve exactly once" $capability.detail.family -}}
+{{- end -}}
+{{- $family := index $familyMatches 0 -}}
+{{- $source := $inventory.source -}}
+{{- $inventoryPage := site.GetPage "/capabilities" -}}
+{{- $releaseVersion := cond (eq $source.status "release") $source.release_version $inventoryPage.Params.release_target -}}
+{{- $manifestURL := printf "https://github.com/luckyPipewrench/pipelock/blob/%s/docs/security/capability-manifest.json" $source.commit -}}
+{{- $entrySourceURL := printf "https://github.com/luckyPipewrench/pipelock/blob/%s/%s" $source.commit $capability.operator_entry_point.source.file -}}
+{{- $implementationURL := printf "https://github.com/luckyPipewrench/pipelock/blob/%s/%s" $source.commit $capability.implementation.file -}}
+{{- $references := index site.Data.pipelock_capability_references.capabilities $capability.id -}}
+{{- $sourceCorrection := index site.Data.pipelock_capability_references.source_corrections $capability.id -}}
+
+<article class="capdoc-page">
+  <header class="capdoc-hero" data-hero="utility" data-fx="reveal">
+    <div class="capdoc-hero-inner">
+      <nav class="capdoc-breadcrumbs" aria-label="Breadcrumb">
+        <a href="/capabilities/">Capabilities</a>
+        <span aria-hidden="true">/</span>
+        <span>{{ $family.title }}</span>
+      </nav>
+      <div class="capdoc-hero-grid">
+        <div>
+          <p class="capdoc-kicker">{{ $family.number }} · {{ $family.eyebrow }}</p>
+          <h1>{{ $capability.name }}</h1>
+          <p class="capdoc-lede">{{ $capability.summary }}</p>
+          <div class="capdoc-hero-meta">
+            <span class="capref-tier capref-tier-{{ lower (replace $capability.tier " " "-") }}">{{ $capability.tier }}</span>
+            <code>{{ $capability.id }}</code>
+          </div>
+        </div>
+        <div class="capdoc-source-card" data-fx="spotlight">
+          <span class="capdoc-label">Document source</span>
+          <strong>v{{ $releaseVersion }} {{ if eq $source.status "release" }}release{{ else }}target{{ end }}</strong>
+          <span>Manifest commit {{ substr $source.commit 0 8 }}</span>
+          <a href="{{ $manifestURL }}" target="_blank" rel="noopener noreferrer">Open manifest <span aria-hidden="true">&nearr;</span></a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="capdoc-shell">
+    <aside class="capdoc-nav" aria-label="Capability documentation">
+      <div class="capdoc-nav-inner">
+        <a class="capdoc-nav-title" href="/capabilities/">Capability docs</a>
+        {{ range $families }}
+        <section>
+          <h2>{{ .title }}</h2>
+          <ul>
+            {{ range .capabilities }}
+              {{- $navMatches := where $inventory.capabilities "id" . -}}
+              {{- $navCapability := index $navMatches 0 -}}
+              <li><a href="{{ $navCapability.detail.path }}"{{ if eq $navCapability.id $capability.id }} aria-current="page"{{ end }}>{{ $navCapability.name }}</a></li>
+            {{ end }}
+          </ul>
+        </section>
+        {{ end }}
+      </div>
+    </aside>
+
+    <main class="capdoc-content">
+      <section class="capdoc-section" id="operator-surface">
+        <p class="capdoc-kicker">Operator surface</p>
+        <h2>{{ if eq $capability.operator_entry_point.kind "command" }}Run the command{{ else }}Set the configuration key{{ end }}</h2>
+        <p>{{ if eq $capability.operator_entry_point.kind "command" }}The release manifest records this command as the capability's operator entry point. Open the pinned source pointer to inspect the declaration and surrounding validation.{{ else }}The release manifest records this key as the capability's operator entry point. Open the pinned source pointer to inspect its schema context.{{ end }}</p>
+        <div class="capdoc-entry" data-fx="spotlight">
+          <span>{{ if eq $capability.operator_entry_point.kind "command" }}Command{{ else }}Configuration key{{ end }}</span>
+          <code>{{ $capability.operator_entry_point.value }}</code>
+          <a href="{{ $entrySourceURL }}" target="_blank" rel="noopener noreferrer">Read {{ $capability.operator_entry_point.source.symbol }} <span aria-hidden="true">&nearr;</span></a>
+        </div>
+      </section>
+
+      <section class="capdoc-section" id="availability">
+        <p class="capdoc-kicker">Availability</p>
+        <h2>Included tiers</h2>
+        <div class="capdoc-tier-list" aria-label="Available tiers">
+          {{ range $capability.access_tiers }}
+          <span>{{ if eq . "free" }}Community{{ else if eq . "pro" }}Pro{{ else if eq . "enterprise" }}Enterprise{{ else }}Assess{{ end }}</span>
+          {{ end }}
+        </div>
+        {{ with $capability.availability }}
+        <div class="capdoc-boundary">
+          <span class="capdoc-label">Deployment boundary</span>
+          <p>{{ .qualifier }}</p>
+        </div>
+        {{ else }}
+        <p class="capdoc-no-qualifier">The product manifest records no extra transport or platform qualifier for this capability.</p>
+        {{ end }}
+      </section>
+
+      <section class="capdoc-section" id="implementation">
+        <p class="capdoc-kicker">Source records</p>
+        <h2>Open the pinned source</h2>
+        <p>The release manifest names these source pointers. The publication gate confirms their Go files and declarations exist at the same Pipelock commit as this page; the linked code provides the runtime context.</p>
+        <div class="capdoc-source-grid">
+          <a href="{{ $entrySourceURL }}" target="_blank" rel="noopener noreferrer" data-fx="spotlight">
+            <span>Entry point</span>
+            <strong>{{ $capability.operator_entry_point.source.symbol }}</strong>
+            <code>{{ $capability.operator_entry_point.source.file }}</code>
+          </a>
+          <a href="{{ $implementationURL }}" target="_blank" rel="noopener noreferrer" data-fx="spotlight">
+            <span>Implementation</span>
+            <strong>{{ $capability.implementation.symbol }}</strong>
+            <code>{{ $capability.implementation.file }}</code>
+          </a>
+        </div>
+        {{ with $sourceCorrection }}
+        <div class="capdoc-source-note">
+          <span class="capdoc-label">{{ .label }}</span>
+          <p>{{ .text }}</p>
+          <a href="https://github.com/luckyPipewrench/pipelock/blob/{{ $source.commit }}/{{ .path }}" target="_blank" rel="noopener noreferrer">
+            {{ .symbol }} <span aria-hidden="true">&nearr;</span>
+          </a>
+        </div>
+        {{ end }}
+      </section>
+
+      <section class="capdoc-section" id="references">
+        <p class="capdoc-kicker">Read next</p>
+        <h2>Guides and references</h2>
+        <div class="capdoc-reference-list">
+          {{ range $references }}
+            {{- $href := .path -}}
+            {{- $external := eq .kind "source" -}}
+            {{- if $external }}{{ $href = printf "https://github.com/luckyPipewrench/pipelock/blob/%s/%s" $source.commit .path }}{{ end -}}
+            <a href="{{ $href }}"{{ if $external }} target="_blank" rel="noopener noreferrer"{{ end }}>
+              <span>{{ if $external }}Pipelock source{{ else }}PipeLab guide{{ end }}</span>
+              <strong>{{ .label }}</strong>
+              <span aria-hidden="true">{{ if $external }}&nearr;{{ else }}&rarr;{{ end }}</span>
+            </a>
+          {{ end }}
+        </div>
+      </section>
+
+      <section class="capdoc-section capdoc-related" id="related">
+        <p class="capdoc-kicker">{{ $family.title }}</p>
+        <h2>Related capabilities</h2>
+        <div class="capdoc-related-grid">
+          {{ range $family.capabilities }}
+            {{- if ne . $capability.id -}}
+              {{- $relatedMatches := where $inventory.capabilities "id" . -}}
+              {{- $related := index $relatedMatches 0 -}}
+              <a href="{{ $related.detail.path }}">
+                <span>{{ $related.tier }}</span>
+                <strong>{{ $related.name }}</strong>
+                <small>{{ $related.summary }}</small>
+              </a>
+            {{- end -}}
+          {{ end }}
+        </div>
+      </section>
+    </main>
+
+    <aside class="capdoc-toc" aria-label="On this page">
+      <div>
+        <span class="capdoc-label">On this page</span>
+        <a href="#operator-surface">Operator surface</a>
+        <a href="#availability">Availability</a>
+        <a href="#implementation">Source records</a>
+        <a href="#references">Read next</a>
+        <a href="#related">Related</a>
+      </div>
+    </aside>
+  </div>
+</article>
+
+{{ partial "site-fx.html" . }}
+{{ end }}

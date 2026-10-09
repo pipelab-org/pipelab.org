@@ -1,0 +1,267 @@
+.site-footer {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding: clamp(3.5rem, 7vw, 5rem) clamp(1.25rem, 4vw, 2rem) 2rem;
+  margin-top: 4rem;
+  background:
+    radial-gradient(ellipse 42% 80% at 8% 0%, rgba(0, 229, 160, 0.055), transparent 72%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.014), transparent 42%);
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    right: 30%;
+    left: 30%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0, 229, 160, 0.72), transparent);
+  }
+}
+
+.footer-container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  position: relative;
+}
+
+.footer-columns {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2rem;
+
+  @media (max-width: $bp-mobile) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem 1.5rem;
+  }
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.footer-heading {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.75rem;
+  padding: 0.32rem 0.62rem;
+  border: 1px solid rgba(0, 229, 160, 0.2);
+  border-radius: 0.35rem;
+  background: rgba(0, 229, 160, 0.055);
+  box-shadow: inset 2px 0 0 rgba(0, 229, 160, 0.8);
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  line-height: 1;
+  margin: 0 0 1.05rem;
+  font-weight: 700;
+}
+
+.footer-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+
+  a {
+    color: var(--text-muted);
+    font-size: var(--fs-code);
+    transition: color 0.15s ease;
+
+    &:hover {
+      color: var(--accent);
+    }
+
+    &:focus-visible { color: var(--accent); }
+  }
+}
+
+.footer-bottom {
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  @media (max-width: $bp-mobile) {
+    flex-direction: column;
+    gap: 0.5rem;
+    text-align: center;
+  }
+}
+
+.footer-copy {
+  color: var(--text-dim);
+  font-size: var(--fs-caption);
+  margin: 0;
+}
+
+.footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+
+  img,
+  .footer-brand-mark {
+    flex: 0 0 auto;
+  }
+}
+
+// ── Social row (moved out of the Company column, 2026-08-30) ────────────────
+.footer-social {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  a {
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-caption);
+    color: var(--text-muted);
+    text-decoration: none;
+    letter-spacing: var(--tracking-wide);
+
+    &:hover,
+    &:focus-visible { color: var(--accent); }
+  }
+}
+
+// ── Brand-cell footer layout (v2, 2026-08-30) ───────────────────────────────
+// Brand block on the left with the tagline and social links, three link
+// columns beside it, legal links in the bottom bar with the copyright.
+
+.footer-columns-brand {
+  grid-template-columns: minmax(15rem, 1.35fr) repeat(3, minmax(0, 1fr));
+  gap: 3rem 2.5rem;
+  align-items: start;
+  text-align: left;
+
+  @media (max-width: $bp-tablet) {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.footer-col-brand {
+  text-align: center;
+
+  .footer-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    text-decoration: none;
+    margin: 0 auto 1rem;
+  }
+
+  .footer-brand-lockup {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.15rem;
+  }
+
+  .footer-wordmark {
+    font-family: var(--font-mono), monospace;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text);
+
+    span { color: var(--accent); }
+  }
+
+  .footer-brand-kicker {
+    color: var(--text-dim);
+    font-family: var(--font-body), sans-serif;
+    font-size: 0.58rem;
+    line-height: 1;
+    letter-spacing: var(--tracking-tagline);
+    text-transform: uppercase;
+  }
+
+  .footer-tagline {
+    color: var(--text-muted);
+    font-size: var(--fs-code);
+    line-height: 1.6;
+    max-width: 26ch;
+    margin: 0 auto 1.1rem;
+    text-wrap: pretty;
+  }
+
+  .footer-social {
+    justify-content: center;
+  }
+}
+
+.footer-legal {
+  display: flex;
+  gap: 1.4rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  a {
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-caption);
+    color: var(--text-dim);
+    text-decoration: none;
+
+    &:hover,
+    &:focus-visible { color: var(--accent); }
+  }
+}
+
+// Keep the three navigation columns left-aligned while the PipeLab identity
+// block stays centered over its social links.
+.footer-columns-brand .footer-col:not(.footer-col-brand),
+.footer-columns-brand .footer-col nav,
+.footer-columns-brand .footer-heading {
+  text-align: left;
+}
+
+.footer-columns-brand .footer-links {
+  align-items: flex-start;
+  gap: 0.7rem;
+  padding-left: 0.8rem;
+  border-left: 1px solid rgba(0, 229, 160, 0.14);
+}
+
+
+// Balance the columns: the Pipelock column carries six links, so it wraps to
+// two columns of three and the three headings sit at equal heights.
+.footer-links-2col {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 1.5rem;
+  row-gap: 0.6rem;
+}
+
+// The brand-cell footer has a real left/right bottom rail. Its higher
+// specificity intentionally beats the older site-wide centered-footer default.
+.site-footer .footer-bottom {
+  justify-content: space-between;
+  gap: 1.25rem 2rem;
+  text-align: left;
+}
+
+.site-footer .footer-copy {
+  max-width: 72ch;
+  line-height: 1.6;
+}
+
+@media (max-width: $bp-mobile) {
+  .site-footer .footer-bottom {
+    align-items: flex-start;
+    text-align: left;
+  }
+}

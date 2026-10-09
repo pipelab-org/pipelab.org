@@ -1,0 +1,131 @@
+{{ define "main" }}
+{{ $receiptID := .Params.receipt_id }}
+{{ $receiptFile := .Params.receipt_file }}
+{{ $keyFile := .Params.test_key_file }}
+{{ $jsonPath := printf "static/receipts/v0/%s" $receiptFile }}
+{{ $keyPath := printf "static/receipts/v0/%s" $keyFile }}
+{{ $receiptJSON := readFile $jsonPath }}
+{{ $receipt := $receiptJSON | transform.Unmarshal }}
+{{ $action := $receipt.action_record }}
+{{ $keyJSON := readFile $keyPath }}
+{{ $key := $keyJSON | transform.Unmarshal }}
+
+<article id="top" class="receipt-article">
+<header class="receipt-header" data-hero="utility" data-fx="reveal">
+    <p class="receipt-eyebrow">Pipelock Agent Action Receipt</p>
+    <h1 data-fx="decrypt">{{ $receiptID }}</h1>
+    {{ with .Params.subtitle }}<p class="receipt-lead">{{ . }}</p>{{ end }}
+    <p class="receipt-verdict-banner receipt-verdict-{{ $action.verdict }}">
+      Verdict: <strong>{{ $action.verdict }}</strong>
+    </p>
+  </header>
+
+  <section class="receipt-section receipt-prose" data-fx="reveal">
+    {{ .Content }}
+  </section>
+
+  <section class="receipt-section" data-fx="reveal">
+    <h2 data-fx="decrypt">Action record</h2>
+    <dl class="receipt-fields">
+      <div><dt>Version</dt><dd>{{ $action.version }}</dd></div>
+      <div><dt>Action ID</dt><dd class="mono">{{ $action.action_id }}</dd></div>
+      <div><dt>Type</dt><dd>{{ $action.action_type }}</dd></div>
+      <div><dt>Target</dt><dd class="mono">{{ $action.target }}</dd></div>
+      <div><dt>Transport</dt><dd>{{ $action.transport }}</dd></div>
+      <div><dt>Method</dt><dd>{{ $action.method }}</dd></div>
+      <div><dt>Principal</dt><dd class="mono">{{ $action.principal }}</dd></div>
+      <div><dt>Actor</dt><dd class="mono">{{ $action.actor }}</dd></div>
+      <div><dt>Side effect class</dt><dd>{{ $action.side_effect_class }}</dd></div>
+      <div><dt>Reversibility</dt><dd>{{ $action.reversibility }}</dd></div>
+      <div><dt>Decided at</dt><dd>{{ $action.timestamp }}</dd></div>
+      <div><dt>Policy hash</dt><dd class="mono">{{ $action.policy_hash }}</dd></div>
+      <div><dt>Delegation chain</dt><dd>
+        {{ range $i, $d := $action.delegation_chain }}{{ if $i }} → {{ end }}<span class="mono">{{ $d }}</span>{{ end }}
+      </dd></div>
+      <div><dt>Chain seq</dt><dd>{{ $action.chain_seq }}</dd></div>
+      <div><dt>Chain prev hash</dt><dd class="mono">{{ $action.chain_prev_hash }}</dd></div>
+    </dl>
+  </section>
+
+  <section class="receipt-section" data-fx="reveal">
+    <h2 data-fx="decrypt">Signature</h2>
+    <dl class="receipt-fields">
+      <div><dt>Receipt version</dt><dd>{{ $receipt.version }}</dd></div>
+      <div><dt>Algorithm</dt><dd>Ed25519 over SHA-256 of canonical JSON</dd></div>
+      <div><dt>Signature</dt><dd class="mono receipt-mono-wrap">{{ $receipt.signature }}</dd></div>
+      <div><dt>Signer public key</dt><dd class="mono receipt-mono-wrap">{{ $receipt.signer_key }}</dd></div>
+    </dl>
+    <p class="receipt-note">
+      Signed by the Pipelock <strong>conformance test key</strong>
+      ({{ $key.seed_phrase }}). Public on GitHub at
+      <a href="https://github.com/luckyPipewrench/pipelock/blob/f9d12ae6c45e65e6baa229ccd0393ccd71003fbc/sdk/conformance/testdata/test-key.json"
+         target="_blank" rel="noopener noreferrer"><code>sdk/conformance/testdata/test-key.json</code></a>.
+      Real customer receipts come from the customer's own Pipelock
+      deployment, signed by the customer's own key.
+    </p>
+  </section>
+
+  <section class="receipt-section" data-fx="reveal">
+    <h2 data-fx="decrypt">Verify it yourself</h2>
+    <p>
+      Download the receipt JSON, pin the public key, run any verifier.
+      Exit code 0 is accept; 1 is reject; 2 is verifier error; 64 is
+      usage error.
+    </p>
+
+    <h3>1. Get the receipt</h3>
+    <pre data-command><code>curl -O https://pipelab.org/receipts/v0/{{ $receiptFile }}</code></pre>
+
+    <h3>2. Verify with the Pipelock binary (Go)</h3>
+    <pre data-command><code>pipelock verify-receipt \
+  --key {{ $key.public_key_hex }} \
+  {{ $receiptFile }}</code></pre>
+
+    <h3>3. Or use the standalone verifier</h3>
+    <pre data-command><code>pipelock-verifier receipt \
+  --key {{ $key.public_key_hex }} \
+  {{ $receiptFile }}</code></pre>
+
+    <h3>4. Or one of the language SDKs</h3>
+    <p>After installing a language verifier, the same pinned-key check works:</p>
+    <pre data-command><code>pipelock-verifier-ts receipt \
+  --key {{ $key.public_key_hex }} \
+  {{ $receiptFile }}</code></pre>
+    <pre data-command><code>pipelock-verifier-rs receipt \
+  --key {{ $key.public_key_hex }} \
+  {{ $receiptFile }}</code></pre>
+    <pre data-command><code>pipelock-verify \
+  --key {{ $key.public_key_hex }} \
+  {{ $receiptFile }}</code></pre>
+    <p>
+      Verifier source for all four implementations is documented at
+      <a href="/learn/verify-a-receipt/">/learn/verify-a-receipt/</a>.
+    </p>
+  </section>
+
+  <section class="receipt-section" data-fx="reveal">
+    <h2 data-fx="decrypt">Signed receipt JSON</h2>
+    <p>
+      <a href="/receipts/v0/{{ $receiptFile }}" download>Download {{ $receiptFile }}</a>
+      ({{ len $receiptJSON }} bytes). Pretty-printed below for reading;
+      the Ed25519 signature covers the canonical-JSON encoding of the
+      action record, not these formatted bytes.
+    </p>
+    <details class="receipt-json-details">
+      <summary>Show JSON inline</summary>
+      <pre class="receipt-json-block"><code>{{ $receiptJSON }}</code></pre>
+    </details>
+  </section>
+
+  <section class="receipt-section" data-fx="reveal">
+    <h2 data-fx="decrypt">Format references</h2>
+    <ul>
+      <li><a href="/learn/action-receipt-spec/">Action Receipt v1 implementation spec</a></li>
+      <li><a href="/learn/verify-a-receipt/">Verify a receipt (all four verifier languages)</a></li>
+      <li><a href="/learn/agent-action-receipts/">Agent action receipts overview</a></li>
+      <li><a href="/attestation/agent-action-receipt/v0.1.schema.json">in-toto v0.1 predicate JSON Schema</a></li>
+    </ul>
+  </section>
+</article>
+{{ partial "site-fx.html" . }}
+{{ end }}

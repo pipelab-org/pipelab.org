@@ -1,0 +1,58 @@
+.post-list {
+  list-style: none;
+  padding: 0;
+}
+
+.post-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem 2rem;
+  margin-bottom: 1rem;
+  transition: all 0.3s;
+
+  &:hover {
+    border-color: rgba(0, 229, 160, 0.2);
+    background: var(--bg-card-hover);
+  }
+
+  h2 {
+    font-size: var(--fs-lead);
+    margin-bottom: 0.5rem;
+
+    a {
+      color: var(--text);
+
+      &:hover {
+        color: var(--accent);
+      }
+    }
+  }
+}
+
+.post-date {
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  color: var(--text-dim);
+}
+
+.post-summary {
+  color: var(--text-muted);
+  font-size: var(--fs-body);
+  margin-top: 0.5rem;
+}
+
+.post-meta {
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-code);
+  color: var(--text-dim);
+  margin-top: 0.8rem;
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+}
+
+.post-author::before {
+  content: "by ";
+  color: var(--text-dim);
+}

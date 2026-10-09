@@ -1,0 +1,9 @@
+Pipelock audit packet — receipt chain verification
+scenario: poisoned-readme-key-paste
+receipts: 1
+verdict: valid (trusted)
+root_hash: 80456e1638bf671546d915c2a78f5b6f83f815e62b059177886327bb0f5b6a4e
+signer_key: 0abef59effe062f1975d311a6a8cde7115aefa015c497241f4c3dd04302e3041
+
+Verify it yourself from this directory:
+  pipelock-verifier audit-packet . --key 0abef59effe062f1975d311a6a8cde7115aefa015c497241f4c3dd04302e3041

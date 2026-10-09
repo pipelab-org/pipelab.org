@@ -1,0 +1,378 @@
+// ============================================================
+//   /agent-firewall/ — visual introduction above the guide.
+//   Left: category claim + self-serve actions. Right: two real
+//   recorded requests (allow, then block) and the signed receipt
+//   the block produced. All values come from the shipped replay
+//   manifests; nothing here is invented.
+// ============================================================
+
+.afw-hero {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  margin: 0;
+  padding: 4.5rem 2rem 4rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.afw-operating-model {
+  border-top: 0;
+}
+
+.afw-hero-inner {
+  position: relative;
+  z-index: 1;
+  max-width: var(--max-width);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 4fr);
+  gap: 3.5rem;
+  align-items: center;
+}
+
+// ── Copy column ────────────────────────────────────────────
+.afw-eyebrow {
+  margin: 0 0 1rem;
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.afw-h1 {
+  margin: 0 0 1.1rem;
+  font-family: var(--font-mono), monospace;
+  font-size: clamp(1.7rem, 2.6vw, 2.4rem);
+  line-height: 1.18;
+  letter-spacing: var(--tracking-tight);
+  color: var(--text);
+}
+
+.afw-lead {
+  margin: 0 0 0.8rem;
+  font-size: var(--fs-lead);
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.afw-lead-2 {
+  margin: 0 0 1.6rem;
+  font-size: var(--fs-body);
+  line-height: 1.6;
+  color: var(--text-dim);
+}
+
+.afw-cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.afw-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.72rem 1.25rem;
+  border-radius: 9px;
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-code);
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.15s, box-shadow 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.afw-btn-primary {
+  background: var(--accent);
+  color: #09090b;
+  box-shadow: 0 0 0 1px rgba(0, 229, 160, 0.3), 0 0 24px rgba(0, 229, 160, 0.2);
+
+  &:hover,
+  &:focus-visible {
+    transform: translateY(-1px);
+    box-shadow: 0 0 0 1px rgba(0, 229, 160, 0.5), 0 0 34px rgba(0, 229, 160, 0.35);
+  }
+}
+
+.afw-btn-ghost {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: var(--text);
+
+  &:hover,
+  &:focus-visible {
+    border-color: rgba(0, 229, 160, 0.4);
+    color: var(--accent);
+  }
+}
+
+.afw-btn-text {
+  color: var(--text-muted);
+  padding-left: 0.4rem;
+  padding-right: 0.4rem;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--accent);
+  }
+}
+
+.afw-provenance {
+  margin: 1.4rem 0 0;
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  color: var(--text-dim);
+
+  a {
+    color: var(--text-dim);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+
+    &:hover { color: var(--accent); }
+  }
+}
+
+// ── Demo column ────────────────────────────────────────────
+.afw-demo {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.afw-seq {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.afw-req {
+  position: relative;
+  padding: 1rem 1.2rem;
+  border-radius: 12px;
+  background: rgba(14, 14, 17, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(6px);
+  min-width: 0;
+}
+
+.afw-req-allow {
+  border-left: 2px solid rgba(0, 229, 160, 0.55);
+}
+
+.afw-req-block {
+  border-left: 2px solid rgba(255, 77, 77, 0.65);
+  box-shadow: 0 0 34px rgba(255, 77, 77, 0.07);
+}
+
+.afw-req-head {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-bottom: 0.55rem;
+}
+
+.afw-req-step {
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  color: var(--text-dim);
+}
+
+.afw-req-method {
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  font-weight: 700;
+  color: var(--text-muted);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  padding: 0.1rem 0.45rem;
+}
+
+.afw-verdict {
+  margin-left: auto;
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  padding: 0.18rem 0.7rem;
+}
+
+.afw-verdict-allow {
+  color: var(--accent);
+  background: rgba(0, 229, 160, 0.1);
+  border: 1px solid rgba(0, 229, 160, 0.35);
+}
+
+.afw-verdict-block {
+  color: #ff6b6b;
+  background: rgba(255, 77, 77, 0.1);
+  border: 1px solid rgba(255, 77, 77, 0.4);
+}
+
+.afw-req-target {
+  margin: 0 0 0.35rem;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.82rem;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.afw-req-shape {
+  margin: 0 0 0.45rem;
+
+  code {
+    font-family: var(--font-mono), monospace;
+    font-size: 0.8rem;
+    color: #ff8f8f;
+    background: rgba(255, 77, 77, 0.08);
+    border: 1px solid rgba(255, 77, 77, 0.18);
+    border-radius: 6px;
+    padding: 0.15rem 0.5rem;
+  }
+}
+
+.afw-req-note {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+// ── The receipt object ─────────────────────────────────────
+.afw-receipt {
+  position: relative;
+  padding: 1.15rem 1.3rem 1.2rem;
+  border-radius: 14px;
+  background:
+    linear-gradient(160deg, rgba(0, 229, 160, 0.05), transparent 45%),
+    rgba(10, 12, 12, 0.92);
+  border: 1px solid rgba(0, 229, 160, 0.22);
+  box-shadow:
+    0 18px 50px rgba(0, 0, 0, 0.45),
+    0 0 40px rgba(0, 229, 160, 0.06);
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0 12% auto 12%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0, 229, 160, 0.55), transparent);
+  }
+}
+
+.afw-receipt-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+  margin-bottom: 0.85rem;
+}
+
+.afw-receipt-badge {
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  font-weight: 700;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.afw-receipt-seq {
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  color: var(--text-dim);
+}
+
+.afw-receipt-grid {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.3rem 1rem;
+
+  > div {
+    display: grid;
+    grid-template-columns: 5.5rem 1fr;
+    gap: 0.8rem;
+    align-items: baseline;
+  }
+
+  dt {
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-caption);
+    color: var(--text-dim);
+  }
+
+  dd {
+    margin: 0;
+    font-family: var(--font-mono), monospace;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    overflow-wrap: anywhere;
+  }
+
+  .afw-dd-block {
+    color: #ff6b6b;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+}
+
+.afw-receipt-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+  margin-top: 0.95rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+
+  a {
+    font-family: var(--font-mono), monospace;
+    font-size: 0.8rem;
+    color: var(--accent);
+    text-decoration: none;
+
+    &:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+    &:last-child { color: var(--text-muted); }
+    &:last-child:hover { color: var(--accent); }
+  }
+}
+
+// ── Responsive ─────────────────────────────────────────────
+@media (max-width: 1024px) {
+  .afw-hero-inner {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+
+  .afw-demo {
+    max-width: 620px;
+  }
+}
+
+@media (max-width: $bp-mobile) {
+  .afw-hero {
+    padding: 2.75rem 1.25rem 3rem;
+  }
+
+  .afw-h1 {
+    font-size: 1.45rem;
+  }
+
+  .afw-cta-row {
+    align-items: stretch;
+    flex-direction: column;
+
+    .afw-btn {
+      justify-content: center;
+      min-height: 48px;
+    }
+  }
+
+  .afw-receipt-grid > div {
+    grid-template-columns: 4.6rem 1fr;
+  }
+}

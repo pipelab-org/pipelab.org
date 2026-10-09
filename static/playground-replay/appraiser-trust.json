@@ -1,0 +1,11 @@
+{
+  "trust_entries": {
+    "pipelab-playground-lab": {
+      "mediator_id": "pipelock-lab",
+      "role": "mediator"
+    }
+  },
+  "trusted_keys": {
+    "pipelab-playground-lab": "8c4f08fb0aff71e60e5d7bce4ada46b3409e4fc23132b5b1646435e10ddb5f5c"
+  }
+}

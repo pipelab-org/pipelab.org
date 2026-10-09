@@ -1,0 +1,523 @@
+{{ define "main" }}
+{{/* Bespoke /enterprise/ template — overrides _default/single.html.
+     Hero, sticky mini-nav, evaluator-shaped section flow, and bottom
+     CTA are template-owned. The markdown body still renders {{ .Content }}
+     so the markdown alternate output and the audit's inbound-link
+     counter pick up the link list at the bottom of content/enterprise.md. */}}
+
+{{ $version := site.Params.pipelock_version | default "" }}
+{{ $stats := site.Data.stats }}
+{{ $isUpdated := and (not .Lastmod.IsZero) (not (.Lastmod.Equal .Date)) }}
+{{ $dateValue := cond $isUpdated .Lastmod .Date }}
+{{ $dateLabel := $dateValue.Format "Jan 2, 2006" }}
+
+<article id="top" class="enterprise-product showpiece-page">
+
+  {{/* ── Hero ─────────────────────────────────────────── */}}
+<header class="enterprise-hero site-hero brand-field-hero brand-field-hero-standard" data-hero="brand-standard" data-fx="reveal">
+    <div class="enterprise-hero-inner site-hero-inner">
+      <p class="enterprise-eyebrow">
+        <span class="enterprise-eyebrow-dot" aria-hidden="true"></span>
+        Enterprise · Conductor{{ if $version }} · v{{ $version }}{{ end }}{{ if $dateLabel }} · {{ $dateLabel }}{{ end }}
+      </p>
+
+      <h1 class="enterprise-headline">
+        <span>{{ with .Params.headline }}{{ . }}{{ else }}{{ .Title }}{{ end }}</span>
+        {{ with .Params.headline_accent }}<span class="enterprise-headline-accent">{{ . }}</span>{{ end }}
+      </h1>
+
+      <p class="enterprise-lead">
+        Run Pipelock free on every agent for protection. The Conductor governs the fleet from one place: shared rules, signed records of mediated actions, and one emergency stop no single person can pull alone. Anyone can check the signatures offline, no account needed.
+      </p>
+
+      <div class="enterprise-hero-actions">
+        <a class="btn btn-primary" href="/pricing/"
+           data-event="pricing_click" data-event-placement="enterprise-hero">
+          See Enterprise pricing
+        </a>
+        <a class="btn btn-ghost"
+           href="https://buy.polar.sh/polar_cl_ToGNrYlQDH6Xrnf9kBvrrSG3D3yRn0P0y4xEZ2Z0cCH"
+           target="_blank" rel="noopener noreferrer"
+           data-event="checkout_started" data-event-placement="enterprise-hero" data-event-value="enterprise_eval">
+          Start a $5k evaluation
+        </a>
+        <a class="btn btn-ghost" href="/enterprise/pipelock-solution-brief.pdf"
+           data-event="solution_brief_click" data-event-placement="enterprise-hero">
+          Download Solution Brief (PDF)
+        </a>
+        <a class="btn btn-ghost" href="/gauntlet/results/"
+           data-event="gauntlet_results_click" data-event-placement="enterprise-hero">
+          View public benchmark results
+        </a>
+      </div>
+
+      <p class="enterprise-hero-meta">
+        Every step is self-service. Evaluate, take a design-partner slot, or buy the annual license without a sales call.
+        <a href="https://buy.polar.sh/polar_cl_uEr20ZxF9tPBNCmuERPpx8L2MI0J4Dw6gfav42LAcnD"
+           target="_blank" rel="noopener noreferrer"
+           data-event="checkout_started" data-event-placement="enterprise-hero-meta" data-event-value="enterprise_design_partner">
+          Become a design partner.
+        </a>
+      </p>
+
+      {{ partial "page-formats.html" . }}
+
+    </div>
+  </header>
+
+  <section class="enterprise-hero-evidence" aria-label="Pipelock by the numbers">
+      {{/* Evidence stats — every value pulled from data/stats.yaml */}}
+      <div class="enterprise-hero-stats" role="list" aria-label="Pipelock by the numbers">
+        <div class="enterprise-stat" role="listitem">
+          <p class="enterprise-stat-value" data-fx="count">{{ $stats.bench_adversarial_cases }}</p>
+          <p class="enterprise-stat-label">Public attack<br>cases (Bench)</p>
+        </div>
+        <div class="enterprise-stat" role="listitem">
+          <p class="enterprise-stat-value" data-fx="count">{{ $stats.compliance_frameworks }}</p>
+          <p class="enterprise-stat-label">Compliance<br>frameworks</p>
+        </div>
+        <div class="enterprise-stat" role="listitem">
+          <p class="enterprise-stat-value">Go</p>
+          <p class="enterprise-stat-label">Single Go<br>binary</p>
+        </div>
+        <div class="enterprise-stat" role="listitem">
+          <p class="enterprise-stat-value" data-fx="count">{{ $stats.tests }}<span class="enterprise-stat-unit">+</span></p>
+          <p class="enterprise-stat-label">Test cases<br>with race detection</p>
+        </div>
+        <div class="enterprise-stat" role="listitem">
+          <p class="enterprise-stat-value" data-fx="count">{{ $stats.kill_switch_sources }}</p>
+          <p class="enterprise-stat-label">Kill-switch<br>sources</p>
+        </div>
+        <div class="enterprise-stat" role="listitem">
+          <p class="enterprise-stat-value" data-fx="count">{{ $stats.dlp_patterns }}</p>
+          <p class="enterprise-stat-label">Built-in DLP<br>patterns</p>
+        </div>
+      </div>
+      {{ partial "bench-provenance.html" . }}
+  </section>
+
+  {{/* ── Sticky mini-nav ──────────────────────────────── */}}
+  <nav class="enterprise-mini-nav showpiece-mini-nav" aria-label="On this page" data-fx="mininav">
+    <ul>
+      <li><a href="#risk"><span class="enterprise-mini-num">01</span>Fleet</a></li>
+      <li><a href="#deploy"><span class="enterprise-mini-num">02</span>Conductor</a></li>
+      <li><a href="#verify"><span class="enterprise-mini-num">03</span>Proof</a></li>
+      <li><a href="#evidence"><span class="enterprise-mini-num">04</span>Evidence</a></li>
+      <li><a href="#fit"><span class="enterprise-mini-num">05</span>Adopt</a></li>
+      <li><a href="#scenarios"><span class="enterprise-mini-num">06</span>Tiers</a></li>
+      <li><a href="#start"><span class="enterprise-mini-num">07</span>Start</a></li>
+    </ul>
+  </nav>
+
+  {{/* ── 01 — Risk: why now ───────────────────────────── */}}
+  <section class="enterprise-section showpiece-chapter" data-chapter="01" id="risk" aria-label="Why a fleet needs a control plane">
+    <div class="enterprise-section-inner">
+      <div class="enterprise-section-head showpiece-chapter-head">
+        <span class="enterprise-section-num showpiece-chapter-kicker">01 · Fleet</span>
+        <h2 data-fx="decrypt">Running one agent is easy. A fleet is the hard part.</h2>
+        <span class="enterprise-section-meta">The free binary already protects each agent</span>
+      </div>
+
+      <div class="enterprise-why-grid" data-fx="reveal">
+        <div class="enterprise-why-cell" data-fx="spotlight">
+          <span class="enterprise-why-marker">Already covered</span>
+          <h3>You are already running Pipelock free on every agent.</h3>
+          <p>The full scanner and enforcement engine is in the open-source core. One agent or a hundred, each instance protects itself and stands on its own.</p>
+        </div>
+        <div class="enterprise-why-cell" data-fx="spotlight">
+          <span class="enterprise-why-marker">The fleet question</span>
+          <h3>At scale, one question has no single answer: what is every agent enforcing right now?</h3>
+          <p>Per-host configs drift. There is no one place to see, set, and prove the policy the whole fleet is running, or to stop it at once when something goes wrong.</p>
+        </div>
+        <div class="enterprise-why-cell" data-fx="spotlight">
+          <span class="enterprise-why-marker">What it takes</span>
+          <h3>Govern the fleet as one, and keep a record you can hand an auditor.</h3>
+          <p>Distribute one signed policy, aggregate the signed evidence, and pull a kill switch that no single operator can fake or quietly undo.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {{/* ── 02 — Deploy ──────────────────────────────────── */}}
+  <section class="enterprise-section enterprise-section-elev showpiece-chapter" data-chapter="02" id="deploy" aria-label="What the Conductor does" data-fx="live">
+    <div class="enterprise-section-inner">
+      <div class="enterprise-section-head showpiece-chapter-head">
+        <span class="enterprise-section-num showpiece-chapter-kicker">02 · Conductor</span>
+        <h2 data-fx="decrypt">What the Conductor does</h2>
+        <span class="enterprise-section-meta">The Enterprise control plane · requires the fleet license</span>
+      </div>
+
+      <div class="enterprise-verify-grid">
+        <article class="enterprise-verify-card" data-fx="spotlight">
+          <div class="enterprise-verify-head">
+            <span class="enterprise-verify-num">01</span>
+            <span>Set the rules</span>
+          </div>
+          <h3>Set your security rules once. Every agent runs them.</h3>
+          <p>Push one policy to the whole fleet. No agent can quietly roll back to an older one, and once its signed policy expires, an agent that has lost the Conductor denies traffic by default instead of drifting.</p>
+          <div class="enterprise-verify-leaves">
+            <span class="enterprise-verify-leaves-label">What you get</span>
+            <span class="enterprise-verify-leaves-value">One policy across every agent</span>
+          </div>
+        </article>
+
+        <article class="enterprise-verify-card" data-fx="spotlight">
+          <div class="enterprise-verify-head">
+            <span class="enterprise-verify-num">02</span>
+            <span>Emergency stop</span>
+          </div>
+          <h3>Cut off every agent at once when something goes wrong.</h3>
+          <p>One switch stops internet access across the fleet, or for a single agent. Turning it on, or back off, takes sign-off from more than one person, so a single rogue or hacked operator can't pull it or undo it alone.</p>
+          <div class="enterprise-verify-leaves">
+            <span class="enterprise-verify-leaves-label">What you get</span>
+            <span class="enterprise-verify-leaves-value">Takes more than one person to pull</span>
+          </div>
+        </article>
+
+        <article class="enterprise-verify-card" data-fx="spotlight">
+          <div class="enterprise-verify-head">
+            <span class="enterprise-verify-num">03</span>
+            <span>The record</span>
+          </div>
+          <h3>Keep a tamper-evident record of mediated agent actions.</h3>
+          <p>Each agent signs its own record and sends it to the Conductor, which holds them all in one place. Because every agent signs its own, you don't have to trust the central system to believe what it says.</p>
+          <div class="enterprise-verify-leaves">
+            <span class="enterprise-verify-leaves-label">What you get</span>
+            <span class="enterprise-verify-leaves-value">Signed by each agent, not the server</span>
+          </div>
+        </article>
+
+        <article class="enterprise-verify-card" data-fx="spotlight">
+          <div class="enterprise-verify-head">
+            <span class="enterprise-verify-num">04</span>
+            <span>See everything</span>
+          </div>
+          <h3>See your whole fleet enrolled in one place.</h3>
+          <p>One view, for an auditor or admin, lists every agent enrolled with the Conductor, its identity, and whether it is active. One roster instead of a pile of spreadsheets.</p>
+          <div class="enterprise-verify-leaves">
+            <span class="enterprise-verify-leaves-label">What you get</span>
+            <span class="enterprise-verify-leaves-value">One roster for the whole fleet</span>
+          </div>
+        </article>
+
+        <article class="enterprise-verify-card" data-fx="spotlight">
+          <div class="enterprise-verify-head">
+            <span class="enterprise-verify-num">05</span>
+            <span>Onboard safely</span>
+          </div>
+          <h3>Bring a new agent in with a one-time pass, not a shared key.</h3>
+          <p>Each agent joins with its own one-time pass and gets its own identity. No shared secret pasted across every machine, waiting to be the one thing an attacker steals.</p>
+          <div class="enterprise-verify-leaves">
+            <span class="enterprise-verify-leaves-label">What you get</span>
+            <span class="enterprise-verify-leaves-value">One-time pass, per-agent identity</span>
+          </div>
+        </article>
+
+        <article class="enterprise-verify-card" data-fx="spotlight">
+          <div class="enterprise-verify-head">
+            <span class="enterprise-verify-num">06</span>
+            <span>The long haul</span>
+          </div>
+          <h3>Run the fleet for years, not just install day.</h3>
+          <p>Retire an old agent for good so its access stops working, and back up the Conductor's data so a lost Conductor is a restore instead of a rebuild. Signing keys stay in your own key store.</p>
+          <div class="enterprise-verify-leaves">
+            <span class="enterprise-verify-leaves-label">What you get</span>
+            <span class="enterprise-verify-leaves-value">Add, retire, back up, restore</span>
+          </div>
+        </article>
+      </div>
+
+      <p class="enterprise-deploy-foot">
+        The scanner and enforcement run free on every agent. The Conductor is what ties them into one fleet you can govern. For what a single agent does on its own, see <a href="/pipelock/">Pipelock</a>.
+      </p>
+    </div>
+  </section>
+
+  {{/* ── 03 — Verify ──────────────────────────────────── */}}
+  <section class="enterprise-section showpiece-chapter" data-chapter="03" id="verify" aria-label="Proof you verify yourself">
+    <div class="enterprise-section-inner">
+      <div class="enterprise-section-head showpiece-chapter-head">
+        <span class="enterprise-section-num showpiece-chapter-kicker">03 · Proof</span>
+        <h2 data-fx="decrypt">The part procurement cares about: you do not have to trust us</h2>
+        <span class="enterprise-section-meta">A dashboard shows status. Pipelock adds proof.</span>
+      </div>
+
+      <div class="enterprise-verify-grid">
+        <article class="enterprise-verify-card" data-fx="spotlight tilt">
+          <div class="enterprise-verify-head">
+            <span class="enterprise-verify-num">A</span>
+            <span>Signed where it happens</span>
+          </div>
+          <h3>Each agent signs its own record the moment it acts.</h3>
+          <p>The signature comes from outside the agent's own code, so a compromised agent cannot rewrite it as its own log after the fact.</p>
+          <div class="enterprise-verify-leaves">
+            <span class="enterprise-verify-leaves-label">What you get</span>
+            <span class="enterprise-verify-leaves-value">Signed outside the agent process</span>
+          </div>
+        </article>
+
+        <article class="enterprise-verify-card" data-fx="spotlight tilt">
+          <div class="enterprise-verify-head">
+            <span class="enterprise-verify-num">B</span>
+            <span>Check it yourself</span>
+          </div>
+          <h3>Check the proof with the free Pipelock binary and the published signing key.</h3>
+          <p>No Conductor, no account, no call home. An auditor can verify the signature and chain offline with the published key, even if the control plane is unavailable. That proves the records haven't changed since signing. It doesn't prove the signer recorded every event.</p>
+          <div class="enterprise-verify-leaves">
+            <span class="enterprise-verify-leaves-label">What you get</span>
+            <span class="enterprise-verify-leaves-value">Works offline, even without us</span>
+          </div>
+        </article>
+
+        <article class="enterprise-verify-card" data-fx="spotlight tilt">
+          <div class="enterprise-verify-head">
+            <span class="enterprise-verify-num">C</span>
+            <span>Check vs create</span>
+          </div>
+          <h3>Anyone can check the fleet roll-up. The Conductor creates it.</h3>
+          <p>That split is the whole point. The free version lets any team check a record itself. The paid Conductor is what produces a single signed roll-up of the mediated activity its enrolled followers reported in a given window.</p>
+          <div class="enterprise-verify-leaves">
+            <span class="enterprise-verify-leaves-label">What you get</span>
+            <span class="enterprise-verify-leaves-value">Open to check, paid to produce</span>
+          </div>
+        </article>
+      </div>
+
+      {{ $wb := resources.Get "images/dashboard-workbench.png" }}
+      {{ if $wb }}{{ $wbimg := $wb.Resize "1200x webp q84" }}
+      <figure class="enterprise-console-figure" data-fx="scan" style="margin: 2.5rem 0 0;">
+        <a href="/learn/operator-console/" aria-label="Learn about the Pipelock operator console">
+          <img src="{{ $wbimg.RelPermalink }}"
+               alt="Pipelock operator console Signed Action Workbench: shipped conductor publish, kill, and rollback commands with read-only replay of past decisions"
+               width="{{ $wbimg.Width }}" height="{{ $wbimg.Height }}"
+               loading="lazy" decoding="async"
+               style="max-width: 100%; height: auto; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06);">
+        </a>
+        <figcaption style="font-size: 0.85rem; color: var(--text-dim, #8b949e); margin-top: 0.6rem;">
+          The Signed Action Workbench in the operator console: it prepares and replays signed fleet actions, and it is deliberately unable to submit them. Publish, kill, and rollback run through the shipped CLI with keys the console never holds. <a href="/learn/operator-console/">How the console works →</a>
+        </figcaption>
+      </figure>
+      {{ end }}
+    </div>
+  </section>
+
+  {{/* ── 04 — Evidence ────────────────────────────────── */}}
+  <section class="enterprise-section enterprise-section-elev showpiece-chapter" data-chapter="04" id="evidence" aria-label="Evidence and auditability">
+    <div class="enterprise-section-inner">
+      <div class="enterprise-section-head showpiece-chapter-head">
+        <span class="enterprise-section-num showpiece-chapter-kicker">04 · Evidence</span>
+        <h2 data-fx="decrypt">Evidence and auditability</h2>
+        <span class="enterprise-section-meta">5 distinct artifacts</span>
+      </div>
+
+      <div class="enterprise-evidence">
+        <div class="enterprise-evidence-main">
+          <div class="enterprise-evidence-list">
+            <div class="enterprise-evidence-item">
+              <div class="enterprise-evidence-key">Artifact 01</div>
+              <div>
+                <h4>Flight recorder</h4>
+                <p>Hash-chained audit log of scanner decisions, policy actions, and session events. Replayable.</p>
+                <p class="enterprise-evidence-meta">Format: NDJSON · chain: SHA-256</p>
+              </div>
+            </div>
+            <div class="enterprise-evidence-item">
+              <div class="enterprise-evidence-key">Artifact 02</div>
+              <div>
+                <h4>Signed assessments</h4>
+                <p><code>pipelock assess</code> generates HTML and JSON reports with framework mappings.</p>
+                <p class="enterprise-evidence-meta">Signature: Ed25519 · {{ $stats.compliance_frameworks }} frameworks mapped</p>
+              </div>
+            </div>
+            <div class="enterprise-evidence-item">
+              <div class="enterprise-evidence-key">Artifact 03</div>
+              <div>
+                <h4>Mediator-signed action receipts</h4>
+                <p>Optional per-decision records signed from outside the agent trust boundary.</p>
+                <p class="enterprise-evidence-meta">Verifier: <a href="https://github.com/luckyPipewrench/pipelock-verify-python" target="_blank" rel="noopener noreferrer">pipelock-verify-python</a></p>
+              </div>
+            </div>
+            <div class="enterprise-evidence-item">
+              <div class="enterprise-evidence-key">Artifact 04</div>
+              <div>
+                <h4>Posture verification</h4>
+                <p><code>pipelock posture verify</code> and <code>pipelock verify-install</code> support repeatable evaluation and CI gates.</p>
+                <p class="enterprise-evidence-meta">CI gate: exit code 0 / non-zero</p>
+              </div>
+            </div>
+            <div class="enterprise-evidence-item">
+              <div class="enterprise-evidence-key">Artifact 05</div>
+              <div>
+                <h4>Public proof surfaces</h4>
+                <p>Public benchmark results, public docs, public mappings, and published release artifacts.</p>
+                <p class="enterprise-evidence-meta">Public: <a href="/proof/">/proof/</a> · <a href="/gauntlet/">/gauntlet/</a></p>
+              </div>
+            </div>
+          </div>
+
+          <div class="enterprise-evidence-mappings">
+            <h4>Framework mappings, published in the public repo docs</h4>
+            <div class="enterprise-evidence-pills">
+              <a class="enterprise-evidence-pill" href="https://github.com/luckyPipewrench/pipelock/blob/main/docs/owasp-mapping.md" target="_blank" rel="noopener noreferrer">OWASP Agentic AI Top 10</a>
+              <a class="enterprise-evidence-pill" href="https://github.com/luckyPipewrench/pipelock/blob/main/docs/owasp-mapping.md" target="_blank" rel="noopener noreferrer">OWASP LLM Top 10</a>
+              <a class="enterprise-evidence-pill" href="https://github.com/luckyPipewrench/pipelock/blob/main/docs/owasp-mapping.md" target="_blank" rel="noopener noreferrer">OWASP MCP Top 10</a>
+              <span class="enterprise-evidence-pill is-static">MITRE ATLAS</span>
+              <span class="enterprise-evidence-pill is-static">NIST 800-53</span>
+              <span class="enterprise-evidence-pill is-static">EU AI Act</span>
+              <span class="enterprise-evidence-pill is-static">SOC 2</span>
+            </div>
+          </div>
+
+          {{/* Verify-a-receipt terminal — command-syntax only.
+               Synthetic verifier output deliberately omitted to match the
+               /proof/ pattern (no fabricated proof artifacts). */}}
+          <div class="enterprise-evidence-cli">
+            <div class="enterprise-evidence-cli-head">
+              <span class="enterprise-evidence-cli-dot enterprise-evidence-cli-dot-1"></span>
+              <span class="enterprise-evidence-cli-dot enterprise-evidence-cli-dot-2"></span>
+              <span class="enterprise-evidence-cli-dot enterprise-evidence-cli-dot-3"></span>
+              <span class="enterprise-evidence-cli-name">verify.sh</span>
+              <span class="enterprise-evidence-cli-hint">Reproducible · offline</span>
+            </div>
+            <pre class="enterprise-evidence-cli-body" data-fx="type" data-command-lines data-command-text="pipelock verify-receipt receipt.json --key 70b991eb77816fc4ef0ae6a54d8a4119ddc5a16c9711c332c39e743079f6c63e&#10;pip install pipelock-verify&#10;pipelock-verify receipt.json --key 70b991eb..."><code>$ pipelock verify-receipt receipt.json --key 70b991eb77816fc4ef0ae6a54d8a4119ddc5a16c9711c332c39e743079f6c63e
+$ pip install pipelock-verify
+$ pipelock-verify receipt.json --key 70b991eb...</code></pre>
+            <div class="enterprise-evidence-cli-foot">
+              <a href="https://github.com/luckyPipewrench/pipelock-verify-python" target="_blank" rel="noopener noreferrer">pipelock-verify-python</a>
+              <span class="enterprise-evidence-cli-sep">·</span>
+              <a href="https://github.com/luckyPipewrench/pipelock/blob/main/docs/scan-api.md" target="_blank" rel="noopener noreferrer">Scan API docs</a>
+              <span class="enterprise-evidence-cli-sep">·</span>
+              <a href="/assess/demo-assessment/">Demo assessment</a>
+            </div>
+          </div>
+        </div>
+
+        <aside class="enterprise-evidence-sample">
+          <span class="enterprise-evidence-sample-label">Sample report</span>
+          <a href="/assess/demo-assessment/" aria-label="View sample assessment report">
+            <img src="/images/sample-report.webp"
+                 alt="Pipelock signed security assessment report, sample"
+                 width="500" height="1542"
+                 loading="lazy" decoding="async">
+          </a>
+          <p class="enterprise-evidence-sample-cap">
+            Click to open the <a href="/assess/demo-assessment/">demo assessment</a>. Generated by <code>pipelock assess</code>; Ed25519-signed; mappings included.
+          </p>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  {{/* ── 05 — Stack fit ───────────────────────────────── */}}
+  <section class="enterprise-section showpiece-chapter" data-chapter="05" id="fit" aria-label="Adopt without breaking production">
+    <div class="enterprise-section-inner">
+      <div class="enterprise-section-head showpiece-chapter-head">
+        <span class="enterprise-section-num showpiece-chapter-kicker">05 · Adopt</span>
+        <h2 data-fx="decrypt">Adopt without breaking production</h2>
+        <span class="enterprise-section-meta">Observe-first is the default, not a setting to hunt for</span>
+      </div>
+
+      <div class="enterprise-why-grid">
+        <div class="enterprise-why-cell" data-fx="spotlight">
+          <span class="enterprise-why-marker">Roll in safely</span>
+          <h3>Start in observe-first mode across the live fleet.</h3>
+          <p>The first objection at scale is that a blocking firewall takes down legitimate traffic on day one. <a href="/learn/progressive-enforcement/">Progressive enforcement</a> answers it: observe first, then promote.</p>
+        </div>
+        <div class="enterprise-why-cell" data-fx="spotlight">
+          <span class="enterprise-why-marker">See before you block</span>
+          <h3>Review what would have been blocked before you turn on enforcement.</h3>
+          <p>Turn on shadow recording and every request that <em>would</em> have been blocked is written as a signed shadow receipt, so you promote with evidence instead of a guess.</p>
+        </div>
+        <div class="enterprise-why-cell" data-fx="spotlight">
+          <span class="enterprise-why-marker">Reversible</span>
+          <h3>Rollback writes its own audit record.</h3>
+          <p>Roll back to a policy you already approved, and the rollback is signed and logged like any other change. Nothing changes what the fleet enforces without leaving a record.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {{/* ── 06 — Scenarios ───────────────────────────────── */}}
+  <section class="enterprise-section enterprise-section-elev showpiece-chapter" data-chapter="06" id="scenarios" aria-label="Free core, paid coordination">
+    <div class="enterprise-section-inner">
+      <div class="enterprise-section-head showpiece-chapter-head">
+        <span class="enterprise-section-num showpiece-chapter-kicker">06 · Tiers</span>
+        <h2 data-fx="decrypt">Free core, paid coordination</h2>
+        <span class="enterprise-section-meta">We sell coordination, not detection</span>
+      </div>
+
+      <div class="enterprise-scen-grid" data-fx="reveal">
+        <div class="enterprise-scen" data-fx="spotlight">
+          <span class="enterprise-scen-num">01</span>
+          <p>Free, on every agent.<span class="enterprise-scen-detail">The full scanner and enforcement engine is the Apache-2.0 core, a single binary. Enterprise features are under ELv2. Detection is never behind a license, one agent or a thousand.</span></p>
+        </div>
+        <div class="enterprise-scen" data-fx="spotlight">
+          <span class="enterprise-scen-num">02</span>
+          <p>Pro adds multi-agent coordination.<span class="enterprise-scen-detail">Per-agent policies and budgets for one operator running several agents. See <a href="/pricing/">pricing</a>.</span></p>
+        </div>
+        <div class="enterprise-scen" data-fx="spotlight">
+          <span class="enterprise-scen-num">03</span>
+          <p>Enterprise is the Conductor.<span class="enterprise-scen-detail">The fleet control plane: one set of rules everywhere, a remote kill switch, signed records of what each enrolled follower reported, and the tools to run it for years. Gated on the <code>fleet</code> license.</span></p>
+        </div>
+        <div class="enterprise-scen" data-fx="spotlight">
+          <span class="enterprise-scen-num">04</span>
+          <p>The rule behind the split.<span class="enterprise-scen-detail">No attacker gets past the scanner because a team is on the free tier. The paid line is fleet coordination and governance, never the protection itself.</span></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {{/* ── 07 — Start an evaluation ─────────────────────── */}}
+  <section class="enterprise-section showpiece-chapter" data-chapter="07" id="start" aria-label="Where the Conductor is today">
+    <div class="enterprise-section-inner">
+      <div class="enterprise-cta showpiece-final" data-fx="reveal">
+        <span class="enterprise-cta-eyebrow showpiece-chapter-kicker">07 · Start</span>
+        <h2 data-fx="decrypt">Where it is today.</h2>
+        <p>
+          The Conductor ships now as <code>pipelock conductor</code> commands: add and remove agents, publish policy, hit the kill switch, resume, and back up and restore. Self-service Enterprise purchase is live: start a $5k evaluation, take a design-partner slot, or buy the annual license.
+        </p>
+        <div class="enterprise-cta-actions">
+          <a class="btn btn-primary" href="/pricing/"
+             data-event="pricing_click" data-event-placement="enterprise-cta">
+            See Enterprise pricing
+          </a>
+          <a class="btn btn-ghost"
+             href="https://buy.polar.sh/polar_cl_ToGNrYlQDH6Xrnf9kBvrrSG3D3yRn0P0y4xEZ2Z0cCH"
+             target="_blank" rel="noopener noreferrer"
+             data-event="checkout_started" data-event-placement="enterprise-cta" data-event-value="enterprise_eval">
+            Start a $5k evaluation
+          </a>
+          <a class="btn btn-ghost" href="/enterprise/pipelock-solution-brief.pdf"
+             data-event="solution_brief_click" data-event-placement="enterprise-cta">
+            Download Solution Brief (PDF)
+          </a>
+        </div>
+        <p class="enterprise-cta-fine">
+          Available now → shipped <code>conductor</code> commands and self-service purchase on the <a href="/pricing/">pricing page</a>
+          <br>
+          Evaluation → <a href="https://buy.polar.sh/polar_cl_ToGNrYlQDH6Xrnf9kBvrrSG3D3yRn0P0y4xEZ2Z0cCH" target="_blank" rel="noopener noreferrer" data-event="checkout_started" data-event-placement="enterprise-cta-fine" data-event-value="enterprise_eval">start a $5k evaluation</a>
+          <br>
+          Design partner → <a href="https://buy.polar.sh/polar_cl_uEr20ZxF9tPBNCmuERPpx8L2MI0J4Dw6gfav42LAcnD" target="_blank" rel="noopener noreferrer" data-event="checkout_started" data-event-placement="enterprise-cta-fine" data-event-value="enterprise_design_partner">become a design partner</a>
+          <br>
+          Questions first → <a href="/contact/" data-event="contact_click" data-event-placement="enterprise-cta-fine">get in touch</a>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  {{/* ── Markdown body (link list for inbound-link counter +
+         markdown alternate output). The HTML template above does
+         not render the body inline; this keeps `npm run site:audit`
+         happy and gives the .md alternate a useful payload. */}}
+  {{ if .Content }}
+  <section class="enterprise-further" aria-label="Page content">
+    <div class="enterprise-further-inner">
+      {{ .Content }}
+    </div>
+  </section>
+  {{ end }}
+</article>
+
+{{ partial "site-fx.html" . }}
+
+{{ end }}

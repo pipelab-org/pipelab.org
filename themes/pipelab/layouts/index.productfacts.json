@@ -1,0 +1,18 @@
+{{- $stats := site.Data.stats -}}
+{{- $facts := dict
+  "name" "Pipelock"
+  "category" "open-source agent firewall"
+  "version" site.Params.pipelock_version
+  "license" (dict "core" "Apache-2.0" "enterprise" "Elastic-2.0")
+  "transports" (slice "HTTP" "WebSocket" "MCP")
+  "scope" "Inspection applies to mediated traffic. Direct egress prevention requires deployment isolation and network controls."
+  "install" ("pipelock/#install" | absURL)
+  "verification" ("proof/" | absURL)
+  "pricing" ("pricing/" | absURL)
+  "source_scope" "Metrics snapshot. The version field follows the current site release declaration."
+  "source_repository" $stats.product_source_repository
+  "source_commit" $stats.product_source_commit
+  "verified_date" $stats.product_verified_date
+  "metrics" (dict "dlp_patterns" $stats.dlp_patterns "direct_dependencies" $stats.direct_deps)
+-}}
+{{- $facts | jsonify -}}

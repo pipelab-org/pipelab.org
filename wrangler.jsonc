@@ -1,0 +1,16 @@
+{
+  "name": "pipelab-org",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-02-10",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": "./public"
+  },
+  // Destination for the /api/gh-advisory alert. Kept here rather than in secret
+  // storage on purpose: a Telegram chat id is not a credential and cannot be
+  // used without the bot token, so treating it as a secret would only make the
+  // delivery target harder to see and audit.
+  "vars": {
+    "TELEGRAM_ADVISORY_CHAT_ID": "-5558674979"
+  }
+}

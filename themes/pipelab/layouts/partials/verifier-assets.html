@@ -1,0 +1,22 @@
+{{/*
+  Resolves the browser-verifier asset set with content-hashed URLs and SRI
+  integrity values. A missing asset fails the build loudly here rather than
+  publishing a verifier page that cannot load.
+*/}}
+{{ $paths := dict
+  "wasm" "verifier/pipelock-verifier.wasm"
+  "wasmExec" "verifier/wasm_exec.js"
+  "capture" "verifier/evidence-proxy-0.jsonl"
+  "key" "verifier/receipt-key.pub.txt"
+}}
+{{ $out := dict }}
+{{ range $name, $path := $paths }}
+  {{ $res := resources.Get $path }}
+  {{ if not $res }}
+    {{ errorf "verifier asset missing from assets/: %s" $path }}
+  {{ else }}
+    {{ $fp := $res | fingerprint }}
+    {{ $out = merge $out (dict $name (dict "url" $fp.RelPermalink "integrity" $fp.Data.Integrity)) }}
+  {{ end }}
+{{ end }}
+{{ return $out }}

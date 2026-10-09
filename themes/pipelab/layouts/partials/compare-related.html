@@ -1,0 +1,78 @@
+{{/* compare-related.html
+     3-up related comparisons at the vendor page footer.
+     Driven by frontmatter override (related: [slug, slug, slug]) with a
+     fallback by shared compare_cat. Skips self. */}}
+{{ $page := . }}
+{{ $section := where .Site.RegularPages "Section" "compare" }}
+
+{{ $bySlug := dict }}
+{{ range $section }}
+  {{ if .File }}
+    {{ $bySlug = merge $bySlug (dict .File.BaseFileName .) }}
+  {{ end }}
+{{ end }}
+
+{{ $picks := slice }}
+
+{{/* 1. Frontmatter override wins. */}}
+{{ with $page.Params.related }}
+  {{ range . }}
+    {{ $p := index $bySlug . }}
+    {{ if $p }}{{ $picks = $picks | append $p }}{{ end }}
+  {{ end }}
+{{ end }}
+
+{{/* 2. Fallback: same compare_cat, exclude self. */}}
+{{ if lt (len $picks) 3 }}
+  {{ $selfPath := $page.Path }}
+  {{ $selfCat := $page.Params.compare_cat }}
+  {{ $candidates := slice }}
+  {{ range $section }}
+    {{ if and (ne .Path $selfPath) (eq .Params.compare_cat $selfCat) }}
+      {{ $candidates = $candidates | append . }}
+    {{ end }}
+  {{ end }}
+  {{ range $candidates }}
+    {{ if lt (len $picks) 3 }}
+      {{ $p := . }}
+      {{ $alreadyIn := false }}
+      {{ range $picks }}{{ if eq .Path $p.Path }}{{ $alreadyIn = true }}{{ end }}{{ end }}
+      {{ if not $alreadyIn }}{{ $picks = $picks | append $p }}{{ end }}
+    {{ end }}
+  {{ end }}
+{{ end }}
+
+{{/* 3. Fill from the rest of the section so a two-page category still shows three cards. */}}
+{{ if lt (len $picks) 3 }}
+  {{ $selfPath := $page.Path }}
+  {{ range $section }}
+    {{ if and (lt (len $picks) 3) (ne .Path $selfPath) }}
+      {{ $p := . }}
+      {{ $alreadyIn := false }}
+      {{ range $picks }}{{ if eq .Path $p.Path }}{{ $alreadyIn = true }}{{ end }}{{ end }}
+      {{ if not $alreadyIn }}{{ $picks = $picks | append $p }}{{ end }}
+    {{ end }}
+  {{ end }}
+{{ end }}
+
+{{ if gt (len $picks) 0 }}
+<aside class="compare-related" data-fx="reveal" aria-label="Related comparisons">
+  <p class="compare-related-label">Related comparisons</p>
+  <div class="compare-related-grid">
+    {{ range $picks }}
+    <a class="compare-related-card" data-fx="spotlight tilt" href="{{ .RelPermalink }}">
+      {{ $cat := .Params.compare_cat | default "" }}
+      {{ if $cat }}
+        {{ $catLabel := $cat }}
+        {{ range site.Data.compare_index.categories }}
+          {{ if eq .key $cat }}{{ $catLabel = .label }}{{ end }}
+        {{ end }}
+        <p class="compare-related-cat">{{ $catLabel }}</p>
+      {{ end }}
+      <p class="compare-related-title">{{ .LinkTitle | default .Title }}</p>
+      {{ with .Params.subtitle }}<p class="compare-related-desc">{{ . }}</p>{{ end }}
+    </a>
+    {{ end }}
+  </div>
+</aside>
+{{ end }}

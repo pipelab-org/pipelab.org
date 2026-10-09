@@ -1,0 +1,239 @@
+/* ============================================================
+   PipeLab / Pipelock - Colors & Type
+   ------------------------------------------------------------
+   v1.1 - 2026-04-26
+   Reconciled against Pipelock Brand Guidelines v1.0 (April 2026).
+
+   LOCKED-CURRENT (doc rejected, design system is canonical):
+     - Accent #00e5a0 teal - NOT doc's #00FFC8 cyan
+     - Background ramp #09090b -> #0e0e11 - NOT doc's navy ramp
+     - Hero treatment: purple radial + particle network - NOT grid overlay
+     - Wordmark: mixed-case two-tone (Pipe-slate / Lab-accent), default tracking
+
+   ADOPTED FROM DOC:
+     - Type scale 36 / 26 / 16 / 14 / 12 (was 51 / 29 / 15 / 13.5 / 13)
+     - "AGENT SECURITY" PipeLab tagline component (Inter Regular, +4px tracking, UC, 14px, slate)
+     - Voice and anti-vocabulary additions from the brand guide
+
+   Sync target: themes/pipelab/assets/scss/_variables.scss
+   ============================================================ */
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('./fonts/inter-variable.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 100 800;
+  font-display: swap;
+  src: url('./fonts/jetbrains-mono-variable.woff2') format('woff2');
+}
+
+:root {
+  /* - Brand color - LOCKED - */
+  --accent: #00e5a0;            /* Pipelock teal - single brand accent */
+  --accent-dim: rgba(0, 229, 160, 0.15);
+  --accent-glow: rgba(0, 229, 160, 0.08);
+  --accent-border: rgba(0, 229, 160, 0.20);
+
+  /* Hero radial companion - LOCKED (hero glow only, never type/button/border) */
+  --purple: #7c3aed;
+  --purple-dim: rgba(124, 58, 237, 0.10);
+
+  /* - Surfaces - LOCKED (near-black, not doc navy) - */
+  --bg: #09090b;                /* page background */
+  --bg-elevated: #0e0e11;       /* terminals, code blocks */
+  --bg-card: rgba(255, 255, 255, 0.04);
+  --bg-card-hover: rgba(255, 255, 255, 0.07);
+  --bg-overlay: rgba(9, 9, 11, 0.85);   /* sticky nav backdrop */
+  --bg-overlay-strong: rgba(9, 9, 11, 0.92);
+
+  /* - Borders - */
+  --border: rgba(255, 255, 255, 0.06);
+  --border-strong: rgba(255, 255, 255, 0.12);
+
+  /* - Text - */
+  --text: #e2e8f0;              /* primary */
+  --text-muted: #94a3b8;        /* body / secondary - also tagline color */
+  --text-dim: #64748b;          /* meta, captions */
+  --text-inverse: #09090b;      /* on accent surfaces */
+
+  /* - Semantic / status - */
+  --success: #00e5a0;           /* same as accent - brand owns "good" */
+  --warn:    #f59e0b;
+  --danger:  #ef4444;
+  --info:    #38bdf8;
+
+  /* - Type families - */
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+  --font-display: 'JetBrains Mono', 'Fira Code', monospace;  /* headings are mono */
+
+  /* - Type scale - DOC v1.0 (calmed down from old hero-heavy scale) - */
+  --fs-caption: 0.75rem;        /* 12px - caption */
+  --fs-code:    0.875rem;       /* 14px - code, CLI, eyebrow body */
+  --fs-tagline: 0.875rem;       /* 14px - "AGENT SECURITY" tagline */
+  --fs-body:    1rem;           /* 16px - body */
+  --fs-lead:    1.0625rem;      /* 17px - lead body, hero subhead */
+  --fs-h3:      1.25rem;        /* 20px - card title */
+  --fs-h2:      1.625rem;       /* 26px - section h2 */
+  --fs-h1:      2.25rem;        /* 36px - page / section h1 */
+  --fs-display: 3.25rem;        /* 52px - wordmark + featured display */
+  --fs-stat:    1.75rem;        /* 28px - stat numerics */
+
+  /* - Aliased token names (back-compat for older preview cards) - */
+  --fs-xs:   var(--fs-caption); /* 12 */
+  --fs-sm:   var(--fs-code);    /* 14 */
+  --fs-base: var(--fs-body);    /* 16 */
+  --fs-md:   var(--fs-lead);    /* 17 */
+  --fs-lg:   var(--fs-h3);      /* 20 */
+  --fs-xl:   var(--fs-h2);      /* 26 */
+  --fs-2xl:  var(--fs-h1);      /* 36 */
+  --fs-3xl:  var(--fs-h1);      /* 36 - h1 ceiling on body pages */
+  --fs-4xl:  var(--fs-display); /* 52 - wordmark / display only */
+  --fs-5xl:  var(--fs-display); /* 52 - wordmark / display only */
+
+  --lh-tight: 1.15;
+  --lh-snug:  1.35;
+  --lh-body:  1.6;
+  --lh-loose: 1.75;
+
+  /* - Tracking - */
+  --tracking-tight: -0.02em;    /* h1, h2 */
+  --tracking-snug:  -0.01em;    /* h3 */
+  --tracking-tagline: 0.286em;  /* +4px @ 14px = AGENT SECURITY tagline */
+  --tracking-wide:    0.08em;   /* uppercase eyebrows, stat labels */
+  --tracking-wider:   0.15em;   /* section labels */
+
+  /* - Spacing - */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.8rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 5rem;
+
+  /* - Radii - */
+  --radius-sm: 4px;
+  --radius:    8px;             /* buttons, inputs, pre */
+  --radius-md: 12px;            /* cards, terminals */
+  --radius-pill: 999px;
+
+  /* - Shadows / glows - */
+  --shadow-card:    0 1px 2px rgba(0,0,0,0.3);
+  --shadow-feature: 0 0 30px rgba(0, 229, 160, 0.08);
+  --shadow-button:  0 0 20px var(--accent-dim);
+  --backdrop-blur:  blur(12px);
+
+  /* - Layout - */
+  --max-width: 1100px;
+
+  /* - Motion - */
+  --t-fast:  0.15s ease;
+  --t-base:  0.2s ease;
+  --t-mid:   0.3s ease;
+  --t-slow:  0.6s ease-out;
+}
+
+/* ============================================================
+   Semantic element styles - drop-in defaults
+   ============================================================ */
+
+html {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: var(--lh-body);
+}
+
+body { background: var(--bg); color: var(--text); }
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  color: var(--text);
+  font-weight: 700;
+  letter-spacing: var(--tracking-tight);
+}
+
+h1 { font-size: var(--fs-h1); line-height: var(--lh-tight); }
+h2 { font-size: var(--fs-h2); line-height: var(--lh-tight); }
+h3 { font-size: var(--fs-h3); line-height: var(--lh-snug); letter-spacing: var(--tracking-snug); }
+h4 { font-size: var(--fs-body); }
+
+p {
+  font-family: var(--font-body);
+  color: var(--text-muted);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+}
+
+a { color: var(--accent); text-decoration: none; transition: opacity var(--t-base); }
+a:hover { opacity: 0.8; }
+
+small, .meta {
+  font-size: var(--fs-caption);
+  color: var(--text-dim);
+}
+
+/* Eyebrow / section label - uppercase mono */
+.eyebrow, .section-label {
+  font-family: var(--font-mono);
+  font-size: var(--fs-code);
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wider);
+}
+
+/* Tagline - Inter, uppercase, +4px tracking, slate
+   Use beneath the wordmark on hero/marketing surfaces.
+   Pairs with --fs-display wordmark only. */
+.tagline {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: var(--fs-tagline);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-tagline);
+}
+
+/* Code */
+code, kbd, samp {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  color: var(--accent);
+}
+
+pre {
+  font-family: var(--font-mono);
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  overflow-x: auto;
+  font-size: var(--fs-code);
+  line-height: var(--lh-body);
+  color: var(--accent);
+}
+
+/* Mono numerics (stats) */
+.numeric {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-stat);
+}
+
+/* Focus */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

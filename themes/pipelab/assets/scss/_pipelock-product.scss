@@ -1,0 +1,2059 @@
+// ============================================================
+//   /pipelock/ product page
+//   ------------------------------------------------------------
+//   Used by themes/pipelab/layouts/pipelock/single.html only.
+//   Scoped under .pipelock-product so all selectors stay local
+//   even when class names overlap with the existing theme
+//   (.section-intro, .capability-grid, .deploy-grid, etc.).
+//   Editorial product page treatment matching the recently
+//   shipped /learn/ + /blog/ surfaces.
+// ============================================================
+
+.pipelock-product {
+  position: relative;
+  // Counter for the three pillar headings (Detect / Enforce / Prove).
+  // Increments only inside .pipelock-pillars-scope to avoid bleeding
+  // into the rest of the page; we apply the scope on the body wrapper.
+  counter-reset: pillar;
+}
+
+// ── Hero ────────────────────────────────────────────────────
+.pipelock-hero-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.pipelock-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-code);
+  color: var(--accent);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  margin: 0 0 1.25rem;
+  padding: 0.4rem 0.95rem;
+  border: 1px solid rgba(0, 229, 160, 0.2);
+  border-radius: 999px;
+}
+
+.pipelock-eyebrow-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px rgba(0, 229, 160, 0.6);
+}
+
+.pipelock-lockup {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(1.25rem, 2.5vw, 2.25rem);
+}
+
+.pipelock-lockup-mark {
+  display: block;
+  width: clamp(72px, 6vw, 88px);
+  height: clamp(72px, 6vw, 88px);
+  color: var(--accent);
+
+  svg { display: block; width: 100%; height: 100%; }
+}
+
+.pipelock-lockup-type {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  text-align: left;
+}
+
+.pipelock-wordmark {
+  font-family: var(--font-mono), monospace;
+  font-size: clamp(2.7rem, 5.1vw, 5rem);
+  font-weight: 700;
+  line-height: .96;
+  letter-spacing: -.065em;
+  color: var(--text);
+  margin: 0;
+  white-space: nowrap;
+
+  em { color: var(--accent); font-style: normal; }
+
+  @media (max-width: $bp-mobile) {
+    font-size: clamp(2rem, 10vw, 3rem);
+    white-space: normal;
+  }
+}
+
+.pipelock-category {
+  margin: .85rem 0 0 .18rem;
+  color: var(--text-muted);
+  font: 500 clamp(.8rem, 1.15vw, 1rem)/1.25 var(--font-mono);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.pipelock-lead {
+  font-size: var(--fs-lead);
+  color: var(--text-muted);
+  line-height: 1.55;
+  margin: 1rem auto 1.1rem;
+  max-width: 760px;
+}
+
+.pipelock-version-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem 0.85rem;
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  color: var(--text-dim);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  margin: 0 auto 1rem;
+}
+
+.pipelock-version-chip {
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  color: var(--accent);
+  background: rgba(0, 229, 160, 0.08);
+  border: 1px solid rgba(0, 229, 160, 0.25);
+  border-radius: 4px;
+  padding: 0.18rem 0.55rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.pipelock-hero-actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.pipelock-hero-facts {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  max-width: 920px;
+  margin: 1.5rem auto 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(8, 10, 14, .72);
+  backdrop-filter: blur(12px);
+
+  div { padding: .75rem 1rem; }
+  div + div { border-left: 1px solid var(--border); }
+  dt {
+    color: var(--text-dim);
+    font: 600 .65rem/1.2 var(--font-mono);
+    letter-spacing: .13em;
+    text-transform: uppercase;
+  }
+  dd {
+    margin: .45rem 0 0;
+    color: var(--text);
+    font: 650 .9rem/1.25 var(--font-mono);
+  }
+
+  @media (max-width: $bp-tablet) {
+    grid-template-columns: repeat(2, 1fr);
+    div:nth-child(3) { border-left: 0; border-top: 1px solid var(--border); }
+    div:nth-child(4) { border-top: 1px solid var(--border); }
+  }
+}
+
+.pipelock-deep-dives {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem 0.85rem;
+  margin: 0 auto 2.5rem;
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+@media (max-width: $bp-mobile) {
+  .pipelock-lockup { flex-direction: column; gap: 1.1rem; }
+  .pipelock-lockup-type { text-align: center; }
+  .pipelock-category { margin-left: 0; }
+}
+
+.pipelock-deep-dives-label {
+  color: var(--text-dim);
+}
+
+.pipelock-deep-dives a {
+  color: var(--text-muted);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: color 0.15s ease, border-color 0.15s ease;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+}
+
+// page-formats partial inside the hero (Markdown source / RSS pills).
+// Mirrors the .page-formats treatment used on /learn/ and /blog/ headers.
+.pipelock-hero .page-formats {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 0 auto 2.5rem;
+
+  a {
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-caption);
+    color: var(--accent);
+    text-decoration: none;
+    border: 1px solid rgba(0, 229, 160, 0.18);
+    border-radius: 999px;
+    padding: 0.35rem 0.9rem;
+    transition: border-color 0.2s ease, background 0.2s ease;
+  }
+  a:hover,
+  a:focus-visible {
+    border-color: rgba(0, 229, 160, 0.36);
+    background: rgba(0, 229, 160, 0.06);
+  }
+}
+
+.pipelock-hero-architecture {
+  margin: 1.75rem auto 0;
+  max-width: 960px;
+  padding: 1.1rem;
+  border-radius: 18px;
+  background:
+    linear-gradient(150deg, rgba(0, 229, 160, 0.07), rgba(124, 58, 237, 0.05) 70%),
+    rgba(14, 14, 17, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+
+  img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+}
+
+// ── Sticky mini-nav ─────────────────────────────────────────
+//   Sits BELOW the site header (.site-header is sticky top:0 z:100,
+//   measures ~65px tall). Mini-nav stays a layer behind so the site
+//   header always wins on overlap.
+.pipelock-mini-nav {
+  position: sticky;
+  top: 65px;
+  z-index: 50;
+  background: rgba(9, 9, 11, 0.92);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 2rem;
+
+  ul {
+    list-style: none;
+    margin: 0 auto;
+    padding: 0.85rem 1.5rem;
+    max-width: 1100px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.4rem;
+
+    @media (max-width: $bp-tablet) {
+      overflow-x: auto;
+      flex-wrap: nowrap;
+      justify-content: flex-start;
+      padding: 0.65rem 1rem;
+      // Branded scrollbar inherited from _brand-standards.scss.
+    }
+  }
+
+  li { margin: 0; }
+
+  a {
+    display: inline-block;
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-caption);
+    color: var(--text-muted);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.4rem 0.9rem;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--text);
+      border-color: rgba(255, 255, 255, 0.18);
+    }
+
+    &.is-current {
+      color: var(--bg);
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+  }
+}
+
+// ── Body wrapper ────────────────────────────────────────────
+.pipelock-product-body {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 2rem 2rem;
+
+  @media (max-width: $bp-mobile) {
+    padding: 0 1.5rem 1.5rem;
+  }
+}
+
+// ── Editorial chapter slabs ─────────────────────────────────
+// The Markdown keeps the product narrative and its deep-link anchors. These
+// wrappers give related sections one continuous surface so the long product
+// page reads as chapters rather than a stack of unrelated cards.
+.pipelock-product-body .pipelock-chapter {
+  position: relative;
+  width: auto;
+  margin: 4.5rem 0 0;
+  padding: 4.5rem clamp(1rem, 3vw, 2rem);
+  box-sizing: border-box;
+  background: linear-gradient(180deg, #0c0e0e 0%, #0a0b0d 55%, #0b0a0e 100%);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 18px;
+  overflow: hidden;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(ellipse 55% 28% at 50% 0%, rgba(0, 229, 160, 0.05), transparent 65%),
+      radial-gradient(ellipse 48% 30% at 78% 100%, rgba(124, 58, 237, 0.06), transparent 65%);
+  }
+
+  > * { position: relative; }
+
+  > hr,
+  > .section-divider { display: none; }
+
+  > .section-intro {
+    margin-top: 5rem;
+    padding-top: 0;
+  }
+
+  > .section-intro:first-child { margin-top: 0; }
+
+  > .capability-grid,
+  > .deploy-grid,
+  > .pipeline-frame,
+  > .stats-strip,
+  > .media-grid,
+  > .terminal,
+  > .waitlist-section {
+    margin-bottom: 0;
+  }
+
+  @media (max-width: $bp-mobile) {
+    margin-top: 3rem;
+    padding: 3rem 1rem;
+    border-radius: 14px;
+
+    > .section-intro { margin-top: 3.5rem; }
+  }
+}
+
+.pipelock-product-body .pipelock-chapter-capabilities {
+  margin-top: 2rem;
+}
+
+.pipelock-product-body .pipelock-chapter-architecture {
+  background:
+    radial-gradient(ellipse 48% 30% at 18% 16%, rgba(0, 229, 160, 0.045), transparent 66%),
+    linear-gradient(180deg, #0b0d0d 0%, #090a0c 100%);
+}
+
+.pipelock-product-body .pipelock-chapter-deploy {
+  background:
+    radial-gradient(ellipse 48% 30% at 80% 12%, rgba(124, 58, 237, 0.055), transparent 66%),
+    linear-gradient(180deg, #0c0d10 0%, #0a0b0d 100%);
+}
+
+// ── Overview block (intro paragraph between hero and Detect) ─
+.pipelock-product-overview {
+  display: grid;
+  grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+  gap: 2rem;
+  max-width: 68.75rem;
+  margin: 1.5rem auto 4rem;
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+  text-align: left;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 12% 12%, rgba(0, 229, 160, .07), transparent 42%),
+    rgba(10, 12, 14, .78);
+
+  p {
+    color: var(--text-muted);
+    font-size: var(--fs-body);
+    line-height: 1.7;
+    margin: 0 0 1rem;
+  }
+
+  a {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(0, 229, 160, 0.3);
+
+    &:hover { border-bottom-color: var(--accent); }
+  }
+}
+
+.pipelock-overview-statement {
+  align-self: center;
+  padding-right: clamp(0rem, 2vw, 1.5rem);
+
+  p:last-child {
+    margin: 0;
+    color: var(--text);
+    font-size: clamp(1.05rem, 1.5vw, 1.2rem);
+    line-height: 1.7;
+  }
+}
+
+.pipelock-product-overview .pipelock-overview-kicker {
+  margin: 0 0 .9rem;
+  color: var(--accent);
+  font: 650 var(--fs-caption)/1.2 var(--font-mono);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+}
+
+.pipelock-overview-proof {
+  display: grid;
+  gap: .75rem;
+}
+
+.pipelock-overview-meta {
+  position: relative;
+  margin: 0;
+  padding: .85rem 1rem .85rem 2rem;
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  color: var(--text-dim);
+  letter-spacing: .02em;
+  border: 1px solid rgba(255, 255, 255, .055);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .018);
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: .55rem;
+    left: .9rem;
+    width: .45rem;
+    height: .45rem;
+    border: 1px solid var(--accent);
+    transform: rotate(45deg);
+  }
+}
+
+.pipelock-overview-meta-quiet {
+  color: var(--text-dim);
+  opacity: 0.85;
+}
+
+@media (max-width: $bp-tablet) {
+  .pipelock-product-overview {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    padding-inline: 1.25rem;
+  }
+}
+
+// ── Section intros (.section-intro from markdown) ───────────
+//   The markdown places one of these at the top of every section.
+//   For Detect / Enforce / Prove (the three pillars) the intro
+//   reads as "01 / 03 - DETECT - Find threats..." with a counter.
+//   Other sections (How It Works, Pipeline, Security, Deploy,
+//   GitHub Action, Install, Quick Start) get the same eyebrow
+//   treatment without the pillar counter.
+.pipelock-product-body .section-intro {
+  text-align: center;
+  margin: 0 auto 2rem;
+  max-width: 760px;
+  padding: 1rem 0 0.5rem;
+  scroll-margin-top: 5.5rem;
+
+  .section-label {
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-caption);
+    color: var(--accent);
+    letter-spacing: var(--tracking-wider);
+    text-transform: uppercase;
+    margin: 0 0 0.85rem;
+  }
+
+  h2 {
+    font-family: var(--font-mono), monospace;
+    font-size: clamp(1.8rem, 3vw, 2.4rem);
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: var(--tracking-tight);
+    color: var(--text);
+    margin: 0 0 0.85rem;
+  }
+
+  p {
+    font-size: var(--fs-body);
+    color: var(--text-muted);
+    line-height: 1.65;
+    margin: 0;
+  }
+}
+
+// Pillar counter on the three named pillars (Detect / Enforce / Prove).
+.pipelock-product-body .section-intro {
+  &#detect, &#enforce, &#prove {
+    counter-increment: pillar;
+  }
+}
+
+// ── Capability grid (3-up cards, last-row centered) ────────
+//   Uses flex instead of grid so partial last rows (4, 7, 8 cards
+//   on a 3-up grid) center instead of leaving empty cells on the
+//   right. Counts vary by section (Detect=7, Enforce=8, Prove=9)
+//   and will keep changing, so the layout has to be count-agnostic.
+.pipelock-product-body .capability-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+  max-width: 1100px;
+  margin: 0 auto 3.5rem;
+  counter-reset: card;
+}
+
+.pipelock-product-body .capability-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 calc((100% - 2rem) / 3);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  counter-increment: card;
+  overflow: hidden;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+
+  @media (max-width: $bp-tablet) {
+    flex-basis: calc((100% - 1rem) / 2);
+  }
+  @media (max-width: $bp-mobile) {
+    flex-basis: 100%;
+  }
+
+  &:hover,
+  &:focus-within {
+    border-color: rgba(0, 229, 160, 0.35);
+    background: var(--bg-card-hover);
+    transform: translateY(-1px);
+  }
+
+  h3 {
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-h3);
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.25;
+    margin: 0 0 0.65rem;
+  }
+
+  p {
+    font-size: var(--fs-code);
+    color: var(--text-muted);
+    line-height: 1.55;
+    margin: 0;
+  }
+
+  code {
+    font-family: var(--font-mono), monospace;
+    font-size: 0.875em;
+    color: var(--accent);
+    background: rgba(0, 229, 160, 0.06);
+    border-radius: 4px;
+    padding: 0.05em 0.35em;
+  }
+}
+
+// Each product pillar gets its own reading rhythm. This avoids turning a long
+// product narrative into three consecutive walls of identical cards.
+.pipelock-product-body #detect + .capability-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  align-items: stretch;
+
+  .capability-card {
+    width: auto;
+    flex: none;
+    grid-column: span 3;
+    min-height: 15rem;
+  }
+
+  .capability-card:nth-child(-n + 4) {
+    background:
+      linear-gradient(145deg, rgba(0, 229, 160, .085), transparent 62%),
+      var(--bg-card);
+  }
+
+  .capability-card:nth-child(n + 5) {
+    grid-column: span 4;
+  }
+
+  .capability-card:last-child:nth-child(odd) {
+    max-width: none;
+    justify-self: stretch;
+  }
+}
+
+.pipelock-product-body #enforce + .capability-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0 2.5rem;
+  border-block: 1px solid var(--border);
+
+  .capability-card {
+    width: auto;
+    flex: none;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    column-gap: 1rem;
+    flex-basis: auto;
+    padding: 1.5rem 0;
+    border: 0;
+    border-radius: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, .065);
+    background: transparent;
+
+    &:hover,
+    &:focus-within {
+      background: transparent;
+      transform: none;
+    }
+  }
+}
+
+.pipelock-product-body #prove + .capability-grid {
+  display: grid;
+  grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr);
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  background: rgba(8, 10, 14, .7);
+
+  .capability-card {
+    width: auto;
+    flex: none;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    column-gap: 1rem;
+    flex-basis: auto;
+    padding: 1.4rem 1.5rem;
+    border: 0;
+    border-bottom: 1px solid var(--border);
+    border-radius: 0;
+    background: transparent;
+
+    &:nth-child(4n + 2),
+    &:nth-child(4n + 3) {
+      background: rgba(124, 58, 237, .035);
+    }
+
+    &:hover,
+    &:focus-within {
+      transform: none;
+    }
+  }
+}
+
+@media (max-width: $bp-tablet) {
+  .pipelock-product-body #detect + .capability-grid,
+  .pipelock-product-body #enforce + .capability-grid,
+  .pipelock-product-body #prove + .capability-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pipelock-product-body #detect + .capability-grid .capability-card,
+  .pipelock-product-body #detect + .capability-grid .capability-card:nth-child(-n + 4),
+  .pipelock-product-body #detect + .capability-grid .capability-card:nth-child(n + 5) {
+    grid-column: auto;
+    min-height: 0;
+  }
+}
+
+// ── Pipeline (terminal-card style with counter) ─────────────
+.pipelock-product-body .pipeline-frame {
+  max-width: 880px;
+  margin: 0 auto 3.5rem;
+}
+
+.pipelock-product-body .pipeline-inner {
+  padding: 0.85rem;
+  background:
+    linear-gradient(150deg, rgba(0, 229, 160, 0.10), rgba(124, 58, 237, 0.07) 70%),
+    rgba(14, 14, 17, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.pipelock-product-body .pipeline-inner > * {
+  background-color: rgba(9, 9, 11, 0.78);
+}
+
+.pipelock-product-body .pipeline-header {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.7rem 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid var(--border);
+}
+
+.pipelock-product-body .pipeline-dots {
+  display: inline-flex;
+  gap: 0.35rem;
+
+  span {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+  }
+}
+
+.pipelock-product-body .pipeline-title {
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  color: var(--text-dim);
+  letter-spacing: var(--tracking-wide);
+}
+
+.pipelock-product-body .pipeline-body {
+  counter-reset: pipeline-step;
+}
+
+.pipelock-product-body .pipeline-step {
+  display: grid;
+  grid-template-columns: 60px 1fr;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.85rem 1.1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  counter-increment: pipeline-step;
+
+  &:last-child { border-bottom: 0; }
+
+  &::before {
+    content: counter(pipeline-step, decimal-leading-zero);
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-h3);
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0;
+    text-align: left;
+  }
+
+  .pipeline-label {
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-body);
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .pipeline-desc {
+    font-size: var(--fs-caption);
+    color: var(--text-muted);
+    margin-top: 0.15rem;
+    line-height: 1.45;
+  }
+
+  @media (max-width: $bp-mobile) {
+    grid-template-columns: 40px 1fr;
+    gap: 0.75rem;
+    padding: 0.75rem 0.9rem;
+
+    &::before { font-size: var(--fs-body); }
+  }
+}
+
+.pipelock-product-body .pipeline-note {
+  padding: 0.85rem 1.1rem;
+  background: rgba(0, 229, 160, 0.04);
+  border-top: 1px solid rgba(0, 229, 160, 0.18);
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  color: var(--text);
+  line-height: 1.5;
+}
+
+// ── Deploy grid (deployment surfaces, last-row centered) ───
+//   Same flex treatment as .capability-grid so partial rows
+//   (How It Works has 4, Deploy has 7) center instead of
+//   leaving empty cells on the right.
+.pipelock-product-body .deploy-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+  max-width: 1100px;
+  margin: 0 auto 3.5rem;
+  counter-reset: deploy;
+}
+
+.pipelock-product-body .deploy-card {
+  flex: 0 0 calc((100% - 2rem) / 3);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.4rem;
+  counter-increment: deploy;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+
+  @media (max-width: $bp-tablet) {
+    flex-basis: calc((100% - 1rem) / 2);
+  }
+  @media (max-width: $bp-mobile) {
+    flex-basis: 100%;
+  }
+
+  &:hover {
+    border-color: rgba(0, 229, 160, 0.35);
+    background: var(--bg-card-hover);
+    transform: translateY(-2px);
+  }
+
+  .mode-title {
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-h3);
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.25;
+    margin: 0 0 0.6rem;
+  }
+
+  p {
+    font-size: var(--fs-code);
+    color: var(--text-muted);
+    line-height: 1.55;
+    margin: 0;
+  }
+
+  code {
+    font-family: var(--font-mono), monospace;
+    font-size: 0.875em;
+    color: var(--accent);
+    background: rgba(0, 229, 160, 0.06);
+    border-radius: 4px;
+    padding: 0.05em 0.35em;
+  }
+}
+
+// Transport is a compact legend leading into the ordered scanner pipeline,
+// not another capability-card wall.
+.pipelock-product-body .transport-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+  border-block: 1px solid var(--border);
+
+  .deploy-card {
+    display: block;
+    flex: none;
+    padding: 1.25rem;
+    border: 0;
+    border-right: 1px solid var(--border);
+    border-radius: 0;
+    background: transparent;
+
+    &:last-child { border-right: 0; }
+    &:hover { background: rgba(0, 229, 160, .025); transform: none; }
+  }
+
+  @media (max-width: $bp-tablet) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    .deploy-card:nth-child(2) { border-right: 0; }
+    .deploy-card:nth-child(-n + 2) { border-bottom: 1px solid var(--border); }
+  }
+
+  @media (max-width: $bp-mobile) {
+    grid-template-columns: 1fr;
+    .deploy-card { border-right: 0; border-bottom: 1px solid var(--border); }
+    .deploy-card:last-child { border-bottom: 0; }
+  }
+}
+
+// Deployment modes are reference material. A scan-friendly ledger is more
+// useful than seven equal hover cards.
+.pipelock-product-body .deploy-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+
+  .deploy-card {
+    display: grid;
+    grid-template-columns: minmax(9rem, .55fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 1rem;
+    flex: none;
+    padding: 1.1rem 1.25rem;
+    border: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, .065);
+    border-right: 1px solid rgba(255, 255, 255, .065);
+    border-radius: 0;
+    background: transparent;
+
+    &:nth-child(2n) { border-right: 0; }
+    &:hover { background: rgba(0, 229, 160, .025); transform: none; }
+
+    .mode-title { margin: 0; font-size: var(--fs-code); }
+  }
+
+  @media (max-width: $bp-tablet) {
+    grid-template-columns: 1fr;
+    .deploy-card { border-right: 0; }
+  }
+
+  @media (max-width: $bp-mobile) {
+    .deploy-card { grid-template-columns: 1fr; gap: .35rem; }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pipelock-product-body .capability-card,
+  .pipelock-product-body .deploy-card {
+    transition: none;
+
+    &:hover,
+    &:focus-within { transform: none; }
+  }
+}
+
+// Screenshot and report panels use the same plated-media treatment as the
+// hero architecture instead of leaving the images on a bare hairline.
+.pipelock-product-body .media-panel {
+  padding: 0.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  background:
+    linear-gradient(150deg, rgba(0, 229, 160, 0.09), rgba(124, 58, 237, 0.06) 70%),
+    rgba(14, 14, 17, 0.78);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.3);
+
+  .media-frame {
+    border-radius: 10px;
+    border-color: rgba(255, 255, 255, 0.08);
+    background: rgba(9, 9, 11, 0.78);
+  }
+
+  .media-caption { margin-bottom: 0; }
+}
+
+.pipelock-product-body .media-panel#kill-switch {
+  background:
+    linear-gradient(150deg, rgba(255, 77, 77, 0.12), rgba(255, 77, 77, 0.03) 70%),
+    rgba(14, 14, 17, 0.78);
+  border-color: rgba(255, 77, 77, 0.2);
+}
+
+// ── Stats strip ────────────────────────────────────────────
+.pipelock-product-body .stats-strip {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.75rem;
+  margin: 0 auto 3rem;
+  padding: 1.5rem 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+  width: 100%;
+  max-width: 1100px;
+
+  @media (max-width: $bp-tablet) {
+    grid-template-columns: repeat(3, 1fr);
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+  @media (max-width: $bp-mobile) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .stat {
+    padding: 0.5rem 0.75rem;
+  }
+
+  .stat-value {
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-h2);
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1.1;
+    margin-bottom: 0.4rem;
+  }
+
+  .stat-label {
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-caption);
+    color: var(--text-dim);
+    letter-spacing: var(--tracking-wider);
+    text-transform: uppercase;
+  }
+}
+
+.pipelock-ci-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 1.25rem;
+  margin-block: 3.5rem;
+
+  .pipelock-ci-panel {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: 1.5rem;
+    border: 1px solid var(--border);
+    border-top-color: rgba(0, 229, 160, .3);
+    border-radius: 14px;
+    background:
+      linear-gradient(180deg, rgba(0, 229, 160, .045), transparent 58%),
+      rgba(10, 12, 14, .72);
+  }
+
+  .section-intro { margin-bottom: 1.25rem; }
+  .terminal { max-width: none !important; margin-inline: 0 !important; }
+  .pipelock-ci-panel > p:last-child { margin-top: auto !important; padding-top: 1rem; }
+
+  @media (max-width: $bp-tablet) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pipelock-editor-guides {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: .6rem;
+  margin: 1.25rem auto 2rem;
+  font: 500 var(--fs-caption)/1.4 var(--font-mono);
+
+  span { color: var(--text-dim); padding: .4rem .25rem; }
+
+  a {
+    padding: .4rem .75rem;
+    color: var(--accent);
+    border-bottom: 1px solid rgba(0, 229, 160, .3);
+    text-decoration: none;
+  }
+}
+
+// ── Pipelock Pro waitlist section ──────────────────────────
+//   Existing markup; tighten margins so it sits at body width
+//   without inheriting the marketing-page hero treatment.
+.pipelock-product-body .waitlist-section {
+  max-width: 880px;
+  margin: 3rem auto;
+  padding: 2.5rem 2rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  text-align: center;
+
+  .waitlist-heading {
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-h2);
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 1rem;
+  }
+
+  .waitlist-intro {
+    font-size: var(--fs-body);
+    color: var(--text-muted);
+    line-height: 1.65;
+    margin: 0 auto 1.5rem;
+    max-width: 640px;
+  }
+
+  .waitlist-features {
+    display: inline-block;
+    text-align: left;
+    margin: 0 auto 1.5rem;
+    padding: 0;
+    list-style: none;
+
+    li {
+      position: relative;
+      padding-left: 1.4rem;
+      font-size: var(--fs-code);
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 0.4rem;
+
+      &::before {
+        content: "›";
+        position: absolute;
+        left: 0;
+        color: var(--accent);
+      }
+    }
+  }
+}
+
+// ── Bottom product CTA (template-owned, page sets disable_cta) ─
+.pipelock-product-cta {
+  max-width: 760px;
+  margin: 4rem auto 5rem;
+  padding: 2.5rem 2rem 0;
+  border-top: 1px solid var(--border);
+  text-align: center;
+
+  @media (max-width: $bp-mobile) {
+    margin: 3rem auto 4rem;
+    padding: 2rem 1.5rem 0;
+  }
+}
+
+.pipelock-product-cta-eyebrow {
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  color: var(--accent);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  margin: 0 0 0.85rem;
+}
+
+.pipelock-product-cta-copy {
+  font-size: var(--fs-lead);
+  color: var(--text);
+  line-height: 1.5;
+  margin: 0 auto 1.75rem;
+  max-width: 560px;
+}
+
+.pipelock-product-cta-actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+// ── Misc body content ──────────────────────────────────────
+.pipelock-product-body .section-divider {
+  margin: 2.5rem auto;
+  max-width: 760px;
+  border: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+}
+
+// Compare / Deep Dives chip lists (existing markup; keep but
+// rebalance against the new editorial scale).
+.pipelock-product-body h2 {
+  // Markdown-emitted h2s (How Pipelock Compares / Deep Dives) get
+  // the same scale + center treatment as section-intro h2s.
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-h2);
+  font-weight: 700;
+  color: var(--text);
+  text-align: center;
+  margin: 3rem auto 1.5rem;
+  scroll-margin-top: 5.5rem;
+}
+
+// ── Product body v2 ───────────────────────────────────────
+// The hero and architecture stay unchanged. The body uses divided rails,
+// one operational runbook, one pipeline artifact, and one evidence exhibit.
+// This block intentionally overrides the retired card-and-accordion rhythm
+// above while the old selectors remain harmless for removed markup.
+.pipelock-body-kicker {
+  margin: 0 0 0.8rem;
+  color: var(--accent);
+  font: 650 var(--fs-caption)/1.2 var(--font-mono);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+}
+
+.pipelock-boundary,
+.pipelock-controls,
+.pipelock-pipeline-section,
+.pipelock-evidence,
+.pipelock-pro-band,
+.pipelock-explore {
+  scroll-margin-top: 8.5rem;
+}
+
+.pipelock-boundary {
+  margin: 2rem 0 0;
+  border-block: 1px solid rgba(255, 255, 255, 0.1);
+  background:
+    radial-gradient(circle at 0 0, rgba(0, 229, 160, 0.08), transparent 38%),
+    rgba(10, 12, 14, 0.72);
+}
+
+.pipelock-boundary-copy {
+  max-width: 62rem;
+  padding: clamp(2rem, 5vw, 4rem) clamp(1.5rem, 4vw, 3.5rem) clamp(1.5rem, 3vw, 2.5rem);
+
+  h2 {
+    margin: 0 0 1.25rem;
+    color: var(--text);
+    font: 700 clamp(1.7rem, 2.8vw, 2.35rem)/1.15 var(--font-mono);
+    letter-spacing: var(--tracking-tight);
+    text-align: left;
+  }
+
+  p:not(.pipelock-body-kicker) {
+    margin: 0 0 1rem;
+    color: var(--text-muted);
+    font-size: var(--fs-body);
+    line-height: 1.75;
+  }
+}
+
+.pipelock-boundary-map {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(13rem, 0.7fr) minmax(0, 1fr);
+  align-items: stretch;
+  margin: 0 clamp(1.5rem, 4vw, 3.5rem) clamp(2rem, 5vw, 3.75rem);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.pipelock-boundary-zone {
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+
+  span {
+    color: var(--text-dim);
+    font: 650 var(--fs-caption)/1.3 var(--font-mono);
+    letter-spacing: var(--tracking-wider);
+    text-transform: uppercase;
+  }
+
+  h3 {
+    margin: 0.7rem 0 0.65rem;
+    color: var(--text);
+    font: 700 clamp(1.05rem, 1.6vw, 1.3rem)/1.35 var(--font-mono);
+  }
+
+  p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--fs-code);
+    line-height: 1.65;
+  }
+}
+
+.pipelock-boundary-zone-untrusted { background: rgba(124, 58, 237, 0.035); }
+
+.pipelock-boundary-crossing {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem 1rem;
+  border-inline: 1px solid rgba(0, 229, 160, 0.28);
+  background: linear-gradient(180deg, rgba(0, 229, 160, 0.11), rgba(0, 229, 160, 0.035));
+  text-align: center;
+
+  span,
+  small {
+    color: var(--text-dim);
+    font: 600 0.68rem/1.35 var(--font-mono);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+  }
+
+  strong {
+    color: var(--accent);
+    font: 700 clamp(1.15rem, 1.8vw, 1.5rem)/1.2 var(--font-mono);
+  }
+}
+
+.pipelock-proof-rail {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+
+  a {
+    min-width: 0;
+    padding: 1.15rem 1.35rem;
+    color: var(--text-muted);
+    font: 650 var(--fs-code)/1.35 var(--font-mono);
+    text-decoration: none;
+    transition: color 0.15s ease, background 0.15s ease;
+  }
+
+  a + a { border-left: 1px solid rgba(255, 255, 255, 0.09); }
+
+  a:hover,
+  a:focus-visible {
+    color: var(--accent);
+    background: rgba(0, 229, 160, 0.04);
+  }
+
+  span {
+    display: block;
+    margin-bottom: 0.35rem;
+    color: var(--text-dim);
+    font-size: 0.65rem;
+    letter-spacing: var(--tracking-wider);
+    text-transform: uppercase;
+  }
+}
+
+.pipelock-first-run {
+  margin-top: clamp(3rem, 7vw, 6rem);
+
+  .product-band-title { text-align: left; }
+}
+
+.pipelock-command {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid rgba(0, 229, 160, 0.22);
+  border-radius: 10px;
+  background: rgba(3, 8, 8, 0.72);
+  color: var(--text);
+  font: 600 var(--fs-code)/1.5 var(--font-mono);
+
+  button { --cmd-row-padding: 1rem 1.1rem; }
+
+  .prompt { color: var(--text-dim); }
+
+  .cmd-text {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}
+
+.pipelock-runbook-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.65rem 1.4rem;
+  margin-top: 2rem;
+
+  a {
+    color: var(--accent);
+    font: 600 var(--fs-code)/1.4 var(--font-mono);
+    text-decoration: none;
+  }
+
+  a:hover,
+  a:focus-visible {
+    text-decoration: underline;
+    text-underline-offset: 0.25rem;
+  }
+}
+
+.pipelock-runbook-release {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.45rem 0.8rem;
+  margin: 1rem 0 0;
+  color: var(--text-dim);
+  font: 500 var(--fs-caption)/1.5 var(--font-mono);
+
+  span {
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+  }
+
+  code {
+    color: var(--text-muted);
+    overflow-wrap: anywhere;
+  }
+}
+
+.pipelock-controls,
+.pipelock-pipeline-section,
+.pipelock-evidence,
+.pipelock-explore {
+  margin-top: clamp(4rem, 8vw, 7rem);
+}
+
+.pipelock-section-head {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(18rem, 1.1fr);
+  gap: clamp(2rem, 6vw, 6rem);
+  align-items: end;
+  margin-bottom: clamp(2.25rem, 5vw, 4rem);
+
+  h2 {
+    margin: 0;
+    color: var(--text);
+    font: 700 clamp(1.7rem, 2.8vw, 2.35rem)/1.15 var(--font-mono);
+    letter-spacing: var(--tracking-tight);
+    text-align: left;
+  }
+
+  > p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--fs-body);
+    line-height: 1.75;
+  }
+}
+
+.pipelock-control-ledger {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pipelock-control-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 4rem minmax(13rem, 0.72fr) minmax(0, 1.28fr);
+  gap: clamp(1.25rem, 3.5vw, 3rem);
+  padding: clamp(2rem, 4vw, 3.25rem) clamp(0.75rem, 2vw, 1.5rem);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+
+  &:nth-child(even) {
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.018), rgba(0, 229, 160, 0.018));
+  }
+}
+
+.pipelock-anchor-alias {
+  position: absolute;
+  inset: 0 auto auto 0;
+}
+
+.pipelock-control-index {
+  color: var(--accent);
+  font: 700 clamp(1.15rem, 2vw, 1.55rem)/1 var(--font-mono);
+}
+
+.pipelock-control-title {
+  p {
+    margin: 0 0 0.65rem;
+    color: var(--text-dim);
+    font: 650 var(--fs-caption)/1.2 var(--font-mono);
+    letter-spacing: var(--tracking-wider);
+    text-transform: uppercase;
+  }
+
+  h3 {
+    margin: 0;
+    color: var(--text);
+    font: 700 clamp(1.05rem, 1.6vw, 1.3rem)/1.4 var(--font-mono);
+  }
+}
+
+.pipelock-control-body {
+  > p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--fs-body);
+    line-height: 1.7;
+  }
+}
+
+.pipelock-control-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: 1.25rem 0 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    margin: 0;
+    padding: 0.35rem 0.7rem;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 999px;
+    color: var(--text-dim);
+    font: 600 0.68rem/1.3 var(--font-mono);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  li::before { content: none; }
+}
+
+.pipelock-control-detail {
+  margin-top: 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+
+  summary {
+    padding: 0.9rem 0 0;
+    color: var(--accent);
+    font: 650 var(--fs-caption)/1.4 var(--font-mono);
+    cursor: pointer;
+    list-style-position: inside;
+  }
+
+  > div {
+    padding-top: 0.4rem;
+  }
+
+  p {
+    margin: 0.7rem 0 0;
+    color: var(--text-muted);
+    font-size: var(--fs-code);
+    line-height: 1.7;
+  }
+
+  strong { color: var(--text); }
+}
+
+.pipelock-pipeline-section {
+  padding: clamp(3rem, 6vw, 5rem) clamp(1rem, 3vw, 2rem);
+  border-block: 1px solid rgba(255, 255, 255, 0.09);
+  background:
+    radial-gradient(ellipse 44% 34% at 90% 0, rgba(124, 58, 237, 0.07), transparent 70%),
+    linear-gradient(180deg, rgba(12, 14, 16, 0.82), rgba(8, 9, 11, 0.86));
+}
+
+.pipelock-scan-version {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: center;
+  margin: 1.1rem 0 0;
+  font: 650 var(--fs-caption)/1.3 var(--font-mono);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+
+  span {
+    padding: 0.3rem 0.55rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 999px;
+    color: var(--text-dim);
+  }
+
+  strong { color: var(--accent); }
+
+  a {
+    color: var(--text-muted);
+    text-decoration-color: rgba(0, 229, 160, 0.35);
+    text-underline-offset: 0.22em;
+    transition: color var(--transition-fast), text-decoration-color var(--transition-fast);
+  }
+
+  a:hover,
+  a:focus-visible {
+    color: var(--accent);
+    text-decoration-color: currentColor;
+  }
+}
+
+.pipelock-scan-flow {
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  list-style: none;
+
+  > li:not(.pipelock-scan-boundary) {
+    display: grid;
+    grid-template-columns: 6rem minmax(0, 1fr);
+    gap: clamp(1rem, 3vw, 2.25rem);
+    padding: clamp(1.5rem, 3vw, 2.25rem) clamp(0.5rem, 2vw, 1.25rem);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+  }
+
+  > li:not(.pipelock-scan-boundary):nth-child(even) {
+    background: linear-gradient(90deg, rgba(0, 229, 160, 0.035), transparent 72%);
+  }
+
+  h3 {
+    margin: 0 0 0.45rem;
+    color: var(--text);
+    font: 700 clamp(1rem, 1.6vw, 1.2rem)/1.35 var(--font-mono);
+  }
+
+  p {
+    margin: 0;
+    max-width: 58rem;
+    color: var(--text-muted);
+    font-size: var(--fs-code);
+    line-height: 1.65;
+  }
+
+.pipelock-scan-gates {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1px;
+    margin: 1.2rem 0 0;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.09);
+    overflow: hidden;
+    list-style: none;
+  }
+
+  .pipelock-scan-gate {
+    display: flex;
+    flex: 1 1 9.5rem;
+    align-items: center;
+    margin: 0;
+    padding: 0.75rem 0.8rem;
+    background: rgba(7, 10, 12, 0.96);
+    color: var(--text-muted);
+    font: 600 var(--fs-caption)/1.35 var(--font-mono);
+  }
+
+  .pipelock-scan-gate::before { content: none; }
+
+}
+
+.pipelock-scan-index {
+  color: var(--accent);
+  font: 700 var(--fs-caption)/1.2 var(--font-mono);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+}
+
+.pipelock-scan-boundary {
+  display: flex;
+  gap: 1rem 1.5rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem clamp(0.75rem, 2vw, 1.25rem);
+  border-block: 1px solid rgba(0, 229, 160, 0.4);
+  background: rgba(0, 229, 160, 0.07);
+  color: var(--accent);
+  font-family: var(--font-mono);
+
+  span {
+    font-size: var(--fs-caption);
+    font-weight: 650;
+    letter-spacing: var(--tracking-wider);
+    text-transform: uppercase;
+  }
+
+  strong {
+    color: var(--text);
+    font-size: var(--fs-code);
+    text-align: right;
+  }
+}
+
+.pipelock-transport-rail {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 2rem 0 0;
+  border-block: 1px solid rgba(255, 255, 255, 0.09);
+
+  div { padding: 1.2rem 1.35rem; }
+  div + div { border-left: 1px solid rgba(255, 255, 255, 0.09); }
+
+  dt {
+    margin-bottom: 0.4rem;
+    color: var(--accent);
+    font: 650 var(--fs-caption)/1.2 var(--font-mono);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+  }
+
+  dd {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--fs-code);
+    line-height: 1.5;
+  }
+}
+
+.pipelock-evidence {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(22rem, 1.2fr);
+  gap: clamp(2.25rem, 5vw, 4.5rem);
+  align-items: center;
+  padding-block: clamp(3rem, 6vw, 5rem);
+  border-block: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pipelock-evidence-copy {
+  h2 {
+    margin: 0 0 1.25rem;
+    color: var(--text);
+    font: 700 clamp(1.7rem, 2.8vw, 2.35rem)/1.15 var(--font-mono);
+    letter-spacing: var(--tracking-tight);
+    text-align: left;
+  }
+
+  > p:not(.pipelock-body-kicker) {
+    margin: 0 0 1.5rem;
+    color: var(--text-muted);
+    font-size: var(--fs-body);
+    line-height: 1.75;
+  }
+}
+
+.pipelock-evidence-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 0.9rem;
+  margin-top: 1rem;
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 3.25rem;
+    width: 100%;
+    padding-inline: 0.9rem;
+    font: 650 clamp(0.8rem, 1.05vw, 0.95rem)/1.2 var(--font-mono);
+    text-align: center;
+    white-space: nowrap;
+  }
+}
+
+.pipelock-evidence-visual {
+  display: block;
+  padding: 0.8rem;
+  border: 1px solid rgba(0, 229, 160, 0.18);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.025);
+  color: var(--text-dim);
+  font: 600 var(--fs-caption)/1.4 var(--font-mono);
+  text-decoration: none;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+
+  img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+  }
+
+  span {
+    display: block;
+    padding: 0.8rem 0.35rem 0.1rem;
+  }
+
+  &:hover,
+  &:focus-visible {
+    border-color: rgba(0, 229, 160, 0.5);
+    transform: translateY(-2px);
+  }
+}
+
+.pipelock-pro-band {
+  display: grid;
+  grid-template-columns: minmax(18rem, 0.82fr) minmax(0, 1.18fr);
+  gap: clamp(2.25rem, 5vw, 5rem);
+  align-items: stretch;
+  margin-top: clamp(4rem, 8vw, 7rem);
+  padding: clamp(2rem, 4.5vw, 3.75rem);
+  border: 1px solid rgba(0, 229, 160, 0.22);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 0 50%, rgba(0, 229, 160, 0.09), transparent 44%),
+    rgba(9, 16, 14, 0.8);
+
+  h2 {
+    margin: 0 0 0.85rem;
+    color: var(--text);
+    font: 700 clamp(1.45rem, 2.3vw, 2rem)/1.2 var(--font-mono);
+    letter-spacing: var(--tracking-tight);
+    text-align: left;
+  }
+
+  p:not(.pipelock-body-kicker) {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--fs-body);
+    line-height: 1.7;
+  }
+}
+
+.pipelock-pro-lead {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.pipelock-pro-price {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 1rem;
+  align-items: center;
+  margin-top: 1.5rem;
+  padding-block: 1.25rem;
+  border-block: 1px solid rgba(255, 255, 255, 0.09);
+
+  strong {
+    color: var(--text);
+    font: 700 var(--fs-code)/1.2 var(--font-mono);
+    white-space: nowrap;
+  }
+
+  strong span {
+    color: var(--accent);
+    font-size: clamp(2rem, 4vw, 3.25rem);
+  }
+
+  p {
+    color: var(--text-dim) !important;
+    font-size: var(--fs-caption) !important;
+    line-height: 1.55 !important;
+  }
+}
+
+.pipelock-pro-ledger {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 12px;
+  background: rgba(2, 7, 7, 0.48);
+  overflow: hidden;
+
+  article {
+    position: relative;
+    min-width: 0;
+    padding: clamp(1.35rem, 3vw, 2rem);
+  }
+
+  article:nth-child(even) { border-left: 1px solid rgba(255, 255, 255, 0.09); }
+  article:nth-child(n + 3) { border-top: 1px solid rgba(255, 255, 255, 0.09); }
+
+  span {
+    display: block;
+    margin-bottom: 1.15rem;
+    color: var(--accent);
+    font: 700 var(--fs-caption)/1 var(--font-mono);
+  }
+
+  h3 {
+    margin: 0 0 0.55rem;
+    color: var(--text);
+    font: 700 var(--fs-code)/1.35 var(--font-mono);
+  }
+
+  p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--fs-caption);
+    line-height: 1.65;
+  }
+}
+
+.pipelock-pro-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 1.5rem;
+
+  .btn {
+    flex: 1 1 10rem;
+    padding-inline: 0.85rem;
+    font-size: var(--fs-code);
+    white-space: nowrap;
+  }
+}
+
+.pipelock-explore {
+  padding-bottom: clamp(2rem, 4vw, 3.5rem);
+
+  > h2 {
+    margin: 0 0 2rem;
+    color: var(--text);
+    font: 700 clamp(1.45rem, 2.3vw, 2rem)/1.2 var(--font-mono);
+    letter-spacing: var(--tracking-tight);
+    text-align: left;
+  }
+}
+
+.pipelock-explore-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.pipelock-explore-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: clamp(1.5rem, 3vw, 2.25rem);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.018);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.18s ease, transform 0.18s ease;
+
+  &:hover,
+  &:focus-within {
+    border-color: rgba(0, 229, 160, 0.28);
+    transform: translateY(-2px);
+  }
+
+  h3 {
+    margin: 0 0 0.75rem;
+    color: var(--text);
+    font: 700 clamp(1rem, 1.5vw, 1.15rem)/1.35 var(--font-mono);
+  }
+
+  > p:not(.pipelock-explore-label) {
+    margin: 0 0 1.5rem;
+    color: var(--text-muted);
+    font-size: var(--fs-code);
+    line-height: 1.65;
+  }
+}
+
+.pipelock-explore-label {
+  margin: 0 0 1rem;
+  color: var(--accent);
+  font: 650 var(--fs-caption)/1.2 var(--font-mono);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+}
+
+.pipelock-explore-go {
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 1.1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--accent);
+  font: 650 var(--fs-caption)/1.3 var(--font-mono);
+
+  b { font-weight: 650; }
+}
+
+@media (max-width: $bp-tablet) {
+  .pipelock-section-head,
+  .pipelock-evidence,
+  .pipelock-pro-band {
+    grid-template-columns: 1fr;
+  }
+
+  .pipelock-boundary-map {
+    grid-template-columns: 1fr;
+  }
+
+  .pipelock-boundary-crossing {
+    border-block: 1px solid rgba(0, 229, 160, 0.28);
+    border-inline: 0;
+  }
+
+  .pipelock-control-row {
+    grid-template-columns: 3rem minmax(0, 0.7fr) minmax(0, 1.3fr);
+  }
+
+  .pipelock-pro-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .pipelock-explore-grid { grid-template-columns: 1fr; }
+
+}
+
+@media (max-width: $bp-mobile) {
+  .pipelock-boundary-map { margin-inline: 0.9rem; }
+
+  .pipelock-evidence-actions {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr);
+    gap: 0.65rem;
+  }
+
+  .pipelock-proof-rail,
+  .pipelock-transport-rail {
+    grid-template-columns: 1fr;
+  }
+
+  .pipelock-proof-rail a + a,
+  .pipelock-transport-rail div + div {
+    border-top: 1px solid rgba(255, 255, 255, 0.09);
+    border-left: 0;
+  }
+
+  .pipelock-control-row {
+    grid-template-columns: 2.25rem minmax(0, 1fr);
+    gap: 1rem;
+    padding-inline: 0;
+  }
+
+  .pipelock-control-body { grid-column: 2; }
+
+  .pipelock-pipeline-section { padding-inline: 0.75rem; }
+
+  .pipelock-scan-flow > li:not(.pipelock-scan-boundary) {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    padding-inline: 0.25rem;
+  }
+
+  .pipelock-scan-gate { flex-basis: calc(50% - 1px); }
+
+  .pipelock-scan-boundary {
+    align-items: flex-start;
+    flex-direction: column;
+
+    strong { text-align: left; }
+  }
+
+  .pipelock-evidence {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pipelock-evidence-visual { padding: 0.5rem; }
+
+  .pipelock-pro-band {
+    padding: 2rem 1.25rem;
+    border-radius: 12px;
+  }
+
+  .pipelock-pro-price { grid-template-columns: 1fr; }
+
+  .pipelock-pro-ledger { grid-template-columns: 1fr; }
+
+  .pipelock-pro-ledger article:nth-child(even) { border-left: 0; }
+  .pipelock-pro-ledger article + article { border-top: 1px solid rgba(255, 255, 255, 0.09); }
+
+  .pipelock-pro-actions {
+    flex-direction: column;
+  }
+
+  .pipelock-pro-actions .btn {
+    flex: 0 0 auto;
+    width: 100%;
+  }
+}

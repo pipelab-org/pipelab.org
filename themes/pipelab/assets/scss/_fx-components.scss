@@ -1,0 +1,218 @@
+// == Shared opt-in components =================================
+// Imported AFTER the page partials, unlike _fx.scss. The distinction matters
+// and is not arbitrary:
+//
+//   _fx.scss            effects applied to a page's OWN elements, so a page's
+//                       own rules must win on a tie. Imported early.
+//   _fx-components.scss styling for .fx-* classes, which exist only where a
+//                       page opted in by using the class. Nothing else can be
+//                       affected, so these must win. Imported last.
+//
+// Extracting the key card without this split made a page rule outrank the
+// shared one and changed the size of three code elements on /proof/.
+
+// == Artifact bar =============================================
+// Shared chrome for evidence excerpts on Proof and Gauntlet. The partial owns
+// the three-dot markup; each consumer supplies only its artifact label.
+.proof-artifact-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin: -1.75rem -1.75rem 1.4rem;
+  padding: 0.7rem 1.1rem;
+  border-bottom: 1px solid var(--border);
+  border-radius: var(--radius) var(--radius) 0 0;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.proof-artifact-dots {
+  display: inline-flex;
+  gap: 0.35rem;
+
+  span {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  span:first-child { background: rgba(255, 77, 77, 0.45); }
+  span:nth-child(2) { background: rgba(255, 196, 0, 0.4); }
+  span:last-child { background: rgba(0, 229, 160, 0.5); }
+}
+
+.proof-artifact-label {
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  letter-spacing: var(--tracking-wide);
+  color: var(--text-dim);
+  text-transform: lowercase;
+}
+
+// == Key card =================================================
+// The numbered anchor card from /proof/: a glyph badge in the corner and a
+// mono anchor line along the bottom. Shared so a page does not have to
+// reinvent the treatment; it is a class rather than a data-fx token because
+// it is styling with no behaviour behind it.
+.fx-keycard {
+  position: relative;
+  overflow: hidden;
+
+  .fx-key-glyph {
+    position: absolute;
+    top: 1.1rem;
+    right: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 229, 160, 0.35);
+    background: rgba(0, 229, 160, 0.05);
+    color: var(--accent);
+    box-shadow: 0 0 14px rgba(0, 229, 160, 0.18);
+
+    svg { width: 16px; height: 16px; }
+  }
+
+  .fx-key-anchor {
+    margin: 1rem 0 0;
+    padding-top: 0.8rem;
+    border-top: 1px solid rgba(0, 229, 160, 0.2);
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-caption);
+    letter-spacing: var(--tracking-wide);
+    text-transform: lowercase;
+    color: var(--text-dim);
+
+    code {
+      color: var(--accent);
+      background: none;
+      padding: 0;
+      font-size: var(--fs-caption);
+    }
+  }
+}
+
+// == Exhibit band =============================================
+// The two-column artifact-and-claims layout that carries /proof/: a real file
+// quoted on one side, the claims it supports on the other, the artifact tilted
+// slightly toward the reader and flattening on hover. Opt in with
+// .fx-exhibit-band, and .fx-exhibit-flip to put the artifact second.
+// The doubled class is deliberate: a page's own layout rule for the same
+// element is often two classes deep (.proof-product .proof-deep-body), and an
+// opt-in component has to win. Doubling matches that weight without inventing
+// a wrapper element.
+.fx-exhibit-band.fx-exhibit-band {
+  display: grid;
+  grid-template-columns: minmax(0, 11fr) minmax(0, 9fr);
+  gap: 3rem;
+  align-items: center;
+
+  // the band replaces the old card: no frame, no pool of grey
+  background: none;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+  overflow: visible;
+
+  @media (max-width: 900px) {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.75rem;
+  }
+}
+
+.fx-exhibit-flip.fx-exhibit-flip {
+  .fx-exhibit { order: 2; --exhibit-tilt: 5deg; }
+  .fx-exhibit-claims { order: 1; }
+
+  @media (max-width: 900px) {
+    .fx-exhibit { order: 1; }
+    .fx-exhibit-claims { order: 2; }
+  }
+}
+
+.fx-exhibit {
+  margin: 0;
+  transform: perspective(1200px) rotateY(var(--exhibit-tilt, -5deg)) rotateX(1deg);
+  transition: transform 0.35s ease;
+  will-change: transform;
+
+  &:hover {
+    transform: perspective(1200px) rotateY(0deg) rotateX(0deg);
+  }
+
+  .proof-artifact-bar {
+    margin: 0;
+    border: 1px solid var(--border);
+    border-bottom: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-exhibit,
+  .fx-exhibit:hover {
+    transform: none;
+  }
+}
+
+// The quoted artifact itself, and its source caption.
+.fx-exhibit-doc {
+  margin: 0;
+  padding: 1.1rem 1.2rem 1.6rem;
+  max-height: 38rem;
+  overflow: hidden;
+
+  // On narrow screens the wide lines would hard-clip mid-word; let the
+  // reader pan the document instead of hiding its right half.
+  @media (max-width: 900px) {
+    overflow-x: auto;
+  }
+  border: 1px solid var(--border);
+  border-top: 0;
+  border-radius: 0 0 var(--radius) var(--radius);
+  background:
+    linear-gradient(180deg, rgba(9, 9, 11, 0.92), rgba(9, 9, 11, 0.98));
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.55), 0 0 40px rgba(0, 229, 160, 0.05);
+  // the document fades out at its foot: an excerpt, not a lie of completeness
+  -webkit-mask-image: linear-gradient(180deg, #000 78%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 78%, transparent 100%);
+
+  code {
+    display: block;
+    font-family: var(--font-mono), monospace;
+    font-size: 0.72rem;
+    line-height: 1.55;
+    color: var(--text-muted);
+    background: none;
+    padding: 0;
+    white-space: pre;
+  }
+}
+
+.fx-exhibit-src {
+  margin: 0.8rem 0 0;
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  color: var(--text-dim);
+  overflow-wrap: anywhere;
+
+  a { color: var(--text-muted); }
+  a:hover, a:focus-visible { color: var(--accent); }
+  code { font-size: var(--fs-caption); }
+}
+
+// claims column: boxless, airy, keyword-led
+
+// The claims column beside the artifact.
+.fx-exhibit-claims {
+  .proof-claim-list { margin-bottom: 1.25rem; }
+  .proof-deep-actions { justify-content: flex-start; margin-top: 1.25rem; }
+  .bench-provenance { text-align: left; margin-left: 0; }
+}
+
+// == Mini terminals ===========================================
+// Real command output quoted inside a claims column: the tamper
+// rejection and the verifier's own words. Green-on-black, small,
+// unmistakably a terminal and not prose.

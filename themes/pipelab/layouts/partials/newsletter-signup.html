@@ -1,0 +1,41 @@
+{{/*
+  Newsletter signup partial (Buttondown).
+
+  Usage:
+    {{ partial "newsletter-signup.html" . }}
+    {{ partial "newsletter-signup.html" (dict "variant" "compact" "page" .) }}
+
+  Config: set params.buttondown_user in hugo.toml to enable.
+  Variants: "full" (default) or "compact".
+*/}}
+
+{{ $page := . }}
+{{ $variant := "full" }}
+{{ with .page }}{{ $page = . }}{{ end }}
+{{ with .variant }}{{ $variant = . }}{{ end }}
+
+{{ $user := site.Params.buttondown_user }}
+{{ if $user }}
+{{ $action := printf "https://buttondown.com/api/emails/embed-subscribe/%s" $user }}
+{{ $view := printf "https://buttondown.com/%s" $user }}
+
+<section class="newsletter-signup newsletter-signup-{{ $variant }}" aria-label="Newsletter signup">
+  <div class="newsletter-inner">
+    {{ if eq $variant "compact" }}
+      <p class="newsletter-copy">Get one email when a new Pipelock release ships. No spam, no pitch decks.</p>
+    {{ else }}
+      <p class="newsletter-label">Stay in the loop</p>
+      <h3 class="newsletter-headline">One email per release. That's it.</h3>
+      <p class="newsletter-copy">Security research, new scanner rules, benchmark updates, and the occasional blog post. No spam, no pitch decks, unsubscribe anytime.</p>
+    {{ end }}
+
+    <form action="{{ $action }}" method="post" target="popupwindow" data-popup-url="{{ $view }}" class="newsletter-form">
+      <label class="visually-hidden" for="newsletter-email-{{ $variant }}">Email address</label>
+      <input type="email" name="email" id="newsletter-email-{{ $variant }}" placeholder="you@company.com" required autocomplete="email" class="newsletter-input">
+      <button type="submit" value="Subscribe" class="btn btn-primary newsletter-submit" data-event="newsletter_signup" data-event-placement="{{ $variant }}">Subscribe</button>
+    </form>
+
+    <p class="newsletter-fineprint">Powered by <a href="https://buttondown.com" target="_blank" rel="noopener noreferrer">Buttondown</a>. <a href="{{ $view }}" target="_blank" rel="noopener noreferrer">Archive</a>.</p>
+  </div>
+</section>
+{{ end }}

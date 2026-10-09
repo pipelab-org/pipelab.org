@@ -1,0 +1,2 @@
+{{- $blogArticle := resources.Get "js/blog-article.js" | minify | fingerprint -}}
+<script src="{{ $blogArticle.RelPermalink }}" integrity="{{ $blogArticle.Data.Integrity }}" defer></script>

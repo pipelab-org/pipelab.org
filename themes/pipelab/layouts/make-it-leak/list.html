@@ -1,0 +1,69 @@
+{{ define "main" }}
+{{ $episodes := sort (where .Site.RegularPages "Section" "make-it-leak") "Params.episode" }}
+{{ $blocked := where $episodes "Params.verdict" "block" }}
+{{ $signed := where $episodes "Params.signer_key" "ne" "" }}
+{{ $overview := replaceRE "(?s)\\n## Episodes.*$" "" .RawContent }}
+
+<section class="mil-page mil-hub">
+  <div class="mil-hero site-hero brand-field-hero brand-field-hero-standard" data-hero="brand-standard" data-fx="reveal">
+    <div class="mil-hero-inner">
+      <span class="mil-pill mil-pill-live">
+        <span class="mil-pulse" aria-hidden="true"></span>
+        Signed run series
+      </span>
+      <h1 data-fx="decrypt">{{ .Title }}</h1>
+      <div class="mil-lead">{{ $overview | markdownify }}</div>
+      <p class="mil-subcaveat">Each page records a mediated allow/block decision. Verification checks the packet against its own published signer key.</p>
+
+      <dl class="mil-stat-strip" aria-label="Make It Leak episode stats">
+        <div>
+          <dt>Episodes</dt>
+          <dd data-fx="count">{{ len $episodes }}</dd>
+        </div>
+        <div>
+          <dt>Blocked</dt>
+          <dd data-fx="count">{{ len $blocked }}</dd>
+        </div>
+        <div>
+          <dt>Signed Packets</dt>
+          <dd data-fx="count">{{ len $signed }}</dd>
+        </div>
+      </dl>
+    </div>
+  </div>
+
+  <div class="mil-section">
+    <div class="mil-section-head" data-fx="reveal">
+      <p class="mil-eyebrow">Episodes</p>
+      <span class="mil-rule" aria-hidden="true"></span>
+    </div>
+
+    <div class="mil-episode-grid">
+      {{ range $episodes }}
+      <a class="mil-card" href="{{ .RelPermalink }}" data-fx="reveal spotlight">
+        <div class="mil-card-top">
+          <span class="mil-card-num">#{{ .Params.episode }}</span>
+          <span class="mil-status-pill">
+            <svg aria-hidden="true" focusable="false" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg>
+            {{ .Params.verdict | upper }}
+          </span>
+        </div>
+
+        <h2>{{ .Title }}</h2>
+
+        <div class="mil-mini-pills">
+          <span>secret: {{ .Params.secret_class }}</span>
+          <span>layer: {{ .Params.layer }}</span>
+        </div>
+
+        <div class="mil-card-foot">
+          <span>signed packet &middot; verify offline</span>
+          <strong>Open</strong>
+        </div>
+      </a>
+      {{ end }}
+    </div>
+  </div>
+</section>
+{{ partial "site-fx.html" . }}
+{{ end }}

@@ -1,0 +1,217 @@
+{{ define "main" }}
+{{ $episode := .Params.episode }}
+{{ $verdict := .Params.verdict }}
+{{ $layer := .Params.layer }}
+{{ $secret := .Params.secret_class }}
+{{ $destination := .Params.destination }}
+{{ $target := .Params.target_url }}
+{{ $method := .Params.method }}
+{{ $transport := .Params.transport }}
+{{ $signer := .Params.signer_key }}
+{{ $setupRaw := replaceRE "(?s)^.*?## The setup\\s*" "" .RawContent }}
+{{ $setupRaw = replaceRE "(?s)\\n## .*$" "" $setupRaw }}
+{{ $episodes := sort (where .Site.RegularPages "Section" "make-it-leak") "Params.episode" }}
+{{ $prev := false }}
+{{ $next := false }}
+{{ range $idx, $page := $episodes }}
+  {{ if eq $page.RelPermalink $.RelPermalink }}
+    {{ if gt $idx 0 }}{{ $prev = index $episodes (sub $idx 1) }}{{ end }}
+    {{ if lt (add $idx 1) (len $episodes) }}{{ $next = index $episodes (add $idx 1) }}{{ end }}
+  {{ end }}
+{{ end }}
+
+<article class="mil-page mil-episode">
+  <div class="mil-episode-wrap">
+    <nav class="mil-breadcrumb" aria-label="Breadcrumb">
+      <a href="/playground/">Playground</a>
+      <span>/</span>
+      <a href="/make-it-leak/">Make It Leak</a>
+      <span>/</span>
+      <strong>#{{ $episode }}</strong>
+    </nav>
+
+<header class="mil-episode-header" data-hero="editorial-article" data-fx="reveal">
+      <div class="mil-kicker-row">
+        <span class="mil-eyebrow">Episode #{{ $episode }}</span>
+        <span class="mil-status-pill">
+          <svg aria-hidden="true" focusable="false" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg>
+          {{ $verdict | upper }}
+        </span>
+      </div>
+      <h1 data-fx="decrypt">{{ .Title }}</h1>
+      <p class="mil-summary">{{ with .Params.summary }}{{ . }}{{ else }}{{ .Params.subtitle }}{{ end }}</p>
+      <div class="mil-meta-pills">
+        <span>attempt: {{ .Params.attempt_id }}</span>
+        <span>secret: {{ $secret }}</span>
+        <span>captured: {{ .Params.captured_at }}</span>
+      </div>
+    </header>
+
+    <div class="mil-timeline">
+      <section class="mil-step" data-fx="reveal">
+        <div class="mil-step-marker" aria-hidden="true">01</div>
+        <div class="mil-step-body">
+          <p class="mil-step-label">The setup</p>
+          <div class="mil-step-copy">{{ $setupRaw | markdownify }}</div>
+          <div class="mil-terminal">
+            <div class="mil-terminal-bar">
+              <span class="mil-dot mil-dot-red"></span>
+              <span class="mil-dot mil-dot-amber"></span>
+              <span class="mil-dot mil-dot-muted"></span>
+              <span class="mil-terminal-title">{{ .Params.source_label }}</span>
+              <span class="mil-tag-warn">Untrusted</span>
+            </div>
+            <pre><code>{{ .Params.manipulation }}</code></pre>
+          </div>
+        </div>
+      </section>
+
+      <section class="mil-step" data-fx="reveal">
+        <div class="mil-step-marker" aria-hidden="true">02</div>
+        <div class="mil-step-body">
+          <p class="mil-step-label">What the agent tried</p>
+          <p class="mil-note">The agent attempted a mediated outbound {{ $method }} to the reserved destination. The secret display below is intentionally inert and masked.</p>
+          <div class="mil-terminal">
+            <div class="mil-terminal-bar">
+              <span class="mil-dot mil-dot-red"></span>
+              <span class="mil-dot mil-dot-amber"></span>
+              <span class="mil-dot mil-dot-muted"></span>
+              <span class="mil-terminal-title">outbound request &middot; unsigned agent narration</span>
+              <span class="mil-destination">{{ $destination }}</span>
+            </div>
+            <pre><code>{{ .Params.outbound_request }}</code></pre>
+          </div>
+          <p class="mil-caption">Believe nothing here as proof. The mediator decision below is the ground-truth record.</p>
+        </div>
+      </section>
+
+      <section class="mil-step mil-step-decision" data-fx="reveal">
+        <div class="mil-step-marker mil-step-marker-hot" aria-hidden="true">03</div>
+        <div class="mil-step-body">
+          <p class="mil-step-label">The signed Pipelock decision</p>
+          <div class="mil-decision-card" data-fx="spotlight">
+            <div class="mil-decision-head">
+              <svg aria-hidden="true" focusable="false" class="mil-shield" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg>
+              <div>
+                <strong>{{ $verdict | upper }}</strong>
+                <p>exfiltration stopped &middot; decision signed by the mediator</p>
+              </div>
+              <span class="mil-signed-pill">Signed</span>
+            </div>
+
+            <dl class="mil-decision-grid">
+              <div>
+                <dt>verdict</dt>
+                <dd class="mil-accent">{{ $verdict }}</dd>
+              </div>
+              <div>
+                <dt>layer</dt>
+                <dd>{{ $layer }}</dd>
+              </div>
+              <div>
+                <dt>secret class</dt>
+                <dd>{{ $secret }}</dd>
+              </div>
+              <div>
+                <dt>reserved destination</dt>
+                <dd>{{ $destination }}</dd>
+              </div>
+            </dl>
+
+            <div class="mil-signer">
+              <span>signer</span>
+              <code>{{ $signer }}</code>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="mil-step" data-fx="reveal">
+        <div class="mil-step-marker" aria-hidden="true">04</div>
+        <div class="mil-step-body">
+          <p class="mil-step-label">Verify it yourself</p>
+          <p class="mil-note">Download the real files for this episode, put them in one directory, and verify the packet offline against the signer key printed in the manifest.</p>
+
+          <div class="mil-file-grid">
+            <a href="/make-it-leak/{{ $episode }}/packet.json" download>
+              <span class="mil-file-icon">{ }</span>
+              <strong>packet.json</strong>
+              <small>Audit packet</small>
+            </a>
+            <a href="/make-it-leak/{{ $episode }}/manifest.json" download>
+              <span class="mil-file-icon">{ }</span>
+              <strong>manifest.json</strong>
+              <small>Run manifest</small>
+            </a>
+            <a href="/make-it-leak/{{ $episode }}/evidence.jsonl" download>
+              <span class="mil-file-icon">[]</span>
+              <strong>evidence.jsonl</strong>
+              <small>Receipt event log</small>
+            </a>
+            <a href="/make-it-leak/{{ $episode }}/verifier.txt" download>
+              <span class="mil-file-icon">$</span>
+              <strong>verifier.txt</strong>
+              <small>Expected verifier output</small>
+            </a>
+          </div>
+
+          <div class="mil-terminal mil-verify-terminal" data-fx="type">
+            <div class="mil-terminal-bar">
+              <span class="mil-dot mil-dot-red"></span>
+              <span class="mil-dot mil-dot-amber"></span>
+              <span class="mil-dot mil-dot-muted"></span>
+              <span class="mil-terminal-title">verify &middot; your machine</span>
+            </div>
+            <pre data-command-lines data-command-text="pipelock-verifier audit-packet . \&#10;  --key {{ $signer }}"><code>$ pipelock-verifier audit-packet . \
+  --key {{ $signer }}
+result: VALID
+checks: schema, chain, cross-check, verdict, key ok</code></pre>
+          </div>
+
+          <div class="mil-actions">
+            <a class="mil-button mil-button-primary" href="/playground/demo/kits/pipelock-verify-linux.zip" download>Download Linux verify kit</a>
+            <span class="mil-os-links">
+              Other systems:
+              <a href="/playground/demo/kits/pipelock-verify-macos.zip" download>macOS</a>
+              <a href="/playground/demo/kits/pipelock-verify-windows.zip" download>Windows</a>
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <section class="mil-step" data-fx="reveal">
+        <div class="mil-step-marker mil-step-marker-warn" aria-hidden="true">05</div>
+        <div class="mil-step-body">
+          <p class="mil-step-label">What this does and does not prove</p>
+          <div class="mil-caveat">
+            <svg aria-hidden="true" focusable="false" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3l10 18H2z"/><path d="M12 9v5m0 3h.01"/></svg>
+            <p>A verified chain proves the mediated decision in this packet was signed by that key and not tampered with or reordered. It does not prove session completeness, that the agent was sandboxed, or that traffic could not bypass Pipelock. The chat is unsigned narration; only the chain of decisions is signed.</p>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <nav class="mil-episode-nav" aria-label="Episode navigation">
+      {{ with $prev }}
+      <a href="{{ .RelPermalink }}">
+        <span>Previous</span>
+        <strong>#{{ .Params.episode }} {{ .Title }}</strong>
+      </a>
+      {{ else }}
+      <span class="mil-nav-empty"></span>
+      {{ end }}
+      {{ with $next }}
+      <a href="{{ .RelPermalink }}" class="mil-nav-next">
+        <span>Next</span>
+        <strong>#{{ .Params.episode }} {{ .Title }}</strong>
+      </a>
+      {{ else }}
+      <span class="mil-nav-empty"></span>
+      {{ end }}
+    </nav>
+
+    <p class="mil-all-link"><a href="/make-it-leak/">Back to all episodes</a></p>
+  </div>
+</article>
+{{ partial "site-fx.html" . }}
+{{ end }}

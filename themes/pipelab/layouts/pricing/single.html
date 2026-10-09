@@ -1,0 +1,57 @@
+{{ define "main" }}
+{{ $stats := site.Data.stats }}
+{{ $version := site.Params.pipelock_version | default "" }}
+
+<article id="top" class="pricing-product">
+
+  {{/* ── Hero ─────────────────────────────────────────── */}}
+<header class="pricing-hero site-hero brand-field-hero brand-field-hero-standard" data-hero="brand-standard" data-fx="reveal">
+<div class="pricing-hero-inner site-hero-inner">
+      <p class="pricing-eyebrow">
+        <span class="pricing-eyebrow-dot" aria-hidden="true"></span>
+        Pricing{{ if $version }} · v{{ $version }}{{ end }}
+      </p>
+      <h1 class="pricing-headline">
+        <span>Detection is free.</span>
+        <span>Coordination is paid.</span>
+        <span class="pricing-headline-accent">Governance is enterprise.</span>
+      </h1>
+      <p class="pricing-lead">The Pipelock security engine is <strong>free and always will be</strong>. Paid plans add multi-agent coordination for teams running many named profiles from one deployment. Enterprise is for fleets that need central governance.</p>
+      <div class="pricing-hero-actions" aria-label="Start with Pipelock">
+        <a href="https://github.com/luckyPipewrench/pipelock" class="btn btn-ghost" target="_blank" rel="noopener noreferrer" data-event="github_click" data-event-placement="pricing-hero">Get Community Free</a>
+        <a href="https://buy.polar.sh/polar_cl_QTxAmBq1Fxuok8crBrvzbWsSm0IZfpQF875fM1FtvNb" class="btn btn-primary" target="_blank" rel="noopener noreferrer" data-event="checkout_started" data-event-placement="pricing-hero" data-event-value="pro_founding">Claim Pro $49/mo</a>
+        <a href="https://buy.polar.sh/polar_cl_ff23dTaTesK9RZrtU3nJqsjQJjRS3pFJCTRcR129P9L" class="btn btn-ghost" target="_blank" rel="noopener noreferrer" data-event="checkout_started" data-event-placement="pricing-hero-trial" data-event-value="pro_trial">Try Pro free for 30 days</a>
+      </div>
+      <ul class="pricing-trust-pills" aria-label="Pricing guarantees">
+        <li>Apache-2.0 core</li>
+        <li>No phone home</li>
+        <li>No machine binding</li>
+        <li>30-day refund</li>
+        <li>Offline license</li>
+        <li>Cancel anytime</li>
+      </ul>
+      {{ partial "page-formats.html" . }}
+    </div>
+  </header>
+
+  {{/* ── Body content ───────────────────────────────────── */}}
+  <div class="pricing-product-body">
+    {{ .Content }}
+    {{ partial "faq.html" . }}
+  </div>
+
+  {{/* ── Bespoke bottom CTA ───────────────────────────── */}}
+  {{/* Page sets disable_cta: true so partials/article-cta.html is intentionally
+       skipped. This is a pricing-page-shaped close instead. */}}
+  <section class="pricing-product-cta" data-fx="reveal" aria-label="Try Pipelock">
+    <p class="pricing-product-cta-eyebrow">Ready when you are</p>
+    <p class="pricing-product-cta-copy">Start free. Upgrade when you need multi-agent coordination.</p>
+    <p class="pricing-product-cta-sub">Single Go binary (Apache-2.0 core; Enterprise features under ELv2). Cancel anytime.</p>
+    <div class="pricing-product-cta-actions">
+      <a href="https://github.com/luckyPipewrench/pipelock" class="btn btn-primary" target="_blank" rel="noopener noreferrer" data-event="github_click" data-event-placement="pricing-bottom">Install Free</a>
+      <a href="/proof/" class="btn btn-ghost" data-event="proof_click" data-event-placement="pricing-bottom">See Proof</a>
+    </div>
+  </section>
+</article>
+{{ partial "site-fx.html" . }}
+{{ end }}

@@ -1,0 +1,9 @@
+Pipelock audit packet — receipt chain verification
+scenario: hostile-page-session-keys
+receipts: 2
+verdict: valid (trusted)
+root_hash: 4c8b5af312cb13f08cb98d70e031decbf94c2201f42674d182fdd8455e9167c7
+signer_key: 91dfb23882a8acf28f624985030ca1798a3efbbcee2bb8bdda8f452612eb755a
+
+Verify it yourself from this directory:
+  pipelock-verifier audit-packet . --key 91dfb23882a8acf28f624985030ca1798a3efbbcee2bb8bdda8f452612eb755a

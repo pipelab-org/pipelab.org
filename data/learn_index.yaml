@@ -1,0 +1,50 @@
+# Editorial state for /learn/ index. Per-article identity (cat, level, tags)
+# lives in each article's frontmatter; this file holds index-level config that
+# changes on its own cadence (featured cards, category order, sidebar block).
+
+# Display order + labels for filter tabs. Keys must match `learn_cat` values
+# in article frontmatter.
+categories:
+  - key: ide
+    label: "IDE Setup"
+  - key: mcp
+    label: "MCP Security"
+  - key: injection
+    label: "Prompt Injection"
+  - key: compliance
+    label: "Compliance"
+  - key: evidence
+    label: "Evidence"
+  - key: operator
+    label: "Operator"
+  - key: comparison
+    label: "Comparison"
+  - key: concepts
+    label: "Concepts"
+
+# Hand-picked starting points for the Featured row at the top of the grid.
+# Slugs only; the template resolves title / description / category from the
+# matching .md page so this list never goes stale.
+featured:
+  - claude-code-hooks
+  - learn-and-lock
+  - mcp-security
+
+# Recommended starting points in the right sidebar. Editorial pick, not
+# analytics-driven, so labelled "Start Here" not "Popular Reads".
+start_here:
+  - llm-prompt-injection
+  - what-is-mcp
+  - mcp-security
+  - learn-and-lock
+  - agent-egress-security
+  - compliance-evidence
+
+# Latest release block in the right sidebar. Update when a new pipelock
+# release ships. The Hugo template falls back to .Site.Params.pipelock_version
+# if this block is missing.
+release:
+  version: "v3.6.0"
+  date: 2026-09-29
+  summary: "current Pipelock release; see GitHub releases for the v3.6.0 changelog"
+  notes_url: https://github.com/luckyPipewrench/pipelock/releases

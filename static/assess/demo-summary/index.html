@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pipelock Security Summary</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-card: rgba(255, 255, 255, 0.04);
+            --bg-hover: rgba(255, 255, 255, 0.07);
+            --bg-header: rgba(255, 255, 255, 0.06);
+            --border: rgba(255, 255, 255, 0.08);
+            --text-primary: #eaeaf0;
+            --text-secondary: #c8c8d8;
+            --text-muted: #a0a0b4;
+            --text-dim: #64748b;
+            --color-green: #22c55e;
+            --color-blue: #3b82f6;
+            --color-yellow: #eab308;
+            --color-orange: #f97316;
+            --color-red: #ef4444;
+            --color-accent: #00ffc8;
+            --mono: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+            --radius: 12px;
+        }
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text-secondary);
+            font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 17px;
+            line-height: 1.7;
+            padding: 2rem;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .brand svg {
+            width: 40px;
+            height: 40px;
+            flex-shrink: 0;
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        h2 {
+            font-size: 1.375rem;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+            color: var(--text-primary);
+            margin: 2.5rem 0 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--border);
+        }
+
+        section {
+            margin-bottom: 2rem;
+        }
+
+        .grade-badge {
+            display: inline-block;
+            padding: 0.5rem 1.5rem;
+            border-radius: 9999px;
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            color: #fff;
+            margin-bottom: 0.75rem;
+        }
+
+        .meta {
+            font-size: 0.8125rem;
+            color: var(--text-muted);
+        }
+
+        .meta span {
+            margin: 0 0.5rem;
+        }
+
+        .informational-banner {
+            background: rgba(234, 179, 8, 0.12);
+            border: 2px solid var(--color-yellow);
+            border-radius: 0.5rem;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.9375rem;
+            color: var(--color-yellow);
+            text-align: center;
+        }
+
+        .informational-banner strong {
+            display: block;
+            margin-bottom: 0.25rem;
+            font-size: 1.0625rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        th {
+            background: var(--bg-header);
+            color: var(--text-muted);
+            font-size: 0.6875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            padding: 0.625rem 0.75rem;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 0.5rem 0.75rem;
+            border-top: 1px solid var(--border);
+            font-size: 0.8125rem;
+            overflow-wrap: break-word;
+        }
+
+        tr:hover {
+            background: var(--bg-hover);
+        }
+
+        .severity-badge {
+            display: inline-block;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.6875rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #fff;
+        }
+
+        .score-bar-wrap {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .score-bar-bg {
+            flex: 1;
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .score-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+        }
+
+        .score-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.75rem;
+            margin-bottom: 0;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .stat-card .compliance-meta {
+            margin-top: 0.35rem;
+            font-size: 0.6875rem;
+            color: var(--text-dim);
+            line-height: 1.4;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .stat-label {
+            font-size: 0.6875rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-top: 0.25rem;
+        }
+
+        .no-findings {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            text-align: center;
+            color: var(--text-dim);
+            font-size: 0.875rem;
+        }
+
+        .upgrade-cta {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--color-accent);
+            border-radius: var(--radius);
+            padding: 1.25rem 1.5rem;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        .upgrade-cta a {
+            color: var(--color-accent);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .upgrade-cta a:hover {
+            text-decoration: underline;
+        }
+
+        .compliance-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+
+
+        .compliance-summary-grid > .stat-card:last-child:nth-child(odd) {
+            grid-column: 1 / -1;
+            width: calc(50% - 0.375rem);
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        footer {
+            margin-top: 3rem;
+            padding: 1.5rem 0;
+            border-top: 2px solid var(--border);
+            text-align: center;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        footer a {
+            color: var(--color-accent);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        .footer-brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .footer-brand svg {
+            width: 14px;
+            height: 14px;
+            vertical-align: middle;
+        }
+
+        @media (max-width: 600px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .compliance-summary-grid { grid-template-columns: 1fr; }
+
+            .compliance-summary-grid > .stat-card:last-child:nth-child(odd) {
+                grid-column: auto;
+                width: auto;
+                margin-left: 0;
+                margin-right: 0;
+            }
+        }
+
+        @media print {
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            body {
+                background: #fff !important;
+                color: #1e293b !important;
+                padding: 0.5in !important;
+                font-size: 11pt !important;
+            }
+            .container { max-width: 100%; }
+
+
+            h1, h2 { color: #0f172a !important; }
+            .grade-badge { color: #fff !important; }
+            .severity-badge { color: #fff !important; }
+
+
+            table { background: #f8fafc !important; border-color: #e2e8f0 !important; }
+            th { background: #f1f5f9 !important; color: #475569 !important; }
+            td { border-color: #e2e8f0 !important; color: #334155 !important; }
+            tr:hover { background: transparent !important; }
+
+
+            .informational-banner {
+                background: #fef9c3 !important;
+                border-color: #ca8a04 !important;
+                color: #854d0e !important;
+            }
+            .informational-banner strong { color: #854d0e !important; }
+
+
+            .score-bar-bg { background: #e2e8f0 !important; }
+
+
+            .stat-card {
+                background: #f8fafc !important;
+                border-color: #e2e8f0 !important;
+            }
+            .stat-value { color: #0f172a !important; }
+            .stat-label { color: #475569 !important; }
+
+
+            .upgrade-cta {
+                background: #f8fafc !important;
+                border-color: #e2e8f0 !important;
+            }
+            .upgrade-cta a { color: #0284c7 !important; }
+
+
+            footer { color: #64748b !important; border-color: #e2e8f0 !important; }
+            footer a { color: #0284c7 !important; }
+
+
+            .meta, [style*="color: var(--text-dim)"], [style*="color: var(--text-muted)"] {
+                color: #64748b !important;
+            }
+
+
+            section { page-break-inside: avoid; }
+            table { page-break-inside: auto; }
+            tr { page-break-inside: avoid; }
+            h2 { page-break-after: avoid; }
+        }
+    </style>
+    <meta name="description" content="Partial synthetic Pipelock summary for version 3.6.0, with scores and scenario results. MCP configuration discovery is skipped in this sample.">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://pipelab.org/assess/demo-summary/">
+    <link rel="alternate" type="application/rss+xml" title="PipeLab RSS" href="https://pipelab.org/index.xml">
+    <meta property="og:title" content="Pipelock Security Summary | PipeLab">
+    <meta property="og:description" content="Partial synthetic Pipelock summary for version 3.6.0, with scores and scenario results. MCP configuration discovery is skipped in this sample.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://pipelab.org/assess/demo-summary/">
+    <meta property="og:site_name" content="PipeLab">
+    <meta property="og:image" content="https://pipelab.org/images/og/og-assess.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@luckyPipewrench">
+    <meta name="twitter:title" content="Pipelock Security Summary | PipeLab">
+    <meta name="twitter:description" content="Partial synthetic Pipelock summary for version 3.6.0, with scores and scenario results. MCP configuration discovery is skipped in this sample.">
+    <meta name="twitter:image" content="https://pipelab.org/images/og/og-assess.png">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="brand">
+                <svg viewBox="0 0 400 360" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M130 180 L130 110 C130 65 160 40 200 40 C240 40 270 65 270 110 L270 180" stroke="#00ffc8" stroke-width="28" stroke-linecap="round" fill="none"/>
+                    <rect x="114" y="165" width="32" height="16" rx="3" fill="#00ffc8" opacity="0.7"/>
+                    <rect x="254" y="165" width="32" height="16" rx="3" fill="#00ffc8" opacity="0.7"/>
+                    <rect x="90" y="180" width="220" height="160" rx="16" fill="#0a0a0f" stroke="#00ffc8" stroke-width="2.5"/>
+                    <circle cx="200" cy="248" r="18" fill="#00ffc8" opacity="0.9"/>
+                    <circle cx="200" cy="248" r="10" fill="#0a0a0f"/>
+                    <rect x="196" y="256" width="8" height="24" rx="3" fill="#00ffc8" opacity="0.9"/>
+                </svg>
+                <h1>Pipelock Security Summary</h1>
+            </div>
+            <div class="grade-badge" style="background: #f97316; font-size: 2rem; padding: 0.75rem 2.5rem;">D</div>
+            <div style="font-size: 1.1875rem; color: var(--text-primary); margin: 1rem auto; padding: 0.25rem 1rem; font-weight: 500; max-width: 48rem; line-height: 1.6;">
+                Scored 64/100. Overall security posture: D.
+            </div>
+            <div class="meta">
+                Run ID: 024be7cb-a8c7-4225-8d0d-d76bd30fd5b6
+                <span>|</span> 2026-10-03 02:10:39 UTC
+                <span>|</span> v3.6.0
+            </div>
+        </header>
+<aside style="margin:1rem auto;max-width:60rem;padding:1rem"><strong>Synthetic demo bundle.</strong> Download the <a href="manifest.json">manifest</a>, <a href="manifest.json.sig">signature</a>, <a href="signer.pub">demo public key</a> and <a href="verify.txt">verification steps</a>. This key verifies sample integrity; it does not establish an operator identity or prove execution.</aside>
+<p>Scope: Config Posture audits the supplied configuration, including MCP feature settings. It does not establish protection for discovered MCP servers. MCP discovery was skipped, so MCP Protection is excluded from the overall score. The config_valid deployment check confirms that the configuration loads; its PASS does not mean HTTPS content inspection is enabled. This sample leaves TLS interception disabled, with the resulting inspection limits listed under deployment verification.</p>
+
+
+        <div class="informational-banner">
+            <strong>&#9432; Informational Only</strong>
+            Signed summary. Not audit-grade. The assess tier adds server-specific findings, remediation commands, exposure analysis, compliance mappings, a badge, a full attestation, and the complete assessment package.
+        </div>
+
+
+        <section>
+            <h2>Method and Scope</h2>
+<p>The overall assessment score combines configuration posture, deployment verification and detection coverage. The configuration audit evidence separately reports 87/170 (51%, F); it supplies the Config Posture section, not the overall grade. MCP discovery was skipped.</p>
+
+            <table>
+                <tbody>
+                    <tr><th>Tool</th><td>pipelock assess v3.6.0 (build unknown)</td></tr>
+                    <tr><th>Method versions</th><td>Scoring 2 · Renderer 2.0 · Schema 2</td></tr>
+                    <tr><th>Target config</th><td>balanced.yaml · SHA-256 907c7f31920de261bfbb2d799da419bfa8fff74465050ee0521cf84a6faa8c56 · unchanged after init</td></tr>
+                    <tr><th>Platform</th><td>linux/amd64 · target commit 3e868ac5d5b62d3a2790958542171143af8a0e38</td></tr>
+                    <tr><th>Run scope</th><td>Assessed with skipped primitives: discover · partial finalization explicitly allowed</td></tr>
+                    <tr><th>Artifact validation</th><td>3 evidence artifact hashes verified before scoring; output hashes are recorded in manifest.json</td></tr>
+                    <tr><th>Not assessed</th><td>assessment finalized with --allow-partial; framework coverage is only attached to fully-evidenced runs</td></tr>
+                    <tr><th>Signature</th><td>Detached Ed25519 signature covers manifest.json and its artifact hashes</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+
+        <section>
+            <h2>Assessment Sections</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Section</th>
+                        <th>Score</th>
+                        <th>Grade</th>
+                        <th>Scope</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                    <tr>
+                        <td>Config Posture</td>
+                        <td>
+
+                            <div class="score-bar-wrap">
+                                <div class="score-bar-bg">
+                                    <div class="score-bar-fill" style="width: 51%; background: #ef4444;"></div>
+                                </div>
+                                <span class="score-label">51/100</span>
+                            </div>
+
+                        </td>
+                        <td>
+
+                            <span class="grade-badge" style="background: #ef4444; padding: 0.125rem 0.5rem; font-size: 0.75rem;">F</span>
+
+                        </td>
+                        <td>23/23 applicable</td>
+                    </tr>
+
+                    <tr>
+                        <td>Deployment Verification</td>
+                        <td>
+
+                            <div class="score-bar-wrap">
+                                <div class="score-bar-bg">
+                                    <div class="score-bar-fill" style="width: 50%; background: #ef4444;"></div>
+                                </div>
+                                <span class="score-label">50/100</span>
+                            </div>
+
+                        </td>
+                        <td>
+
+                            <span class="grade-badge" style="background: #ef4444; padding: 0.125rem 0.5rem; font-size: 0.75rem;">F</span>
+
+                        </td>
+                        <td>12/15 applicable</td>
+                    </tr>
+
+                    <tr>
+                        <td>Detection Coverage</td>
+                        <td>
+
+                            <div class="score-bar-wrap">
+                                <div class="score-bar-bg">
+                                    <div class="score-bar-fill" style="width: 95%; background: #22c55e;"></div>
+                                </div>
+                                <span class="score-label">95/100</span>
+                            </div>
+
+                        </td>
+                        <td>
+
+                            <span class="grade-badge" style="background: #22c55e; padding: 0.125rem 0.5rem; font-size: 0.75rem;">A</span>
+
+                        </td>
+                        <td>23/26 applicable</td>
+                    </tr>
+
+                    <tr>
+                        <td>MCP Protection</td>
+                        <td>
+
+                            <span class="score-label">N/A</span>
+
+                        </td>
+                        <td>
+
+                            <span class="grade-badge" style="background: #6b7280; padding: 0.125rem 0.5rem; font-size: 0.75rem;">N/A</span>
+
+                        </td>
+                        <td>0/0 applicable</td>
+                    </tr>
+
+                </tbody>
+            </table>
+        </section>
+
+
+
+
+
+        <section>
+            <h2>MCP Server Coverage</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">0</div>
+                    <div class="stat-label">Total Servers</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" style="color: var(--color-green);">0</div>
+                    <div class="stat-label">Protected (Pipelock)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" style="color: var(--color-red);">0</div>
+                    <div class="stat-label">Unprotected</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" style="color: var(--text-muted);">0</div>
+                    <div class="stat-label">Unknown</div>
+                </div>
+            </div>
+        </section>
+
+
+        <section>
+            <h2>Detection Coverage</h2>
+            <div class="stats-grid" style="grid-template-columns: 1fr;">
+                <div class="stat-card">
+                    <div class="stat-value" style="color: #22c55e;">95%</div>
+                    <div class="stat-label">Attack scenarios detected</div>
+                </div>
+            </div>
+        </section>
+
+
+        <section>
+            <h2>Top Findings</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Severity</th>
+                        <th>Category</th>
+                        <th>Title</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                    <tr>
+                        <td>
+                            <span class="severity-badge" style="background: #f97316;">HIGH</span>
+                        </td>
+                        <td>Prompt Injection</td>
+                        <td>Attack scenario &#34;Credential solicitation&#34; not detected</td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <span class="severity-badge" style="background: #f97316;">HIGH</span>
+                        </td>
+                        <td>scanning</td>
+                        <td>Verification check &#34;browser_shield&#34; failed: browser_shield is disabled in config</td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <span class="severity-badge" style="background: #f97316;">HIGH</span>
+                        </td>
+                        <td>scanning</td>
+                        <td>Verification check &#34;file_sentry&#34; failed: file_sentry is disabled in config</td>
+                    </tr>
+
+                </tbody>
+            </table>
+
+        </section>
+
+
+        <section>
+            <div class="upgrade-cta">
+                Get the complete assessment package with server-specific findings, exposure analysis, actionable fix guidance, compliance mappings, a badge, and a full attestation.
+                <a href="https://pipelab.org/pipelock">Learn more at pipelab.org/pipelock</a>
+            </div>
+        </section>
+
+        <section>
+            <h2>Explicit Non-Claims</h2>
+            <div class="no-findings">
+                This summary does not identify individual MCP servers, provide deployment-specific exposure analysis or remediation commands, map results to individual compliance controls, issue a badge or full attestation, or constitute an audit or certification. The per-framework coverage counts above are totals, not a control-by-control mapping. A signature authenticates this manifest against the named signing key and shows the listed artifacts have not changed since it was written; it does not establish who operated the assessment, does not expand what was assessed, and carries no authority beyond whatever trust you already place in that key. A key generated locally on first use proves integrity only, until its public key is independently trusted.
+            </div>
+        </section>
+
+        <footer>
+            <span class="footer-brand">
+                <svg viewBox="0 0 400 360" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M130 180 L130 110 C130 65 160 40 200 40 C240 40 270 65 270 110 L270 180" stroke="#00ffc8" stroke-width="28" stroke-linecap="round" fill="none"/>
+                    <rect x="90" y="180" width="220" height="160" rx="16" fill="#0a0a0f" stroke="#00ffc8" stroke-width="2.5"/>
+                    <circle cx="200" cy="248" r="18" fill="#00ffc8" opacity="0.9"/>
+                    <circle cx="200" cy="248" r="10" fill="#0a0a0f"/>
+                    <rect x="196" y="256" width="8" height="24" rx="3" fill="#00ffc8" opacity="0.9"/>
+                </svg>
+                Generated by <a href="https://pipelab.org/pipelock">pipelock</a> v3.6.0
+            </span>
+            <br>
+            <span style="margin-top: 0.375rem; display: inline-block; font-size: 0.75rem; color: var(--text-dim);">Signed summary. Informational only. Not audit-grade.</span>
+            <div style="margin-top: 0.375rem; font-size: 0.75rem; color: var(--text-dim);">
+                Print this page to PDF for a portable copy (Ctrl+P / Cmd+P).
+            </div>
+        </footer>
+    </div>
+</body>
+</html>

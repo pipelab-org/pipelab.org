@@ -1,0 +1,56 @@
+{
+  "schema_version": "pipelock.replay_manifest.v0",
+  "scenario_id": "operation-aware-policy",
+  "title": "Blocked: destructive API mutation",
+  "category": "Operation-aware policy",
+  "bench_case_id": "local-lab-request-policy-graphql-mutation-001",
+  "transport": "forward",
+  "destination_class": "reserved GraphQL API endpoint",
+  "decisive_verdict": "block",
+  "decisive_layer": "request_policy",
+  "without": "A bare agent sends both the safe read and the destructive mutation to the API.",
+  "with": "Pipelock allows the safe read, inspects the GraphQL operation, and blocks the destructive mutation by policy. The signed receipts record both decisions.",
+  "pipelock_version": "3.3.0",
+  "policy_hash": "sha256:85ced5088527e479dc0e70f1dcc739a8b7392391dd352b8728201283a6861653",
+  "signer_key": "91dfb23882a8acf28f624985030ca1798a3efbbcee2bb8bdda8f452612eb755a",
+  "captured_at": "2026-08-05T01:16:26Z",
+  "packet": {
+    "path": "packet.json",
+    "sha256": "d1ed464d8f34ec73500ecb89f2950242f9640cb5322d78c6517c48e4dbb5c1f1",
+    "root_hash": "27e8aa3a211a8d1a9ca8c7750c0a9af769e80c37a33ba4e38c523cd6b022ed52",
+    "receipt_count": 3,
+    "final_seq": 2
+  },
+  "receipts": [
+    {
+      "chain_seq": 0,
+      "action_id": "019fcf7e-425f-706c-93af-1a2e55c9667e",
+      "action_type": "unclassified",
+      "verdict": "allow",
+      "transport": "receipt_session",
+      "target_redacted": "pipelock://session/open"
+    },
+    {
+      "chain_seq": 1,
+      "action_id": "019fcf7e-4262-7bfb-908a-a48bec977a0c",
+      "action_type": "write",
+      "verdict": "allow",
+      "transport": "forward",
+      "method": "POST",
+      "target_redacted": "http://api.fixture.test:39837/graphql"
+    },
+    {
+      "chain_seq": 2,
+      "action_id": "019fcf7e-4267-78dd-ac60-4352912dae32",
+      "action_type": "write",
+      "verdict": "block",
+      "transport": "forward",
+      "method": "POST",
+      "layer": "request_policy",
+      "pattern": "block-destructive-graphql-mutation",
+      "target_redacted": "http://api.fixture.test:39837/graphql"
+    }
+  ],
+  "verifier_command": "pipelock-verifier audit-packet . --key 91dfb23882a8acf28f624985030ca1798a3efbbcee2bb8bdda8f452612eb755a",
+  "completeness_note": "A verified chain proves the included mediated decisions were signed by the mediator and untampered. It does NOT prove session completeness, that no event was missed, that the agent was sandboxed, or that traffic could not bypass Pipelock. The prompts and responses shown are unsigned playback metadata; only the receipt chain of decisions is signed."
+}

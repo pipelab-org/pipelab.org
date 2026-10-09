@@ -1,0 +1,240 @@
+{{ define "main" }}
+{{/*
+  The browser verifier's wasm is served two different ways and the loader has to
+  work on both. On the broker the viewer sits at / and fetches the wasm the
+  broker built into its own image, document-relative. On this site there is no
+  such build step, so the document-relative path 404s and the Replay tab's
+  verify button cannot run at all. Hand the loader the content-hashed Hugo asset
+  URL and its SRI digest here; viewer-live.js falls back to the relative path
+  when these attributes are absent, which is the broker case.
+*/}}
+{{ $va := partial "verifier-assets.html" . }}
+<div class="playground-page playground-index" data-wasm="{{ $va.wasm.url }}" data-wasm-integrity="{{ $va.wasm.integrity }}" data-wasm-exec="{{ $va.wasmExec.url }}" data-wasm-exec-integrity="{{ $va.wasmExec.integrity }}">
+
+  {{/* ── 1. HERO ────────────────────────────────────────────── */}}
+  <section class="pg-hero site-hero brand-field-hero" data-hero="brand-rich" data-fx="reveal">
+    <div class="pg-hero-inner">
+
+      <span class="pg-pill">
+        <span class="pg-pulse"></span>
+        Sandbox demo &middot; no account &middot; fake secret
+      </span>
+
+      <div class="pg-lockup">
+        <span class="pg-lockup-mark">{{ partial "brands/pipelock-mark.svg" . }}</span>
+        <h1 class="pg-lockup-name"><span>Pipe</span><em>lock</em> <strong>Playground</strong></h1>
+      </div>
+
+      <h2 class="pg-h1">
+        Watch an agent try to leak a secret.<br>
+        Watch the firewall <span class="pg-accent">stop it.</span>
+      </h2>
+
+      <p class="pg-lead">
+        Pipelock sits between AI agents and the internet and blocks secret leaks, unsafe tool traffic, and prompt-injection responses. Step through one real run below, then verify the result yourself, offline.
+      </p>
+
+      <div class="pg-honesty-callout">
+        <svg aria-hidden="true" focusable="false" class="pg-shield-svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#00e5a0" stroke-width="1.5"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg>
+        <div>
+          <p class="pg-honesty-title">The firewall guards what leaves, not what the agent can read.</p>
+          <p class="pg-honesty-body">The agent <b>can</b> read the planted secret. That is allowed, and it is the whole point: it still <b class="pg-accent">cannot move it out past Pipelock</b>. Every mediated attempt is signed before the destination ever sees it.</p>
+        </div>
+      </div>
+
+      <div class="pg-fixtures">
+        <span class="pg-fixture">
+          <span class="pg-fixture-label">planted canary</span>
+          <code class="pg-fixture-val pg-fixture-amber">demo secret</code>
+        </span>
+        <span class="pg-fixture">
+          <span class="pg-fixture-label">allowed read</span>
+          <code class="pg-fixture-val pg-fixture-green">safe.target.test</code>
+        </span>
+        <span class="pg-fixture">
+          <span class="pg-fixture-label">off-limits collector</span>
+          <code class="pg-fixture-val pg-fixture-red">exfil.target.test</code>
+        </span>
+      </div>
+
+      <div class="pg-hero-cta">
+        <a class="btn btn-primary pg-btn-arrow" href="#playground-app" data-event="playground_start_clicked" data-event-placement="hero">
+          Start the run
+          <svg aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14m0 0l-6-6m6 6l6-6"/></svg>
+        </a>
+      </div>
+
+      <p class="pg-disclaimer">
+        <svg aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
+        The secret here is fake and planted. This is a sandbox, do not enter real secrets.
+      </p>
+
+    </div>
+    <div class="pg-divider" aria-hidden="true"></div>
+  </section>
+
+  {{/* ── 2. APP SECTION ─────────────────────────────────────── */}}
+  <section id="playground-app" class="pg-app">
+    <div class="pg-section-head" data-fx="reveal">
+      <p class="pg-eyebrow">Live demo</p>
+      <h2 class="pg-h2" data-fx="decrypt">One agent. One secret. Every move signed.</h2>
+      <p class="pg-lead">Read left to right. Manipulation enters at Chat, the agent acts, Pipelock decides, and the proof is yours to re-check.</p>
+      <p class="pg-lead"><a href="/playground-challenge/">Read the challenge rules</a>: what counts as a bypass, what does not, and how to verify the signed result yourself.</p>
+    </div>
+
+    <div class="pg-legend">
+      <div class="pg-legend-card pg-legend-amber" data-fx="reveal spotlight">
+        <span class="pg-legend-idx">01</span>
+        <div>
+          <p class="pg-legend-title pg-color-amber">Chat</p>
+          <p class="pg-legend-desc">Untrusted input. The agent believes it.</p>
+        </div>
+      </div>
+      <div class="pg-legend-card pg-legend-blue" data-fx="reveal spotlight">
+        <span class="pg-legend-idx">02</span>
+        <div>
+          <p class="pg-legend-title pg-color-blue">Agent</p>
+          <p class="pg-legend-desc">What it tried. Unsigned. Believe nothing.</p>
+        </div>
+      </div>
+      <div class="pg-legend-card pg-legend-green" data-fx="reveal spotlight">
+        <span class="pg-legend-idx">03</span>
+        <div>
+          <p class="pg-legend-title pg-color-green">Pipelock</p>
+          <p class="pg-legend-desc">Signed ALLOW / BLOCK. The only ground truth.</p>
+        </div>
+      </div>
+      <div class="pg-legend-card pg-legend-green" data-fx="reveal spotlight">
+        <span class="pg-legend-idx">04</span>
+        <div>
+          <p class="pg-legend-title pg-color-green">Proof</p>
+          <p class="pg-legend-desc">Download it. Verify offline. No account.</p>
+        </div>
+      </div>
+    </div>
+
+    {{/* Live demo: embed the live broker host so Replay + Live both run natively (Turnstile is pinned to that hostname). */}}
+    <div class="playground-demo-frame-wrap">
+      <iframe class="playground-demo-frame"
+              src="https://playground.pipelab.org/?v=20260630embedfix3"
+              title="Pipelock Playground: a contained agent run mediated outside the agent, signed at each decision, and verifiable offline. Replay runs by default; click Live to drive a real contained agent."
+              loading="lazy"></iframe>
+    </div>
+    <p class="pg-demo-popout">Embedded demo not loading? <a href="https://playground.pipelab.org/" target="_blank" rel="noopener noreferrer" data-event="playground_popout_clicked" data-event-placement="embedded-demo">Open the live demo in a new tab &#8599;</a></p>
+
+    <div class="pg-truth-echo">
+      <svg aria-hidden="true" focusable="false" class="pg-shield-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#00e5a0" stroke-width="1.5"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg>
+      <p><b>The agent narrates. Pipelock signs.</b> The agent can read the secret locally. It just cannot move it out past Pipelock, and every mediated decision is signed proof either way.</p>
+    </div>
+
+    <p class="pg-watermark">
+      <span class="pg-watermark-rule" aria-hidden="true"></span>
+      Sandbox demo &middot; fixtures are fake &middot; planted secret only
+      <span class="pg-watermark-rule" aria-hidden="true"></span>
+    </p>
+  </section>
+
+  {{/* ── 3. PROOF CLIMAX ────────────────────────────────────── */}}
+  <section id="prove" class="pg-prove">
+    <div class="pg-section-head" data-fx="reveal">
+      <p class="pg-eyebrow">Prove</p>
+      <h2 class="pg-h2" data-fx="decrypt">Don&rsquo;t trust us. Verify it yourself.</h2>
+      <p class="pg-lead">Most demos stop at a claim. Download the signed bundle, run the verifier on your own machine with our published key, and watch it return <code class="pg-accent">result: VALID</code>. No network. No account.</p>
+    </div>
+
+    <div class="pg-verify-card" data-fx="reveal spotlight">
+
+      <div class="pg-stamp" aria-hidden="true">
+        <svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00e5a0" stroke-width="2.6"><path d="M5 13l4 4L19 7"/></svg>
+        VERIFY OK
+      </div>
+
+      <div class="pg-verify-header">
+        <svg aria-hidden="true" focusable="false" class="pg-shield-svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#00e5a0" stroke-width="1.6"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg>
+        <h3 class="pg-verify-title">Verified offline</h3>
+      </div>
+      <p class="pg-verify-sub">verified offline against the published signing key</p>
+
+      <div class="pg-checks-grid">
+        <span class="pg-check"><span class="pg-check-icon">&#10003;</span> schema</span>
+        <span class="pg-check"><span class="pg-check-icon">&#10003;</span> receipt chain</span>
+        <span class="pg-check"><span class="pg-check-icon">&#10003;</span> cross-check</span>
+        <span class="pg-check"><span class="pg-check-icon">&#10003;</span> verdict: valid</span>
+        <span class="pg-check"><span class="pg-check-icon">&#10003;</span> trusted key</span>
+      </div>
+
+      <div class="pg-terminal">
+        <div class="pg-terminal-bar">
+          <span class="pg-terminal-dot pg-dot-red"></span>
+          <span class="pg-terminal-dot pg-dot-amber"></span>
+          <span class="pg-terminal-dot pg-dot-green"></span>
+          <span class="pg-terminal-label">verify &middot; your machine</span>
+        </div>
+        <div class="pg-terminal-body">
+          <div><span class="pg-prompt">$ </span><span class="pg-cmd">./pipelock-verifier audit-packet ./packet \</span></div>
+          <div class="pg-cmd-cont">--key 99f16ec99b3f55180f75a025affa6a9cced3e559a38590fa6cac48a736221a2c</div>
+          <div class="pg-result">result: VALID</div>
+          <div class="pg-result-detail">checks: schema, chain, cross-check, verdict, key  ok</div>
+        </div>
+      </div>
+
+      <p class="pg-pubkey">
+        published key <b>ed25519:99f16ec9...36221a2c</b>
+        <span class="pg-key-match">
+          <svg aria-hidden="true" focusable="false" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00e5a0" stroke-width="2.4"><path d="M5 13l4 4L19 7"/></svg>
+          matches release
+        </span>
+      </p>
+
+      <div class="pg-verify-actions">
+        <div class="pg-verify-primary-group">
+          <a class="btn btn-primary pg-btn-download" href="/playground/demo/kits/pipelock-verify-linux.zip" download data-event="playground_kit_downloaded" data-event-placement="verify-card" data-event-value="linux">
+            <svg aria-hidden="true" focusable="false" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>
+            Download verify kit
+          </a>
+          <span class="pg-os-links">
+            Other systems:
+            <a href="/playground/demo/kits/pipelock-verify-macos.zip" download data-event="playground_kit_downloaded" data-event-placement="verify-card" data-event-value="macos">macOS</a>
+            <a href="/playground/demo/kits/pipelock-verify-windows.zip" download data-event="playground_kit_downloaded" data-event-placement="verify-card" data-event-value="windows">Windows</a>
+          </span>
+        </div>
+        <a class="btn btn-ghost pg-btn-bundle" href="/playground/demo/audit-packet.zip" download data-event="playground_bundle_downloaded" data-event-placement="verify-card">
+          Download signed bundle
+          <span class="pg-bundle-name">audit-packet.zip</span>
+        </a>
+      </div>
+
+      <p class="pg-verify-inline-link">Or re-check it in your browser in the <a href="#playground-app">demo above</a>. The downloaded kit lets you verify the signature offline.</p>
+
+    </div>
+
+    <p class="pg-methodology">Public methodology. Public attack cases. Public Pipelock results.</p>
+  </section>
+
+  {{/* ── 4. REPLAY ARCHIVE POINTER ──────────────────────────── */}}
+  <section class="playground-band" id="recordings">
+    <div class="playground-section-head" data-fx="reveal">
+      <p class="playground-label">Replay archive</p>
+      <h2 data-fx="decrypt">Inspect more signed decisions.</h2>
+      <p>The permanent replay archive keeps the recorded agent actions, signed receipt chains, downloadable Audit Packets, and evidence-theater contrast fixture together.</p>
+      <div class="playground-actions">
+        <a class="btn btn-primary" href="/playground/replay/" data-event="playground_replay_archive_clicked" data-event-placement="replay-archive">Browse signed replays</a>
+      </div>
+    </div>
+  </section>
+
+  {{/* ── 5. CLOSING CTA ─────────────────────────────────────── */}}
+  <section class="pg-cta">
+    <div class="pg-cta-card" data-fx="reveal spotlight">
+      <h2 class="pg-h2" data-fx="decrypt">Run it against your own agents.</h2>
+      <p>Single Go binary (Apache-2.0 core; Enterprise features under ELv2). Fail-closed by default. Install in one command and get signed evidence for mediated actions.</p>
+      <div class="pg-cta-actions">
+        <a class="btn btn-primary" href="/pipelock/" data-event="cta_primary_click" data-event-placement="playground-bottom">Get Started Free</a>
+        <a class="btn btn-ghost" href="https://github.com/luckyPipewrench/pipelock" target="_blank" rel="noopener noreferrer" data-event="github_click" data-event-placement="playground-bottom">GitHub</a>
+      </div>
+    </div>
+  </section>
+
+</div>
+{{ partial "site-fx.html" . }}
+{{ end }}

@@ -1,0 +1,35 @@
+{
+  "_comment": "Reviewed baseline for the continuous Gauntlet lane. Exact candidate scores become the next run's floors and ceiling only through a promotion PR. Public records remain append-only and the latest-verified pointer moves only with that reviewed commit.",
+  "benchmark_manifest_sha256": "6dd6b41b5caaf2f3c928ba7ab35affcb961419277ea08e44c9e513b2e4aced5a",
+  "corpus_git_sha": "79a51f084fc4f4cd5254e4ec15a273c556c280d5",
+  "corpus_sha256": "7d4a7792168e2dc49e9a6c796c7705bf709369964995a235438e0f9533aff7f1",
+  "corpus_version": "v2.14.0",
+  "observed_case_count": {
+    "applicable": 266,
+    "not_applicable": 0,
+    "not_applicable_reasons": {},
+    "total": 266,
+    "unreachable": 0
+  },
+  "pipelock_version": "3.6.0",
+  "recorded_on": "2026-10-03",
+  "runner_version": "0.4.3",
+  "schema_version": 1,
+  "score_ceilings": {
+    "applicable": {
+      "false_positive_rate": 0.02631578947368421
+    }
+  },
+  "score_floors": {
+    "applicable": {
+      "containment": 0.9842105263157894
+    },
+    "full": {
+      "containment": 0.9842105263157894
+    }
+  },
+  "scoring_version": "2.8",
+  "summary_schema_version": 5,
+  "verified_artifact_id": "github-actions:luckyPipewrench/pipelock:37142996092:2",
+  "verified_candidate_sha256": "1cd062c318086fb61e7dd78609f6caa44398d35d9ed3979bda873fac627f583f"
+}

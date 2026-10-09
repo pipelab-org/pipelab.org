@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "repository": "luckyPipewrench/pipelock",
+  "commit": "4c4e0a37f292602abb1c2e6eb721b1fb3338337a",
+  "path": "benchmark/gauntlet-baseline.json",
+  "sha256": "29d61ca812841c272846145476cadf3473aa71ec6515aaab72ba341c076340b0"
+}

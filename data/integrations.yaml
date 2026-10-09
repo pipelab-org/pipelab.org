@@ -1,0 +1,276 @@
+# Integrations Pipelock ships a guide or artifact for. Rendered by
+# partials/works-with.html. Every href is a real site page, repo guide,
+# chart, verifier, or repository. color is the official brand hex
+# (black-branded marks render as off-white on the dark ground; two
+# too-dark marks use their official lighter brand tone). brand names a
+# partial under layouts/partials/brands/; rows without one render a
+# neutral monogram, never an invented logo. x/ypct are orbit positions in
+# percent of the orbit box.
+#
+# The vertical key is `ypct`, NOT `y`. Do not rename it back. YAML 1.1 treats a
+# bare `y` key as the boolean true, so the Hugo pinned in .hugo-version (which
+# CI and the production build use) resolves `.y` to nothing and emits an empty
+# `--y:%`, collapsing every planet onto the sun. Newer local Hugo parses `y` as
+# a plain string, so the preview looks correct while production is broken.
+# px/py are the precomputed SVG thread endpoints; keep templates math-free
+# because the pinned Hugo also rejects `mul` on YAML floats.
+orbit:
+      - name: "Claude Code"
+        href: "/learn/claude-code-security/"
+        color: "#D97757"
+        brand: claude
+        x: 56.5
+        ypct: 28.3
+        px: 565
+        py: 147.2
+        delay: 0
+      - name: "Cursor"
+        href: "/learn/cursor-integration/"
+        color: "#F4F4F5"
+        brand: cursor
+        x: 68.7
+        ypct: 46
+        px: 687.1
+        py: 239.2
+        delay: 0.4
+      - name: "VS Code"
+        href: "/learn/vscode-integration/"
+        color: "#3EA6FF"
+        brand: vscode
+        x: 62.2
+        ypct: 67.7
+        px: 622.1
+        py: 351.9
+        delay: 0.7
+      - name: "JetBrains"
+        href: "/learn/jetbrains-integration/"
+        color: "#F4F4F5"
+        brand: jetbrains
+        x: 43.5
+        ypct: 71.7
+        px: 435
+        py: 372.8
+        delay: 1
+      - name: "Zed"
+        href: "/learn/zed-integration/"
+        color: "#4B8DFF"
+        brand: zed
+        x: 31.3
+        ypct: 54
+        px: 312.9
+        py: 280.8
+        delay: 1.4
+      - name: "Codex CLI"
+        href: "https://github.com/luckyPipewrench/pipelock/blob/main/docs/guides/codex.md"
+        color: "#F4F4F5"
+        brand: openai
+        x: 37.8
+        ypct: 32.3
+        px: 377.9
+        py: 168.1
+        delay: 1.8
+      - name: "OpenClaw"
+        href: "https://github.com/luckyPipewrench/pipelock/blob/main/docs/guides/openclaw.md"
+        color: "#FF4D4D"
+        brand: openclaw
+        x: 11.2
+        ypct: 40
+        px: 111.9
+        py: 208
+        delay: 2.1
+      - name: "Continue"
+        href: "/learn/continue/"
+        color: "#F4F4F5"
+        # Source: https://github.com/continuedev/continue/blob/main/extensions/vscode/media/icon.png
+        img: "/images/brands/continue.png"
+        x: 20.1
+        ypct: 22.5
+        px: 201.3
+        py: 117
+        delay: 2.4
+      - name: "MCP"
+        href: "/learn/mcp-security/"
+        color: "#F4F4F5"
+        brand: mcp
+        kind: protocol
+        x: 35.9
+        ypct: 11.3
+        px: 359.2
+        py: 58.8
+        delay: 2.8
+      - name: "Cline"
+        href: "https://github.com/luckyPipewrench/pipelock/blob/main/docs/guides/cline.md"
+        color: "#F4F4F5"
+        brand: cline
+        x: 54.9
+        ypct: 9
+        px: 549.3
+        py: 46.6
+        delay: 3.2
+      - name: "OpenCode"
+        href: "https://github.com/luckyPipewrench/pipelock/blob/main/docs/guides/opencode.md"
+        color: "#F4F4F5"
+        brand: opencode
+        x: 72.8
+        ypct: 16
+        px: 728.1
+        py: 83.4
+        delay: 3.5
+      - name: "LangGraph"
+        href: "https://github.com/luckyPipewrench/pipelock/blob/main/docs/guides/langgraph.md"
+        color: "#7FC8FF"
+        brand: langchain
+        x: 85.5
+        ypct: 30.9
+        px: 854.7
+        py: 160.6
+        delay: 3.9
+      - name: "CrewAI"
+        href: "https://github.com/luckyPipewrench/pipelock/blob/main/docs/guides/crewai.md"
+        color: "#FF5A50"
+        brand: crewai
+        x: 90
+        ypct: 50.1
+        px: 900
+        py: 260.6
+        delay: 4.2
+      - name: "Google ADK"
+        href: "https://github.com/luckyPipewrench/pipelock/blob/main/docs/guides/google-adk.md"
+        color: "#4285F4"
+        brand: google
+        x: 85.4
+        ypct: 69.3
+        px: 853.7
+        py: 360.4
+        delay: 4.6
+      - name: "AutoGen"
+        href: "https://github.com/luckyPipewrench/pipelock/blob/main/docs/guides/autogen.md"
+        color: "#F4F4F5"
+        brand: autogen
+        x: 72.6
+        ypct: 84.1
+        px: 726.3
+        py: 437.3
+        delay: 4.9
+      - name: "OpenAI Agents"
+        href: "https://github.com/luckyPipewrench/pipelock/blob/main/docs/guides/openai-agents.md"
+        color: "#F4F4F5"
+        brand: openai
+        x: 54.7
+        ypct: 91.1
+        px: 547.1
+        py: 473.5
+        delay: 5.3
+      - name: "Hermes"
+        href: "/learn/hermes-integration/"
+        color: "#F4F4F5"
+        # Source: https://github.com/NousResearch/hermes-agent/blob/main/apps/desktop/public/apple-touch-icon.png
+        img: "/images/brands/hermes.png"
+        x: 35.7
+        ypct: 88.6
+        px: 357.2
+        py: 460.8
+        delay: 5.6
+      - name: "Grok"
+        href: "/learn/grok/"
+        color: "#F4F4F5"
+        brand: grok
+        x: 20
+        ypct: 77.3
+        px: 199.9
+        py: 402.1
+        delay: 5.9
+      - name: "Pi"
+        href: "/learn/pi/"
+        color: "#4D9ABF"
+        # Source: the official mark embedded in https://pi.dev/ (svg.pi-logo-mark), cropped to its bounds.
+        brand: pi
+        x: 11.1
+        ypct: 59.8
+        px: 111.4
+        py: 310.9
+        delay: 6.3
+rows:
+  - label: "Runs where your agents run"
+    items:
+      - name: "Docker"
+        href: "/install/"
+        color: "#2496ED"
+        brand: docker
+      - name: "Kubernetes"
+        href: "https://github.com/luckyPipewrench/pipelock/blob/main/docs/guides/kubernetes-enterprise-deployment.md"
+        color: "#326CE5"
+        brand: kubernetes
+      - name: "Helm chart"
+        href: "https://github.com/luckyPipewrench/pipelock/tree/main/charts/pipelock"
+        color: "#277A9F"
+        brand: helm
+      - name: "Cloudflare Sandboxes"
+        href: "/learn/cloudflare-sandboxes-pipelock/"
+        color: "#F38020"
+        brand: cloudflare
+      - name: "GitHub Actions"
+        href: "https://github.com/luckyPipewrench/pipelock-agent-egress-action"
+        color: "#2088FF"
+        brand: githubactions
+      - name: "Sure"
+        href: "/learn/sure-pipelock/"
+        color: "#61A446"
+        # Source: https://github.com/we-promise/sure/blob/main/desktop/src/assets/logomark.svg
+        img: "/images/brands/sure.svg"
+      - name: "Homebrew"
+        href: "/install/"
+        color: "#FBB040"
+        brand: homebrew
+      - name: "Go"
+        href: "/install/"
+        color: "#00ADD8"
+        brand: go
+  - label: "Observe and respond"
+    items:
+      - name: "Prometheus"
+        href: "/learn/operator-console/"
+        color: "#E6522C"
+        brand: prometheus
+      - name: "Grafana"
+        href: "/learn/operator-console/"
+        color: "#F46800"
+        brand: grafana
+      - name: "Splunk"
+        href: "https://github.com/luckyPipewrench/pipelock/blob/main/docs/guides/siem-integration.md"
+        color: "#F4F4F5"
+        brand: splunk
+      - name: "Elastic"
+        href: "https://github.com/luckyPipewrench/pipelock/blob/main/docs/guides/siem-integration.md"
+        color: "#FEC514"
+        brand: elastic
+      - name: "Microsoft Sentinel"
+        href: "https://github.com/luckyPipewrench/pipelock/blob/main/docs/guides/siem-integration.md"
+        color: "#1B93EB"
+        brand: microsoft-sentinel
+      - name: "Grafana Loki"
+        href: "https://github.com/luckyPipewrench/pipelock/blob/main/docs/guides/siem-integration.md"
+        color: "#F46800"
+        brand: grafana
+      - name: "OpenTelemetry"
+        href: "https://github.com/luckyPipewrench/pipelock/blob/main/docs/guides/siem-integration.md"
+        color: "#F5A800"
+        brand: opentelemetry
+  - label: "Verify receipts in"
+    items:
+      - name: "Go"
+        href: "/learn/verify-a-receipt/"
+        color: "#00ADD8"
+        brand: go
+      - name: "TypeScript"
+        href: "https://github.com/luckyPipewrench/pipelock/tree/main/sdk/verifiers/ts"
+        color: "#3178C6"
+        brand: typescript
+      - name: "Rust"
+        href: "https://github.com/luckyPipewrench/pipelock/tree/main/sdk/verifiers/rust"
+        color: "#DEA584"
+        brand: rust
+      - name: "Python"
+        href: "https://github.com/luckyPipewrench/pipelock-verify-python"
+        color: "#3776AB"
+        brand: python

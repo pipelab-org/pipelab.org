@@ -1,0 +1,12 @@
+{
+  "canonical_execution": true,
+  "corpus_git_sha": "06399746918ae0005f59a914fc9ec100a2f27fb8",
+  "corpus_ref_kind": "origin/main",
+  "corpus_repository": "luckyPipewrench/agent-egress-bench",
+  "dirty": false,
+  "generated_at": "2026-09-03T17:47:59Z",
+  "local_run_id": "local:20260903T174759Z:2612",
+  "noncanonical_reasons": [],
+  "runner_go_version": "go version go1.25.12 linux/amd64",
+  "schema_version": 2
+}

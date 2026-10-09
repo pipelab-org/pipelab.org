@@ -1,0 +1,34 @@
+# Single source of truth for Pipelock install commands.
+#
+# Every surface that shows an install command renders it from this file: the
+# product page terminal, the homepage hero, and the learn guides. Editing a
+# command here changes it everywhere at once. Do not hand-write an install
+# command into a page; scripts/site-audit.mjs fails the build if you do.
+#
+# ORDER MATTERS. The order of `methods` is the published order, and the first
+# entry is what a reader meets first. Go leads because it is the broadest path
+# we publish; the Homebrew tap is macOS and Linux only and must stay last.
+# scripts/site-audit.mjs enforces that Go precedes Homebrew here.
+#
+# VERSION in a command is substituted with site.Params.pipelock_version at build
+# time, so a release version bump does not need an edit here.
+#
+# The one surface this does NOT reach is static/llms-full.txt, which is served
+# raw and never passes through Hugo. Its ordering is covered by the same audit
+# check instead.
+
+methods:
+  - id: go
+    label: Go
+    short_label: Go
+    command: go install github.com/luckyPipewrench/pipelock/cmd/pipelock@latest
+
+  - id: docker
+    label: Docker
+    short_label: Docker
+    command: docker pull ghcr.io/luckypipewrench/pipelock:VERSION
+
+  - id: homebrew
+    label: Homebrew (macOS / Linux)
+    short_label: Homebrew (macOS)
+    command: brew install luckyPipewrench/tap/pipelock

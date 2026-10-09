@@ -1,0 +1,151 @@
+{{ define "main" }}
+{{- $methods := partial "install/methods.html" (dict) -}}
+{{- $version := site.Params.pipelock_version -}}
+{{- $first := index $methods 0 -}}
+
+<section class="inst-hero site-hero brand-field-hero" data-hero="brand-rich" data-fx="reveal">
+
+  <div class="inst-hero-inner fx-exhibit-band">
+
+    <div class="inst-copy fx-exhibit-claims">
+      <p class="inst-eyebrow">Install</p>
+      <h1 class="inst-h1">{{ .Title }}</h1>
+      <p class="inst-lead">{{ .Params.subtitle }}</p>
+      <ul class="inst-facts" role="list">
+        <li><span class="inst-fact-dot" aria-hidden="true"></span> Apache-2.0 core; Enterprise features under ELv2</li>
+        <li><span class="inst-fact-dot" aria-hidden="true"></span> Signed releases with checksums and provenance</li>
+        <li><span class="inst-fact-dot" aria-hidden="true"></span> Fail-closed defaults on mediated paths</li>
+      </ul>
+      <p class="inst-provenance">Current release: <a href="https://github.com/luckyPipewrench/pipelock/releases/latest" rel="noopener">v{{ $version }}</a></p>
+    </div>
+
+    <div class="inst-panel fx-exhibit" id="inst-panel-root" data-fx="scan">
+      <div class="inst-tabs" role="tablist" aria-label="Install method">
+        {{ range $i, $m := $methods }}
+        <button class="inst-tab{{ if eq $i 0 }} is-active{{ end }}" type="button" id="inst-tab-{{ $m.id }}"
+                role="tab" tabindex="{{ if eq $i 0 }}0{{ else }}-1{{ end }}" aria-selected="{{ if eq $i 0 }}true{{ else }}false{{ end }}" aria-controls="inst-panel"
+                data-inst-id="{{ $m.id }}" data-inst-label="{{ $m.short_label }}" data-inst-cmd="{{ $m.command }}"
+                data-event="install_tab_click" data-event-value="{{ $m.id }}" data-event-placement="install-hero">{{ partial (printf "brands/%s.svg" $m.id) . }} {{ $m.short_label }}</button>
+        {{ end }}
+        <button class="inst-tab" type="button" id="inst-tab-binary"
+                role="tab" tabindex="-1" aria-selected="false" aria-controls="inst-panel"
+                data-inst-id="binary" data-inst-label="Binary"
+                data-event="install_tab_click" data-event-value="binary" data-event-placement="install-hero">Binary</button>
+      </div>
+      <div class="inst-term inst-term-hero" id="inst-panel" role="tabpanel" aria-labelledby="inst-tab-{{ $first.id }}">
+        <div class="inst-term-head">
+          <span class="inst-term-dots" aria-hidden="true"><span></span><span></span><span></span></span>
+          <span class="inst-term-title" id="inst-term-title">install &middot; {{ $first.short_label | lower }}</span>
+        </div>
+        <button type="button" class="inst-term-body" id="inst-term-cmdrow" data-cmd-copy aria-label="Copy the install command" data-event="install_copy" data-event-placement="install-hero"><span class="prompt">$ </span><span class="cmd-text" id="inst-cmd">{{ $first.command }}</span></button>
+        <div class="inst-term-body inst-term-binary" id="inst-term-binary" hidden>
+          <p>Signed Linux, macOS, and Windows releases include checksums and provenance.</p>
+          <a class="inst-binary-link" href="https://github.com/luckyPipewrench/pipelock/releases/latest" rel="noopener"
+             data-event="install_releases_click" data-event-placement="install-hero">Download v{{ $version }} &rarr;</a>
+        </div>
+        <div class="inst-term-foot">
+          <span class="inst-term-check" aria-hidden="true">&#10003;</span> then <code>pipelock --version</code> confirms the build
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section class="inst-next product-band" data-fx="reveal live" aria-labelledby="install-runbook-title">
+  <div class="product-band-inner">
+    <div class="product-band-head">
+      <div>
+        <p class="product-band-kicker">Two minutes</p>
+        <h2 class="product-band-title" id="install-runbook-title">Three commands from install to proof</h2>
+      </div>
+      <p class="product-band-lead">Start with one agent, mediate one real path, then verify the decision record. Each command stands on its own; there is no hidden setup sequence between them.</p>
+    </div>
+
+    <ol class="product-runbook">
+      <li class="product-runbook-row" data-fx="reveal">
+        <span class="product-runbook-index" aria-hidden="true">01</span>
+        <div class="product-runbook-copy">
+          <h3>Put it in front of Claude Code</h3>
+          <p>Wires Claude Code through the proxy and starts the scanner. <a href="/learn/claude-code-security/">Claude Code guide &rarr;</a></p>
+        </div>
+        <div class="product-runbook-artifact inst-term"><button type="button" class="inst-term-body" data-cmd-copy aria-label="Copy: pipelock claude setup"><span class="prompt">$ </span><span class="cmd-text">pipelock claude setup</span></button></div>
+      </li>
+      <li class="product-runbook-row" data-fx="reveal">
+        <span class="product-runbook-index" aria-hidden="true">02</span>
+        <div class="product-runbook-copy">
+          <h3>Wrap any stdio MCP server</h3>
+          <p>The local subprocess servers most agents actually use, scanned both directions. <a href="/learn/mcp-proxy/">MCP proxy guide &rarr;</a></p>
+        </div>
+        <div class="product-runbook-artifact inst-term"><button type="button" class="inst-term-body" data-cmd-copy aria-label="Copy: pipelock mcp proxy"><span class="prompt">$ </span><span class="cmd-text">pipelock mcp proxy -- ./mcp-server</span></button></div>
+      </li>
+      <li class="product-runbook-row" data-fx="reveal">
+        <span class="product-runbook-index" aria-hidden="true">03</span>
+        <div class="product-runbook-copy">
+          <h3>Verify a real receipt</h3>
+          <p>Configure receipt signing to produce signed evidence. The public replay gallery gives you a signed packet to check now. <a href="/learn/verify-a-receipt/">Verify a receipt &rarr;</a></p>
+        </div>
+        <div class="product-runbook-artifact inst-term"><button type="button" class="inst-term-body" data-cmd-copy aria-label="Copy: pipelock verify-receipt"><span class="prompt">$ </span><span class="cmd-text">pipelock verify-receipt receipt.json --key signer.pub</span></button></div>
+      </li>
+    </ol>
+
+    <div class="inst-cta-row">
+      <a class="inst-btn-primary" href="/playground/" data-event="install_playground_click" data-event-placement="install-page">Test the live demo</a>
+      <a class="inst-btn-ghost" href="/proof/" data-event="install_proof_click" data-event-placement="install-page">Verify public proof</a>
+    </div>
+  </div>
+</section>
+
+<script>
+  (function () {
+    document.addEventListener('DOMContentLoaded', function () {
+      var root = document.getElementById('inst-panel-root');
+      if (!root) return;
+      var tabs = root.querySelectorAll('.inst-tab');
+      var cmdRow = document.getElementById('inst-term-cmdrow');
+      var cmdEl = document.getElementById('inst-cmd');
+      var binaryEl = document.getElementById('inst-term-binary');
+      var titleEl = document.getElementById('inst-term-title');
+      var panelEl = document.getElementById('inst-panel');
+      function activate(tab) {
+        tabs.forEach(function (t) {
+          var isMe = t === tab;
+          t.classList.toggle('is-active', isMe);
+          t.setAttribute('aria-selected', isMe ? 'true' : 'false');
+          t.tabIndex = isMe ? 0 : -1;
+        });
+        var isBinary = tab.getAttribute('data-inst-id') === 'binary';
+        cmdRow.hidden = isBinary;
+        binaryEl.hidden = !isBinary;
+        if (!isBinary && cmdEl) cmdEl.textContent = tab.getAttribute('data-inst-cmd') || '';
+        if (titleEl) titleEl.textContent = 'install · ' + (tab.getAttribute('data-inst-label') || '').toLowerCase();
+        if (panelEl) panelEl.setAttribute('aria-labelledby', tab.id);
+      }
+      tabs.forEach(function (tab) {
+        tab.addEventListener('click', function () {
+          activate(tab);
+        });
+        tab.addEventListener('keydown', function (event) {
+          var index = Array.prototype.indexOf.call(tabs, tab);
+          var nextIndex;
+          if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+            nextIndex = (index + 1) % tabs.length;
+          } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+            nextIndex = (index + tabs.length - 1) % tabs.length;
+          } else if (event.key === 'Home') {
+            nextIndex = 0;
+          } else if (event.key === 'End') {
+            nextIndex = tabs.length - 1;
+          } else {
+            return;
+          }
+          event.preventDefault();
+          activate(tabs[nextIndex]);
+          tabs[nextIndex].focus();
+        });
+      });
+    });
+  })();
+</script>
+{{ partial "site-fx.html" . }}
+{{ end }}

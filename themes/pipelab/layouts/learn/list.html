@@ -1,0 +1,148 @@
+{{ define "main" }}
+{{ $cfg := site.Data.learn_index }}
+{{ $cats := $cfg.categories }}
+{{ $catSummaries := site.Data.learn_category_summaries }}
+{{ $allLearn := where .Site.RegularPages "Section" "learn" }}
+{{ $bySlug := dict }}
+{{ range $allLearn }}
+  {{ if .File }}{{ $bySlug = merge $bySlug (dict .File.BaseFileName .) }}{{ end }}
+{{ end }}
+
+{{ $countAll := 0 }}
+{{ $counts := dict }}
+{{ range $cats }}
+  {{ $count := len (where $allLearn ".Params.learn_cat" .key) }}
+  {{ $countAll = add $countAll $count }}
+  {{ $counts = merge $counts (dict .key $count) }}
+{{ end }}
+
+<article id="top" class="editorial-index editorial-index--learn" data-editorial-index data-item-singular="guide" data-item-plural="guides" data-all-label="All guides" data-directory-default="Browse by subject">
+  <header class="editorial-index-header" data-hero="editorial-index">
+    <div class="editorial-index-inner">
+      <p class="editorial-index-eyebrow">Pipelock Guides</p>
+      <h1 data-fx="decrypt">{{ .Title }}</h1>
+      {{ with .Params.subtitle }}<p class="editorial-index-lead">{{ . }}</p>{{ end }}
+      <div class="editorial-index-ctas">
+        <a href="/learn/claude-code-hooks/" class="btn btn-primary">Start with Claude Code</a>
+        <a href="/agent-firewall/" class="btn btn-ghost">Agent Firewall Guide</a>
+      </div>
+      {{ partial "page-formats.html" . }}
+    </div>
+  </header>
+
+  <div class="editorial-index-toolbar">
+    <div class="editorial-index-toolbar-inner">
+      <div class="editorial-index-tabs" aria-label="Filter guides by category">
+        <button type="button" class="editorial-index-tab is-active" data-filter-cat="all" data-filter-label="All guides" aria-pressed="true">
+          All <span>{{ $countAll }}</span>
+        </button>
+        {{ range $cats }}
+        <button type="button" class="editorial-index-tab" data-filter-cat="{{ .key }}" data-filter-label="{{ .label }}" aria-pressed="false">
+          {{ .label }} <span>{{ index $counts .key }}</span>
+        </button>
+        {{ end }}
+      </div>
+      <div class="editorial-index-search">
+        <label class="editorial-index-search-label" for="learn-search-input">Search guides</label>
+        <div class="editorial-index-search-field">
+          <input type="search" id="learn-search-input" data-index-search placeholder="Topic or tag, e.g. MCP" autocomplete="off" spellcheck="false">
+          <button type="button" class="editorial-index-search-clear" data-search-clear hidden aria-label="Clear search">&times;</button>
+          <span class="editorial-index-search-key" aria-hidden="true">/</span>
+        </div>
+      </div>
+      <p class="editorial-index-result-meta" data-result-meta aria-live="polite">{{ $countAll }} guides</p>
+    </div>
+  </div>
+
+  <div class="editorial-index-page">
+    <main class="editorial-index-main">
+      <section class="editorial-index-featured" data-featured-row aria-labelledby="learn-featured-title">
+        <div class="editorial-index-section-head">
+          <div>
+            <p class="editorial-index-kicker">Selected routes</p>
+            <h2 id="learn-featured-title">Start with the problem in front of you</h2>
+          </div>
+          <p>Three practical entry points</p>
+        </div>
+        <div class="editorial-index-featured-grid">
+          {{ range $cfg.featured }}
+            {{ with index $bySlug . }}{{ partial "learn-index-card.html" (dict "page" . "featured" true) }}{{ end }}
+          {{ end }}
+        </div>
+      </section>
+
+      <section class="editorial-index-directory" aria-labelledby="learn-directory-title">
+        <div class="editorial-index-section-head editorial-index-section-head--directory">
+          <div>
+            <p class="editorial-index-kicker">Guide directory</p>
+            <h2 id="learn-directory-title" data-directory-label>Browse by subject</h2>
+          </div>
+          <p data-directory-hint>{{ $countAll }} guides in the directory</p>
+        </div>
+
+        <div class="editorial-index-groups">
+          {{ range $index, $cat := $cats }}
+            {{ $pages := where $allLearn ".Params.learn_cat" $cat.key }}
+            {{ if gt (len $pages) 0 }}
+            <section class="editorial-index-group" data-category-group data-cat="{{ $cat.key }}" aria-labelledby="learn-category-{{ $cat.key }}">
+              <div class="editorial-index-group-head">
+                <span class="editorial-index-group-number" aria-hidden="true">{{ printf "%02d" (add $index 1) }}</span>
+                <div>
+                  <p class="editorial-index-group-label">{{ len $pages }} {{ if eq (len $pages) 1 }}guide{{ else }}guides{{ end }}</p>
+                  <h3 id="learn-category-{{ $cat.key }}">{{ $cat.label }}</h3>
+                  {{ with index $catSummaries $cat.key }}<p>{{ . }}</p>{{ end }}
+                </div>
+              </div>
+              <div class="editorial-index-directory-grid">
+                {{ range $pages }}{{ partial "learn-index-card.html" (dict "page" .) }}{{ end }}
+              </div>
+            </section>
+            {{ end }}
+          {{ end }}
+        </div>
+
+        <div class="editorial-index-empty" data-empty-state hidden>
+          <p>No guides match this filter.</p>
+          <button type="button" class="btn btn-ghost" data-empty-reset>Reset filters</button>
+        </div>
+      </section>
+    </main>
+
+    <aside class="editorial-index-aside" aria-label="Learn index details">
+      <div class="editorial-index-aside-sticky">
+        {{ with $cfg.release }}
+        <section class="editorial-index-aside-block editorial-index-aside-block--status">
+          <p class="editorial-index-aside-label"><span></span>Latest release</p>
+          <p class="editorial-index-aside-value">Pipelock {{ .version }}</p>
+          {{ with .summary }}<p class="editorial-index-aside-copy">{{ . }}</p>{{ end }}
+          {{ with .notes_url }}<a href="{{ . }}"{{ if hasPrefix . "http" }} target="_blank" rel="noopener noreferrer"{{ end }}>Read release notes <span aria-hidden="true">&#8599;</span></a>{{ end }}
+        </section>
+        {{ end }}
+
+        {{ with $cfg.start_here }}
+        <section class="editorial-index-aside-block">
+          <p class="editorial-index-aside-label">Start here</p>
+          <ol class="editorial-index-aside-list editorial-index-aside-list--numbered">
+            {{ range . }}{{ with index $bySlug . }}<li><a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a></li>{{ end }}{{ end }}
+          </ol>
+        </section>
+        {{ end }}
+
+        <section class="editorial-index-aside-block">
+          <p class="editorial-index-aside-label">Keep the index</p>
+          <ul class="editorial-index-aside-list">
+            {{ with .OutputFormats.Get "rss" }}<li><a href="{{ .RelPermalink }}">RSS feed</a></li>{{ end }}
+            {{ with .OutputFormats.Get "markdown" }}<li><a href="{{ .RelPermalink }}">Markdown index</a></li>{{ end }}
+            <li><a href="https://github.com/luckyPipewrench/pipelock" rel="noopener noreferrer">GitHub</a></li>
+          </ul>
+        </section>
+      </div>
+    </aside>
+  </div>
+
+  {{ partial "article-cta.html" (dict "page" . "placement" "bottom") }}
+</article>
+
+{{ partial "editorial-index-script.html" . }}
+{{ partial "site-fx.html" . }}
+{{ end }}

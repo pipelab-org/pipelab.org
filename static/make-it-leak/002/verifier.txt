@@ -1,0 +1,9 @@
+Pipelock audit packet — receipt chain verification
+scenario: poisoned-ticket-webhook-exfil
+receipts: 1
+verdict: valid (trusted)
+root_hash: ff61dd0e70465b6e094701673a05c441c78014172f201ad8a80d4361b60725b5
+signer_key: 0abef59effe062f1975d311a6a8cde7115aefa015c497241f4c3dd04302e3041
+
+Verify it yourself from this directory:
+  pipelock-verifier audit-packet . --key 0abef59effe062f1975d311a6a8cde7115aefa015c497241f4c3dd04302e3041

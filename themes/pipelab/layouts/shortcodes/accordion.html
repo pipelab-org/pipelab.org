@@ -1,0 +1,13 @@
+{{/* Reusable accordion/FAQ item. Usage:
+     {{< accordion title="Question here" >}}
+     Answer content here. Supports **markdown**.
+     {{< /accordion >}}
+
+     Wrap multiple items in a <div class="accordion"> for consistent styling.
+*/}}
+<details class="accordion-item">
+  <summary>{{ .Get "title" }}</summary>
+  <div class="accordion-body">
+    {{ .Inner | markdownify }}
+  </div>
+</details>

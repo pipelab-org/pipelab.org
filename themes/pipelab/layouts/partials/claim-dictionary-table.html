@@ -1,0 +1,35 @@
+{{ $title := .title }}
+{{ $entries := .entries | default slice }}
+{{ if gt (len $entries) 0 }}
+<h2>{{ $title }}</h2>
+<div class="claim-dictionary-table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Claim</th>
+        <th>Axis</th>
+        <th>Status</th>
+        <th>Proves</th>
+        <th>Does not prove</th>
+        <th>Tested by</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{ range $entries }}
+      <tr>
+        <td><code>{{ .claim }}</code></td>
+        <td><code>{{ .axis }}</code></td>
+        <td><code>{{ .status }}</code></td>
+        <td>{{ .proves }}</td>
+        <td>
+          <ul>
+            {{ range .does_not_prove }}<li>{{ . }}</li>{{ end }}
+          </ul>
+        </td>
+        <td><code>{{ .tested_by }}</code></td>
+      </tr>
+      {{ end }}
+    </tbody>
+  </table>
+</div>
+{{ end }}

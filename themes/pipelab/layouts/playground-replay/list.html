@@ -1,0 +1,101 @@
+{{ define "main" }}
+{{ $gallery := transform.Unmarshal (readFile "static/playground-replay/gallery.json") }}
+<div class="playground-page playground-index">
+  <section class="playground-hero playground-detail-hero site-hero brand-field-hero brand-field-hero-standard" data-hero="brand-standard" data-fx="reveal">
+    <div class="playground-hero-inner">
+      <p class="playground-eyebrow">Replay archive</p>
+      <h1>{{ .Title }}</h1>
+      {{ with .Params.subtitle }}<p class="playground-lead">{{ . }}</p>{{ end }}
+      <div class="playground-actions">
+        <a class="btn btn-primary" href="/playground/">Run the live demo</a>
+        <a class="btn btn-secondary" href="/learn/verify-a-receipt/">Verify a receipt</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="playground-band" id="recordings" data-fx="reveal live">
+    <div class="playground-section-head">
+      <p class="playground-label">Proof packs</p>
+      <h2 data-fx="decrypt">Recorded agent actions</h2>
+      <p>Each replay shows the agent action, the Pipelock mediator decision, and a signed Audit Packet you can download and verify.</p>
+    </div>
+    <div class="playground-card-grid">
+      {{ range index $gallery "scenarios" }}
+      {{ $id := index . "id" }}
+      {{ $page := $.Site.GetPage (printf "/playground/replay/%s" $id) }}
+      {{ $verdict := index . "decisive_verdict" }}
+      {{ $receiptCount := printf "%v" (index . "receipt_count") }}
+      <a class="playground-card" data-fx="reveal spotlight" href="{{ $page.RelPermalink }}">
+        <span class="playground-card-kicker">{{ index . "category" }}</span>
+        <h3>{{ index . "title" }}</h3>
+        <p class="playground-card-summary">
+          {{ if eq $verdict "allow" }}
+          Pipelock allowed the action and signed the decision.
+          {{ else if eq $verdict "warn" }}
+          Pipelock observed the finding, forwarded the lab action, and signed the warning.
+          {{ else }}
+          Pipelock blocked the unsafe exchange and signed the decision.
+          {{ end }}
+        </p>
+        <dl>
+          <div><dt>Attempt</dt><dd>{{ index . "bench_case_id" }}</dd></div>
+          <div><dt>Decision</dt><dd>{{ $verdict }}</dd></div>
+          <div><dt>Proof</dt><dd>{{ $receiptCount }} signed receipt{{ if ne $receiptCount "1" }}s{{ end }}</dd></div>
+        </dl>
+      </a>
+      {{ end }}
+      <a class="playground-card" data-fx="reveal spotlight" href="/make-it-leak/">
+        <span class="playground-card-kicker">Signed series</span>
+        <h3>Make It Leak episodes</h3>
+        <p class="playground-card-summary">Captured leak attempts, each blocked and signed. Verify the Audit Packets offline.</p>
+        <dl>
+          <div><dt>Format</dt><dd>signed replay</dd></div>
+          <div><dt>Verify</dt><dd>offline, published key</dd></div>
+        </dl>
+      </a>
+    </div>
+  </section>
+
+  <section class="playground-band" data-fx="reveal live">
+    <div class="playground-section-head">
+      <p class="playground-label">Contrast</p>
+      <h2>When the evidence doesn&rsquo;t hold up.</h2>
+      <p>Not every assurance envelope survives the appraiser. Each replay above wraps a valid lab receipt, so its panel still confirms a narrow set of claims. This one does not.</p>
+    </div>
+    <article class="playground-verify playground-killsuite" data-fx="scan spotlight">
+      <span class="playground-card-kicker">Downgraded example</span>
+      <h3>A maximal claim list under an untrusted key</h3>
+      <p>This envelope claims everything: <code>mediated</code>, transparency-log inclusion, and complete mediation under a real Ed25519 signature. But the signing key is not in the trust file, so the signature is <code>unknown_key</code>, the assertion is unsigned, and not one claim verifies. It sounds strong. It proves nothing.</p>
+      <p class="playground-killsuite-outcome">assertion_signed: false &middot; verified_claims: none</p>
+      <p>This is a fixture from the public Evidence Theater kill suite. Its appraisal is reproducible with the AARP verifier:</p>
+      <pre data-command><code>pipelock-verifier aarp k02-untrusted-issuer-overclaim.aarp.json --trust killsuite-trust.json --json</code></pre>
+      <ul>
+        <li><a href="/playground-replay/_killsuite/k02-untrusted-issuer-overclaim.aarp.json" download>k02-untrusted-issuer-overclaim.aarp.json</a>: the envelope</li>
+        <li><a href="/playground-replay/_killsuite/k02-untrusted-issuer-overclaim.appraisal.json" download>appraisal.json</a>: the appraisal a correct verifier must emit</li>
+        <li><a href="/playground-replay/_killsuite/k02-untrusted-issuer-overclaim.expect.json" download>expect.json</a>: the attack class and what must not verify</li>
+        <li><a href="/playground-replay/_killsuite/killsuite-trust.json" download>killsuite-trust.json</a>: the pinned test trust</li>
+      </ul>
+    </article>
+  </section>
+
+  <section class="playground-band playground-honesty" data-fx="reveal live">
+    <div class="playground-section-head">
+      <p class="playground-label">Scope</p>
+      <h2>Signed mediated decisions, not a trust-me badge.</h2>
+      <p>{{ index $gallery "completeness_note" }}</p>
+    </div>
+  </section>
+
+  <section class="pg-cta" data-fx="reveal">
+    <div class="pg-cta-card" data-fx="spotlight">
+      <h2 class="pg-h2">Try the live path.</h2>
+      <p>Run the contained demo, inspect the decision, then verify the signed bundle offline.</p>
+      <div class="pg-cta-actions">
+        <a class="btn btn-primary" href="/playground/">Open Playground</a>
+        <a class="btn btn-ghost" href="/pipelock/">Install Pipelock</a>
+      </div>
+    </div>
+  </section>
+</div>
+{{ partial "site-fx.html" . }}
+{{ end }}

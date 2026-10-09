@@ -1,0 +1,99 @@
+{{ define "main" }}
+{{ $hasToc := and .TableOfContents (gt (len (string .TableOfContents)) 16) }}
+<article id="top" class="learn-article{{ if $hasToc }} learn-article-has-toc{{ end }}">
+
+  <div class="reading-progress" aria-hidden="true"><div class="reading-progress-fill"></div></div>
+
+<header class="learn-article-header" data-hero="editorial-article" data-fx="reveal">
+    <div class="learn-article-header-inner">
+      {{ with .Params.project_mark }}<img class="learn-project-mark" src="{{ . }}" alt="{{ $.Title }} logo" aria-hidden="true" width="88" height="88">{{ else }}{{ partial "integration-guide-mark.html" . }}{{ end }}
+      {{ with .Params.eyebrow }}<p class="learn-eyebrow">{{ . }}</p>{{ end }}
+      <h1{{ if not .Params.disable_title_fx }} data-fx="decrypt"{{ end }}>{{ .Title }}</h1>
+      {{ with .Params.subtitle }}<p class="learn-lead">{{ . }}</p>{{ end }}
+      <dl class="learn-article-meta">
+        {{ if .ReadingTime }}<div><dt>Read</dt><dd>{{ .ReadingTime }} min</dd></div>{{ end }}
+        {{ $isUpdated := and (not .Lastmod.IsZero) (not (.Lastmod.Equal .Date)) }}
+        {{ $dateLabel := cond $isUpdated "Updated" "Published" }}
+        {{ $dateValue := cond $isUpdated .Lastmod .Date }}
+        {{ if not $dateValue.IsZero }}<div><dt>{{ $dateLabel }}</dt><dd><time datetime="{{ $dateValue.Format "2006-01-02" }}">{{ $dateValue.Format "Jan 2, 2006" }}</time></dd></div>{{ end }}
+        {{ with .Params.level }}<div><dt>Level</dt><dd>{{ . }}</dd></div>{{ end }}
+        {{ with .Params.topic }}<div><dt>Topic</dt><dd>{{ . }}</dd></div>{{ end }}
+      </dl>
+      {{ partial "page-formats.html" . }}
+    </div>
+  </header>
+
+  {{ partial "article-cta.html" (dict "page" . "placement" "top" "fx" "spotlight") }}
+
+  <div class="learn-article-grid">
+    {{ if $hasToc }}
+    <aside class="learn-article-toc" aria-label="Table of contents" data-fx="mininav">
+      <details class="learn-toc-disclosure">
+        <summary>
+          <span class="learn-toc-label">On this page</span>
+          <span class="learn-toc-chevron" aria-hidden="true">+</span>
+        </summary>
+        {{ .TableOfContents }}
+        <a class="learn-toc-back" href="#top">Back to top</a>
+      </details>
+    </aside>
+    {{ end }}
+
+    <div class="learn-article-body">
+      {{ .Content }}
+      {{ partial "faq.html" . }}
+    </div>
+  </div>
+
+  {{ if not .Params.disable_related }}{{ partial "learn-related.html" . }}{{ end }}
+
+  {{ partial "article-cta.html" (dict "page" . "placement" "bottom") }}
+</article>
+
+{{ if $hasToc }}
+<script>
+(function() {
+  var fill = document.querySelector('.reading-progress-fill');
+  var article = document.querySelector('.learn-article-body');
+  var tocLinks = document.querySelectorAll('.learn-article-toc a[href^="#"]');
+  var disclosure = document.querySelector('.learn-toc-disclosure');
+  if (!disclosure) return;
+
+  var desktopMql = window.matchMedia('(min-width: 901px)');
+  function syncDisclosure() {
+    if (desktopMql.matches) {
+      disclosure.setAttribute('open', '');
+    } else if (disclosure.dataset.userToggled !== '1') {
+      disclosure.removeAttribute('open');
+    }
+  }
+  disclosure.addEventListener('toggle', function() {
+    if (!desktopMql.matches) disclosure.dataset.userToggled = '1';
+  });
+  syncDisclosure();
+  desktopMql.addEventListener
+    ? desktopMql.addEventListener('change', syncDisclosure)
+    : desktopMql.addListener(syncDisclosure);
+
+  if (!fill || !article || !tocLinks.length) return;
+
+  function update() {
+    var rect = article.getBoundingClientRect();
+    var total = Math.max(1, article.offsetHeight - window.innerHeight);
+    var scrolled = Math.max(0, -rect.top);
+    var pct = Math.max(0, Math.min(1, scrolled / total));
+    fill.style.transform = 'scaleX(' + pct + ')';
+
+    // Section highlighting belongs to the shared module (the mininav token on
+    // the table of contents). Doing it here as well meant two thresholds
+    // fighting over the same class.
+  }
+
+  update();
+  window.addEventListener('scroll', update, { passive: true });
+  window.addEventListener('resize', update, { passive: true });
+})();
+</script>
+{{ end }}
+{{ partial "site-fx.html" . }}
+{{ end }}

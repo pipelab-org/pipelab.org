@@ -1,0 +1,52 @@
+# Fallback GitHub star count for no-JS and failed client fetches.
+# Live count is applied client-side from the public GitHub API and
+# revalidated on every page load. Snapshot 813 on 2026-08-25.
+stars: 813
+# Retained test-count snapshot; not recounted in the 3.6.0 data refresh.
+# Do not infer current test counts from product_source_commit.
+tests: "36,000"
+# Conservative floor, rendered as ">90%". The current core coverage gate is
+# 91%; keep the public claim below the exact moving value.
+test_coverage_percent: 90
+direct_deps: 26
+# Product metrics are a dated snapshot from Pipelock main. GitHub stars are
+# refreshed client-side; the committed stars value above is only a fallback.
+product_source_repository: "https://github.com/luckyPipewrench/pipelock"
+product_source_commit: "3e868ac5d5b62d3a2790958542171143af8a0e38"
+product_verified_date: "2026-10-02"
+dlp_patterns: 65
+simulate_scenarios: 30
+presets: 7
+response_patterns: 34
+# Current public release count for the v3.6.0 site refresh.
+releases: 49
+# Committed Agent Egress Bench snapshot. Deliberately updated by PR, never by a
+# build-time network fetch. The pin tracks the v0.1.1 release commit.
+# Provenance is the bench_source_commit and
+# bench_verified_date fields below, measured with `make stats` in the bench
+# repository. Do not restate the commit or date in this comment: the previous
+# wording named an older snapshot than the fields did and contradicted them.
+bench_source_repository: "https://github.com/luckyPipewrench/agent-egress-bench"
+bench_source_commit: "79a51f084fc4f4cd5254e4ec15a273c556c280d5"
+bench_verified_date: "2026-10-02"
+bench_cases: 268
+# Current logical-case split. Use bench_adversarial_cases anywhere copy says
+# "adversarial" or "attack".
+bench_adversarial_cases: 191
+bench_fp_cases: 76
+bench_warn_cases: 1
+chain_patterns: 10
+# Added 2026-04-27 to back the /proof/ page numbers strip.
+bench_categories: 18
+compliance_frameworks: 7
+scan_latency_ms: 1
+# Added 2026-04-27 for /assess/ page redesign.
+# Verified live: pipelock audit score --json | jq '.categories|length' == 23 (2026-06-27).
+assess_config_categories: 23
+assess_license_usd: 999
+# Added 2026-04-28 for home page redesign.
+# 131 constructor sites at product_source_commit; excludes *_test.go.
+prometheus_metrics: 131
+# Seven OR-composed sources at product_source_commit, including uncertain
+# Conductor apply; see internal/killswitch/killswitch.go.
+kill_switch_sources: 7

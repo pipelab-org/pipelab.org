@@ -1,0 +1,16 @@
+{{- /* Renders the product-page terminal install rows from data/install.yaml.
+
+     Emits only the terminal BODY rows so the surrounding terminal chrome stays
+     in the page. Uses each method's short_label, which is what the narrow
+     terminal column was written for.
+
+     Usage:  {{< install-terminal >}}
+*/ -}}
+
+{{- $methods := partial "install/methods.html" (dict) -}}
+<div class="terminal-body" style="text-align: left;">
+{{- range $i, $m := $methods }}
+  <div{{ if $i }} style="margin-top: 0.8rem;"{{ end }}><span class="comment"># {{ $m.short_label }}</span></div>
+  <div><span class="prompt">$ </span>{{ $m.command }}</div>
+{{- end }}
+</div>

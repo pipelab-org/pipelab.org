@@ -1,0 +1,16 @@
+{{- /* Emits ONE install command as plain text, from data/install.yaml.
+
+     For use inside an existing fenced code block that mixes the install command
+     with other commands, where a whole install block would not fit. Hugo expands
+     shortcodes inside code fences, so this renders as literal command text.
+
+     Usage:  {{< install-cmd go >}}   {{< install-cmd homebrew >}}
+
+     An unknown id fails the build rather than emitting an empty line.
+*/ -}}
+{{- $id := .Get 0 -}}
+{{- if not $id -}}
+  {{- errorf "install-cmd: needs a method id, e.g. {{< install-cmd go >}} (in %s)" .Page.File.Path -}}
+{{- end -}}
+{{- $method := index (partial "install/methods.html" (dict "only" (slice $id))) 0 -}}
+{{- $method.command -}}

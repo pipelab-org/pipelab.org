@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 560" fill="none">
+  <defs>
+    <!-- Green glow filter for center -->
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <!-- Subtle glow for orbit -->
+    <filter id="orbit-glow" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="3"/>
+    </filter>
+    <!-- Arrow marker -->
+    <marker id="arrow" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="10" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 3.5 L 0 7 z" fill="#e2e8f0"/>
+    </marker>
+  </defs>
+
+  <!-- Orbit ring (thick gray arc) -->
+  <ellipse cx="400" cy="270" rx="240" ry="210" stroke="rgba(255,255,255,0.08)" stroke-width="32" fill="none"/>
+  <ellipse cx="400" cy="270" rx="240" ry="210" stroke="rgba(255,255,255,0.04)" stroke-width="48" fill="none"/>
+
+  <!-- Clockwise curved arrows between nodes -->
+  <!-- Top → Right: "proves closed" -->
+  <path d="M 490 120 C 610 140, 695 270, 655 360" stroke="#e2e8f0" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+  <text x="660" y="230" font-family="'JetBrains Mono', monospace" font-size="13" fill="#94a3b8" font-style="italic" text-anchor="start">proves closed</text>
+
+  <!-- Right → Left: "rules close gaps" -->
+  <path d="M 558 445 C 470 510, 330 510, 242 445" stroke="#e2e8f0" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+  <text x="400" y="515" font-family="'JetBrains Mono', monospace" font-size="13" fill="#94a3b8" font-style="italic" text-anchor="middle">rules close gaps</text>
+
+  <!-- Left → Top: "gaps found" -->
+  <path d="M 148 362 C 115 250, 175 140, 310 102" stroke="#e2e8f0" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+  <text x="120" y="230" font-family="'JetBrains Mono', monospace" font-size="13" fill="#94a3b8" font-style="italic" text-anchor="end">gaps found</text>
+
+  <!-- Center: Pipelock circle -->
+  <circle cx="400" cy="265" r="72" stroke="#00e5a0" stroke-width="2.5" fill="rgba(0,229,160,0.05)" filter="url(#glow)"/>
+  <text x="400" y="258" font-family="'JetBrains Mono', monospace" font-size="26" font-weight="700" fill="#e2e8f0" text-anchor="middle">Pipelock</text>
+  <text x="400" y="283" font-family="'JetBrains Mono', monospace" font-size="13" fill="#94a3b8" text-anchor="middle">Detect + Enforce</text>
+
+  <!-- Inner arrows from center to each node -->
+  <line x1="400" y1="192" x2="400" y2="148" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="340" y1="315" x2="240" y2="380" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="460" y1="315" x2="560" y2="380" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Top node: Agent Egress Bench (rounded rectangle) -->
+  <rect x="320" y="62" width="160" height="66" rx="10" stroke="rgba(255,255,255,0.25)" stroke-width="1.5" fill="rgba(255,255,255,0.04)"/>
+  <text x="400" y="89" font-family="'JetBrains Mono', monospace" font-size="15" font-weight="600" fill="#e2e8f0" text-anchor="middle">Agent Egress</text>
+  <text x="400" y="112" font-family="'JetBrains Mono', monospace" font-size="15" font-weight="600" fill="#e2e8f0" text-anchor="middle">Bench</text>
+  <!-- Label -->
+  <text x="400" y="48" font-family="'JetBrains Mono', monospace" font-size="14" font-weight="600" fill="#00e5a0" text-anchor="middle">Validate</text>
+
+  <!-- Bottom-left node: Pipelock Rules (circle) -->
+  <circle cx="190" cy="410" r="55" stroke="rgba(255,255,255,0.25)" stroke-width="1.5" fill="rgba(255,255,255,0.04)"/>
+  <text x="190" y="403" font-family="'JetBrains Mono', monospace" font-size="14" font-weight="600" fill="#e2e8f0" text-anchor="middle">Pipelock</text>
+  <text x="190" y="423" font-family="'JetBrains Mono', monospace" font-size="14" font-weight="600" fill="#e2e8f0" text-anchor="middle">Rules</text>
+  <!-- Label -->
+  <text x="190" y="488" font-family="'JetBrains Mono', monospace" font-size="14" font-weight="600" fill="#00e5a0" text-anchor="middle">Govern</text>
+
+  <!-- Bottom-right node: Pipelock Assess (circle) -->
+  <circle cx="610" cy="410" r="55" stroke="rgba(255,255,255,0.25)" stroke-width="1.5" fill="rgba(255,255,255,0.04)"/>
+  <text x="610" y="403" font-family="'JetBrains Mono', monospace" font-size="14" font-weight="600" fill="#e2e8f0" text-anchor="middle">Pipelock</text>
+  <text x="610" y="423" font-family="'JetBrains Mono', monospace" font-size="14" font-weight="600" fill="#e2e8f0" text-anchor="middle">Assess</text>
+  <!-- Label -->
+  <text x="610" y="488" font-family="'JetBrains Mono', monospace" font-size="14" font-weight="600" fill="#7c3aed" text-anchor="middle">Attest</text>
+</svg>

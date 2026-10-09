@@ -1,0 +1,6 @@
+{{/* Shared showpiece layer. Include on any page whose markup carries data-fx
+     tokens; the module reads those attributes and knows nothing about which
+     page it is on. Effects are additive, so the page stays complete when this
+     script is blocked. */}}
+{{- $siteFx := resources.Get "js/site-fx.js" | minify | fingerprint -}}
+<script src="{{ $siteFx.RelPermalink }}" integrity="{{ $siteFx.Data.Integrity }}" defer></script>

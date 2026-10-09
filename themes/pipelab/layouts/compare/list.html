@@ -1,0 +1,164 @@
+{{ define "main" }}
+{{ $cfg := site.Data.compare_index }}
+{{ $cats := $cfg.categories }}
+{{ $allCompare := where .Site.RegularPages "Section" "compare" }}
+{{ $bySlug := dict }}
+{{ range $allCompare }}
+  {{ if .File }}{{ $bySlug = merge $bySlug (dict .File.BaseFileName .) }}{{ end }}
+{{ end }}
+
+{{/* Every comparison page must belong to a category the index knows about;
+     an unknown key would render outside every group and vanish from filters. */}}
+{{ $knownKeys := slice }}
+{{ range $cats }}{{ $knownKeys = $knownKeys | append .key }}{{ end }}
+{{ range $allCompare }}
+  {{ if not (in $knownKeys (.Params.compare_cat | default "")) }}
+    {{ errorf "compare page %q has unknown compare_cat %q" .RelPermalink (.Params.compare_cat | default "") }}
+  {{ end }}
+{{ end }}
+
+{{ $countAll := 0 }}
+{{ $counts := dict }}
+{{ range $cats }}
+  {{ $count := len (where $allCompare ".Params.compare_cat" .key) }}
+  {{ $countAll = add $countAll $count }}
+  {{ $counts = merge $counts (dict .key $count) }}
+{{ end }}
+
+<article id="top" class="editorial-index editorial-index--compare" data-editorial-index data-item-singular="comparison" data-item-plural="comparisons" data-all-label="All comparisons" data-directory-default="Browse by category">
+  <header class="editorial-index-header" data-hero="editorial-index">
+    <div class="editorial-index-inner">
+      <p class="editorial-index-eyebrow">PipeLab Compare</p>
+      <h1 data-fx="decrypt">{{ .Title }}</h1>
+      {{ with .Params.subtitle }}<p class="editorial-index-lead">{{ . }}</p>{{ end }}
+      <div class="editorial-index-ctas">
+        <a href="/pipelock/" class="btn btn-primary">Get Pipelock</a>
+        <a href="/agent-firewall/" class="btn btn-ghost">What is an agent firewall?</a>
+      </div>
+      {{ partial "page-formats.html" . }}
+    </div>
+  </header>
+
+  <div class="editorial-index-toolbar">
+    <div class="editorial-index-toolbar-inner">
+      <div class="editorial-index-tabs" aria-label="Filter comparisons by category">
+        <button type="button" class="editorial-index-tab is-active" data-filter-cat="all" data-filter-label="All comparisons" aria-pressed="true">
+          All <span>{{ $countAll }}</span>
+        </button>
+        {{ range $cats }}
+        <button type="button" class="editorial-index-tab" data-filter-cat="{{ .key }}" data-filter-label="{{ .label }}" aria-pressed="false">
+          {{ .label }} <span>{{ index $counts .key }}</span>
+        </button>
+        {{ end }}
+      </div>
+      <div class="editorial-index-search">
+        <label class="editorial-index-search-label" for="compare-search-input">Search comparisons</label>
+        <div class="editorial-index-search-field">
+          <input type="search" id="compare-search-input" data-index-search placeholder="Product, category, or job, e.g. receipts" autocomplete="off" spellcheck="false">
+          <button type="button" class="editorial-index-search-clear" data-search-clear hidden aria-label="Clear search">&times;</button>
+          <span class="editorial-index-search-key" aria-hidden="true">/</span>
+        </div>
+      </div>
+      <p class="editorial-index-result-meta" data-result-meta aria-live="polite">{{ $countAll }} comparisons</p>
+    </div>
+  </div>
+
+  <div class="editorial-index-page">
+    <main class="editorial-index-main">
+      <section class="compare-chooser" data-featured-row aria-labelledby="compare-chooser-title">
+        <div class="editorial-index-section-head">
+          <div>
+            <p class="editorial-index-kicker">Start here</p>
+            <h2 id="compare-chooser-title">Pick the comparison that matches your situation</h2>
+          </div>
+          <p>{{ len $cfg.routes }} routes</p>
+        </div>
+        <ol class="compare-chooser-list">
+          {{ range $i, $route := $cfg.routes }}
+          <li class="compare-chooser-route" data-fx="reveal">
+            <a href="{{ $route.href }}">
+              <span class="compare-chooser-number" aria-hidden="true">{{ printf "%02d" (add $i 1) }}</span>
+              <span class="compare-chooser-copy">
+                <span class="compare-chooser-situation">{{ $route.situation }}</span>
+                <span class="compare-chooser-label">{{ $route.label }}</span>
+                <span class="compare-chooser-note">{{ $route.note }}</span>
+              </span>
+              <span class="compare-chooser-arrow" aria-hidden="true">&rarr;</span>
+            </a>
+          </li>
+          {{ end }}
+        </ol>
+        <div class="compare-chooser-featured">
+          <p class="editorial-index-kicker">Most compared</p>
+          <div class="editorial-index-featured-grid">
+            {{ range $cfg.featured }}
+              {{ with index $bySlug . }}{{ partial "compare-index-card.html" (dict "page" . "featured" true) }}{{ else }}{{ errorf "compare featured slug %q has no page" . }}{{ end }}
+            {{ end }}
+          </div>
+        </div>
+      </section>
+
+      <section class="editorial-index-directory" aria-labelledby="compare-directory-title">
+        <div class="editorial-index-section-head editorial-index-section-head--directory">
+          <div>
+            <p class="editorial-index-kicker">Comparison directory</p>
+            <h2 id="compare-directory-title" data-directory-label>Browse by category</h2>
+          </div>
+          <p data-directory-hint>{{ $countAll }} comparisons in the directory</p>
+        </div>
+
+        <div class="editorial-index-groups">
+          {{ range $index, $cat := $cats }}
+            {{ $pages := where $allCompare ".Params.compare_cat" $cat.key }}
+            {{ if gt (len $pages) 0 }}
+            <section class="editorial-index-group compare-group" data-category-group data-cat="{{ $cat.key }}" aria-labelledby="compare-category-{{ $cat.key }}">
+              <div class="editorial-index-group-head">
+                <span class="editorial-index-group-number" aria-hidden="true">{{ printf "%02d" (add $index 1) }}</span>
+                <div>
+                  <p class="editorial-index-group-label">{{ len $pages }} {{ if eq (len $pages) 1 }}comparison{{ else }}comparisons{{ end }}</p>
+                  <h3 id="compare-category-{{ $cat.key }}">{{ $cat.label }}</h3>
+                  {{ with $cat.summary }}<p>{{ . }}</p>{{ end }}
+                  {{ with $cat.adds }}<p class="compare-group-adds"><span>Pipelock</span>{{ . }}</p>{{ end }}
+                </div>
+              </div>
+              <div class="editorial-index-directory-grid">
+                {{ range $pages }}{{ partial "compare-index-card.html" (dict "page" .) }}{{ end }}
+              </div>
+            </section>
+            {{ end }}
+          {{ end }}
+        </div>
+
+        <div class="editorial-index-empty" data-empty-state hidden>
+          <p>No comparisons match this filter.</p>
+          <button type="button" class="btn btn-ghost" data-empty-reset>Reset filters</button>
+        </div>
+      </section>
+    </main>
+
+    <aside class="editorial-index-aside" aria-label="Compare index details">
+      <div class="editorial-index-aside-sticky">
+        <section class="editorial-index-aside-block editorial-index-aside-block--status">
+          <p class="editorial-index-aside-label"><span></span>How these are written</p>
+          <p class="editorial-index-aside-value">Public sources, dated</p>
+          <p class="editorial-index-aside-copy">Every page lists the third-party sources it was checked against and the month it was reviewed. Features change; check the linked docs before you buy.</p>
+          <a href="/agent-firewall-checklist/">Use the evaluation checklist <span aria-hidden="true">&#8594;</span></a>
+        </section>
+
+        <section class="editorial-index-aside-block">
+          <p class="editorial-index-aside-label">Keep the index</p>
+          <ul class="editorial-index-aside-list">
+            {{ with .OutputFormats.Get "rss" }}<li><a href="{{ .RelPermalink }}">RSS feed</a></li>{{ end }}
+            {{ with $cfg.subscribe }}{{ range . }}<li><a href="{{ .url }}"{{ if .external }} target="_blank" rel="noopener noreferrer"{{ end }}>{{ .label }}</a></li>{{ end }}{{ end }}
+          </ul>
+        </section>
+      </div>
+    </aside>
+  </div>
+
+  {{ partial "section-cta.html" . }}
+</article>
+
+{{ partial "editorial-index-script.html" . }}
+{{ partial "site-fx.html" . }}
+{{ end }}

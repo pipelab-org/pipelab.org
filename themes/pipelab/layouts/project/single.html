@@ -1,0 +1,91 @@
+{{ define "main" }}
+{{ $project := .Params.project_id }}
+{{ $stats := site.Data.stats }}
+<article id="top" class="project-page project-page-{{ $project }}">
+<header class="project-hero site-hero brand-field-hero brand-field-hero-standard" data-hero="brand-standard" data-fx="reveal">
+<div class="project-hero-inner site-hero-inner">
+      <p class="project-eyebrow">{{ .Params.project_eyebrow }}</p>
+      <div class="project-lockup">
+        <img src="{{ .Params.project_mark }}" alt="{{ .Params.project_name | default .Title }} logo" aria-hidden="true" width="96" height="96">
+        <h1 class="project-wordmark">{{ $name := .Params.project_name }}{{ $accent := .Params.project_accent }}{{ $before := strings.TrimSpace (strings.TrimSuffix $accent $name) }}{{ with $before }}<span>{{ . }}</span> {{ end }}<em>{{ $accent }}</em></h1>
+      </div>
+      <p class="project-lead">{{ .Params.subtitle | default .Description }}</p>
+      <div class="hero-buttons project-actions">
+        {{ range .Params.project_actions }}
+        <a class="btn {{ if .primary }}btn-primary{{ else }}btn-ghost{{ end }}" href="{{ .href }}"{{ if or (hasPrefix .href "https://") (hasPrefix .href "http://") }} target="_blank" rel="noopener noreferrer"{{ end }}>{{ .label }}</a>
+        {{ end }}
+      </div>
+      <dl class="project-facts" aria-label="Project facts">
+        {{ range .Params.project_facts }}<div><dt>{{ .label }}</dt><dd>{{ with .value_stat }}{{ index $stats . }}{{ else }}{{ .value }}{{ end }}</dd></div>{{ end }}
+      </dl>
+    </div>
+  </header>
+
+  {{ if eq $project "bench" }}
+  <section class="project-showcase" aria-labelledby="bench-showcase-title">
+    <div class="project-section-head"><p>What it measures</p><h2 id="bench-showcase-title">One case, one observed decision, evidence you can keep</h2></div>
+    <figure class="project-diagram-frame">
+      <div class="project-diagram-scroll"><img class="project-diagram" src="/images/projects/agent-egress-bench/architecture.svg" alt="A benchmark case passes through an egress control and produces a scored, recorded outcome."></div>
+      <figcaption>One case goes through the security control. The runner records delivery and the control's decision before assigning a score.</figcaption>
+    </figure>
+    <dl class="project-score-key" aria-label="Benchmark score mapping">
+      <div><dt>Expected block, observed block</dt><dd>Pass</dd></div>
+      <div><dt>Expected allow, observed allow</dt><dd>Pass</dd></div>
+      <div><dt>Wrong decision</dt><dd>Fail</dd></div>
+      <div><dt>No route, delivery, or decision</dt><dd>Not scored</dd></div>
+    </dl>
+    <div class="project-metrics" aria-label="Current corpus snapshot">
+      <div><strong>{{ $stats.bench_cases }}</strong><span>logical cases</span></div>
+      <div><strong>{{ $stats.bench_categories }}</strong><span>categories</span></div>
+      <div><strong>{{ $stats.bench_adversarial_cases }}</strong><span>block-expected cases</span></div>
+      <div><strong>{{ $stats.bench_fp_cases }}</strong><span>false-positive controls</span></div>
+    </div>
+    {{ partial "bench-provenance.html" . }}
+  </section>
+  {{ else if eq $project "rules" }}
+  <section class="project-showcase" aria-labelledby="rules-showcase-title">
+    <div class="project-section-head"><p>From source to install</p><h2 id="rules-showcase-title">Every check must pass before a bundle is published</h2></div>
+    <figure class="project-diagram-frame">
+      <div class="project-diagram-scroll"><img class="project-diagram" src="/images/projects/pipelock-rules/pipeline.svg" alt="A rule moves through author review, compilation, fixture tests, validation, and signature verification before installation."></div>
+      <figcaption>Every rule passes human review, deterministic compilation, positive and negative fixtures, schema validation, and signature verification.</figcaption>
+    </figure>
+    <div class="project-command">
+      <span>Install the community bundle</span>
+      <button type="button" data-cmd-copy aria-label="Copy: pipelock rules install pipelock-community"><span class="cmd-text"><code>pipelock rules install pipelock-community</code></span></button>
+    </div>
+  </section>
+  {{ else if eq $project "ael" }}
+  <section class="project-showcase" aria-labelledby="ael-showcase-title">
+    <div class="project-section-head"><p>The scale</p><h2 id="ael-showcase-title">Each level closes another omission gap</h2></div>
+    <ol class="project-levels">
+      <li><span>AEL-0</span><strong>Authentic and ordered</strong></li>
+      <li><span>AEL-1</span><strong>Gaps and truncation evident</strong></li>
+      <li><span>AEL-2</span><strong>Cross-domain omission evident</strong></li>
+      <li><span>AEL-3</span><strong>Externally anchored</strong></li>
+      <li><span>AEL-4</span><strong>Counterparty confirmed</strong></li>
+    </ol>
+    <div class="project-custody">
+      <div><span>EVALUATED</span><h3>Producer or operator run</h3><p>A signed evaluation package can't support a public numeric grade.</p></div>
+      <div aria-hidden="true">→</div>
+      <div><span>VERIFIED</span><h3>Independent verifier run</h3><p>A signed verification record binds the grade to the exact run and evidence.</p></div>
+    </div>
+    <p class="project-disclosure"><strong>Maintained by PipeLab.</strong> Governance isn't independent yet. PipeLab also builds Pipelock and can't award AEL grades.</p>
+  </section>
+  {{ end }}
+
+  <div id="project-details" class="project-story">
+    {{ range .Params.project_sections }}
+    {{ $section := . }}
+    <section class="project-detail-card{{ if .wide }} project-detail-wide{{ end }}{{ with .links }} project-resource-card{{ end }}">
+      <p class="project-detail-number">{{ .number }} · {{ .label }}</p>
+      <h2>{{ .title }}</h2>
+      {{ with .columns }}<div class="project-detail-copy project-detail-cols">{{ range . }}<p>{{ . | markdownify }}</p>{{ end }}</div>{{ end }}
+      {{ with .body }}<p>{{ . | markdownify }}</p>{{ end }}
+      {{ with .links }}<ul role="list"{{ if $section.link_grid }} class="project-resource-grid"{{ end }}>{{ range . }}<li><a href="{{ .href }}"{{ if or (hasPrefix .href "https://") (hasPrefix .href "http://") }} target="_blank" rel="noopener noreferrer"{{ end }}>{{ .label }}</a></li>{{ end }}</ul>{{ end }}
+    </section>
+    {{ end }}
+    {{ partial "faq.html" . }}
+  </div>
+</article>
+{{ partial "site-fx.html" . }}
+{{ end }}

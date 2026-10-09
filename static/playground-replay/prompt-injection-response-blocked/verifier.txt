@@ -1,0 +1,9 @@
+Pipelock audit packet — receipt chain verification
+scenario: prompt-injection-response-blocked
+receipts: 2
+verdict: valid (trusted)
+root_hash: 32a6905e48bc82d0db412852910f5940e7bc3d27b501cc3018adf8a270f2e5e9
+signer_key: 91dfb23882a8acf28f624985030ca1798a3efbbcee2bb8bdda8f452612eb755a
+
+Verify it yourself from this directory:
+  pipelock-verifier audit-packet . --key 91dfb23882a8acf28f624985030ca1798a3efbbcee2bb8bdda8f452612eb755a

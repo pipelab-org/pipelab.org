@@ -1,0 +1,14 @@
+{{ define "main" }}
+<header class="page-header" data-hero="editorial-article" data-fx="reveal">
+  <h1 data-fx="decrypt">{{ .Title }}</h1>
+  {{ with .Params.subtitle }}<p class="subtitle">{{ . }}</p>{{ end }}
+  {{ partial "page-formats.html" . }}
+</header>
+{{ partial "article-cta.html" (dict "page" . "placement" "top" "fx" "spotlight") }}
+<article class="page-content{{ if .Params.centered }} page-centered{{ end }}">
+  {{ .Content }}
+  {{ partial "faq.html" . }}
+  {{ partial "article-cta.html" (dict "page" . "placement" "bottom") }}
+</article>
+{{ partial "site-fx.html" . }}
+{{ end }}

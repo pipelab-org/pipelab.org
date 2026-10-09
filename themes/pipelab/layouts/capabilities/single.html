@@ -1,0 +1,139 @@
+{{ define "main" }}
+{{- $inventory := site.Data.pipelock_capabilities -}}
+{{- $source := $inventory.source -}}
+{{- $count := len $inventory.capabilities -}}
+{{- $releaseVersion := cond (eq $source.status "release") $source.release_version .Params.release_target -}}
+{{- $releaseLabel := cond (eq $source.status "release") "release source" "release target" -}}
+{{- $groups := slice
+  (dict "id" "boundary" "number" "01" "eyebrow" "Mediate and inspect" "title" "Control the boundary" "description" "Traffic mediation and protocol-specific inspection. Qualifiers state where Pipelock can see and enforce.")
+  (dict "id" "enforcement" "number" "02" "eyebrow" "Contain and enforce" "title" "Stop risky actions" "description" "Host controls and runtime policy that stop or escalate risky activity.")
+  (dict "id" "evidence" "number" "03" "eyebrow" "Record and explain" "title" "Keep the decision" "description" "Receipts, explanations, diagnostics, and operator records you can inspect after a decision.")
+  (dict "id" "coordination" "number" "04" "eyebrow" "Assess and coordinate" "title" "Add named and fleet control" "description" "Named-agent, assessment, and fleet features add licensed control above the free engine.")
+-}}
+{{- $manifestURL := printf "https://github.com/luckyPipewrench/pipelock/blob/%s/docs/security/capability-manifest.json" $source.commit -}}
+
+<div class="capref-page">
+  <header class="capref-hero" data-fx="sky reveal">
+    <div class="capref-hero-inner">
+      <p class="capref-kicker">Capability reference</p>
+      <h1 data-fx="decrypt">Pipelock's operator surface, checked against the code.</h1>
+      <p class="capref-lede">Search the commands, controls, evidence, and licensed features recorded in the product manifest.</p>
+
+      <div class="capref-provenance" data-fx="spotlight">
+        <div class="capref-provenance-stat">
+          <span class="capref-provenance-value">{{ $count }}</span>
+          <span class="capref-provenance-label">operator-visible capabilities</span>
+        </div>
+        <div class="capref-provenance-stat">
+          <span class="capref-provenance-value">v{{ $releaseVersion }}</span>
+          <span class="capref-provenance-label">{{ $releaseLabel }}</span>
+        </div>
+        <div class="capref-provenance-source">
+          <div>
+            <span class="capref-provenance-label">source commit</span>
+            <code class="capref-provenance-commit">{{ substr $source.commit 0 8 }}</code>
+          </div>
+          <a class="capref-provenance-link" href="{{ $manifestURL }}" target="_blank" rel="noopener noreferrer">
+            Open manifest <span aria-hidden="true">&nearr;</span>
+          </a>
+        </div>
+      </div>
+
+      {{ if ne $source.status "release" }}
+      <p class="capref-dev-note">Previewing the v{{ $releaseVersion }} capability manifest. Publication waits for the matching site version.</p>
+      {{ end }}
+    </div>
+  </header>
+
+  <section class="capref-controls" aria-label="Filter capabilities" data-capability-controls hidden>
+    <div class="capref-controls-inner">
+      <label class="capref-search">
+        <span class="capref-search-label">Search capabilities</span>
+        <span class="capref-search-field">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"></circle><path d="m16.5 16.5 4 4"></path></svg>
+          <input type="search" data-capability-search aria-label="Search capabilities" placeholder="Search capability or command" autocomplete="off">
+        </span>
+      </label>
+      <div class="capref-tier-control">
+        <span class="capref-search-label">Availability</span>
+        <div class="capref-filters" role="group" aria-label="Show capabilities available with each offering">
+          <button type="button" class="capref-filter is-active" data-capability-tier="all" aria-pressed="true">All <span>{{ $count }}</span></button>
+          <button type="button" class="capref-filter" data-capability-tier="free" aria-pressed="false">Community <span>{{ $inventory.tier_counts.free }}</span></button>
+          <button type="button" class="capref-filter" data-capability-tier="pro" aria-pressed="false">Pro <span>{{ $inventory.tier_counts.pro }}</span></button>
+          <button type="button" class="capref-filter" data-capability-tier="enterprise" aria-pressed="false">Enterprise <span>{{ $inventory.tier_counts.enterprise }}</span></button>
+          <button type="button" class="capref-filter" data-capability-tier="assess" aria-pressed="false">Assess <span>{{ $inventory.tier_counts.assess }}</span></button>
+        </div>
+      </div>
+      <p class="capref-result" aria-live="polite"><span data-capability-count>{{ $count }}</span> <span data-capability-result-label>capabilities in the full inventory</span></p>
+    </div>
+  </section>
+
+  <div class="capref-directory" data-capability-directory>
+    {{ range $groups }}
+      {{- $group := . -}}
+      {{- $capabilities := where $inventory.capabilities "group" $group.id -}}
+      <section class="capref-group capref-group-{{ $group.id }}" data-capability-group>
+        <div class="capref-group-intro">
+          <span class="capref-group-number">{{ $group.number }}</span>
+          <p class="capref-group-eyebrow">{{ $group.eyebrow }}</p>
+          <h2>{{ $group.title }}</h2>
+          <p>{{ $group.description }}</p>
+          <span class="capref-group-count">{{ len $capabilities }} surfaces</span>
+        </div>
+
+        <div class="capref-list">
+          {{ range $capabilities }}
+            {{- $tierTokens := delimit .access_tiers " " -}}
+            <article class="capref-item" data-fx="reveal spotlight" data-capability-card data-tier="{{ $tierTokens }}" data-search="{{ lower (printf "%s %s %s %s" .name .summary .tier .operator_entry_point.value) }}">
+              <div class="capref-item-head">
+                <div>
+                  <p class="capref-item-id">{{ .id }}</p>
+                  <h3>{{ .name }}</h3>
+                </div>
+                <span class="capref-tier capref-tier-{{ lower (replace .tier " " "-") }}">{{ .tier }}</span>
+              </div>
+              <p class="capref-summary">{{ .summary }}</p>
+              <div class="capref-entry">
+                <span>{{ if eq .operator_entry_point.kind "command" }}Command{{ else }}Config{{ end }}</span>
+                <code>{{ .operator_entry_point.value }}</code>
+              </div>
+              {{ with .availability }}
+              <details class="capref-qualifier">
+                <summary>Deployment qualifier</summary>
+                <p>{{ .qualifier }}</p>
+              </details>
+              {{ end }}
+              {{- $detailPages := where site.RegularPages "Params.capability" .id -}}
+              {{- if ne (len $detailPages) 1 -}}
+                {{- errorf "capability %q must resolve to exactly one documentation page" .id -}}
+              {{- end -}}
+              {{- $detailPage := index $detailPages 0 -}}
+              <a class="capref-detail-link" href="{{ $detailPage.RelPermalink }}">
+                Read the docs <span aria-hidden="true">&rarr;</span>
+              </a>
+            </article>
+          {{ end }}
+        </div>
+      </section>
+    {{ end }}
+
+    <p class="capref-empty" data-capability-empty hidden>No capability matches that search and tier.</p>
+  </div>
+
+  <section class="capref-bottom" data-fx="reveal">
+    <div>
+      <p class="capref-kicker">Put it to work</p>
+      <h2>Start with the full free engine.</h2>
+      <p>Community includes the scanner, MCP proxy, receipts, containment, and one default profile. Pro adds named profiles and operator controls.</p>
+    </div>
+    <div class="capref-bottom-actions">
+      <a href="/install/" class="btn btn-primary">Install Pipelock</a>
+      <a href="/pricing/" class="btn btn-ghost">Compare tiers</a>
+    </div>
+  </section>
+</div>
+
+{{- $filterScript := resources.Get "js/capabilities-filter.js" | minify | fingerprint -}}
+<script src="{{ $filterScript.RelPermalink }}" integrity="{{ $filterScript.Data.Integrity }}" defer></script>
+{{ partial "site-fx.html" . }}
+{{ end }}

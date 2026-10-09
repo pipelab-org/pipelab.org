@@ -1,0 +1,24 @@
+format_version: 1
+name: pipelock-community
+version: "2026.07.0"
+author: pipelock
+description: "Community detection rules for AI agent traffic"
+homepage: "https://pipelab.org/rules/pipelock-community"
+min_pipelock: "1.4.0"
+license: "Apache-2.0"
+
+rules:
+  - id: dlp-1password-service-account-token
+    type: dlp
+    status: stable
+    name: "1Password Service Account Token"
+    description: "Detects 1Password service account tokens"
+    severity: critical
+    confidence: high
+    references:
+      - "https://developer.1password.com/docs/service-accounts/security/"
+    tags:
+      - "provider:1password"
+      - "owasp-llm:LLM06"
+    pattern:
+      regex: 'ops_[A-Za-z0-9]{20,}'

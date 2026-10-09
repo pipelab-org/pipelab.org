@@ -1,0 +1,145 @@
+{{ define "main" }}
+{{- $allowPath := "static/playground-replay/allowed-safe-read/manifest.json" -}}
+{{- $blockPath := "static/playground-replay/secret-exfil-url-blocked/manifest.json" -}}
+{{- $allow := transform.Unmarshal (readFile $allowPath) -}}
+{{- $block := transform.Unmarshal (readFile $blockPath) -}}
+{{- range $field := slice "destination_class" "receipts" -}}
+  {{- if not (isset $allow $field) -}}
+    {{- errorf "agent-firewall layout: %s is missing required field %q" $allowPath $field -}}
+  {{- end -}}
+{{- end -}}
+{{- range $field := slice "captured_at" "pipelock_version" "policy_hash" "signer_key" "redacted_shape" "receipts" -}}
+  {{- if not (isset $block $field) -}}
+    {{- errorf "agent-firewall layout: %s is missing required field %q" $blockPath $field -}}
+  {{- end -}}
+{{- end -}}
+{{- $blockReceipt := dict -}}
+{{- range $block.receipts -}}
+  {{- if eq .verdict "block" -}}{{- $blockReceipt = . -}}{{- end -}}
+{{- end -}}
+{{- $allowReceipt := dict -}}
+{{- range $allow.receipts -}}
+  {{- if and (eq .verdict "allow") (eq .transport "fetch") -}}{{- $allowReceipt = . -}}{{- end -}}
+{{- end -}}
+{{- if not $allowReceipt -}}
+  {{- errorf "agent-firewall layout: %s has no allowed fetch receipt" $allowPath -}}
+{{- end -}}
+{{- if not $blockReceipt -}}
+  {{- errorf "agent-firewall layout: %s has no blocked receipt" $blockPath -}}
+{{- end -}}
+{{- range $field := slice "action_id" "chain_seq" "layer" "pattern" "target_redacted" "transport" "verdict" -}}
+  {{- if not (isset $blockReceipt $field) -}}
+    {{- errorf "agent-firewall layout: blocked receipt in %s is missing required field %q" $blockPath $field -}}
+  {{- end -}}
+{{- end -}}
+
+<section class="afw-hero site-hero brand-field-hero" data-hero="brand-rich" data-fx="reveal">
+
+  <div class="afw-hero-inner">
+
+    <div class="afw-copy">
+      <p class="afw-eyebrow">Agent Firewall</p>
+      <h1 class="afw-h1" data-fx="decrypt">{{ .Title }}</h1>
+      <p class="afw-lead">{{ .Params.subtitle }}</p>
+      <p class="afw-lead-2">Below: two real recorded requests through Pipelock. A safe read passes. The same kind of request carrying an AWS-style access key is blocked before transmission, and the decision is signed.</p>
+      <div class="afw-cta-row">
+        <a class="afw-btn afw-btn-primary" href="/playground/replay/secret-exfil-url-blocked/"
+           data-event="afw_run_scenario_click" data-event-placement="afw-hero">
+          Run this scenario
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
+        </a>
+        <a class="afw-btn afw-btn-ghost" href="/playground/"
+           data-event="afw_playground_click" data-event-placement="afw-hero">Try the live demo</a>
+        <a class="afw-btn afw-btn-text" href="#afw-guide">Read the full guide &darr;</a>
+      </div>
+      <p class="afw-provenance">Recorded with Pipelock v{{ $block.pipelock_version }} &middot; {{ dateFormat "Jan 2, 2006" $block.captured_at }} &middot; <a href="/playground-replay/secret-exfil-url-blocked/manifest.json">raw manifest</a></p>
+    </div>
+
+    <div class="afw-demo" aria-label="Recorded demonstration: one request allowed, one blocked">
+      <div class="afw-seq">
+
+        <article class="afw-req afw-req-allow" data-fx="reveal spotlight">
+          <header class="afw-req-head">
+            <span class="afw-req-step">01</span>
+            <span class="afw-req-method">GET</span>
+            <span class="afw-verdict afw-verdict-allow">allow</span>
+          </header>
+          <p class="afw-req-target">{{ $allow.destination_class }}</p>
+          <p class="afw-req-note">No secret, no injection, no unsafe target. Forwarded, and the allow decision is signed too.</p>
+        </article>
+
+        <article class="afw-req afw-req-block" data-fx="reveal spotlight">
+          <header class="afw-req-head">
+            <span class="afw-req-step">02</span>
+            <span class="afw-req-method">GET</span>
+            <span class="afw-verdict afw-verdict-block">block</span>
+          </header>
+          <p class="afw-req-target">{{ $blockReceipt.target_redacted }}</p>
+          <p class="afw-req-shape"><code>{{ $block.redacted_shape }}</code></p>
+          <p class="afw-req-note">{{ $blockReceipt.pattern }} &middot; caught in the URL before DNS resolution. The value never left.</p>
+        </article>
+
+      </div>
+
+      <aside class="afw-receipt" data-fx="reveal scan" aria-label="The signed receipt for the blocked request">
+        <header class="afw-receipt-head">
+          <span class="afw-receipt-badge">Signed receipt</span>
+          <span class="afw-receipt-seq">chain_seq {{ $blockReceipt.chain_seq }} &middot; {{ $blockReceipt.transport }}</span>
+        </header>
+        <dl class="afw-receipt-grid">
+          <div><dt>verdict</dt><dd class="afw-dd-block">{{ $blockReceipt.verdict }}</dd></div>
+          <div><dt>layer</dt><dd>{{ $blockReceipt.layer }}</dd></div>
+          <div><dt>action_id</dt><dd>{{ $blockReceipt.action_id }}</dd></div>
+          <div><dt>policy</dt><dd>{{ substr $block.policy_hash 0 22 }}&hellip;</dd></div>
+          <div><dt>signer</dt><dd>ed25519:{{ substr $block.signer_key 0 8 }}&hellip;{{ substr $block.signer_key -8 }}</dd></div>
+        </dl>
+        <div class="afw-receipt-actions">
+          <a href="/playground/replay/secret-exfil-url-blocked/" data-event="afw_receipt_replay_click" data-event-placement="afw-hero">Open replay + verifier &rarr;</a>
+          <a href="/learn/verify-a-receipt/" data-event="afw_receipt_verify_click" data-event-placement="afw-hero">Verify offline &rarr;</a>
+        </div>
+      </aside>
+    </div>
+
+  </div>
+</section>
+
+<section class="afw-operating-model product-band" data-fx="reveal" aria-labelledby="afw-operating-title">
+  <div class="product-band-inner">
+    <div class="product-band-head">
+      <div>
+        <p class="product-band-kicker">The enforceable boundary</p>
+        <h2 class="product-band-title" id="afw-operating-title">Route it. Inspect it. Prove it.</h2>
+      </div>
+      <p class="product-band-lead">An agent firewall only covers traffic it actually mediates. The deployment creates that boundary; inspection makes the decision; the receipt makes the result checkable.</p>
+    </div>
+
+    <div class="product-signals" role="list">
+      <article class="product-signal" role="listitem">
+        <span class="product-signal-index" aria-hidden="true">01</span>
+        <span class="product-signal-label">Mediate</span>
+        <h3>Put the control in the path</h3>
+        <p>Route HTTP and WebSocket traffic through the proxy, or launch stdio MCP servers through the wrapper.</p>
+      </article>
+      <article class="product-signal" role="listitem">
+        <span class="product-signal-index" aria-hidden="true">02</span>
+        <span class="product-signal-label">Inspect</span>
+        <h3>Read both directions</h3>
+        <p>Scan requests, responses, tool arguments, and tool descriptions before the next system receives them.</p>
+      </article>
+      <article class="product-signal" role="listitem">
+        <span class="product-signal-index" aria-hidden="true">03</span>
+        <span class="product-signal-label">Record</span>
+        <h3>Keep a verifiable decision</h3>
+        <p>When receipt signing is configured, emit a signed allow or block record that another party can verify offline.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<article class="page-content" id="afw-guide">
+  {{ .Content }}
+  {{ partial "faq.html" . }}
+  {{ partial "article-cta.html" (dict "page" . "placement" "bottom") }}
+</article>
+{{ partial "site-fx.html" . }}
+{{ end }}

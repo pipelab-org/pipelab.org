@@ -1,0 +1,835 @@
+// ============================================================
+//   Proof sequence — one real recorded block, played as a
+//   short story on a single stage. Full-bleed slab in the
+//   afw-hero family; every color and size is a locked token.
+//
+//   Two hard rules. The composition must read complete with
+//   motion off: the settled state IS the final frame, and
+//   motion only replays how it got there. And the halt at the
+//   boundary is the entire product claim, so the boundary is
+//   the highest-contrast element on the stage.
+//
+//   Timeline (one 7s pass, all elements share it):
+//     act 1  0.0–2.6s  no boundary; payload crosses and escapes
+//     act 2  2.6–5.2s  boundary rises; same payload halts on it
+//     act 3  5.2–7.0s  verdict stamps, receipt and steps settle
+// ============================================================
+
+.pseq {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  // `.proof-product` already spans the page. Pulling this section out by half
+  // the scrollbar width creates a horizontal scroll range on every viewport.
+  margin: 0;
+  padding: 4.5rem 2rem 4rem;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.pseq-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 55% 60% at 18% 15%, rgba(255, 77, 77, 0.06), transparent 62%),
+    radial-gradient(ellipse 55% 65% at 82% 80%, var(--accent-dim), transparent 65%),
+    radial-gradient(ellipse 40% 45% at 60% 5%, var(--purple-dim), transparent 60%);
+}
+
+.pseq-inner {
+  position: relative;
+  z-index: 1;
+  max-width: var(--max-width);
+  margin: 0 auto;
+}
+
+// ── Header ──────────────────────────────────────────────────
+
+.pseq-head {
+  max-width: 760px;
+  margin: 0 0 2.5rem;
+}
+
+.pseq-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.9rem;
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.pseq-eyebrow-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius);
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent);
+}
+
+.pseq-title {
+  margin: 0 0 0.8rem;
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-h2);
+  line-height: 1.18;
+  letter-spacing: var(--tracking-tight);
+  color: var(--text);
+
+  @media (min-width: #{$bp-tablet + 1px}) {
+    font-size: var(--fs-h1);
+  }
+}
+
+.pseq-sub {
+  margin: 0;
+  font-size: var(--fs-lead);
+  line-height: 1.65;
+  color: var(--text-muted);
+}
+
+// ── The stage ───────────────────────────────────────────────
+
+.pseq-stage {
+  position: relative;
+  margin: 0 0 2.5rem;
+  padding: 2.6rem 2rem 1.6rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background:
+    radial-gradient(circle, rgba(255, 255, 255, 0.045) 1px, transparent 1.4px) 0 0 / 26px 26px,
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.008));
+
+  @media (max-width: 640px) {
+    padding: 2.2rem 1rem 1.2rem;
+  }
+}
+
+.pseq-wire {
+  position: relative;
+  height: 96px;
+}
+
+.pseq-line {
+  position: absolute;
+  left: 88px;
+  right: 168px;
+  top: 50%;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.16), rgba(255, 77, 77, 0.35));
+
+  @media (max-width: 640px) {
+    left: 64px;
+    right: 96px;
+  }
+}
+
+.pseq-endpoint {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  padding: 0.45rem 0.75rem;
+  border-radius: var(--radius);
+  background: var(--bg);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.pseq-endpoint-agent {
+  left: 0;
+}
+
+.pseq-endpoint-collector {
+  right: 0;
+  border-color: rgba(255, 77, 77, 0.22);
+  color: rgba(255, 143, 143, 0.45);
+
+  @media (max-width: 640px) {
+    max-width: 90px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+// The payload. Travels via `left` animated in percent of the
+// wire, so the motion scales with the container at any width.
+.pseq-payload {
+  position: absolute;
+  top: 50%;
+  left: 12%;
+  transform: translate(-50%, -50%);
+  z-index: 3;
+  padding: 0.35rem 0.6rem;
+  border-radius: var(--radius);
+  background: rgba(255, 77, 77, 0.08);
+  border: 1px solid rgba(255, 77, 77, 0.5);
+  box-shadow: 0 0 18px rgba(255, 77, 77, 0.12);
+  white-space: nowrap;
+
+  code {
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-code);
+    color: #ff8f8f;
+    background: none;
+    padding: 0;
+  }
+
+  @media (max-width: 640px) {
+    code {
+      display: inline-block;
+      max-width: 92px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      vertical-align: middle;
+      font-size: var(--fs-caption);
+    }
+  }
+}
+
+// The streak the payload drags while it moves. Hidden at rest.
+.pseq-payload::after {
+  content: "";
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  width: 64px;
+  height: 2px;
+  transform: translateY(-50%);
+  background: linear-gradient(90deg, transparent, rgba(255, 77, 77, 0.55));
+  opacity: 0;
+  pointer-events: none;
+}
+
+// The wire beyond the boundary. Dead by default (the settled frame is
+// post-block), lit only during the first pass while the path still exists.
+.pseq-line-dead {
+  position: absolute;
+  left: 62%;
+  right: 168px;
+  top: 50%;
+  height: 3px;
+  transform: translateY(-50%);
+  background: var(--bg);
+  opacity: 1;
+  pointer-events: none;
+
+  @media (max-width: 640px) {
+    right: 96px;
+  }
+}
+
+// The boundary. The one thing the eye must land on.
+.pseq-boundary {
+  position: absolute;
+  left: 62%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 86px;
+}
+
+.pseq-boundary-core {
+  display: block;
+  width: 4px;
+  height: 100%;
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, rgba(0, 229, 160, 0.4), var(--accent) 50%, rgba(0, 229, 160, 0.4));
+  box-shadow: 0 0 14px rgba(0, 229, 160, 0.35);
+}
+
+// The padlock badge on top of the wall: the same mark that anchors the
+// homepage orbit, so the boundary is unmistakably Pipelock.
+.pseq-boundary-lock {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 1px solid rgba(0, 229, 160, 0.5);
+  box-shadow: 0 0 18px rgba(0, 229, 160, 0.35);
+  color: var(--accent);
+
+  svg {
+    width: 17px;
+    height: 17px;
+    display: block;
+  }
+}
+
+// The wall breathes gently once it exists: alive, not decorative. Runs only
+// when motion is allowed; at reduced motion the wall is simply lit.
+@media (prefers-reduced-motion: no-preference) {
+  // A box-shadow animation repaints, so keep this non-essential idle pulse
+  // alive only while the sequence itself is on screen.
+  .pseq.pseq-motion-live .pseq-boundary-core {
+    animation: pseq-breathe 3.6s ease-in-out infinite;
+  }
+}
+
+@keyframes pseq-breathe {
+  0%, 100% { box-shadow: 0 0 12px rgba(0, 229, 160, 0.3); }
+  50%      { box-shadow: 0 0 22px rgba(0, 229, 160, 0.5); }
+}
+
+// Captions under the wire. Both rendered; visibility is timed.
+.pseq-captions {
+  position: relative;
+  min-height: 2.6rem;
+  margin-top: 1.1rem;
+
+  @media (max-width: 640px) {
+    min-height: 5.4rem;
+  }
+}
+
+.pseq-caption {
+  position: absolute;
+  inset: 0 0 auto;
+  margin: 0;
+  font-size: var(--fs-code);
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+.pseq-cap-tag {
+  display: inline-block;
+  margin-right: 0.55rem;
+  padding: 0.14rem 0.5rem;
+  border-radius: var(--radius);
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+.pseq-cap-tag-bare {
+  background: rgba(255, 77, 77, 0.12);
+  border: 1px solid rgba(255, 77, 77, 0.3);
+  color: #ff8f8f;
+}
+
+.pseq-cap-tag-guard {
+  background: var(--accent-dim);
+  border: 1px solid rgba(0, 229, 160, 0.35);
+  color: var(--accent);
+}
+
+// The verdict stamp, pinned to the boundary.
+.pseq-stamp {
+  position: absolute;
+  left: 62%;
+  top: 0.9rem;
+  transform: translateX(-50%);
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pseq-stamp-verdict {
+  padding: 0.32rem 0.85rem;
+  border-radius: var(--radius);
+  background: rgba(255, 77, 77, 0.16);
+  border: 1px solid rgba(255, 77, 77, 0.55);
+  box-shadow: 0 0 18px rgba(255, 77, 77, 0.22);
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-code);
+  font-weight: 700;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: #ff8f8f;
+}
+
+.pseq-stamp-layer {
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  color: var(--text-dim);
+}
+
+// ── Below the stage ─────────────────────────────────────────
+
+.pseq-lower {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 4fr);
+  gap: 3rem;
+  align-items: start;
+
+  @media (max-width: 900px) {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2rem;
+  }
+}
+
+.pseq-step {
+  display: grid;
+  grid-template-columns: 2.6rem minmax(0, 1fr);
+  gap: 0.9rem;
+  padding: 1rem 0;
+
+  & + & {
+    border-top: 1px solid var(--border);
+  }
+}
+
+.pseq-step-num {
+  margin: 0;
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  color: var(--text-dim);
+}
+
+.pseq-step-title {
+  margin: 0 0 0.35rem;
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-h3);
+  letter-spacing: var(--tracking-snug);
+  color: var(--text);
+}
+
+.pseq-step-body {
+  margin: 0;
+  font-size: var(--fs-body);
+  line-height: 1.65;
+  color: var(--text-muted);
+}
+
+.pseq-step-target {
+  margin: 0.55rem 0 0;
+  overflow-wrap: anywhere;
+
+  code {
+    font-size: var(--fs-caption);
+    color: var(--text-dim);
+  }
+}
+
+.pseq-counterpoint {
+  margin: 1.4rem 0 0;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--border);
+  font-size: var(--fs-code);
+  line-height: 1.6;
+  color: var(--text-dim);
+}
+
+// ── The receipt ─────────────────────────────────────────────
+
+.pseq-receipt {
+  border: 1px solid rgba(0, 229, 160, 0.28);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(180deg, rgba(0, 229, 160, 0.05), rgba(0, 229, 160, 0.015));
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.pseq-receipt-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.8rem 1.1rem;
+  border-bottom: 1px solid rgba(0, 229, 160, 0.18);
+}
+
+.pseq-receipt-badge {
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.pseq-receipt-seq {
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  color: var(--text-dim);
+}
+
+.pseq-receipt-grid {
+  margin: 0;
+  padding: 1rem 1.1rem;
+  display: grid;
+  gap: 0.6rem;
+
+  div {
+    display: grid;
+    grid-template-columns: 5.4rem minmax(0, 1fr);
+    gap: 0.75rem;
+    align-items: baseline;
+  }
+
+  dt {
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-caption);
+    color: var(--text-dim);
+  }
+
+  dd {
+    margin: 0;
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-code);
+    color: var(--text);
+    overflow-wrap: anywhere;
+  }
+}
+
+.pseq-dd-block {
+  color: #ff8f8f;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+}
+
+.pseq-receipt-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0 1.1rem 1.1rem;
+}
+
+.pseq-replay {
+  margin-left: auto;
+  padding: 0.45rem 0.8rem;
+  border-radius: var(--radius);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: none;
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  color: var(--text-muted);
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--text);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+}
+
+.pseq-provenance {
+  margin: 2rem 0 0;
+  font-size: var(--fs-caption);
+  color: var(--text-dim);
+  overflow-wrap: anywhere;
+
+  code {
+    font-size: var(--fs-caption);
+  }
+}
+
+// ── The timeline ────────────────────────────────────────────
+// The DEFAULT state below is the finished frame: boundary up,
+// payload halted on it, stamp shown, captions on act 2. If the
+// JS never runs or motion is reduced, this is what renders.
+
+// Settled: the payload's LEADING edge rests against the badge. The anchor
+// is the right edge (translateX(-100%)) so the chip never pierces the bar
+// regardless of how wide the redacted shape renders.
+.pseq-payload { left: calc(62% - 17px); transform: translate(-100%, -50%); }
+.pseq-caption-1 { opacity: 0; }
+.pseq-caption-2 { opacity: 1; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .pseq-playing {
+    .pseq-payload {
+      animation: pseq-payload 7s linear forwards;
+    }
+
+    .pseq-payload::after {
+      animation: pseq-trail 7s linear forwards;
+    }
+
+    .pseq-line-dead {
+      animation: pseq-linedead 7s linear forwards;
+    }
+
+    .pseq-stage {
+      animation: pseq-shake 7s linear forwards;
+    }
+
+    .pseq-boundary-core {
+      animation: pseq-boundary 7s linear forwards;
+    }
+
+    .pseq-boundary-lock {
+      animation: pseq-lockin 7s linear forwards;
+    }
+
+    .pseq-endpoint-collector {
+      animation: pseq-collector 7s linear forwards;
+    }
+
+    .pseq-caption-1 {
+      animation: pseq-cap1 7s linear forwards;
+    }
+
+    .pseq-caption-2 {
+      animation: pseq-cap2 7s linear forwards;
+    }
+
+    .pseq-stamp {
+      animation: pseq-stamp 7s linear forwards;
+    }
+
+    .pseq-receipt {
+      animation: pseq-late 7s linear forwards;
+    }
+
+    .pseq-step {
+      animation: pseq-late 7s linear forwards;
+    }
+  }
+}
+
+// All keyframes share the 7s clock:
+//   0–37%  act 1 (escape)   37–74%  act 2 (halt)   74–100%  act 3 (proof)
+
+// The anchor slides from center (in flight) to right edge (at the wall), so
+// the chip decelerates INTO the boundary instead of passing through it.
+@keyframes pseq-payload {
+  0%       { left: 12%; transform: translate(-50%, -50%); opacity: 1; }
+  28%      { left: 82%; transform: translate(-50%, -50%); opacity: 1; }
+  35%      { left: 90%; transform: translate(-50%, -50%); opacity: 0; }
+  37%      { left: 12%; transform: translate(-50%, -50%); opacity: 0; }
+  41%      { opacity: 1; }
+  62%      { left: calc(62% - 17px); transform: translate(-100%, -50%); } // the hit
+  66%      { left: 58.6%; transform: translate(-100%, -50%); } // recoil
+  74%,100% { left: calc(62% - 17px); transform: translate(-100%, -50%); opacity: 1; }
+}
+
+@keyframes pseq-boundary {
+  0%, 37%  { transform: scaleY(0); opacity: 0; }
+  44%      { transform: scaleY(1); opacity: 1; box-shadow: 0 0 14px rgba(0, 229, 160, 0.35); }
+  61%      { box-shadow: 0 0 14px rgba(0, 229, 160, 0.35); }
+  62%      { box-shadow: 0 0 30px 6px rgba(0, 229, 160, 0.75); } // the hit
+  74%,100% { transform: scaleY(1); opacity: 1; box-shadow: 0 0 14px rgba(0, 229, 160, 0.35); }
+}
+
+@keyframes pseq-collector {
+  0%       { border-color: rgba(255, 77, 77, 0.4); color: #ff8f8f; }
+  28%      { border-color: rgba(255, 77, 77, 0.4); color: #ff8f8f; }
+  33%      { border-color: rgba(255, 77, 77, 0.95); color: #ff8f8f; box-shadow: 0 0 18px rgba(255, 77, 77, 0.4); } // the leak lands
+  40%,61%  { border-color: rgba(255, 77, 77, 0.4); color: #ff8f8f; box-shadow: none; }
+  // after the block, the collector goes dark: it was never reached
+  62%,100% { border-color: rgba(255, 77, 77, 0.22); color: rgba(255, 143, 143, 0.45); box-shadow: none; }
+}
+
+// The trail exists only while the payload is in flight.
+@keyframes pseq-trail {
+  0%       { opacity: 0; }
+  4%       { opacity: 1; }
+  30%      { opacity: 1; }
+  36%      { opacity: 0; }
+  41%      { opacity: 1; }
+  60%      { opacity: 1; }
+  66%,100% { opacity: 0; }
+}
+
+// The wire beyond the boundary is alive during the first pass, then dies.
+@keyframes pseq-linedead {
+  0%,61%   { opacity: 0; }
+  62%,100% { opacity: 1; }
+}
+
+// The padlock arrives with its wall, a beat ahead of the impact.
+@keyframes pseq-lockin {
+  0%, 38%  { opacity: 0; transform: translate(-50%, -50%) scale(0.6); }
+  46%,100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+// One short jolt when the payload hits the wall. Everything else is still.
+@keyframes pseq-shake {
+  0%, 62%  { transform: translateX(0); }
+  63%      { transform: translateX(3px); }
+  64%      { transform: translateX(-2px); }
+  65%      { transform: translateX(1px); }
+  66%,100% { transform: translateX(0); }
+}
+
+@keyframes pseq-cap1 {
+  0%       { opacity: 1; }
+  35%      { opacity: 1; }
+  40%,100% { opacity: 0; }
+}
+
+@keyframes pseq-cap2 {
+  0%, 40%  { opacity: 0; }
+  45%,100% { opacity: 1; }
+}
+
+@keyframes pseq-stamp {
+  0%, 66%  { opacity: 0; transform: translateX(-50%) scale(1.25); }
+  72%,100% { opacity: 1; transform: translateX(-50%) scale(1); }
+}
+
+@keyframes pseq-late {
+  0%, 72%  { opacity: 0.25; }
+  84%,100% { opacity: 1; }
+}
+
+// == Showpiece layer =========================================
+// Reveal, spotlight, orbit-grade backdrop, and one extravagant
+// element: the beam circling the signed receipt. All additive;
+// with scripts blocked or motion reduced the page is complete.
+
+// Scroll reveal and cursor spotlight now live in _fx.scss, keyed on
+// data-fx tokens so every page shares one definition.
+
+.proof-evidence-card {
+  position: relative;
+  overflow: hidden;
+}
+
+// Star dust behind the sequence stage: the same field the homepage
+// orbit floats in, so the two showpieces share a sky.
+.pseq-dust {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image:
+    radial-gradient(1px 1px at 12% 18%, rgba(255, 255, 255, 0.55), transparent 60%),
+    radial-gradient(1px 1px at 27% 74%, rgba(255, 255, 255, 0.4), transparent 60%),
+    radial-gradient(1.5px 1.5px at 41% 9%, rgba(0, 229, 160, 0.5), transparent 60%),
+    radial-gradient(1px 1px at 58% 88%, rgba(255, 255, 255, 0.45), transparent 60%),
+    radial-gradient(1px 1px at 66% 31%, rgba(255, 255, 255, 0.35), transparent 60%),
+    radial-gradient(1.5px 1.5px at 79% 63%, rgba(124, 58, 237, 0.55), transparent 60%),
+    radial-gradient(1px 1px at 88% 14%, rgba(255, 255, 255, 0.5), transparent 60%),
+    radial-gradient(1px 1px at 93% 81%, rgba(0, 229, 160, 0.45), transparent 60%),
+    radial-gradient(1px 1px at 5% 52%, rgba(255, 255, 255, 0.35), transparent 60%),
+    radial-gradient(1px 1px at 48% 47%, rgba(255, 255, 255, 0.25), transparent 60%);
+}
+
+// The sequence keeps its own dust, painted after the wash. Hide the
+// shared field, not the sky clip box, so the shooting star still runs.
+.pseq > .fx-sky::before {
+  display: none;
+}
+
+// The beam: a slow accent light circling the signed receipt, the
+// one deliberately extravagant element on the page. Needs
+// registered custom properties; browsers without them keep the
+// receipt's static border and lose only the motion.
+@property --pv-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .pseq.pseq-motion-live .pseq-receipt {
+    position: relative;
+
+    &::before {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      z-index: 0;
+      border-radius: inherit;
+      padding: 1px;
+      background: conic-gradient(from var(--pv-angle),
+        transparent 0deg,
+        transparent 300deg,
+        rgba(0, 229, 160, 0.9) 330deg,
+        transparent 360deg);
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      animation: pv-beam 6s linear infinite;
+      pointer-events: none;
+    }
+
+    > * {
+      position: relative;
+      z-index: 1;
+    }
+  }
+}
+
+@keyframes pv-beam {
+  to { --pv-angle: 360deg; }
+}
+
+// == Scene rail: pager over the stage ========================
+.pseq-rail {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem;
+  margin: 0 0 1rem;
+}
+
+.pseq-scene-title {
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-code);
+  color: var(--text);
+  letter-spacing: var(--tracking-snug);
+}
+
+.pseq-scene-count {
+  margin-left: 0.7rem;
+  font-size: var(--fs-caption);
+  color: var(--text-dim);
+}
+
+.pseq-arrow {
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 229, 160, 0.3);
+  background: rgba(0, 229, 160, 0.05);
+  color: var(--accent);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+
+  &:hover, &:focus-visible {
+    background: rgba(0, 229, 160, 0.14);
+    border-color: rgba(0, 229, 160, 0.6);
+    transform: scale(1.08);
+  }
+}
+
+// == Receipt head hosts the replay control ===================
+.pseq-receipt-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.pseq-receipt-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+
+  .btn { text-align: center; }
+}
+
+.pseq-replay {
+  margin-left: 0;
+  padding: 0.3rem 0.6rem;
+}

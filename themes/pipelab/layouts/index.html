@@ -1,0 +1,505 @@
+{{ define "main" }}
+{{/* Bespoke home page - replaces the prior themes/pipelab/layouts/index.html.
+
+     Final entry in the page-redesign sequence. Eight bespoke templates
+     now in the theme: proof, pipelock, compare, pricing, enterprise,
+     assess, about, and this home page.
+
+     Variants locked from the prototype's Tweaks panel:
+       heroKind  = particle  (mouse-interactive canvas)
+       capLayout = hybrid    (6 cards + chip cloud)
+       idePattern = tabs     (tabbed terminal)
+       showCNCF  = true      (band visible)
+
+     Vanilla JS only. No React, no Babel, no Tweaks panel chrome.
+     The existing baseof.html JSON-LD branch handles `.IsHome`
+     (Organization + WebSite); no competing JSON-LD branch added here.
+
+     Stats pulled live from data/stats.yaml; version from
+     Site.Params.pipelock_version. Real CLI commands verified against
+     internal/cli/setup/{claude,cursor,vscode,jetbrains}.go. */}}
+
+{{ $version := site.Params.pipelock_version | default "" }}
+{{ $stats := site.Data.stats }}
+
+<div class="home-product">
+
+  {{/* ── Hero ─────────────────────────────────────────── */}}
+  {{ partial "hero-home.html" . }}
+  {{ $constellationScript := resources.Get "js/receipt-constellation.js" | minify | fingerprint }}
+  <script src="{{ $constellationScript.RelPermalink }}" integrity="{{ $constellationScript.Data.Integrity }}" defer></script>
+  {{ $orbitScript := resources.Get "js/integration-orbit.js" | minify | fingerprint }}
+  <script src="{{ $orbitScript.RelPermalink }}" integrity="{{ $orbitScript.Data.Integrity }}" defer></script>
+  {{ partial "site-fx.html" . }}
+
+  {{/* ── Stats strip ──────────────────────────────────── */}}
+  <div class="hp-divider"></div>
+  <div class="hp-stats-section" data-fx="reveal sky">
+    <div class="hp-stats">
+      <div class="hp-stat">
+        {{/* No count-up here: the live star count script in baseof.html owns
+             this element and can rewrite it at any time. */}}
+        <p class="hp-stat-v" id="hp-star-stat">{{ $stats.stars }}+</p>
+        <p class="hp-stat-l">GitHub Stars</p>
+      </div>
+      <div class="hp-stat">
+        <p class="hp-stat-v" data-fx="count">{{ $stats.tests }}+</p>
+        <p class="hp-stat-l">Test Cases</p>
+      </div>
+      <div class="hp-stat">
+        <p class="hp-stat-v" data-fx="count">&gt;{{ $stats.test_coverage_percent }}%</p>
+        <p class="hp-stat-l">Core Coverage</p>
+      </div>
+      <div class="hp-stat">
+        <p class="hp-stat-v" data-fx="count">Go</p>
+        <p class="hp-stat-l">Single Binary</p>
+      </div>
+      <div class="hp-stat">
+        <p class="hp-stat-v" data-fx="count">{{ $stats.bench_cases }}</p>
+        <p class="hp-stat-l">Public Bench Cases</p>
+      </div>
+      <div class="hp-stat">
+        <p class="hp-stat-v" data-fx="count">{{ $stats.compliance_frameworks }}</p>
+        <p class="hp-stat-l">Compliance Mappings</p>
+      </div>
+    </div>
+    {{ partial "product-provenance.html" . }}
+  </div>
+  <div class="hp-divider"></div>
+
+  {{/* ── CNCF band ────────────────────────────────────── */}}
+  {{ partial "works-with.html" . }}
+
+  {{/* ── Get Started: tabbed IDE pattern ──────────────── */}}
+  <section class="hp-section" data-fx="reveal live">
+    <div class="hp-section-inner">
+      <div class="hp-section-head">
+        <p class="hp-eyebrow">Get Started</p>
+        <h2 class="hp-section-h2" data-fx="decrypt">Two minutes to protection</h2>
+        <p class="hp-section-sub">
+          Works with Claude Code, Cursor, VS Code, JetBrains, local stdio MCP servers, or any agent that speaks HTTP or WebSocket.
+        </p>
+      </div>
+
+      <div class="hp-ide" id="hp-ide">
+        <div class="hp-ide-tabs" role="tablist" aria-label="IDE quick-start">
+          <button class="hp-ide-tab is-active" type="button"
+                  role="tab" aria-selected="true" aria-controls="hp-ide-panel"
+                  data-ide-name="Claude Code"
+                  data-ide-slug="claude-code"
+                  data-ide-cmd="pipelock claude setup"
+                  data-ide-href="/learn/claude-code-hooks/"
+                  data-event="ide_tab_click" data-event-value="claude-code" data-event-placement="get-started">
+            {{ partial "brands/claude.svg" . }}
+            Claude Code
+          </button>
+          <button class="hp-ide-tab" type="button"
+                  role="tab" aria-selected="false" aria-controls="hp-ide-panel"
+                  data-ide-name="Cursor"
+                  data-ide-slug="cursor"
+                  data-ide-cmd="pipelock cursor install"
+                  data-ide-href="/learn/cursor-integration/"
+                  data-event="ide_tab_click" data-event-value="cursor" data-event-placement="get-started">
+            {{ partial "brands/cursor.svg" . }}
+            Cursor
+          </button>
+          <button class="hp-ide-tab" type="button"
+                  role="tab" aria-selected="false" aria-controls="hp-ide-panel"
+                  data-ide-name="VS Code"
+                  data-ide-slug="vscode"
+                  data-ide-cmd="pipelock vscode install"
+                  data-ide-href="/learn/vscode-integration/"
+                  data-event="ide_tab_click" data-event-value="vscode" data-event-placement="get-started">
+            {{ partial "brands/vscode.svg" . }}
+            VS Code
+          </button>
+          <button class="hp-ide-tab" type="button"
+                  role="tab" aria-selected="false" aria-controls="hp-ide-panel"
+                  data-ide-name="JetBrains"
+                  data-ide-slug="jetbrains"
+                  data-ide-cmd="pipelock jetbrains install"
+                  data-ide-href="/learn/jetbrains-integration/"
+                  data-event="ide_tab_click" data-event-value="jetbrains" data-event-placement="get-started">
+            {{ partial "brands/jetbrains.svg" . }}
+            JetBrains
+          </button>
+        </div>
+
+        <div class="hp-term" id="hp-ide-panel" role="tabpanel">
+          <div class="hp-term-head">
+            <div class="hp-term-dots" aria-hidden="true"><span></span><span></span><span></span></div>
+            <span class="hp-term-title" id="hp-ide-title">claude-code</span>
+            <button class="hp-term-copy" type="button" id="hp-ide-copy"
+                    data-copy-target="#hp-ide-cmd"
+                    data-event="ide_copy_install" data-event-placement="ide-tabs">copy</button>
+          </div>
+          <div class="hp-term-body">
+            <div class="hp-term-row"><span class="prompt">$ </span>{{ (index (partial "install/methods.html" (dict "only" (slice "go"))) 0).command }}</div>
+            <div style="margin-top: 0.6rem;"><span class="comment"># Wire <span id="hp-ide-name-comment">Claude Code</span> through Pipelock</span></div>
+            <div class="hp-term-row"><span class="prompt">$ </span><span id="hp-ide-cmd">pipelock claude setup</span></div>
+            <div style="margin-top: 0.6rem;"><span class="out">✓ proxy configured · scanner running</span></div>
+          </div>
+        </div>
+
+        <p class="hp-ide-guide-link">
+          <a href="/learn/claude-code-hooks/" id="hp-ide-guide"
+             data-event="ide_guide_click" data-event-value="claude-code">
+            Open the <span id="hp-ide-name-guide">Claude Code</span> guide →
+          </a>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  {{/* ── Real users ────────────────────────────────────── */}}
+  <section class="hp-cncf" data-fx="reveal">
+    <div class="hp-cncf-card" data-fx="reveal spotlight">
+      <div class="hp-cncf-mark" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="30" height="30"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm9.75-7.5l3 5.25 6 .75-4.5 4.125 1.125 5.625L12 17.25l-5.625 3 1.125-5.625L3 10.5l6-.75L12 4.5z"/></svg>
+      </div>
+      <div class="hp-cncf-text">
+        <p class="hp-cncf-eyebrow">CNCF Landscape</p>
+        <p class="hp-cncf-title">
+          Pipelock is listed under <span class="accent">Provisioning · Security &amp; Compliance</span>.
+        </p>
+        <p class="hp-cncf-meta">
+          Listed via <code>cncf/landscape#4807</code> · category: <code>provisioning · security-compliance</code>
+        </p>
+      </div>
+      <a class="hp-cncf-link"
+         href="https://landscape.cncf.io/?item=provisioning--security-compliance--pipelock"
+         target="_blank" rel="noopener noreferrer"
+         data-event="cncf_band_click" data-event-placement="cncf-band">
+        View listing
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="13" height="13" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
+      </a>
+    </div>
+  </section>
+
+  <div class="hp-chapter">
+  {{/* ── Detect / Enforce / Prove ────────────────────── */}}
+  <section class="hp-section" data-fx="reveal">
+    <div class="hp-section-inner">
+      <div class="hp-section-head">
+        <p class="hp-eyebrow">Narrative</p>
+        <h2 class="hp-section-h2" data-fx="decrypt">Detect. Enforce. Prove.</h2>
+        <p class="hp-section-sub">
+          One binary, three jobs. Each line below is a real surface in the Pipelock source tree.
+        </p>
+      </div>
+      <div class="hp-narrative">
+        <a class="hp-narrative-card" data-fx="reveal spotlight tilt" href="/pipelock/#detect" data-event="narrative_detect_click" data-event-placement="narrative">
+          <div class="hp-narrative-icon" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="32" height="32"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
+          </div>
+          <h3>Detect</h3>
+          <p>Fixed-order scanner pipeline. {{ $stats.dlp_patterns }} DLP patterns. A2A scanning. Encoded payload handling across HTTP, WebSocket, and MCP.</p>
+          <div class="hp-narrative-stat">
+            <span>DLP before DNS</span>
+            <span>{{ $stats.dlp_patterns }} DLP patterns</span>
+            <span>{{ $stats.response_patterns }} injection</span>
+          </div>
+          <span class="hp-narrative-go">Explore &rarr;</span>
+        </a>
+        <a class="hp-narrative-card" data-fx="reveal spotlight tilt" href="/pipelock/#enforce" data-event="narrative_enforce_click" data-event-placement="narrative">
+          <div class="hp-narrative-icon" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="32" height="32"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+          </div>
+          <h3>Enforce</h3>
+          <p>OR-composed kill switch. Adaptive escalation. Process sandbox on Linux and macOS. MCP tool policy with redirect. Fail-closed on mediated paths.</p>
+          <div class="hp-narrative-stat">
+            <span>{{ $stats.kill_switch_sources }} kill sources</span>
+            <span>3 escalation levels</span>
+            <span>fail-closed</span>
+          </div>
+          <span class="hp-narrative-go">Explore &rarr;</span>
+        </a>
+        <a class="hp-narrative-card" data-fx="reveal spotlight tilt" href="/pipelock/#prove" data-event="narrative_prove_click" data-event-placement="narrative">
+          <div class="hp-narrative-icon" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="32" height="32"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.746 3.746 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z"/></svg>
+          </div>
+          <h3>Prove</h3>
+          <p>Evidence for mediated machine operations. Hash-chained flight recorder. Ed25519-signed assessment reports. {{ $stats.simulate_scenarios }}+ attack simulations.</p>
+          <div class="hp-narrative-stat">
+            <span>{{ $stats.compliance_frameworks }} frameworks</span>
+            <span>Ed25519 signed</span>
+            <span>offline verify</span>
+          </div>
+          <span class="hp-narrative-go">Explore &rarr;</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  {{/* ── Capabilities (hybrid: 6 cards + chip cloud) ──── */}}
+  <section class="hp-section" data-fx="reveal">
+    <div class="hp-section-inner">
+      <div class="hp-section-head">
+        <p class="hp-eyebrow">Capabilities</p>
+        <h2 class="hp-section-h2" data-fx="decrypt">What Pipelock stops and records</h2>
+        <p class="hp-section-sub">
+          The product page carries the full control inventory and deployment details.
+        </p>
+      </div>
+
+      <div class="hp-cap-hybrid">
+        <div class="hp-cap-grid">
+          <a class="hp-cap-card" data-fx="reveal spotlight" href="/learn/securing-claude-code-against-secret-exfiltration/">
+            <div class="hp-cap-icon" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+            </div>
+            <h3>Stop secret leaks</h3>
+            <p>{{ $stats.dlp_patterns }} credential patterns with checksum validation. Base64, hex, URL, and Unicode encoding-aware.</p>
+          </a>
+          <a class="hp-cap-card" data-fx="reveal spotlight" href="/learn/prompt-injection-detection/">
+            <div class="hp-cap-icon" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.184-4.183a1.14 1.14 0 01.778-.332 48.294 48.294 0 005.83-.498c1.585-.233 2.708-1.626 2.708-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z"/></svg>
+            </div>
+            <h3>Reject hostile responses</h3>
+            <p>{{ $stats.response_patterns }} detection patterns. 6-pass normalization covering zero-width chars, homoglyphs, and leetspeak.</p>
+          </a>
+          <a class="hp-cap-card" data-fx="reveal spotlight" href="/learn/mcp-security/">
+            <div class="hp-cap-icon" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 004.486-6.336l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437l1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008z"/></svg>
+            </div>
+            <h3>Inspect MCP tools</h3>
+            <p>Stdio subprocess wrapping, tool poisoning detection, rug-pull tracking, policy engine with redirect, session binding, and chain detection.</p>
+          </a>
+          <a class="hp-cap-card" data-fx="reveal spotlight" href="/learn/cloudflare-sandboxes-pipelock/">
+            <div class="hp-cap-icon" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9"/></svg>
+            </div>
+            <h3>Constrain the process</h3>
+            <p>Landlock + seccomp + network namespaces on Linux. sandbox-exec on macOS. Per-agent profiles with strict mode.</p>
+          </a>
+          <a class="hp-cap-card" data-fx="reveal spotlight" href="/pipelock/">
+            <div class="hp-cap-icon" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/></svg>
+            </div>
+            <h3>Escalate on risk</h3>
+            <p>Per-session threat scoring. Three escalation levels. Auto-recovery after clean traffic. No permanent lockouts.</p>
+          </a>
+          <a class="hp-cap-card" data-fx="reveal spotlight" href="/learn/compliance-evidence/">
+            <div class="hp-cap-icon" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+            </div>
+            <h3>Keep verifiable evidence</h3>
+            <p>OWASP MCP Top 10, OWASP Agentic Top 10, MITRE ATLAS, EU AI Act, NIST AI RMF, HIPAA, SOC 2 mappings. Ed25519-signed reports.</p>
+          </a>
+        </div>
+
+        <p class="hp-cap-hybrid-head">Plus more surfaces</p>
+
+        <div class="hp-cap-cloud">
+          <span class="hp-cap-pill"><span class="num">{{ $stats.dlp_patterns }}</span>DLP</span>
+          <span class="hp-cap-pill"><span class="num">{{ $stats.response_patterns }}</span>Prompt injection</span>
+          <span class="hp-cap-pill">DLP before DNS</span>
+          <span class="hp-cap-pill">Tool poisoning</span>
+          <span class="hp-cap-pill">A2A scanning</span>
+          <span class="hp-cap-pill">Process sandbox</span>
+          <span class="hp-cap-pill"><span class="num">{{ $stats.kill_switch_sources }}</span>Kill switch</span>
+          <span class="hp-cap-pill">Adaptive scoring</span>
+          <span class="hp-cap-pill">Hash-chained log</span>
+          <span class="hp-cap-pill"><span class="num">{{ $stats.compliance_frameworks }}</span>Frameworks</span>
+          <span class="hp-cap-pill"><span class="num">{{ $stats.bench_cases }}</span>Bench cases</span>
+          <span class="hp-cap-pill"><span class="num">~{{ $stats.scan_latency_ms }}ms</span>Scan latency</span>
+        </div>
+
+        <a class="hp-cap-link" href="/capabilities/"
+           data-event="capabilities_full_inventory_click" data-event-placement="capabilities">
+          Inspect every capability →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  {{/* ── Proof strip ──────────────────────────────────── */}}
+  <section class="hp-section" data-fx="reveal">
+    <div class="hp-section-inner">
+      <div class="hp-section-head">
+        <p class="hp-eyebrow">Evidence</p>
+        <h2 class="hp-section-h2" data-fx="decrypt">Monitor. Block. Prove.</h2>
+        <p class="hp-section-sub">
+          Three real artifacts the binary produces today. Click any panel to see how it works in production.
+        </p>
+      </div>
+      <div class="hp-proof-feature" data-fx="reveal">
+        {{ $dash := resources.Get "images/dashboard-overview.png" }}
+        <a class="hp-proof-main" data-fx="scan spotlight" href="/learn/operator-console/"
+           data-event="proof_monitor_click" data-event-placement="proof-strip">
+          <span class="hp-proof-frame">
+            <span class="hp-proof-frame-head" aria-hidden="true"><span></span><span></span><span></span></span>
+            {{ if $dash }}{{ $big := $dash.Resize "1200x webp q88" }}
+            <img class="hp-proof-img"
+                 src="{{ $big.RelPermalink }}"
+                 alt="Pipelock operator console overview showing enforcement decisions, fleet reporting posture, and proven-fact counts"
+                 width="{{ $big.Width }}" height="{{ $big.Height }}"
+                 loading="lazy" decoding="async">
+            {{ end }}
+          </span>
+          <span class="hp-proof-body">
+            <span class="hp-proof-eyebrow"><span class="num">01</span> Monitor</span>
+            <span class="hp-proof-title">Operator console</span>
+            <span class="hp-proof-desc">A read-only console over signed evidence: enforcement decisions, evidence integrity, exemptions, budgets, and fleet posture. Plus {{ $stats.prometheus_metrics }} Prometheus metrics.</span>
+            <span class="hp-proof-link">See the console &rarr;</span>
+          </span>
+        </a>
+
+        <div class="hp-proof-side">
+          {{ $kill := resources.Get "images/killswitch-telegram.png" }}
+          <a class="hp-proof-mini" href="/learn/kill-switch/"
+             data-event="proof_block_click" data-event-placement="proof-strip">
+            {{ if $kill }}{{ $thumb := $kill.Resize "720x webp q86" }}
+            <img class="hp-proof-img"
+                 src="{{ $thumb.RelPermalink }}"
+                 alt="Pipelock kill switch triggered and confirmed from an example chat-ops automation calling the kill-switch API"
+                 width="{{ $thumb.Width }}" height="{{ $thumb.Height }}"
+                 loading="lazy" decoding="async">
+            {{ end }}
+            <span class="hp-proof-body">
+              <span class="hp-proof-eyebrow"><span class="num">02</span> Block</span>
+              <span class="hp-proof-title">{{ $stats.kill_switch_sources }}-source kill switch</span>
+              <span class="hp-proof-desc">Trigger from CLI, dashboard, API, signal, sentinel file, or fleet control. One source flips the agent into deny-all in under a second.</span>
+              <span class="hp-proof-link">Kill-switch flow &rarr;</span>
+            </span>
+          </a>
+
+          {{ $report := resources.Get "images/sample-report.png" }}
+          <a class="hp-proof-mini" href="/assess/"
+             data-event="proof_prove_click" data-event-placement="proof-strip">
+            {{ if $report }}{{ $thumb := $report.Resize "720x webp q86" }}
+            <img class="hp-proof-img"
+                 src="{{ $thumb.RelPermalink }}"
+                 alt="Pipelock signed security assessment report sample"
+                 width="{{ $thumb.Width }}" height="{{ $thumb.Height }}"
+                 loading="lazy" decoding="async">
+            {{ end }}
+            <span class="hp-proof-body">
+              <span class="hp-proof-eyebrow"><span class="num">03</span> Prove</span>
+              <span class="hp-proof-title">Ed25519-signed reports</span>
+              <span class="hp-proof-desc">{{ $stats.compliance_frameworks }} compliance frameworks. Demo reports verify offline against the Pipelock demo key; customer reports verify against the deployment's pinned key.</span>
+              <span class="hp-proof-link">View Assess &rarr;</span>
+            </span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  </div>
+
+  <section class="hp-section hp-voices">
+    <div class="hp-section-inner">
+      <div class="hp-section-head">
+        <p class="hp-eyebrow">In production</p>
+        <h2 class="hp-section-h2" data-fx="decrypt">Run by people who ship agents</h2>
+        <p class="hp-section-sub">
+          Operators running Pipelock in front of real coding agents with real secrets.
+        </p>
+      </div>
+      <div class="hp-quote-row">
+        {{ range site.Data.testimonials.quotes }}
+        {{ partial "quote-card.html" . }}
+        {{ end }}
+      </div>
+      <p class="hp-quote-verify">
+        verify it yourself:
+        <a href="/playground/" data-event="testimonial_verify_click" data-event-placement="testimonial-keith">pipelab.org/playground/</a>
+      </p>
+    </div>
+  </section>
+
+  {{/* ── Bottom CTAs ──────────────────────────────────── */}}
+  <section class="hp-bottom" data-fx="reveal">
+    <div class="hp-cta-row">
+      <a href="/install/" class="hp-btn hp-btn-primary"
+         data-event="bottom_get_started_click" data-event-placement="bottom">
+        Install Pipelock
+      </a>
+      <a href="/proof/" class="hp-btn hp-btn-ghost"
+         data-event="proof_click" data-event-placement="bottom">Proof</a>
+      <a href="/pricing/" class="hp-btn hp-btn-ghost"
+         data-event="pricing_click" data-event-placement="bottom">Pricing</a>
+    </div>
+    <p class="hp-bottom-tagline">
+      Public methodology · Public attack cases · Public Pipelock results
+    </p>
+  </section>
+</div>
+
+<script>
+(function () {
+  // ── Live GitHub stars fetch ────────────────────────────────
+  function afterIdle(fn) {
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(fn, { timeout: 3000 });
+      return;
+    }
+    window.addEventListener('load', function () {
+      setTimeout(fn, 0);
+    }, { once: true });
+  }
+
+  // ── Terminal copy buttons ──────────────────────────────────
+  function bindCopy(btn) {
+    if (!btn) return;
+    var sel = btn.getAttribute('data-copy-target');
+    if (!sel) return;
+    btn.addEventListener('click', function () {
+      var target = document.querySelector(sel);
+      if (!target || !navigator.clipboard) return;
+      navigator.clipboard.writeText(target.textContent.trim()).then(function () {
+        btn.classList.add('is-copied');
+        var prev = btn.textContent;
+        btn.textContent = 'copied';
+        setTimeout(function () {
+          btn.classList.remove('is-copied');
+          btn.textContent = prev;
+        }, 1400);
+      }).catch(function () {});
+    });
+  }
+  bindCopy(document.getElementById('hp-ide-copy'));
+
+  // ── IDE tabs (vanilla, no React) ───────────────────────────
+  var ideRoot = document.getElementById('hp-ide');
+  if (ideRoot) {
+    var tabs = ideRoot.querySelectorAll('.hp-ide-tab');
+    var titleEl = document.getElementById('hp-ide-title');
+    var cmdEl = document.getElementById('hp-ide-cmd');
+    var guideEl = document.getElementById('hp-ide-guide');
+    var guideName = document.getElementById('hp-ide-name-guide');
+    var commentName = document.getElementById('hp-ide-name-comment');
+    function activate(tab) {
+      for (var i = 0; i < tabs.length; i++) {
+        var t = tabs[i];
+        var isMe = t === tab;
+        t.classList.toggle('is-active', isMe);
+        t.setAttribute('aria-selected', isMe ? 'true' : 'false');
+      }
+      var name = tab.getAttribute('data-ide-name') || '';
+      var slug = tab.getAttribute('data-ide-slug') || '';
+      var cmd = tab.getAttribute('data-ide-cmd') || '';
+      var href = tab.getAttribute('data-ide-href') || '';
+      if (titleEl) titleEl.textContent = slug;
+      if (cmdEl) cmdEl.textContent = cmd;
+      if (guideEl) {
+        guideEl.setAttribute('href', href);
+        // Keep funnel-analytics value in sync with the active IDE so
+        // ide_guide_click events report the IDE the reader actually
+        // followed, not the default tab on page load.
+        guideEl.setAttribute('data-event-value', slug);
+      }
+      if (guideName) guideName.textContent = name;
+      if (commentName) commentName.textContent = name;
+    }
+    for (var i = 0; i < tabs.length; i++) {
+      (function (tab) {
+        tab.addEventListener('click', function () { activate(tab); });
+      })(tabs[i]);
+    }
+  }
+
+})();
+</script>
+{{ end }}

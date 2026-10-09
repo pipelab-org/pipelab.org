@@ -1,0 +1,131 @@
+{
+  "_source": "https://schema.org/version/latest/schemaorg-current-https.jsonld",
+  "_source_sha256": "0f0c97a4f666b2f8563573fe48453782fd51b87a504523cf0c9aff6a71c3eec4",
+  "_retrieved": "2026-09-03",
+  "_generated_by": "scripts/generate-schema-property-table.mjs",
+  "_note": "Properties this site emits, each confirmed against the published schema.org vocabulary as valid for its type. Do not edit by hand; rebuild the site and rerun the generator.",
+  "types": {
+    "AboutPage": [
+      "description",
+      "mainEntity",
+      "name",
+      "url"
+    ],
+    "Answer": [
+      "text"
+    ],
+    "BlogPosting": [
+      "author",
+      "dateModified",
+      "datePublished",
+      "description",
+      "headline",
+      "image",
+      "publisher",
+      "url"
+    ],
+    "BreadcrumbList": [
+      "itemListElement"
+    ],
+    "ContactPage": [
+      "description",
+      "mainEntity",
+      "name",
+      "url"
+    ],
+    "ContactPoint": [
+      "availableLanguage",
+      "contactType",
+      "email"
+    ],
+    "DefinedTerm": [
+      "alternateName",
+      "description",
+      "inDefinedTermSet",
+      "name",
+      "termCode",
+      "url"
+    ],
+    "DefinedTermSet": [
+      "name"
+    ],
+    "FAQPage": [
+      "mainEntity"
+    ],
+    "HowTo": [
+      "description",
+      "name",
+      "step",
+      "url"
+    ],
+    "HowToStep": [
+      "name",
+      "position",
+      "text"
+    ],
+    "ImageObject": [
+      "url"
+    ],
+    "ListItem": [
+      "item",
+      "name",
+      "position"
+    ],
+    "Offer": [
+      "name",
+      "price",
+      "priceCurrency",
+      "url"
+    ],
+    "Organization": [
+      "contactPoint",
+      "description",
+      "founder",
+      "logo",
+      "name",
+      "sameAs",
+      "url"
+    ],
+    "Person": [
+      "jobTitle",
+      "knowsAbout",
+      "name",
+      "sameAs",
+      "url",
+      "worksFor"
+    ],
+    "Question": [
+      "acceptedAnswer",
+      "name"
+    ],
+    "SoftwareApplication": [
+      "applicationCategory",
+      "description",
+      "downloadUrl",
+      "image",
+      "isAccessibleForFree",
+      "license",
+      "name",
+      "offers",
+      "operatingSystem",
+      "publisher",
+      "sameAs",
+      "softwareVersion",
+      "url"
+    ],
+    "TechArticle": [
+      "author",
+      "dateModified",
+      "datePublished",
+      "description",
+      "headline",
+      "image",
+      "publisher",
+      "url"
+    ],
+    "WebSite": [
+      "name",
+      "url"
+    ]
+  }
+}

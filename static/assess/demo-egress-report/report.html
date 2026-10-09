@@ -1,0 +1,1521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pipelock Agent Egress Report</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-card: rgba(255, 255, 255, 0.04);
+            --bg-hover: rgba(255, 255, 255, 0.07);
+            --bg-header: rgba(255, 255, 255, 0.06);
+            --border: rgba(255, 255, 255, 0.08);
+            --text-primary: #e2e8f0;
+            --text-secondary: #e2e8f0;
+            --text-muted: #94a3b8;
+            --text-dim: #64748b;
+            --text-footer: #64748b;
+            --color-red: #f44336;
+            --color-orange: #f97316;
+            --color-yellow: #eab308;
+            --color-green: #00CC66;
+            --color-blue: #00AEEF;
+            --color-accent: #00ffc8;
+            --color-purple: #7c3aed;
+            --mono: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+            --radius: 12px;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; }
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text-secondary);
+            font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.7;
+            padding: 2rem;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            overflow-x: hidden;
+        }
+
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .brand svg {
+            width: 40px;
+            height: 40px;
+            flex-shrink: 0;
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .risk-badge {
+            display: inline-block;
+            padding: 0.5rem 1.5rem;
+            border-radius: 9999px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            color: var(--bg-primary);
+            margin-bottom: 0.75rem;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+        }
+
+        .meta {
+            font-size: 0.8125rem;
+            color: var(--text-muted);
+        }
+
+        .meta span {
+            margin: 0 0.5rem;
+        }
+
+
+        .exec-summary {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 2rem;
+            font-size: 0.9375rem;
+            line-height: 1.7;
+            color: var(--text-muted);
+            border-left: 3px solid var(--color-blue);
+        }
+
+
+        h2 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        section {
+            margin-bottom: 1.25rem;
+        }
+
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 0.75rem;
+            margin-bottom: 2rem;
+        }
+
+        .kpi-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1rem;
+            text-align: center;
+            transition: border-color 0.2s;
+        }
+
+        .kpi-card:hover {
+            border-color: #334155;
+        }
+
+        .kpi-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .kpi-label {
+            font-size: 0.6875rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-top: 0.25rem;
+        }
+
+        .kpi-blocks .kpi-value { color: var(--color-orange); }
+        .kpi-warnings .kpi-value { color: var(--color-yellow); }
+        .kpi-criticals .kpi-value { color: var(--color-red); }
+        .kpi-total .kpi-value { color: var(--color-blue); }
+        .kpi-allowed .kpi-value { color: var(--color-green); }
+        .kpi-domains .kpi-value { color: var(--color-purple); }
+
+
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+            align-items: start;
+        }
+
+        .two-col > * {
+            min-width: 0;
+            margin-bottom: 0;
+        }
+
+
+        table {
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: collapse;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        th {
+            background: var(--bg-header);
+            color: var(--text-muted);
+            font-size: 0.6875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            padding: 0.625rem 0.75rem;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 0.5rem 0.75rem;
+            border-top: 1px solid var(--border);
+            font-size: 0.8125rem;
+            overflow-wrap: break-word;
+            word-break: break-all;
+        }
+
+        tr:hover {
+            background: var(--bg-hover);
+        }
+
+        .severity-badge {
+            display: inline-block;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.6875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+
+        .domain-bar {
+            display: flex;
+            height: 0.5rem;
+            border-radius: 0.25rem;
+            overflow: hidden;
+            min-width: 2px;
+        }
+
+        .domain-bar-block { background: var(--color-red); }
+        .domain-bar-warn { background: var(--color-yellow); }
+        .domain-bar-allowed { background: var(--color-green); }
+
+
+        .chart-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            overflow-x: auto;
+        }
+
+        .chart-svg {
+            display: block;
+            width: 100%;
+        }
+
+        .chart-bar:hover rect {
+            opacity: 0.8;
+        }
+
+        .chart-label {
+            fill: var(--text-dim);
+            font-size: 14px;
+            font-family: var(--mono);
+        }
+
+        .chart-legend {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            margin-top: 0.75rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .chart-legend-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+            margin-right: 0.375rem;
+            vertical-align: middle;
+        }
+
+
+        .evidence-group {
+            margin-bottom: 0.5rem;
+        }
+
+        .evidence-group summary {
+            cursor: pointer;
+            padding: 0.75rem 1rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            list-style: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .evidence-group summary::-webkit-details-marker { display: none; }
+
+        .evidence-group summary::before {
+            content: "\25B6";
+            font-size: 0.625rem;
+            margin-right: 0.75rem;
+            transition: transform 0.15s;
+            color: var(--text-dim);
+        }
+
+        .evidence-group[open] summary::before {
+            transform: rotate(90deg);
+        }
+
+        .evidence-group[open] summary {
+            border-radius: 0.5rem 0.5rem 0 0;
+            border-bottom-color: transparent;
+        }
+
+        .event-detail {
+            font-family: var(--mono);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            background: var(--bg-primary);
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border);
+            border-top: none;
+            border-radius: 0 0 0.5rem 0.5rem;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .event-time {
+            font-size: 0.6875rem;
+            color: var(--text-dim);
+            font-family: var(--mono);
+        }
+
+
+        .warning-banner {
+            background: #7f1d1d;
+            border: 1px solid var(--color-red);
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.875rem;
+        }
+
+
+        footer {
+            text-align: center;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+            font-size: 0.75rem;
+            color: var(--text-footer);
+        }
+
+        footer a {
+            color: #00ffc8;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        .footer-brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .footer-brand svg {
+            width: 14px;
+            height: 14px;
+            vertical-align: middle;
+        }
+
+        @media (max-width: 900px) {
+            .kpi-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            .two-col {
+                grid-template-columns: 1fr;
+            }
+            body {
+                padding: 1rem;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media print {
+            body { background: #fff; color: #1e293b; padding: 0.5rem; }
+            .container { max-width: 100%; }
+            .kpi-card, .chart-container, table, .exec-summary, .evidence-group summary {
+                background: #f8fafc; border-color: #e2e8f0;
+            }
+            .kpi-value, h1, h2, .evidence-group summary { color: #0f172a; }
+            .event-detail { background: #f1f5f9; }
+        }
+    </style>
+    <meta name="description" content="Synthetic Pipelock egress report for version 3.6.0, with signed sample events, scan findings, and blocked traffic from the example log.">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://pipelab.org/assess/demo-egress-report/">
+    <link rel="alternate" type="application/rss+xml" title="PipeLab RSS" href="https://pipelab.org/index.xml">
+    <meta property="og:title" content="Pipelock Agent Egress Report | PipeLab">
+    <meta property="og:description" content="Synthetic Pipelock egress report for version 3.6.0, with signed sample events, scan findings, and blocked traffic from the example log.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://pipelab.org/assess/demo-egress-report/">
+    <meta property="og:site_name" content="PipeLab">
+    <meta property="og:image" content="https://pipelab.org/images/og/og-assess.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@luckyPipewrench">
+    <meta name="twitter:title" content="Pipelock Agent Egress Report | PipeLab">
+    <meta name="twitter:description" content="Synthetic Pipelock egress report for version 3.6.0, with signed sample events, scan findings, and blocked traffic from the example log.">
+    <meta name="twitter:image" content="https://pipelab.org/images/og/og-assess.png">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="brand">
+                <svg viewBox="0 0 400 360" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M130 180 L130 110 C130 65 160 40 200 40 C240 40 270 65 270 110 L270 180" stroke="#00ffc8" stroke-width="28" stroke-linecap="round" fill="none"/>
+                    <rect x="114" y="165" width="32" height="16" rx="3" fill="#00ffc8" opacity="0.7"/>
+                    <rect x="254" y="165" width="32" height="16" rx="3" fill="#00ffc8" opacity="0.7"/>
+                    <rect x="90" y="180" width="220" height="160" rx="16" fill="#0a0a0f" stroke="#00ffc8" stroke-width="2.5"/>
+                    <circle cx="200" cy="248" r="18" fill="#00ffc8" opacity="0.9"/>
+                    <circle cx="200" cy="248" r="10" fill="#0a0a0f"/>
+                    <rect x="196" y="256" width="8" height="24" rx="3" fill="#00ffc8" opacity="0.9"/>
+                </svg>
+                <h1>Pipelock Agent Egress Report</h1>
+            </div>
+            <div class="risk-badge" style="background: #f44336;">HIGH RISK</div>
+            <div class="meta">
+                2026-03-28 09:00:01 UTC to 2026-03-28 09:59:59 UTC
+                <span>|</span> Mode: balanced
+                <span>|</span> v3.6.0
+            </div>
+        </header>
+<aside style="margin:1rem auto;max-width:60rem;padding:1rem"><strong>Synthetic demo bundle.</strong> Download the <a href="manifest.json">manifest</a>, <a href="manifest.json.sig">signature</a>, <a href="signer.pub">demo public key</a> and <a href="verify.txt">verification steps</a>. This key verifies sample integrity; it does not establish an operator identity or prove execution.</aside>
+
+
+
+
+
+        <div class="exec-summary">Over a 59-minute observation window, pipelock processed 44 requests across 25 unique domains. 6 critical events were detected, requiring immediate attention. 30 of 44 inspected requests (68%) were allowed without intervention.</div>
+
+
+        <section class="kpi-grid">
+            <div class="kpi-card kpi-total">
+                <div class="kpi-value">48</div>
+                <div class="kpi-label">Total Events</div>
+            </div>
+            <div class="kpi-card kpi-allowed">
+                <div class="kpi-value">30</div>
+                <div class="kpi-label">Allowed</div>
+            </div>
+            <div class="kpi-card kpi-blocks">
+                <div class="kpi-value">10</div>
+                <div class="kpi-label">Blocks</div>
+            </div>
+            <div class="kpi-card kpi-warnings">
+                <div class="kpi-value">4</div>
+                <div class="kpi-label">Warnings</div>
+            </div>
+            <div class="kpi-card kpi-criticals">
+                <div class="kpi-value">6</div>
+                <div class="kpi-label">Criticals</div>
+            </div>
+            <div class="kpi-card kpi-domains">
+                <div class="kpi-value">25</div>
+                <div class="kpi-label">Domains</div>
+            </div>
+        </section>
+
+
+
+
+        <section>
+            <h2>Activity Timeline</h2>
+            <div class="chart-container">
+                <svg class="chart-svg" viewBox="0 0 1000 220">
+
+
+
+                    <text x="133.3" y="12" text-anchor="middle" class="chart-label">20</text>
+
+
+                    <rect x="0.0" y="20.0" width="266.7" height="96.0" fill="#00CC66" opacity="0.85" rx="2">
+                        <title>09:00 | Allowed: 12 Warns: 0 Blocks: 8</title>
+                    </rect>
+
+
+
+                    <rect x="0.0" y="116.0" width="266.7" height="64.0" fill="#f44336" opacity="0.85" rx="2">
+                        <title>09:00 | Allowed: 12 Warns: 0 Blocks: 8</title>
+                    </rect>
+
+
+
+                    <text x="133.3" y="210" text-anchor="middle" class="chart-label">09:00</text>
+
+
+
+                    <text x="466.7" y="12" text-anchor="middle" class="chart-label">17</text>
+
+
+                    <rect x="333.3" y="44.0" width="266.7" height="104.0" fill="#00CC66" opacity="0.85" rx="2">
+                        <title>09:05 | Allowed: 13 Warns: 3 Blocks: 1</title>
+                    </rect>
+
+
+                    <rect x="333.3" y="148.0" width="266.7" height="24.0" fill="#eab308" opacity="0.85" rx="2">
+                        <title>09:05 | Allowed: 13 Warns: 3 Blocks: 1</title>
+                    </rect>
+
+
+                    <rect x="333.3" y="172.0" width="266.7" height="8.0" fill="#f44336" opacity="0.85" rx="2">
+                        <title>09:05 | Allowed: 13 Warns: 3 Blocks: 1</title>
+                    </rect>
+
+
+
+                    <text x="466.7" y="210" text-anchor="middle" class="chart-label">09:05</text>
+
+
+
+                    <text x="800.0" y="12" text-anchor="middle" class="chart-label">9</text>
+
+
+                    <rect x="666.7" y="108.0" width="266.7" height="64.0" fill="#00CC66" opacity="0.85" rx="2">
+                        <title>09:10 | Allowed: 8 Warns: 0 Blocks: 1</title>
+                    </rect>
+
+
+
+                    <rect x="666.7" y="172.0" width="266.7" height="8.0" fill="#f44336" opacity="0.85" rx="2">
+                        <title>09:10 | Allowed: 8 Warns: 0 Blocks: 1</title>
+                    </rect>
+
+
+
+                    <text x="800.0" y="210" text-anchor="middle" class="chart-label">09:10</text>
+
+                </svg>
+                <div class="chart-legend">
+                    <span><span class="chart-legend-dot" style="background: #f44336;"></span>Blocks</span>
+                    <span><span class="chart-legend-dot" style="background: #eab308;"></span>Warnings</span>
+                    <span><span class="chart-legend-dot" style="background: #00CC66;"></span>Allowed</span>
+                </div>
+            </div>
+        </section>
+
+
+        <div class="two-col">
+
+            <section>
+                <h2>Findings by Category</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Count</th>
+                            <th>Severity</th>
+                            <th>MITRE</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        <tr>
+                            <td>DLP / Exfiltration</td>
+                            <td>8</td>
+                            <td>
+                                <span class="severity-badge" style="background: #f44336; color: #1a1a1a;">
+                                    critical
+                                </span>
+                            </td>
+                            <td style="font-family: var(--mono); font-size: 0.75rem;">T1041, T1048.003</td>
+                        </tr>
+
+                        <tr>
+                            <td>Domain Policy</td>
+                            <td>2</td>
+                            <td>
+                                <span class="severity-badge" style="background: #f97316; color: #1a1a1a;">
+                                    high
+                                </span>
+                            </td>
+                            <td style="font-family: var(--mono); font-size: 0.75rem;">T1071.001</td>
+                        </tr>
+
+                        <tr>
+                            <td>MCP / Tool Abuse</td>
+                            <td>2</td>
+                            <td>
+                                <span class="severity-badge" style="background: #f97316; color: #1a1a1a;">
+                                    high
+                                </span>
+                            </td>
+                            <td style="font-family: var(--mono); font-size: 0.75rem;">T1059, T1059.007</td>
+                        </tr>
+
+                        <tr>
+                            <td>SSRF</td>
+                            <td>2</td>
+                            <td>
+                                <span class="severity-badge" style="background: #f97316; color: #1a1a1a;">
+                                    high
+                                </span>
+                            </td>
+                            <td style="font-family: var(--mono); font-size: 0.75rem;">T1552.005</td>
+                        </tr>
+
+                        <tr>
+                            <td>Prompt Injection</td>
+                            <td>1</td>
+                            <td>
+                                <span class="severity-badge" style="background: #f97316; color: #1a1a1a;">
+                                    high
+                                </span>
+                            </td>
+                            <td style="font-family: var(--mono); font-size: 0.75rem;">T1059.007</td>
+                        </tr>
+
+                    </tbody>
+                </table>
+            </section>
+
+
+
+            <section>
+                <h2>DLP by Surface</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>SURFACE</th>
+                            <th>BLOCKS</th>
+                            <th>WARNS</th>
+                            <th>TOTAL</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        <tr>
+                            <td>URL</td>
+                            <td style="color: #f44336;">6</td>
+                            <td style="color: #eab308;">0</td>
+                            <td>6</td>
+                        </tr>
+
+                        <tr>
+                            <td>Request Body</td>
+                            <td style="color: #f44336;">0</td>
+                            <td style="color: #eab308;">1</td>
+                            <td>1</td>
+                        </tr>
+
+                        <tr>
+                            <td>Request Header</td>
+                            <td style="color: #f44336;">0</td>
+                            <td style="color: #eab308;">1</td>
+                            <td>1</td>
+                        </tr>
+
+                    </tbody>
+                </table>
+            </section>
+
+        </div>
+
+        <div class="two-col">
+
+            <section>
+                <h2>Events by Source</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>AGENT</th>
+                            <th>BLOCKS</th>
+                            <th>WARNS</th>
+                            <th>ALLOWED</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        <tr>
+                            <td>[redacted]</td>
+                            <td style="color: #f44336;">10</td>
+                            <td style="color: #eab308;">3</td>
+                            <td style="color: #00CC66;">33</td>
+                        </tr>
+
+                    </tbody>
+                </table>
+            </section>
+
+
+
+            <section>
+                <h2>Events by Transport</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>TRANSPORT</th>
+                            <th>BLOCKS</th>
+                            <th>WARNS</th>
+                            <th>ALLOWED</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        <tr>
+                            <td>HTTP Fetch</td>
+                            <td style="color: #f44336;">10</td>
+                            <td style="color: #eab308;">2</td>
+                            <td style="color: #00CC66;">31</td>
+                        </tr>
+
+                        <tr>
+                            <td>MCP</td>
+                            <td style="color: #f44336;">0</td>
+                            <td style="color: #eab308;">1</td>
+                            <td style="color: #00CC66;">2</td>
+                        </tr>
+
+                    </tbody>
+                </table>
+            </section>
+
+        </div>
+
+
+            <section>
+                <h2>Top Domains</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Domain</th>
+                            <th style="text-align: right;">Total</th>
+                            <th style="width: 40%;">Breakdown</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        <tr>
+                            <td style="font-family: var(--mono); font-size: 0.75rem;">attacker.example.com</td>
+                            <td style="text-align: right;">2</td>
+                            <td>
+                                <div class="domain-bar">
+                                    <div class="domain-bar-block" style="flex: 2;" title="Blocks: 2"></div>
+
+
+                                </div>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td style="font-family: var(--mono); font-size: 0.75rem;">169.254.169.254</td>
+                            <td style="text-align: right;">1</td>
+                            <td>
+                                <div class="domain-bar">
+                                    <div class="domain-bar-block" style="flex: 1;" title="Blocks: 1"></div>
+
+
+                                </div>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td style="font-family: var(--mono); font-size: 0.75rem;">192.168.1.1</td>
+                            <td style="text-align: right;">1</td>
+                            <td>
+                                <div class="domain-bar">
+                                    <div class="domain-bar-block" style="flex: 1;" title="Blocks: 1"></div>
+
+
+                                </div>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td style="font-family: var(--mono); font-size: 0.75rem;">c2-server.example.com</td>
+                            <td style="text-align: right;">1</td>
+                            <td>
+                                <div class="domain-bar">
+                                    <div class="domain-bar-block" style="flex: 1;" title="Blocks: 1"></div>
+
+
+                                </div>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td style="font-family: var(--mono); font-size: 0.75rem;">evil-exfil.example.com</td>
+                            <td style="text-align: right;">1</td>
+                            <td>
+                                <div class="domain-bar">
+                                    <div class="domain-bar-block" style="flex: 1;" title="Blocks: 1"></div>
+
+
+                                </div>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td style="font-family: var(--mono); font-size: 0.75rem;">hnr4kx.oast.fun</td>
+                            <td style="text-align: right;">1</td>
+                            <td>
+                                <div class="domain-bar">
+                                    <div class="domain-bar-block" style="flex: 1;" title="Blocks: 1"></div>
+
+
+                                </div>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td style="font-family: var(--mono); font-size: 0.75rem;">malware-cdn.example.com</td>
+                            <td style="text-align: right;">1</td>
+                            <td>
+                                <div class="domain-bar">
+                                    <div class="domain-bar-block" style="flex: 1;" title="Blocks: 1"></div>
+
+
+                                </div>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td style="font-family: var(--mono); font-size: 0.75rem;">pastebin.com</td>
+                            <td style="text-align: right;">1</td>
+                            <td>
+                                <div class="domain-bar">
+                                    <div class="domain-bar-block" style="flex: 1;" title="Blocks: 1"></div>
+
+
+                                </div>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td style="font-family: var(--mono); font-size: 0.75rem;">webhook.site</td>
+                            <td style="text-align: right;">1</td>
+                            <td>
+                                <div class="domain-bar">
+                                    <div class="domain-bar-block" style="flex: 1;" title="Blocks: 1"></div>
+
+
+                                </div>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td style="font-family: var(--mono); font-size: 0.75rem;">api.github.com</td>
+                            <td style="text-align: right;">9</td>
+                            <td>
+                                <div class="domain-bar">
+
+
+                                    <div class="domain-bar-allowed" style="flex: 9;" title="Allowed: 9"></div>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td style="font-family: var(--mono); font-size: 0.75rem;">api.anthropic.com</td>
+                            <td style="text-align: right;">5</td>
+                            <td>
+                                <div class="domain-bar">
+
+
+                                    <div class="domain-bar-allowed" style="flex: 5;" title="Allowed: 5"></div>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td style="font-family: var(--mono); font-size: 0.75rem;">api.openai.com</td>
+                            <td style="text-align: right;">4</td>
+                            <td>
+                                <div class="domain-bar">
+
+
+                                    <div class="domain-bar-allowed" style="flex: 4;" title="Allowed: 4"></div>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td style="font-family: var(--mono); font-size: 0.75rem;">api.example.com</td>
+                            <td style="text-align: right;">2</td>
+                            <td>
+                                <div class="domain-bar">
+
+                                    <div class="domain-bar-warn" style="flex: 2;" title="Warns: 2"></div>
+
+                                </div>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td style="font-family: var(--mono); font-size: 0.75rem;">docs.python.org</td>
+                            <td style="text-align: right;">2</td>
+                            <td>
+                                <div class="domain-bar">
+
+
+                                    <div class="domain-bar-allowed" style="flex: 2;" title="Allowed: 2"></div>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td style="font-family: var(--mono); font-size: 0.75rem;">api.provider.example</td>
+                            <td style="text-align: right;">1</td>
+                            <td>
+                                <div class="domain-bar">
+
+
+                                    <div class="domain-bar-allowed" style="flex: 1;" title="Allowed: 1"></div>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td style="font-family: var(--mono); font-size: 0.75rem;">cdn.jsdelivr.net</td>
+                            <td style="text-align: right;">1</td>
+                            <td>
+                                <div class="domain-bar">
+
+
+                                    <div class="domain-bar-allowed" style="flex: 1;" title="Allowed: 1"></div>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td style="font-family: var(--mono); font-size: 0.75rem;">crates.io</td>
+                            <td style="text-align: right;">1</td>
+                            <td>
+                                <div class="domain-bar">
+
+
+                                    <div class="domain-bar-allowed" style="flex: 1;" title="Allowed: 1"></div>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td style="font-family: var(--mono); font-size: 0.75rem;">huggingface.co</td>
+                            <td style="text-align: right;">1</td>
+                            <td>
+                                <div class="domain-bar">
+
+
+                                    <div class="domain-bar-allowed" style="flex: 1;" title="Allowed: 1"></div>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td style="font-family: var(--mono); font-size: 0.75rem;">pypi.org</td>
+                            <td style="text-align: right;">1</td>
+                            <td>
+                                <div class="domain-bar">
+
+
+                                    <div class="domain-bar-allowed" style="flex: 1;" title="Allowed: 1"></div>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td style="font-family: var(--mono); font-size: 0.75rem;">registry.npmjs.org</td>
+                            <td style="text-align: right;">1</td>
+                            <td>
+                                <div class="domain-bar">
+
+
+                                    <div class="domain-bar-allowed" style="flex: 1;" title="Allowed: 1"></div>
+                                </div>
+                            </td>
+                        </tr>
+
+                    </tbody>
+                </table>
+            </section>
+
+
+
+            <section>
+                <h2>MITRE ATT&amp;CK Techniques</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>TECHNIQUE</th>
+                            <th>COUNT</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        <tr>
+                            <td><a href="https://attack.mitre.org/techniques/T1041" target="_blank" rel="noopener noreferrer" style="color: #00ffc8;">T1041</a></td>
+                            <td>7</td>
+                        </tr>
+
+                        <tr>
+                            <td><a href="https://attack.mitre.org/techniques/T1059.007" target="_blank" rel="noopener noreferrer" style="color: #00ffc8;">T1059.007</a></td>
+                            <td>2</td>
+                        </tr>
+
+                        <tr>
+                            <td><a href="https://attack.mitre.org/techniques/T1071.001" target="_blank" rel="noopener noreferrer" style="color: #00ffc8;">T1071.001</a></td>
+                            <td>2</td>
+                        </tr>
+
+                        <tr>
+                            <td><a href="https://attack.mitre.org/techniques/T1552.005" target="_blank" rel="noopener noreferrer" style="color: #00ffc8;">T1552.005</a></td>
+                            <td>2</td>
+                        </tr>
+
+                        <tr>
+                            <td><a href="https://attack.mitre.org/techniques/T1048.003" target="_blank" rel="noopener noreferrer" style="color: #00ffc8;">T1048.003</a></td>
+                            <td>1</td>
+                        </tr>
+
+                        <tr>
+                            <td><a href="https://attack.mitre.org/techniques/T1059" target="_blank" rel="noopener noreferrer" style="color: #00ffc8;">T1059</a></td>
+                            <td>1</td>
+                        </tr>
+
+                    </tbody>
+                </table>
+            </section>
+
+
+
+        <section>
+            <h2>Evidence Appendix (16 events)</h2>
+
+            <details class="evidence-group">
+                <summary>
+                    <span>
+                        <span style="color: #f44336;">blocked</span>
+                         <span style="color: var(--text-dim);">(dlp)</span>
+                        : DLP: Anthropic API Key
+                    </span>
+                    <span class="event-time">2026-03-28 09:02:00 UTC</span>
+                </summary>
+
+
+                <div class="event-detail">{
+  "time": "2026-03-28T09:02:00Z",
+  "level": "warn",
+  "event": "blocked",
+  "method": "GET",
+  "url": "https://evil-exfil.example.com",
+  "scanner": "dlp",
+  "reason": "DLP: Anthropic API Key",
+  "client_ip": "[redacted]",
+  "mitre_technique": "T1041",
+  "version": "3.6.0",
+  "pattern": "Anthropic API Key",
+  "severity": "critical",
+  "transport": "fetch",
+  "category": "credential_exfiltration"
+}</div>
+            </details>
+
+            <details class="evidence-group">
+                <summary>
+                    <span>
+                        <span style="color: #f44336;">blocked</span>
+                         <span style="color: var(--text-dim);">(dlp)</span>
+                        : DLP: GitHub Token
+                    </span>
+                    <span class="event-time">2026-03-28 09:02:05 UTC</span>
+                </summary>
+
+
+                <div class="event-detail">{
+  "time": "2026-03-28T09:02:05Z",
+  "level": "warn",
+  "event": "blocked",
+  "method": "POST",
+  "url": "https://pastebin.com",
+  "scanner": "dlp",
+  "reason": "DLP: GitHub Token",
+  "client_ip": "[redacted]",
+  "mitre_technique": "T1041",
+  "version": "3.6.0",
+  "pattern": "GitHub Token",
+  "severity": "critical",
+  "transport": "fetch",
+  "category": "credential_exfiltration"
+}</div>
+            </details>
+
+            <details class="evidence-group">
+                <summary>
+                    <span>
+                        <span style="color: #f44336;">blocked</span>
+                         <span style="color: var(--text-dim);">(dlp)</span>
+                        : DLP: OpenAI API Key
+                    </span>
+                    <span class="event-time">2026-03-28 09:02:10 UTC</span>
+                </summary>
+
+
+                <div class="event-detail">{
+  "time": "2026-03-28T09:02:10Z",
+  "level": "warn",
+  "event": "blocked",
+  "method": "POST",
+  "url": "https://webhook.site",
+  "scanner": "dlp",
+  "reason": "DLP: OpenAI API Key",
+  "client_ip": "[redacted]",
+  "mitre_technique": "T1041",
+  "version": "3.6.0",
+  "pattern": "OpenAI API Key",
+  "severity": "critical",
+  "transport": "forward",
+  "category": "credential_exfiltration"
+}</div>
+            </details>
+
+            <details class="evidence-group">
+                <summary>
+                    <span>
+                        <span style="color: #f44336;">blocked</span>
+                         <span style="color: var(--text-dim);">(dlp)</span>
+                        : DLP: AWS Access Key
+                    </span>
+                    <span class="event-time">2026-03-28 09:04:30 UTC</span>
+                </summary>
+
+
+                <div class="event-detail">{
+  "time": "2026-03-28T09:04:30Z",
+  "level": "warn",
+  "event": "blocked",
+  "method": "GET",
+  "url": "https://attacker.example.com",
+  "scanner": "dlp",
+  "reason": "DLP: AWS Access Key",
+  "client_ip": "[redacted]",
+  "mitre_technique": "T1041",
+  "version": "3.6.0",
+  "pattern": "AWS Access Key",
+  "severity": "critical",
+  "transport": "fetch",
+  "category": "credential_exfiltration"
+}</div>
+            </details>
+
+            <details class="evidence-group">
+                <summary>
+                    <span>
+                        <span style="color: #f44336;">body_dlp</span>
+                         <span style="color: var(--text-dim);">(body_dlp)</span>
+                        : DLP: Stripe Secret Key in request body
+                    </span>
+                    <span class="event-time">2026-03-28 09:05:30 UTC</span>
+                </summary>
+
+
+                <div class="event-detail">{
+  "time": "2026-03-28T09:05:30Z",
+  "level": "warn",
+  "event": "body_dlp",
+  "method": "POST",
+  "url": "https://api.example.com",
+  "scanner": "body_dlp",
+  "reason": "DLP: Stripe Secret Key in request body",
+  "client_ip": "[redacted]",
+  "mitre_technique": "T1041",
+  "version": "3.6.0",
+  "pattern": "Stripe Secret Key",
+  "severity": "critical",
+  "transport": "forward",
+  "category": "credential_exfiltration"
+}</div>
+            </details>
+
+            <details class="evidence-group">
+                <summary>
+                    <span>
+                        <span style="color: #f44336;">blocked</span>
+                         <span style="color: var(--text-dim);">(dlp)</span>
+                        : DLP: GitHub Personal Access Token
+                    </span>
+                    <span class="event-time">2026-03-28 09:10:30 UTC</span>
+                </summary>
+
+
+                <div class="event-detail">{
+  "time": "2026-03-28T09:10:30Z",
+  "level": "warn",
+  "event": "blocked",
+  "method": "GET",
+  "url": "https://attacker.example.com",
+  "scanner": "dlp",
+  "reason": "DLP: GitHub Personal Access Token",
+  "client_ip": "[redacted]",
+  "mitre_technique": "T1041",
+  "version": "3.6.0",
+  "pattern": "GitHub Personal Access Token",
+  "severity": "critical",
+  "transport": "forward",
+  "category": "credential_exfiltration"
+}</div>
+            </details>
+
+            <details class="evidence-group">
+                <summary>
+                    <span>
+                        <span style="color: #f97316;">blocked</span>
+                         <span style="color: var(--text-dim);">(ssrf)</span>
+                        : SSRF: link-local metadata service
+                    </span>
+                    <span class="event-time">2026-03-28 09:02:30 UTC</span>
+                </summary>
+
+
+                <div class="event-detail">{
+  "time": "2026-03-28T09:02:30Z",
+  "level": "warn",
+  "event": "blocked",
+  "method": "GET",
+  "url": "[redacted-url]",
+  "scanner": "ssrf",
+  "reason": "SSRF: link-local metadata service",
+  "client_ip": "[redacted]",
+  "mitre_technique": "T1552.005",
+  "version": "3.6.0",
+  "severity": "high",
+  "transport": "fetch",
+  "category": "ssrf"
+}</div>
+            </details>
+
+            <details class="evidence-group">
+                <summary>
+                    <span>
+                        <span style="color: #f97316;">blocked</span>
+                         <span style="color: var(--text-dim);">(ssrf)</span>
+                        : SSRF: private IP range
+                    </span>
+                    <span class="event-time">2026-03-28 09:02:35 UTC</span>
+                </summary>
+
+
+                <div class="event-detail">{
+  "time": "2026-03-28T09:02:35Z",
+  "level": "warn",
+  "event": "blocked",
+  "method": "GET",
+  "url": "[redacted-url]",
+  "scanner": "ssrf",
+  "reason": "SSRF: private IP range",
+  "client_ip": "[redacted]",
+  "mitre_technique": "T1552.005",
+  "version": "3.6.0",
+  "severity": "high",
+  "transport": "forward",
+  "category": "ssrf"
+}</div>
+            </details>
+
+            <details class="evidence-group">
+                <summary>
+                    <span>
+                        <span style="color: #f97316;">blocked</span>
+                         <span style="color: var(--text-dim);">(blocklist)</span>
+                        : blocklist: c2-server.example.com
+                    </span>
+                    <span class="event-time">2026-03-28 09:03:00 UTC</span>
+                </summary>
+
+
+                <div class="event-detail">{
+  "time": "2026-03-28T09:03:00Z",
+  "level": "warn",
+  "event": "blocked",
+  "method": "GET",
+  "url": "https://c2-server.example.com",
+  "scanner": "blocklist",
+  "reason": "blocklist: c2-server.example.com",
+  "client_ip": "[redacted]",
+  "mitre_technique": "T1071.001",
+  "version": "3.6.0",
+  "severity": "high",
+  "transport": "forward",
+  "category": "c2_communication"
+}</div>
+            </details>
+
+            <details class="evidence-group">
+                <summary>
+                    <span>
+                        <span style="color: #f97316;">blocked</span>
+                         <span style="color: var(--text-dim);">(blocklist)</span>
+                        : blocklist: malware-cdn.example.com
+                    </span>
+                    <span class="event-time">2026-03-28 09:03:05 UTC</span>
+                </summary>
+
+
+                <div class="event-detail">{
+  "time": "2026-03-28T09:03:05Z",
+  "level": "warn",
+  "event": "blocked",
+  "method": "GET",
+  "url": "https://malware-cdn.example.com",
+  "scanner": "blocklist",
+  "reason": "blocklist: malware-cdn.example.com",
+  "client_ip": "[redacted]",
+  "mitre_technique": "T1071.001",
+  "version": "3.6.0",
+  "severity": "high",
+  "transport": "forward",
+  "category": "c2_communication"
+}</div>
+            </details>
+
+            <details class="evidence-group">
+                <summary>
+                    <span>
+                        <span style="color: #f97316;">response_scan</span>
+                         <span style="color: var(--text-dim);">(response)</span>
+                        : injection: Prompt Injection
+                    </span>
+                    <span class="event-time">2026-03-28 09:05:00 UTC</span>
+                </summary>
+
+
+                <div class="event-detail">{
+  "time": "2026-03-28T09:05:00Z",
+  "level": "warn",
+  "event": "response_scan",
+  "url": "https://untrusted-api.example.com",
+  "scanner": "response",
+  "reason": "injection: Prompt Injection",
+  "client_ip": "[redacted]",
+  "mitre_technique": "T1059.007",
+  "version": "3.6.0",
+  "severity": "high",
+  "transport": "fetch",
+  "category": "prompt_injection"
+}</div>
+            </details>
+
+            <details class="evidence-group">
+                <summary>
+                    <span>
+                        <span style="color: #f97316;">header_dlp</span>
+                         <span style="color: var(--text-dim);">(header_dlp)</span>
+                        : DLP: Bearer token in non-Authorization header
+                    </span>
+                    <span class="event-time">2026-03-28 09:05:45 UTC</span>
+                </summary>
+
+
+                <div class="event-detail">{
+  "time": "2026-03-28T09:05:45Z",
+  "level": "warn",
+  "event": "header_dlp",
+  "method": "POST",
+  "url": "https://api.example.com",
+  "scanner": "header_dlp",
+  "reason": "DLP: Bearer token in non-Authorization header",
+  "client_ip": "[redacted]",
+  "mitre_technique": "T1041",
+  "version": "3.6.0",
+  "pattern": "Bearer Token Header",
+  "severity": "high",
+  "transport": "forward",
+  "category": "credential_exfiltration"
+}</div>
+            </details>
+
+            <details class="evidence-group">
+                <summary>
+                    <span>
+                        <span style="color: #f97316;">blocked</span>
+                         <span style="color: var(--text-dim);">(dlp)</span>
+                        : DLP: high entropy subdomain
+                    </span>
+                    <span class="event-time">2026-03-28 09:06:30 UTC</span>
+                </summary>
+
+
+                <div class="event-detail">{
+  "time": "2026-03-28T09:06:30Z",
+  "level": "warn",
+  "event": "blocked",
+  "method": "GET",
+  "url": "https://hnr4kx.oast.fun",
+  "scanner": "dlp",
+  "reason": "DLP: high entropy subdomain",
+  "client_ip": "[redacted]",
+  "mitre_technique": "T1048.003",
+  "version": "3.6.0",
+  "pattern": "Subdomain Entropy",
+  "severity": "high",
+  "transport": "fetch",
+  "category": "dns_exfiltration"
+}</div>
+            </details>
+
+            <details class="evidence-group">
+                <summary>
+                    <span>
+                        <span style="color: #f97316;">chain_detection</span>
+                         <span style="color: var(--text-dim);">(chain)</span>
+                        : chain: read-then-exec (file_read -&gt; bash_exec)
+                    </span>
+                    <span class="event-time">2026-03-28 09:07:00 UTC</span>
+                </summary>
+
+
+                <div class="event-detail">{
+  "time": "2026-03-28T09:07:00Z",
+  "level": "warn",
+  "event": "chain_detection",
+  "scanner": "chain",
+  "reason": "chain: read-then-exec (file_read -\u003e bash_exec)",
+  "client_ip": "[redacted]",
+  "mitre_technique": "T1059",
+  "version": "3.6.0",
+  "severity": "high",
+  "session": "sess-7f3a",
+  "tool": "bash_exec",
+  "transport": "mcp",
+  "category": "tool_chain"
+}</div>
+            </details>
+
+            <details class="evidence-group">
+                <summary>
+                    <span>
+                        <span style="color: #f97316;">mcp_unknown_tool</span>
+                         <span style="color: var(--text-dim);">(session_binding)</span>
+                        : unknown tool: data_exfil_helper (not in session baseline)
+                    </span>
+                    <span class="event-time">2026-03-28 09:07:15 UTC</span>
+                </summary>
+
+
+                <div class="event-detail">{
+  "time": "2026-03-28T09:07:15Z",
+  "level": "warn",
+  "event": "mcp_unknown_tool",
+  "scanner": "session_binding",
+  "reason": "unknown tool: data_exfil_helper (not in session baseline)",
+  "client_ip": "[redacted]",
+  "mitre_technique": "T1059.007",
+  "version": "3.6.0",
+  "severity": "high",
+  "session": "sess-2b9c",
+  "tool": "data_exfil_helper",
+  "transport": "mcp",
+  "category": "tool_poisoning"
+}</div>
+            </details>
+
+            <details class="evidence-group">
+                <summary>
+                    <span>
+                        <span style="color: #f97316;">anomaly</span>
+                         <span style="color: var(--text-dim);">(adaptive)</span>
+                        : anomaly: agent score escalated to 0.85 (threshold 0.7)
+                    </span>
+                    <span class="event-time">2026-03-28 09:07:30 UTC</span>
+                </summary>
+
+
+                <div class="event-detail">{
+  "time": "2026-03-28T09:07:30Z",
+  "level": "warn",
+  "event": "anomaly",
+  "scanner": "adaptive",
+  "reason": "anomaly: agent score escalated to 0.85 (threshold 0.7)",
+  "client_ip": "[redacted]",
+  "score": 0.85,
+  "version": "3.6.0",
+  "severity": "high",
+  "session": "sess-4d1e",
+  "transport": "mcp",
+  "category": "behavioral_anomaly"
+}</div>
+            </details>
+
+        </section>
+
+
+        <footer>
+            <span class="footer-brand">
+                <svg viewBox="0 0 400 360" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M130 180 L130 110 C130 65 160 40 200 40 C240 40 270 65 270 110 L270 180" stroke="#00ffc8" stroke-width="28" stroke-linecap="round" fill="none"/>
+                    <rect x="90" y="180" width="220" height="160" rx="16" fill="#0a0a0f" stroke="#00ffc8" stroke-width="2.5"/>
+                    <circle cx="200" cy="248" r="18" fill="#00ffc8" opacity="0.9"/>
+                    <circle cx="200" cy="248" r="10" fill="#0a0a0f"/>
+                    <rect x="196" y="256" width="8" height="24" rx="3" fill="#00ffc8" opacity="0.9"/>
+                </svg>
+                Generated by <a href="https://pipelab.org/pipelock">Pipelock</a> v3.6.0
+            </span>
+            <br>2026-10-03 02:12:33 UTC | Config: e4f7a2b1c9d3
+        </footer>
+    </div>
+</body>
+</html>

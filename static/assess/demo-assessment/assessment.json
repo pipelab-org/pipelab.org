@@ -1,0 +1,995 @@
+{
+  "schema_version": "2",
+  "manifest": {
+    "schema_version": "2",
+    "version": "3.6.0",
+    "build_sha": "unknown",
+    "run_id": "3fb02d78-a73c-40b4-8227-d6fb0cc5c335",
+    "config_file": "balanced.yaml",
+    "config_hash": "907c7f31920de261bfbb2d799da419bfa8fff74465050ee0521cf84a6faa8c56",
+    "license_tier": "assess",
+    "started_at": "2026-10-03T02:12:10.954596325Z",
+    "completed_at": "2026-10-03T02:12:11.471262197Z",
+    "finalized_at": "2026-10-03T02:12:11.605832352Z",
+    "git_commit": "3e868ac5d5b62d3a2790958542171143af8a0e38",
+    "platform": "linux/amd64",
+    "status": "finalized",
+    "skipped_primitives": [
+      "discover"
+    ],
+    "allow_partial": true,
+    "renderer_version": "2.0",
+    "scoring_version": "2",
+    "evidence_hashes": {
+      "audit-score.jsonl": "8b6133cf9e10915c7bae80d3e40c6cbfae5647b4208cf41c11ae28c727d935ae",
+      "simulate.jsonl": "47ee8fc662ae05093aab551db2b319e309f09f915f79ad9aefae29974aadf072",
+      "verify-install.jsonl": "1f22d97a28a7bca67d4e387982c1ea3f6763447f840be9b3933bd380fab498a1"
+    },
+    "compliance_omitted_reason": "assessment finalized with --allow-partial; framework coverage is only attached to fully-evidenced runs"
+  },
+  "overall_grade": "D",
+  "overall_score": 64,
+  "cap_reasons": [
+    {
+      "cap": "B",
+      "reason": "partial assessment (some primitives skipped)",
+      "source": "manifest",
+      "evidence_id": "allow-partial"
+    }
+  ],
+  "weights": {
+    "detection_coverage": 25,
+    "config_posture": 25,
+    "deployment_verification": 30,
+    "mcp_protection": 20
+  },
+  "sections": [
+    {
+      "schema_version": "2",
+      "id": "config_posture",
+      "name": "Config Posture",
+      "score": 51,
+      "max_score": 100,
+      "grade": "F",
+      "detail": "87/170 points",
+      "applicable": 23,
+      "total": 23
+    },
+    {
+      "schema_version": "2",
+      "id": "deployment_verification",
+      "name": "Deployment Verification",
+      "score": 50,
+      "max_score": 100,
+      "grade": "F",
+      "detail": "6/12 applicable checks passed",
+      "applicable": 12,
+      "total": 15
+    },
+    {
+      "schema_version": "2",
+      "id": "detection_coverage",
+      "name": "Detection Coverage",
+      "score": 95,
+      "max_score": 100,
+      "grade": "A",
+      "detail": "22/23 scenarios detected",
+      "applicable": 23,
+      "total": 26
+    },
+    {
+      "schema_version": "2",
+      "id": "mcp_protection",
+      "name": "MCP Protection",
+      "score": 0,
+      "max_score": 0,
+      "grade": "F",
+      "applicable": 0,
+      "total": 0
+    }
+  ],
+  "findings": [
+    {
+      "schema_version": "2",
+      "id": "find-sim-credential-solicitation",
+      "severity": "high",
+      "category": "Prompt Injection",
+      "source": "simulate",
+      "title": "Attack scenario \"Credential solicitation\" not detected",
+      "remediation": "Enable or strengthen the Prompt Injection scanner configuration. See pipelock documentation for recommended settings.",
+      "evidence": {
+        "category": "Prompt Injection",
+        "detected": false,
+        "scenario": "Credential solicitation"
+      }
+    },
+    {
+      "schema_version": "2",
+      "id": "find-verify-browser_shield",
+      "severity": "high",
+      "category": "scanning",
+      "source": "verify_install",
+      "title": "Verification check \"browser_shield\" failed: browser_shield is disabled in config",
+      "remediation": "Investigate why the browser_shield check failed. Run `pipelock diagnose` for detailed diagnostics.",
+      "evidence": {
+        "check": "browser_shield",
+        "detail": "browser_shield is disabled in config",
+        "status": "fail"
+      }
+    },
+    {
+      "schema_version": "2",
+      "id": "find-verify-file_sentry",
+      "severity": "high",
+      "category": "scanning",
+      "source": "verify_install",
+      "title": "Verification check \"file_sentry\" failed: file_sentry is disabled in config",
+      "remediation": "Investigate why the file_sentry check failed. Run `pipelock diagnose` for detailed diagnostics.",
+      "evidence": {
+        "check": "file_sentry",
+        "detail": "file_sentry is disabled in config",
+        "status": "fail"
+      }
+    },
+    {
+      "schema_version": "2",
+      "id": "find-verify-mcp_binary_integrity_smoke",
+      "severity": "high",
+      "category": "scanning",
+      "source": "verify_install",
+      "title": "Verification check \"mcp_binary_integrity_smoke\" failed: mcp_binary_integrity is disabled in config",
+      "remediation": "Investigate why the mcp_binary_integrity_smoke check failed. Run `pipelock diagnose` for detailed diagnostics.",
+      "evidence": {
+        "check": "mcp_binary_integrity_smoke",
+        "detail": "mcp_binary_integrity is disabled in config",
+        "status": "fail"
+      }
+    },
+    {
+      "schema_version": "2",
+      "id": "find-verify-mcp_tool_provenance_smoke",
+      "severity": "high",
+      "category": "scanning",
+      "source": "verify_install",
+      "title": "Verification check \"mcp_tool_provenance_smoke\" failed: mcp_tool_provenance is disabled in config",
+      "remediation": "Investigate why the mcp_tool_provenance_smoke check failed. Run `pipelock diagnose` for detailed diagnostics.",
+      "evidence": {
+        "check": "mcp_tool_provenance_smoke",
+        "detail": "mcp_tool_provenance is disabled in config",
+        "status": "fail"
+      }
+    },
+    {
+      "schema_version": "2",
+      "id": "find-verify-scanning_injection",
+      "severity": "high",
+      "category": "scanning",
+      "source": "verify_install",
+      "title": "Verification check \"scanning_injection\" failed: injection detection did not trigger",
+      "remediation": "Investigate why the scanning_injection check failed. Run `pipelock diagnose` for detailed diagnostics.",
+      "evidence": {
+        "check": "scanning_injection",
+        "detail": "injection detection did not trigger",
+        "status": "fail"
+      }
+    },
+    {
+      "schema_version": "2",
+      "id": "find-verify-scanning_websocket",
+      "severity": "high",
+      "category": "scanning",
+      "source": "verify_install",
+      "title": "Verification check \"scanning_websocket\" failed: websocket_proxy is disabled in config",
+      "remediation": "Investigate why the scanning_websocket check failed. Run `pipelock diagnose` for detailed diagnostics.",
+      "evidence": {
+        "check": "scanning_websocket",
+        "detail": "websocket_proxy is disabled in config",
+        "status": "fail"
+      }
+    },
+    {
+      "schema_version": "2",
+      "id": "find-audit-kill-switch-10",
+      "severity": "medium",
+      "category": "Kill Switch",
+      "source": "audit_score",
+      "title": "No kill switch sources configured — no emergency stop capability",
+      "remediation": "Configure kill switch with multiple sources (config, API, sentinel file).",
+      "evidence": {
+        "category": "Kill Switch",
+        "message": "No kill switch sources configured — no emergency stop capability"
+      }
+    },
+    {
+      "schema_version": "2",
+      "id": "find-audit-mcp-tool-policy-2",
+      "severity": "medium",
+      "category": "MCP Tool Policy",
+      "source": "audit_score",
+      "title": "Rule \"Recursive Permission Change\" matches high-risk tools but effective action is \"warn\" — consider 'block'",
+      "remediation": "Add tool policy rules to restrict dangerous tool calls. See docs/configuration.md.",
+      "evidence": {
+        "category": "MCP Tool Policy",
+        "message": "Rule \"Recursive Permission Change\" matches high-risk tools but effective action is \"warn\" — consider 'block'"
+      }
+    },
+    {
+      "schema_version": "2",
+      "id": "find-audit-mcp-tool-policy-3",
+      "severity": "medium",
+      "category": "MCP Tool Policy",
+      "source": "audit_score",
+      "title": "Rule \"Network Exfiltration\" matches high-risk tools but effective action is \"warn\" — consider 'block'",
+      "remediation": "Add tool policy rules to restrict dangerous tool calls. See docs/configuration.md.",
+      "evidence": {
+        "category": "MCP Tool Policy",
+        "message": "Rule \"Network Exfiltration\" matches high-risk tools but effective action is \"warn\" — consider 'block'"
+      }
+    },
+    {
+      "schema_version": "2",
+      "id": "find-audit-mcp-tool-policy-4",
+      "severity": "medium",
+      "category": "MCP Tool Policy",
+      "source": "audit_score",
+      "title": "Rule \"Package Install\" matches high-risk tools but effective action is \"warn\" — consider 'block'",
+      "remediation": "Add tool policy rules to restrict dangerous tool calls. See docs/configuration.md.",
+      "evidence": {
+        "category": "MCP Tool Policy",
+        "message": "Rule \"Package Install\" matches high-risk tools but effective action is \"warn\" — consider 'block'"
+      }
+    },
+    {
+      "schema_version": "2",
+      "id": "find-audit-mcp-tool-policy-5",
+      "severity": "medium",
+      "category": "MCP Tool Policy",
+      "source": "audit_score",
+      "title": "Rule \"Detached Process Spawning\" matches high-risk tools but effective action is \"warn\" — consider 'block'",
+      "remediation": "Add tool policy rules to restrict dangerous tool calls. See docs/configuration.md.",
+      "evidence": {
+        "category": "MCP Tool Policy",
+        "message": "Rule \"Detached Process Spawning\" matches high-risk tools but effective action is \"warn\" — consider 'block'"
+      }
+    },
+    {
+      "schema_version": "2",
+      "id": "find-audit-mcp-tool-policy-6",
+      "severity": "medium",
+      "category": "MCP Tool Policy",
+      "source": "audit_score",
+      "title": "Rule \"Audit Log Delete\" matches high-risk tools but effective action is \"warn\" — consider 'block'",
+      "remediation": "Add tool policy rules to restrict dangerous tool calls. See docs/configuration.md.",
+      "evidence": {
+        "category": "MCP Tool Policy",
+        "message": "Rule \"Audit Log Delete\" matches high-risk tools but effective action is \"warn\" — consider 'block'"
+      }
+    },
+    {
+      "schema_version": "2",
+      "id": "find-audit-mcp-tool-policy-7",
+      "severity": "medium",
+      "category": "MCP Tool Policy",
+      "source": "audit_score",
+      "title": "Rule \"Audit Log Write\" matches high-risk tools but effective action is \"warn\" — consider 'block'",
+      "remediation": "Add tool policy rules to restrict dangerous tool calls. See docs/configuration.md.",
+      "evidence": {
+        "category": "MCP Tool Policy",
+        "message": "Rule \"Audit Log Write\" matches high-risk tools but effective action is \"warn\" — consider 'block'"
+      }
+    },
+    {
+      "schema_version": "2",
+      "id": "find-audit-mcp-tool-policy-8",
+      "severity": "medium",
+      "category": "MCP Tool Policy",
+      "source": "audit_score",
+      "title": "Rule \"Audit Log Tampering\" matches high-risk tools but effective action is \"warn\" — consider 'block'",
+      "remediation": "Add tool policy rules to restrict dangerous tool calls. See docs/configuration.md.",
+      "evidence": {
+        "category": "MCP Tool Policy",
+        "message": "Rule \"Audit Log Tampering\" matches high-risk tools but effective action is \"warn\" — consider 'block'"
+      }
+    },
+    {
+      "schema_version": "2",
+      "id": "find-audit-mcp-tool-scanning-1",
+      "severity": "medium",
+      "category": "MCP Tool Scanning",
+      "source": "audit_score",
+      "title": "Tool scanning action is \"warn\" — poisoned tool descriptions won't be blocked",
+      "remediation": "Enable MCP tool scanning with `mcp_tool_scanning: {enabled: true, action: block}`.",
+      "evidence": {
+        "category": "MCP Tool Scanning",
+        "message": "Tool scanning action is \"warn\" — poisoned tool descriptions won't be blocked"
+      }
+    },
+    {
+      "schema_version": "2",
+      "id": "find-audit-redaction-13",
+      "severity": "medium",
+      "category": "Redaction",
+      "source": "audit_score",
+      "title": "Redaction is disabled — provider request/response bodies are not class-preserved",
+      "remediation": "Enable class-preserving redaction with `redaction: {enabled: true, default_profile: \u003cprofile\u003e}`. Configure a default profile and dictionaries, then set `strict_reload: true` for fail-closed dictionary failures.",
+      "evidence": {
+        "category": "Redaction",
+        "message": "Redaction is disabled — provider request/response bodies are not class-preserved"
+      }
+    },
+    {
+      "schema_version": "2",
+      "id": "find-audit-request-body-scanning-16",
+      "severity": "medium",
+      "category": "Request Body Scanning",
+      "source": "audit_score",
+      "title": "Request body scanning action is \"warn\" — consider 'block' for enforcement",
+      "remediation": "Enable request body scanning with `request_body_scanning: {enabled: true, action: block, scan_headers: true}` to catch secrets in POST/PUT bodies and authorization headers.",
+      "evidence": {
+        "category": "Request Body Scanning",
+        "message": "Request body scanning action is \"warn\" — consider 'block' for enforcement"
+      }
+    },
+    {
+      "schema_version": "2",
+      "id": "find-audit-response-scanning-0",
+      "severity": "medium",
+      "category": "Response Scanning",
+      "source": "audit_score",
+      "title": "Response scanning action is \"warn\" — consider 'block' or 'ask' for enforcement",
+      "remediation": "Enable response scanning with `response_scanning: {enabled: true, action: block}`.",
+      "evidence": {
+        "category": "Response Scanning",
+        "message": "Response scanning action is \"warn\" — consider 'block' or 'ask' for enforcement"
+      }
+    },
+    {
+      "schema_version": "2",
+      "id": "find-audit-address-protection-18",
+      "severity": "info",
+      "category": "Address Protection",
+      "source": "audit_score",
+      "title": "Address protection is disabled — blockchain address poisoning is not detected",
+      "remediation": "Enable blockchain address protection with `address_protection: {enabled: true, action: block, unknown_action: block, allowed_addresses: [\u003cyour-addresses\u003e]}`.",
+      "evidence": {
+        "category": "Address Protection",
+        "message": "Address protection is disabled — blockchain address poisoning is not detected"
+      }
+    },
+    {
+      "schema_version": "2",
+      "id": "find-audit-browser-shield-14",
+      "severity": "info",
+      "category": "Browser Shield",
+      "source": "audit_score",
+      "title": "Browser shield is disabled — fetch responses are not stripped of DOM traps or tracking pixels",
+      "remediation": "Enable browser shield with `browser_shield: {enabled: true, strictness: standard}`. Use `aggressive` for sensitive fetch destinations.",
+      "evidence": {
+        "category": "Browser Shield",
+        "message": "Browser shield is disabled — fetch responses are not stripped of DOM traps or tracking pixels"
+      }
+    },
+    {
+      "schema_version": "2",
+      "id": "find-audit-cross-request-detection-17",
+      "severity": "info",
+      "category": "Cross-Request Detection",
+      "source": "audit_score",
+      "title": "Cross-request detection is disabled — secrets split across multiple requests will not be reassembled",
+      "remediation": "Enable cross-request detection with `cross_request_detection: {enabled: true, entropy_budget: {enabled: true}, fragment_reassembly: {enabled: true}}` to catch secrets split across requests.",
+      "evidence": {
+        "category": "Cross-Request Detection",
+        "message": "Cross-request detection is disabled — secrets split across multiple requests will not be reassembled"
+      }
+    },
+    {
+      "schema_version": "2",
+      "id": "find-audit-file-sentry-20",
+      "severity": "info",
+      "category": "File Sentry",
+      "source": "audit_score",
+      "title": "File sentry is disabled — filesystem-watch DLP is inactive",
+      "remediation": "Enable filesystem-watch DLP with `file_sentry: {enabled: true, watch_paths: [\u003csensitive-paths\u003e]}`.",
+      "evidence": {
+        "category": "File Sentry",
+        "message": "File sentry is disabled — filesystem-watch DLP is inactive"
+      }
+    },
+    {
+      "schema_version": "2",
+      "id": "find-audit-git-protection-19",
+      "severity": "info",
+      "category": "Git Protection",
+      "source": "audit_score",
+      "title": "Git protection is disabled — pre-push secret scans and command gating are inactive",
+      "remediation": "Enable git-aware protection with `git_protection: {enabled: true, pre_push_scan: true, blocked_commands: [\"force-push\"]}`.",
+      "evidence": {
+        "category": "Git Protection",
+        "message": "Git protection is disabled — pre-push secret scans and command gating are inactive"
+      }
+    },
+    {
+      "schema_version": "2",
+      "id": "find-audit-live-lock-contracts-12",
+      "severity": "info",
+      "category": "Live-Lock Contracts",
+      "source": "audit_score",
+      "title": "Live-lock contracts are disabled — agent behavior drift is not gated",
+      "remediation": "Enable the live-lock contract gate with `learn_lock: {enabled: true, mode: live}`. Use `mode: shadow` first to observe drift before flipping to enforcement.",
+      "evidence": {
+        "category": "Live-Lock Contracts",
+        "message": "Live-lock contracts are disabled — agent behavior drift is not gated"
+      }
+    },
+    {
+      "schema_version": "2",
+      "id": "find-audit-mcp-session-binding-9",
+      "severity": "info",
+      "category": "MCP Session Binding",
+      "source": "audit_score",
+      "title": "MCP session binding is disabled — tool inventory changes mid-session won't be detected",
+      "remediation": "Enable session binding with `mcp_session_binding: {enabled: true}`.",
+      "evidence": {
+        "category": "MCP Session Binding",
+        "message": "MCP session binding is disabled — tool inventory changes mid-session won't be detected"
+      }
+    },
+    {
+      "schema_version": "2",
+      "id": "find-audit-mediation-envelope-15",
+      "severity": "info",
+      "category": "Mediation Envelope",
+      "source": "audit_score",
+      "title": "Mediation envelope is disabled — no federation verification of inbound or signed receipts on outbound",
+      "remediation": "Enable mediation envelope with `mediation_envelope: {enabled: true, sign: true, signing_key_path: \u003ced25519-key\u003e}` to produce signed receipts that downstream verifiers can attest.",
+      "evidence": {
+        "category": "Mediation Envelope",
+        "message": "Mediation envelope is disabled — no federation verification of inbound or signed receipts on outbound"
+      }
+    },
+    {
+      "schema_version": "2",
+      "id": "find-audit-sandbox-11",
+      "severity": "info",
+      "category": "Sandbox",
+      "source": "audit_score",
+      "title": "Sandbox is not enabled — agent processes run without containment",
+      "remediation": "Enable sandbox mode with `sandbox: {enabled: true}` in your pipelock config.",
+      "evidence": {
+        "category": "Sandbox",
+        "message": "Sandbox is not enabled — agent processes run without containment"
+      }
+    }
+  ],
+  "sources": {
+    "schema_version": "",
+    "simulate": {
+      "total": 26,
+      "passed": 22,
+      "failed": 1,
+      "known_limitations": 3,
+      "percentage": 95,
+      "grade": "A",
+      "mode": "",
+      "scenarios": [
+        {
+          "name": "AWS access key in URL path",
+          "category": "DLP Exfiltration",
+          "detected": true,
+          "detail": "core_dlp"
+        },
+        {
+          "name": "Base64-encoded GitHub token",
+          "category": "DLP Exfiltration",
+          "detected": true,
+          "detail": "core_dlp"
+        },
+        {
+          "name": "Hex-encoded Slack token",
+          "category": "DLP Exfiltration",
+          "detected": true,
+          "detail": "core_dlp"
+        },
+        {
+          "name": "Anthropic API key in text body",
+          "category": "DLP Exfiltration",
+          "detected": true,
+          "detail": "2 matches"
+        },
+        {
+          "name": "OpenAI API key in URL",
+          "category": "DLP Exfiltration",
+          "detected": true,
+          "detail": "dlp"
+        },
+        {
+          "name": "Private key (WIF format) in URL",
+          "category": "DLP Exfiltration",
+          "detected": true,
+          "detail": "dlp"
+        },
+        {
+          "name": "Classic instruction override",
+          "category": "Prompt Injection",
+          "detected": true,
+          "detail": "Prompt Injection, System Prompt Disclosure"
+        },
+        {
+          "name": "Leetspeak evasion",
+          "category": "Prompt Injection",
+          "detected": true,
+          "detail": "Prompt Injection, System Prompt Disclosure"
+        },
+        {
+          "name": "Base64-wrapped injection",
+          "category": "Prompt Injection",
+          "detected": true,
+          "detail": "Prompt Injection"
+        },
+        {
+          "name": "Credential solicitation",
+          "category": "Prompt Injection",
+          "detected": false
+        },
+        {
+          "name": "Memory persistence directive",
+          "category": "Prompt Injection",
+          "detected": true,
+          "detail": "Memory Persistence Directive, Memory Persistence Clause"
+        },
+        {
+          "name": "Role override (DAN jailbreak)",
+          "category": "Prompt Injection",
+          "detected": true,
+          "detail": "Role Override"
+        },
+        {
+          "name": "IMPORTANT tag in description",
+          "category": "Tool Poisoning",
+          "detected": true,
+          "detail": "1 matches"
+        },
+        {
+          "name": "Exfiltration in schema default",
+          "category": "Tool Poisoning",
+          "detected": true,
+          "detail": "1 matches"
+        },
+        {
+          "name": "Cross-tool manipulation",
+          "category": "Tool Poisoning",
+          "detected": true,
+          "detail": "1 matches"
+        },
+        {
+          "name": "Vendor extension with instructions",
+          "category": "Tool Poisoning",
+          "detected": true,
+          "detail": "1 matches"
+        },
+        {
+          "name": "URL-encoded secret in path",
+          "category": "URL Evasion",
+          "detected": true,
+          "detail": "core_dlp"
+        },
+        {
+          "name": "CRLF injection in URL",
+          "category": "URL Evasion",
+          "detected": true,
+          "detail": "crlf_injection"
+        },
+        {
+          "name": "Overlong URL",
+          "category": "URL Evasion",
+          "detected": true,
+          "detail": "length"
+        },
+        {
+          "name": "Path traversal",
+          "category": "URL Evasion",
+          "detected": true,
+          "detail": "path_traversal"
+        },
+        {
+          "name": "ETH address in text body",
+          "category": "Address Poisoning",
+          "detected": true,
+          "detail": "2 matches"
+        },
+        {
+          "name": "Lookalike ETH address (homoglyph)",
+          "category": "Address Poisoning",
+          "detected": true,
+          "detail": "2 matches",
+          "limitation": true
+        },
+        {
+          "name": "12-word BIP-39 mnemonic",
+          "category": "Seed Phrase",
+          "detected": true,
+          "detail": "1 matches"
+        },
+        {
+          "name": "Hidden privilege escalation in skill body",
+          "category": "Skill Poisoning",
+          "detected": false,
+          "detail": "missed by DLP; response-scanning required",
+          "limitation": true
+        },
+        {
+          "name": "Secret split across two text scans",
+          "category": "Split Payload",
+          "detected": false,
+          "detail": "partial1=0 partial2=0",
+          "limitation": true
+        },
+        {
+          "name": "Mixed-encoding chain (URL-encoded base64 of secret)",
+          "category": "URL Evasion",
+          "detected": true,
+          "detail": "core_dlp"
+        }
+      ]
+    },
+    "audit_score": {
+      "total_score": 87,
+      "max_score": 170,
+      "percentage": 51,
+      "grade": "F",
+      "categories": [
+        {
+          "name": "DLP",
+          "score": 15,
+          "max_score": 15,
+          "detail": "66 patterns"
+        },
+        {
+          "name": "Response Scanning",
+          "score": 7,
+          "max_score": 10,
+          "detail": "36 patterns, action=warn"
+        },
+        {
+          "name": "MCP Tool Scanning",
+          "score": 7,
+          "max_score": 10,
+          "detail": "action=warn"
+        },
+        {
+          "name": "MCP Tool Policy",
+          "score": 15,
+          "max_score": 15,
+          "detail": "30 rules"
+        },
+        {
+          "name": "MCP Input Scanning",
+          "score": 5,
+          "max_score": 5
+        },
+        {
+          "name": "MCP Session Binding",
+          "score": 0,
+          "max_score": 5
+        },
+        {
+          "name": "Kill Switch",
+          "score": 0,
+          "max_score": 10,
+          "detail": "0 sources"
+        },
+        {
+          "name": "Enforcement",
+          "score": 8,
+          "max_score": 10,
+          "detail": "mode=balanced, enforce=true"
+        },
+        {
+          "name": "Domain Blocklist",
+          "score": 5,
+          "max_score": 5,
+          "detail": "6 entries"
+        },
+        {
+          "name": "Adaptive Enforcement",
+          "score": 5,
+          "max_score": 5
+        },
+        {
+          "name": "Tool Chain Detection",
+          "score": 3,
+          "max_score": 5
+        },
+        {
+          "name": "Sandbox",
+          "score": 0,
+          "max_score": 5
+        },
+        {
+          "name": "Live-Lock Contracts",
+          "score": 0,
+          "max_score": 10
+        },
+        {
+          "name": "Redaction",
+          "score": 0,
+          "max_score": 10
+        },
+        {
+          "name": "Browser Shield",
+          "score": 0,
+          "max_score": 5
+        },
+        {
+          "name": "Mediation Envelope",
+          "score": 0,
+          "max_score": 5
+        },
+        {
+          "name": "Flight Recorder",
+          "score": 5,
+          "max_score": 5
+        },
+        {
+          "name": "Request Body Scanning",
+          "score": 7,
+          "max_score": 10
+        },
+        {
+          "name": "Cross-Request Detection",
+          "score": 0,
+          "max_score": 5
+        },
+        {
+          "name": "Address Protection",
+          "score": 0,
+          "max_score": 5
+        },
+        {
+          "name": "Seed-Phrase Detection",
+          "score": 5,
+          "max_score": 5
+        },
+        {
+          "name": "Git Protection",
+          "score": 0,
+          "max_score": 5
+        },
+        {
+          "name": "File Sentry",
+          "score": 0,
+          "max_score": 5
+        }
+      ],
+      "findings": [
+        {
+          "severity": "warning",
+          "category": "Response Scanning",
+          "message": "Response scanning action is \"warn\" — consider 'block' or 'ask' for enforcement"
+        },
+        {
+          "severity": "warning",
+          "category": "MCP Tool Scanning",
+          "message": "Tool scanning action is \"warn\" — poisoned tool descriptions won't be blocked"
+        },
+        {
+          "severity": "warning",
+          "category": "MCP Tool Policy",
+          "message": "Rule \"Recursive Permission Change\" matches high-risk tools but effective action is \"warn\" — consider 'block'"
+        },
+        {
+          "severity": "warning",
+          "category": "MCP Tool Policy",
+          "message": "Rule \"Network Exfiltration\" matches high-risk tools but effective action is \"warn\" — consider 'block'"
+        },
+        {
+          "severity": "warning",
+          "category": "MCP Tool Policy",
+          "message": "Rule \"Package Install\" matches high-risk tools but effective action is \"warn\" — consider 'block'"
+        },
+        {
+          "severity": "warning",
+          "category": "MCP Tool Policy",
+          "message": "Rule \"Detached Process Spawning\" matches high-risk tools but effective action is \"warn\" — consider 'block'"
+        },
+        {
+          "severity": "warning",
+          "category": "MCP Tool Policy",
+          "message": "Rule \"Audit Log Delete\" matches high-risk tools but effective action is \"warn\" — consider 'block'"
+        },
+        {
+          "severity": "warning",
+          "category": "MCP Tool Policy",
+          "message": "Rule \"Audit Log Write\" matches high-risk tools but effective action is \"warn\" — consider 'block'"
+        },
+        {
+          "severity": "warning",
+          "category": "MCP Tool Policy",
+          "message": "Rule \"Audit Log Tampering\" matches high-risk tools but effective action is \"warn\" — consider 'block'"
+        },
+        {
+          "severity": "info",
+          "category": "MCP Session Binding",
+          "message": "MCP session binding is disabled — tool inventory changes mid-session won't be detected"
+        },
+        {
+          "severity": "warning",
+          "category": "Kill Switch",
+          "message": "No kill switch sources configured — no emergency stop capability"
+        },
+        {
+          "severity": "info",
+          "category": "Sandbox",
+          "message": "Sandbox is not enabled — agent processes run without containment"
+        },
+        {
+          "severity": "info",
+          "category": "Live-Lock Contracts",
+          "message": "Live-lock contracts are disabled — agent behavior drift is not gated"
+        },
+        {
+          "severity": "warning",
+          "category": "Redaction",
+          "message": "Redaction is disabled — provider request/response bodies are not class-preserved"
+        },
+        {
+          "severity": "info",
+          "category": "Browser Shield",
+          "message": "Browser shield is disabled — fetch responses are not stripped of DOM traps or tracking pixels"
+        },
+        {
+          "severity": "info",
+          "category": "Mediation Envelope",
+          "message": "Mediation envelope is disabled — no federation verification of inbound or signed receipts on outbound"
+        },
+        {
+          "severity": "warning",
+          "category": "Request Body Scanning",
+          "message": "Request body scanning action is \"warn\" — consider 'block' for enforcement"
+        },
+        {
+          "severity": "info",
+          "category": "Cross-Request Detection",
+          "message": "Cross-request detection is disabled — secrets split across multiple requests will not be reassembled"
+        },
+        {
+          "severity": "info",
+          "category": "Address Protection",
+          "message": "Address protection is disabled — blockchain address poisoning is not detected"
+        },
+        {
+          "severity": "info",
+          "category": "Git Protection",
+          "message": "Git protection is disabled — pre-push secret scans and command gating are inactive"
+        },
+        {
+          "severity": "info",
+          "category": "File Sentry",
+          "message": "File sentry is disabled — filesystem-watch DLP is inactive"
+        }
+      ],
+      "config_file": "configs/balanced.yaml"
+    },
+    "verify_install": {
+      "version": "3.6.0",
+      "timestamp": "2026-10-03T02:12:11Z",
+      "config_file": "configs/balanced.yaml",
+      "scope": "Synthetic checks with a temporary proxy and controlled fixtures; does not verify real client routing. DNS-based SSRF and environment leak scanning are disabled for fixtures.",
+      "run_context": "host",
+      "checks": [
+        {
+          "name": "config_valid",
+          "category": "scanning",
+          "status": "pass",
+          "detail": "Config validated with warnings: tls_interception: TLS interception is disabled while the forward proxy accepts CONNECT tunnels. HTTPS traffic is not decrypted, so content scanning (request_body_scanning, response_scanning, path/query entropy, and body DLP) does not inspect HTTPS request paths, bodies, or responses. Pipelock still enforces controls that evaluate from CONNECT metadata or tunnel accounting (destination allowlist/blocklist, SSRF on the CONNECT host, rate limits, data budget, CONNECT handshake-header DLP, kill switch, and receipt gates); request_policy and contract rules that match inner HTTPS method, path, query, headers, or body require tls_interception. Enable tls_interception (and distribute its CA) to scan HTTPS content, or accept tunnel-level-only visibility for HTTPS content as a deliberate posture.",
+          "evidence": {
+            "warning_1": "tls_interception: TLS interception is disabled while the forward proxy accepts CONNECT tunnels. HTTPS traffic is not decrypted, so content scanning (request_body_scanning, response_scanning, path/query entropy, and body DLP) does not inspect HTTPS request paths, bodies, or responses. Pipelock still enforces controls that evaluate from CONNECT metadata or tunnel accounting (destination allowlist/blocklist, SSRF on the CONNECT host, rate limits, data budget, CONNECT handshake-header DLP, kill switch, and receipt gates); request_policy and contract rules that match inner HTTPS method, path, query, headers, or body require tls_interception. Enable tls_interception (and distribute its CA) to scan HTTPS content, or accept tunnel-level-only visibility for HTTPS content as a deliberate posture."
+          }
+        },
+        {
+          "name": "proxy_health",
+          "category": "scanning",
+          "status": "pass",
+          "detail": "/health responded 200"
+        },
+        {
+          "name": "fetch_dlp",
+          "category": "scanning",
+          "status": "pass",
+          "detail": "DLP blocked secret exfiltration",
+          "evidence": {
+            "reason": "core DLP match: AWS Access ID (critical)",
+            "scanner": "dlp"
+          }
+        },
+        {
+          "name": "forward_blocked",
+          "category": "scanning",
+          "status": "pass",
+          "detail": "Blocklisted CONNECT rejected"
+        },
+        {
+          "name": "scanning_websocket",
+          "category": "scanning",
+          "status": "fail",
+          "detail": "websocket_proxy is disabled in config"
+        },
+        {
+          "name": "scanning_dlp",
+          "category": "scanning",
+          "status": "pass",
+          "detail": "DLP caught secret in MCP input",
+          "evidence": {
+            "outcome": "deny"
+          }
+        },
+        {
+          "name": "scanning_injection",
+          "category": "scanning",
+          "status": "fail",
+          "detail": "injection detection did not trigger"
+        },
+        {
+          "name": "scanning_policy",
+          "category": "scanning",
+          "status": "pass",
+          "detail": "Tool policy denied rm -rf",
+          "evidence": {
+            "outcome": "deny"
+          }
+        },
+        {
+          "name": "browser_shield",
+          "category": "scanning",
+          "status": "fail",
+          "detail": "browser_shield is disabled in config"
+        },
+        {
+          "name": "file_sentry",
+          "category": "scanning",
+          "status": "fail",
+          "detail": "file_sentry is disabled in config"
+        },
+        {
+          "name": "mcp_binary_integrity_smoke",
+          "category": "scanning",
+          "status": "fail",
+          "detail": "mcp_binary_integrity is disabled in config"
+        },
+        {
+          "name": "mcp_tool_provenance_smoke",
+          "category": "scanning",
+          "status": "fail",
+          "detail": "mcp_tool_provenance is disabled in config"
+        },
+        {
+          "name": "no_direct_http",
+          "category": "containment",
+          "status": "not_applicable",
+          "detail": "running on host; egress probes require container/pod boundary"
+        },
+        {
+          "name": "no_direct_dns",
+          "category": "containment",
+          "status": "not_applicable",
+          "detail": "running on host; egress probes require container/pod boundary"
+        },
+        {
+          "name": "no_direct_https",
+          "category": "containment",
+          "status": "not_applicable",
+          "detail": "running on host; egress probes require container/pod boundary"
+        }
+      ],
+      "summary": {
+        "total": 15,
+        "passed": 6,
+        "failed": 6,
+        "not_applicable": 3,
+        "scanning": "degraded",
+        "containment": "unknown"
+      }
+    }
+  },
+  "signed": true
+}

@@ -1,0 +1,32 @@
+name: AI PR Review
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  review:
+    if: >-
+      github.actor == 'luckyPipewrench' &&
+      github.triggering_actor == 'luckyPipewrench' &&
+      github.event.comment.user.login == 'luckyPipewrench' &&
+      github.event.comment.author_association == 'OWNER' &&
+      github.event.issue.pull_request &&
+      (github.event.comment.body == '/review' ||
+       github.event.comment.body == '/review deep')
+    # Keep both pins equal until the nested source identity is verified live.
+    uses: luckyPipewrench/pipelock/.github/workflows/pr-review-reusable.yaml@3e8534e0dd621c62879238cc01d56f7e58e9d096
+    with:
+      reviewer_sha: 3e8534e0dd621c62879238cc01d56f7e58e9d096
+      pr_number: ${{ github.event.issue.number }}
+      review_mode: >-
+        ${{ github.event.comment.body == '/review deep' && 'deep' ||
+        'default' }}
+    secrets:
+      review_token: ${{ secrets.GITHUB_TOKEN }}
+      openai_api_key: ${{ secrets.OPENAI_API_KEY }}

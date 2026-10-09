@@ -1,0 +1,19 @@
+{{- $entry := .entry -}}
+{{- $context := .context -}}
+{{- $hasImg := false -}}
+{{- if $entry.brand -}}
+  {{- if ne (len (findRE `^[a-z0-9]+(-[a-z0-9]+)*$` (printf "%v" $entry.brand))) 1 -}}
+    {{- errorf "%s %q: invalid brand slug %q" $context $entry.name $entry.brand -}}
+  {{- end -}}
+{{- else if $entry.img -}}
+  {{- if ne (len (findRE `^/([A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\.[A-Za-z0-9]+$` (printf "%v" $entry.img))) 1 -}}
+    {{- errorf "%s %q: invalid image path %q" $context $entry.name $entry.img -}}
+  {{- else if not (fileExists (printf "static%s" $entry.img)) -}}
+    {{- errorf "%s %q: image asset %q is missing" $context $entry.name $entry.img -}}
+  {{- else -}}
+    {{- $hasImg = true -}}
+  {{- end -}}
+{{- else if .required -}}
+  {{- errorf "%s %q: official mark is missing" $context $entry.name -}}
+{{- end -}}
+{{- return $hasImg -}}

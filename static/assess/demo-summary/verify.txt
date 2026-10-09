@@ -1,0 +1,17 @@
+Demo bundle verification
+
+Download all files listed in manifest.json, plus manifest.json.sig and signer.pub. Keep the directory structure. Import this synthetic demo key into a separate keystore:
+
+  pipelock trust sample-agent signer.pub --keystore ./demo-trust
+
+Verify the manifest signature:
+
+  pipelock verify manifest.json --agent sample-agent --keystore ./demo-trust
+
+For assessment and summary bundles, also verify artifact hashes:
+
+  pipelock assess verify . --agent sample-agent --keystore ./demo-trust
+
+This verifies sample integrity against the supplied demo key. It does not authenticate an operator or prove execution.
+
+Evidence format: audit-score.jsonl starts with one aggregate ScoreResult, followed by individual ScoreFinding records. The assessment finalizer reads the first line as the configuration score; the following records are finding detail, not additional scores.

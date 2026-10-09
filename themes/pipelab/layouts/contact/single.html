@@ -1,0 +1,243 @@
+{{ define "main" }}
+{{/* Bespoke /contact/ template — overrides _default/single.html.
+
+     Form-primary translation of Claude Design's "Contact v2.html" prototype.
+     The form remains the primary call to action. Direct email and the
+     GitHub security-advisory route sit beside it; social handles live in
+     the markdown body link list and global footer. Visitors who skip the form
+     can find them there.
+
+     The form POSTs to /api/contact on the same Cloudflare Worker, where
+     it's verified by Turnstile and delivered to contact@pipelab.org via
+     Resend. Cloudflare Email Routing forwards contact@ to
+     luckypipe@pipelab.org.
+
+     Markdown body still renders {{ .Content }} so the markdown alternate
+     output and the audit's inbound-link counter pick up the link list at
+     the bottom of content/contact.md (which is also where GitHub / X /
+     LinkedIn URLs live for crawlers and the link audit). */}}
+
+{{ $turnstileKey := site.Params.turnstile_site_key | default "" }}
+
+<article id="top" class="contact-product">
+
+  {{/* ── Hero ─────────────────────────────────────────── */}}
+<section class="contact-hero" data-hero="utility" data-fx="reveal">
+    <div class="contact-hero-inner">
+      <p class="contact-eyebrow">
+        Contact PipeLab
+      </p>
+      <h1 class="contact-headline">
+        <span>{{ with .Params.headline }}{{ . }}{{ else }}{{ .Title }}{{ end }}</span>
+        {{ with .Params.headline_accent }}<span class="contact-headline-accent">{{ . }}</span>{{ end }}
+      </h1>
+      <p class="contact-lead">
+        {{ with .Params.lead }}{{ . }}{{ else }}Tell us what you're working on. Sales, support, security disclosures, and press all land in the same inbox, routed by topic.{{ end }}
+      </p>
+      {{ partial "page-formats.html" . }}
+    </div>
+  </section>
+
+  {{/* ── Form (primary action) ────────────────────────── */}}
+  <section class="contact-section contact-form-section" id="message" aria-labelledby="form-h">
+    <div class="contact-conversion">
+      <aside class="contact-route-card" data-fx="reveal spotlight" aria-labelledby="contact-route-h">
+        <p class="contact-route-eyebrow">Route</p>
+        <h2 id="contact-route-h" class="contact-route-title">Pick the shortest path</h2>
+        <p class="contact-route-lead">Use the form for a normal conversation, or go straight to the right channel.</p>
+
+        <div class="contact-route-list">
+          <a class="contact-route-row" href="https://buy.polar.sh/polar_cl_ff23dTaTesK9RZrtU3nJqsjQJjRS3pFJCTRcR129P9L"
+             target="_blank" rel="noopener noreferrer"
+             data-event="checkout_started" data-event-placement="contact-route" data-event-value="pro_trial">
+            <span class="contact-route-index" aria-hidden="true">01</span>
+            <span class="contact-route-copy">
+              <strong>30-day Pro trial</strong>
+              <span>No card. No automatic conversion.</span>
+            </span>
+            <span class="contact-route-arrow" aria-hidden="true">→</span>
+          </a>
+          <a class="contact-route-row" href="https://github.com/luckyPipewrench/pipelock/security/advisories/new"
+             target="_blank" rel="noopener noreferrer"
+             data-event="security_disclosure_click" data-event-placement="contact-route">
+            <span class="contact-route-index" aria-hidden="true">02</span>
+            <span class="contact-route-copy">
+              <strong>Security disclosure</strong>
+              <span>Open a private GitHub advisory.</span>
+            </span>
+            <span class="contact-route-arrow" aria-hidden="true">↗</span>
+          </a>
+          <a class="contact-route-row" href="mailto:luckypipe@pipelab.org"
+             data-event="email_click" data-event-placement="contact-route">
+            <span class="contact-route-index" aria-hidden="true">03</span>
+            <span class="contact-route-copy">
+              <strong>Email directly</strong>
+              <span>luckypipe@pipelab.org</span>
+            </span>
+            <span class="contact-route-arrow" aria-hidden="true">→</span>
+          </a>
+        </div>
+
+        <p class="contact-route-note">Support, licensing, partnerships, and press can all use the form.</p>
+      </aside>
+
+      <div class="contact-form-shell" data-fx="reveal">
+        <div class="contact-form-head">
+          <p class="contact-form-eyebrow">Send</p>
+          <h2 id="form-h" class="contact-form-h2" data-fx="decrypt">Drop us a line</h2>
+        </div>
+
+      {{/* Success panel: replaces the form on a 200 from /api/contact. */}}
+      <div class="contact-form-status-panel" id="contact-form-status-panel" role="status" aria-live="polite" hidden>
+        <p class="contact-form-status-eyebrow">Sent</p>
+        <p class="contact-form-status-msg" id="contact-form-status-msg"></p>
+      </div>
+
+      {{/* No-JS result panels: the Worker redirects native form submissions
+           back to one of these fragments. */}}
+      <div class="contact-form-native-panel contact-form-native-success" id="message-sent" role="status">
+        <p class="contact-form-status-eyebrow">Sent</p>
+        <p class="contact-form-status-msg">Message received. We'll be in touch.</p>
+      </div>
+      <div class="contact-form-native-panel contact-form-native-error" id="message-error" role="alert">
+        <p class="contact-form-status-eyebrow">Not sent</p>
+        <p class="contact-form-status-msg">We couldn't send that message. Try the form again or <a href="mailto:luckypipe@pipelab.org">email us directly</a>.</p>
+      </div>
+
+      <form class="contact-form-card" id="contact-form" action="/api/contact" method="post" novalidate
+            data-event="contact_form_submit" data-event-placement="contact-form">
+        <div class="contact-form-field-row">
+          <div class="contact-form-field">
+            <label class="contact-form-field-label" for="contact-name">
+              <span>Name <span class="contact-form-req">*</span></span>
+            </label>
+            <input class="contact-form-input" type="text" id="contact-name" name="name"
+                   autocomplete="name" maxlength="200" required>
+            <p class="contact-form-field-error">Add your name so we know who's writing.</p>
+          </div>
+          <div class="contact-form-field">
+            <label class="contact-form-field-label" for="contact-email">
+              <span>Email <span class="contact-form-req">*</span></span>
+            </label>
+            <input class="contact-form-input" type="email" id="contact-email" name="email"
+                   autocomplete="email" inputmode="email" maxlength="254"
+                   placeholder="you@company.com" required>
+            <p class="contact-form-field-error">Enter a valid email so we can reply.</p>
+          </div>
+        </div>
+
+        <div class="contact-form-field">
+          <label class="contact-form-field-label" for="contact-reason">
+            <span>What's this about? <span class="contact-form-req">*</span></span>
+          </label>
+          <select class="contact-form-input contact-form-select" id="contact-reason" name="reason" required>
+            <option value="" disabled selected>Pick a topic</option>
+            <option value="trial">30-day Pro trial</option>
+            <option value="general">General</option>
+            <option value="sales">Sales / pricing</option>
+            <option value="support">Pipelock support</option>
+            <option value="security">Security disclosure</option>
+            <option value="press">Press / podcast</option>
+          </select>
+          <p class="contact-form-field-error">Pick a topic so we can route this.</p>
+        </div>
+
+        <div class="contact-form-field">
+          <label class="contact-form-field-label" for="contact-message">
+            <span>Message <span class="contact-form-req">*</span></span>
+            <span class="contact-form-charcount" id="contact-form-charcount">0 / 4,000</span>
+          </label>
+          <textarea class="contact-form-input contact-form-textarea" id="contact-message"
+                    name="message" rows="6" maxlength="4000"
+                    placeholder="A few lines about what you're trying to do, what's in the way, and any deadlines or version numbers."
+                    required></textarea>
+          <p class="contact-form-field-error">Add a few lines so we can help.</p>
+        </div>
+
+        {{/* Honeypot: visually hidden, off the tab order. Bots fill it,
+             real users never see it. The Worker silently 200s on any
+             non-empty value so bots get no signal. */}}
+        <div class="contact-form-honeypot" aria-hidden="true">
+          <label for="contact-website">Website (leave blank)</label>
+          <input id="contact-website" type="text" name="website" tabindex="-1" autocomplete="off">
+        </div>
+
+        <div class="contact-form-field">
+          <span class="contact-form-field-label">
+            <span>Bot check</span>
+            <span class="contact-form-hint">Cloudflare Turnstile</span>
+          </span>
+          {{ if $turnstileKey }}
+          <div class="contact-form-turnstile-wrap">
+            <div class="cf-turnstile" data-sitekey="{{ $turnstileKey }}" data-theme="dark"></div>
+          </div>
+          {{ else }}
+          <div class="contact-form-turnstile-placeholder" role="status" aria-label="Turnstile widget area">
+            <span class="contact-form-turnstile-text">Turnstile widget area · setup pending</span>
+          </div>
+          {{ end }}
+        </div>
+
+        <div class="contact-form-submit-row">
+          <button type="submit" class="contact-form-submit"
+                  id="contact-form-submit"
+                  {{ if not $turnstileKey }}disabled{{ end }}>
+            <span class="contact-form-submit-label">Send message</span>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+              <path d="M3 7h8M7.5 3.5L11 7l-3.5 3.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <p class="contact-form-fineprint">
+            {{ if $turnstileKey -}}
+              Submitting runs a Cloudflare Turnstile check; no cookies, no scoring. We keep your message and email until your request is closed. <a href="/privacy/">Privacy</a>.
+            {{- else -}}
+              Form is being set up. Email <a href="mailto:luckypipe@pipelab.org">luckypipe@pipelab.org</a> for now.
+            {{- end }}
+          </p>
+          <p class="contact-form-inline-error" id="contact-form-inline-error" role="alert"></p>
+        </div>
+      </form>
+      </div>
+    </div>
+  </section>
+
+  {{/* ── Bottom pill row ──────────────────────────────── */}}
+  <section class="contact-section contact-section-links site-link-endcap" id="continue" data-fx="reveal" aria-labelledby="continue-h">
+    <div class="contact-section-inner site-link-endcap-inner">
+      <p id="continue-h" class="contact-links-label site-link-endcap-label">More from PipeLab</p>
+      <div class="contact-pill-row site-link-endcap-row">
+        <a class="contact-pill site-link-pill" href="/pipelock/"
+           data-event="pipelock_click" data-event-placement="contact-bottom">
+          <span class="contact-pill-dot site-link-pill-dot" aria-hidden="true"></span>
+          See Pipelock
+        </a>
+        <a class="contact-pill site-link-pill" href="/proof/"
+           data-event="proof_click" data-event-placement="contact-bottom">Proof</a>
+        <a class="contact-pill site-link-pill" href="/pricing/"
+           data-event="pricing_click" data-event-placement="contact-bottom">Pricing</a>
+        <a class="contact-pill site-link-pill" href="/enterprise/"
+           data-event="enterprise_mailto_click" data-event-placement="contact-bottom">Enterprise</a>
+        <a class="contact-pill site-link-pill" href="/about/"
+           data-event="about_click" data-event-placement="contact-bottom">About</a>
+      </div>
+    </div>
+  </section>
+
+  {{/* ── Markdown body (link list / audit hook) ────────── */}}
+  {{ if .Content }}
+  <section class="contact-further site-further-links" aria-label="Page content">
+    <div class="contact-further-inner site-further-links-inner">
+      {{ .Content }}
+    </div>
+  </section>
+  {{ end }}
+</article>
+
+{{ if $turnstileKey }}
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+{{ end }}
+
+{{ $contactScript := resources.Get "js/contact-form.js" | minify | fingerprint }}
+<script src="{{ $contactScript.RelPermalink }}" integrity="{{ $contactScript.Data.Integrity }}" defer></script>
+{{ partial "site-fx.html" . }}
+{{ end }}

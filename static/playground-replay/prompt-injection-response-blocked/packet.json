@@ -1,0 +1,64 @@
+{
+  "schema_version": "pipelock.audit_packet.v0",
+  "packet_id": "ap-prompt-injection-response-blocked",
+  "generated_at": "2026-08-05T01:16:25Z",
+  "run": {
+    "provider": "local",
+    "agent_identity": "pipelock-lab-agent",
+    "started_at": "2026-08-05T01:16:26Z",
+    "completed_at": "2026-08-05T01:16:26Z"
+  },
+  "policy": {
+    "policy_hashes": [
+      "sha256:a5c57fd96cc0744f3983da4dc406e079d8b4232f731795bc730aa02fb38faea3"
+    ]
+  },
+  "summary": {
+    "receipt_count": 2,
+    "totals": {
+      "allow": 1,
+      "block": 1,
+      "warn": 0,
+      "ask": 0,
+      "strip": 0,
+      "forward": 0,
+      "redirect": 0,
+      "other": 0
+    },
+    "transports": {
+      "fetch": 1,
+      "receipt_session": 1
+    },
+    "layers": {
+      "response_scan": 1
+    },
+    "domains_touched": [
+      "content.fixture.test"
+    ]
+  },
+  "verifier": {
+    "verdict": "valid",
+    "trusted": true,
+    "receipt_count": 2,
+    "root_hash": "32a6905e48bc82d0db412852910f5940e7bc3d27b501cc3018adf8a270f2e5e9",
+    "final_seq": 1,
+    "signer_key": "91dfb23882a8acf28f624985030ca1798a3efbbcee2bb8bdda8f452612eb755a",
+    "output_file": "verifier.txt"
+  },
+  "posture": {
+    "enforcement_mode": "synthetic_lab",
+    "runner_os": "linux",
+    "raw_socket_status": "unknown",
+    "docker_socket_status": "unknown",
+    "dns_udp_status": "unknown",
+    "browser_proxy_status": "unknown",
+    "websocket_frame_scanning": "off",
+    "unsupported_paths": []
+  },
+  "artifacts": {
+    "packet": "packet.json",
+    "summary": "summary.md",
+    "evidence": "evidence.jsonl",
+    "verifier": "verifier.txt"
+  }
+}

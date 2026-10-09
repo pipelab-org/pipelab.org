@@ -1,0 +1,26 @@
+{
+  "linkset": [
+    {
+      "anchor": "https://pipelab.org/api/results",
+      "service-doc": [
+        {
+          "href": "https://pipelab.org/gauntlet/",
+          "type": "text/html"
+        },
+        {
+          "href": "https://pipelab.org/gauntlet/submit/",
+          "type": "text/html"
+        }
+      ]
+    },
+    {
+      "anchor": "https://pipelab.org/api/results/{id}",
+      "service-doc": [
+        {
+          "href": "https://pipelab.org/gauntlet/results/",
+          "type": "text/html"
+        }
+      ]
+    }
+  ]
+}

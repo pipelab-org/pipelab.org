@@ -1,0 +1,66 @@
+<footer class="site-footer" role="contentinfo">
+  <div class="footer-container">
+    <div class="footer-columns footer-columns-brand" aria-label="Footer navigation">
+      <div class="footer-col footer-col-brand">
+        <a class="footer-brand" href="/" aria-label="PipeLab home">
+          {{ partial "brand-mark.html" (dict "class" "footer-brand-mark" "size" 40) }}
+          <span class="footer-brand-lockup">
+            <span class="footer-wordmark">Pipe<span>Lab</span></span>
+            <span class="footer-brand-kicker">Agent Security</span>
+          </span>
+        </a>
+        <p class="footer-tagline">PipeLab builds Pipelock and maintains open agent-security projects. Don't trust it, verify it.</p>
+        <ul class="footer-social" aria-label="PipeLab elsewhere">
+          {{ with .Site.Params.github }}<li><a href="{{ . }}" target="_blank" rel="noopener noreferrer">GitHub</a></li>{{ end }}
+          {{ with .Site.Params.discord }}<li><a href="{{ . }}" target="_blank" rel="noopener noreferrer">Discord</a></li>{{ end }}
+          {{ with .Site.Params.twitter }}<li><a href="{{ . }}" target="_blank" rel="noopener noreferrer">X</a></li>{{ end }}
+          {{ with .Site.Params.linkedin }}<li><a href="{{ . }}" target="_blank" rel="noopener noreferrer">LinkedIn</a></li>{{ end }}
+        </ul>
+      </div>
+      <div class="footer-col">
+        <nav aria-label="Pipelock">
+        <span class="footer-heading">Pipelock</span>
+        <ul class="footer-links">
+          <li><a href="/pipelock/">Overview</a></li>
+          <li><a href="/playground/">Playground</a></li>
+          <li><a href="/assess/">Assess</a></li>
+          <li><a href="/enterprise/">Enterprise</a></li>
+          <li><a href="/verify/">Verify</a></li>
+          <li><a href="/pricing/">Pricing</a></li>
+        </ul>
+        </nav>
+      </div>
+      <div class="footer-col">
+        <nav aria-label="Ecosystem">
+        <span class="footer-heading">Ecosystem</span>
+        <ul class="footer-links">
+          <li><a href="/agent-egress-bench/">Agent Egress Bench</a></li>
+          <li><a href="/pipelock-rules/">Pipelock Rules</a></li>
+          <li><a href="/learn/agent-evidence-levels/">Agent Evidence Level</a></li>
+          <li><a href="/schemas/">Schema mirrors</a></li>
+          <li><a href="/gauntlet/">Benchmark results</a></li>
+        </ul>
+        </nav>
+      </div>
+      <div class="footer-col">
+        <nav aria-label="Company">
+        <span class="footer-heading">Company</span>
+        <ul class="footer-links">
+          <li><a href="/about/">About</a></li>
+          <li><a href="/blog/">Blog</a></li>
+          <li><a href="/learn/">Learn</a></li>
+          <li><a href="/contact/">Contact</a></li>
+        </ul>
+        </nav>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p class="footer-copy">&copy; {{ now.Year }} PipeLab. Pipelock is listed in the <a href="https://landscape.cncf.io/?item=provisioning--security-compliance--pipelock" target="_blank" rel="noopener noreferrer">CNCF Landscape</a> under Security &amp; Compliance.</p>
+      <ul class="footer-legal" aria-label="Legal">
+        <li><a href="/.well-known/security.txt">Security</a></li>
+        <li><a href="/terms/">Terms</a></li>
+        <li><a href="/privacy/">Privacy</a></li>
+      </ul>
+    </div>
+  </div>
+</footer>

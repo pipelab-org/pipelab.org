@@ -1,0 +1,64 @@
+{
+  "schema_version": "pipelock.audit_packet.v0",
+  "packet_id": "ap-mcp-poisoned-tool-description",
+  "generated_at": "2026-08-05T01:16:25Z",
+  "run": {
+    "provider": "local",
+    "agent_identity": "pipelock-lab-agent",
+    "started_at": "2026-08-05T01:16:26Z",
+    "completed_at": "2026-08-05T01:16:26Z"
+  },
+  "policy": {
+    "policy_hashes": [
+      "sha256:d443eb8c9a09c33518be6a86f081833c63bd25d33109b1164305f7f7c1e8298d"
+    ]
+  },
+  "summary": {
+    "receipt_count": 2,
+    "totals": {
+      "allow": 1,
+      "block": 1,
+      "warn": 0,
+      "ask": 0,
+      "strip": 0,
+      "forward": 0,
+      "redirect": 0,
+      "other": 0
+    },
+    "transports": {
+      "mcp_stdio": 1,
+      "receipt_session": 1
+    },
+    "layers": {
+      "mcp_tool_scan": 1
+    },
+    "domains_touched": [
+      "tools.fixture.test"
+    ]
+  },
+  "verifier": {
+    "verdict": "valid",
+    "trusted": true,
+    "receipt_count": 2,
+    "root_hash": "4fdd72427325b95c61e9c10f478cd173867421ade0cf04a93d7146cb52f4df8f",
+    "final_seq": 1,
+    "signer_key": "91dfb23882a8acf28f624985030ca1798a3efbbcee2bb8bdda8f452612eb755a",
+    "output_file": "verifier.txt"
+  },
+  "posture": {
+    "enforcement_mode": "synthetic_lab",
+    "runner_os": "linux",
+    "raw_socket_status": "unknown",
+    "docker_socket_status": "unknown",
+    "dns_udp_status": "unknown",
+    "browser_proxy_status": "unknown",
+    "websocket_frame_scanning": "off",
+    "unsupported_paths": []
+  },
+  "artifacts": {
+    "packet": "packet.json",
+    "summary": "summary.md",
+    "evidence": "evidence.jsonl",
+    "verifier": "verifier.txt"
+  }
+}

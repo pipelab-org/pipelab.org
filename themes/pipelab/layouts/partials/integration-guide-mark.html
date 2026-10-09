@@ -1,0 +1,18 @@
+{{- /* Reuse the homepage's guide mapping and official assets. */ -}}
+{{- $page := . -}}
+{{- range site.Data.integrations.orbit -}}
+  {{- $guide := site.GetPage .href -}}
+  {{- if and (ne .kind "protocol") $guide (eq $guide.RelPermalink $page.RelPermalink) -}}
+    {{- if ne (len (findRE `^#[0-9A-Fa-f]{6}$` (printf "%v" .color))) 1 -}}
+      {{- errorf "integration guide %q: invalid brand color %q" .name .color -}}
+    {{- end -}}
+    {{- $hasImg := partial "integration-mark.html" (dict "entry" . "context" "integration guide" "required" true) -}}
+    <span class="learn-project-mark" data-integration-mark="{{ .name }}" aria-hidden="true" style="color: {{ .color }};">
+      {{- if .brand -}}
+        {{- partial (printf "brands/%s.svg" .brand) . -}}
+      {{- else if $hasImg -}}
+        <img src="{{ strings.TrimPrefix "/" .img | relURL }}" alt="{{ .name }} logo" width="88" height="88">
+      {{- end -}}
+    </span>
+  {{- end -}}
+{{- end -}}

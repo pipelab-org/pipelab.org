@@ -1,0 +1,25 @@
+{{/* Processed image shortcode. Resizes to width, converts to webp.
+     Usage: {{< img src="images/grafana-dashboard.png" alt="Description" width="1200" link=true >}}
+     - src: path relative to assets/
+     - alt: alt text
+     - width: resize width (default 1200)
+     - link: if true, wraps in <a> to full-size original
+*/}}
+{{ $src := .Get "src" }}
+{{ $alt := .Get "alt" | default "" }}
+{{ $width := .Get "width" | default "1200" }}
+{{ $link := .Get "link" | default "false" }}
+{{ $img := resources.Get $src }}
+{{ if $img }}
+  {{ $resized := $img.Resize (printf "%sx webp q82" $width) }}
+  {{ $zoom := $img.Resize "1600x webp q84" }}
+  {{ if eq $link "true" }}
+    <a href="{{ $zoom.RelPermalink }}" target="_blank" rel="noopener noreferrer">
+      <img src="{{ $resized.RelPermalink }}" alt="{{ $alt }}" width="{{ $resized.Width }}" height="{{ $resized.Height }}" loading="lazy" decoding="async" style="max-width: 100%; height: auto; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06); cursor: zoom-in;">
+    </a>
+  {{ else }}
+    <img src="{{ $resized.RelPermalink }}" alt="{{ $alt }}" width="{{ $resized.Width }}" height="{{ $resized.Height }}" loading="lazy" decoding="async" style="max-width: 100%; height: auto; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06);">
+  {{ end }}
+{{ else }}
+  <p style="color: red;">Image not found: {{ $src }}</p>
+{{ end }}

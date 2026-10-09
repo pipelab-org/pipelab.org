@@ -1,0 +1,52 @@
+name: Submit IndexNow URLs
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    env:
+      INDEXNOW_KEY: bd2aa46ad5df4155a5f847081c21637f
+      INDEXNOW_KEY_LOCATION: https://pipelab.org/bd2aa46ad5df4155a5f847081c21637f.txt
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - uses: peaceiris/actions-hugo@2752ce1d29631191ea3f27c23495fa06139a5b78 # v3
+        with:
+          hugo-version: 'latest'
+          extended: true
+      - run: hugo --gc --minify
+      - name: Build IndexNow payload from sitemap
+        run: |
+          # Hugo with --minify emits sitemap.xml on a single line, so the
+          # previous line-oriented sed regex matched zero URLs. grep -o
+          # captures each <loc>...</loc> pair independently, then sed strips
+          # the tags. No untrusted input is interpolated here.
+          grep -oE '<loc>[^<]+</loc>' public/sitemap.xml \
+            | sed -e 's|<loc>||' -e 's|</loc>||' > urls.txt
+          url_count=$(wc -l < urls.txt | tr -d ' ')
+          if [ "$url_count" -eq 0 ]; then
+            echo "No URLs found in public/sitemap.xml"
+            exit 1
+          fi
+          # Build the JSON URL array with jq -R (raw input, one string per line)
+          # and -s (slurp into array). Skip any empty trailing line.
+          jq -R . urls.txt | jq -sc 'map(select(length > 0))' > urls.json
+          jq -n \
+            --arg host "pipelab.org" \
+            --arg key "$INDEXNOW_KEY" \
+            --arg keyLocation "$INDEXNOW_KEY_LOCATION" \
+            --argjson urlList "$(cat urls.json)" \
+            '{host: $host, key: $key, keyLocation: $keyLocation, urlList: $urlList}' > payload.json
+      - name: Submit sitemap URLs to IndexNow
+        run: |
+          curl --fail-with-body \
+            --request POST \
+            --url https://api.indexnow.org/IndexNow \
+            --header 'Content-Type: application/json; charset=utf-8' \
+            --data @payload.json

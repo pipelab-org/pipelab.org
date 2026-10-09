@@ -1,0 +1,113 @@
+{
+  "schema_version": "2",
+  "manifest": {
+    "schema_version": "2",
+    "version": "3.6.0",
+    "build_sha": "unknown",
+    "run_id": "024be7cb-a8c7-4225-8d0d-d76bd30fd5b6",
+    "config_file": "balanced.yaml",
+    "config_hash": "907c7f31920de261bfbb2d799da419bfa8fff74465050ee0521cf84a6faa8c56",
+    "license_tier": "free",
+    "started_at": "2026-10-03T02:10:39.295827972Z",
+    "completed_at": "2026-10-03T02:10:39.472982848Z",
+    "finalized_at": "2026-10-03T02:10:39.529815021Z",
+    "git_commit": "3e868ac5d5b62d3a2790958542171143af8a0e38",
+    "platform": "linux/amd64",
+    "status": "finalized",
+    "skipped_primitives": [
+      "discover"
+    ],
+    "allow_partial": true,
+    "renderer_version": "2.0",
+    "scoring_version": "2",
+    "evidence_hashes": {
+      "audit-score.jsonl": "8b6133cf9e10915c7bae80d3e40c6cbfae5647b4208cf41c11ae28c727d935ae",
+      "simulate.jsonl": "47ee8fc662ae05093aab551db2b319e309f09f915f79ad9aefae29974aadf072",
+      "verify-install.jsonl": "b7a631682e39426a364997b7118eeda654b7cd6892c0ae2dfc74fcc6beefdb54"
+    },
+    "compliance_omitted_reason": "assessment finalized with --allow-partial; framework coverage is only attached to fully-evidenced runs"
+  },
+  "overall_grade": "D",
+  "overall_score": 64,
+  "sections": [
+    {
+      "schema_version": "2",
+      "id": "config_posture",
+      "name": "Config Posture",
+      "score": 51,
+      "max_score": 100,
+      "grade": "F",
+      "applicable": 23,
+      "total": 23
+    },
+    {
+      "schema_version": "2",
+      "id": "deployment_verification",
+      "name": "Deployment Verification",
+      "score": 50,
+      "max_score": 100,
+      "grade": "F",
+      "applicable": 12,
+      "total": 15
+    },
+    {
+      "schema_version": "2",
+      "id": "detection_coverage",
+      "name": "Detection Coverage",
+      "score": 95,
+      "max_score": 100,
+      "grade": "A",
+      "applicable": 23,
+      "total": 26
+    },
+    {
+      "schema_version": "2",
+      "id": "mcp_protection",
+      "name": "MCP Protection",
+      "score": 0,
+      "max_score": 0,
+      "grade": "F",
+      "applicable": 0,
+      "total": 0
+    }
+  ],
+  "top_findings": [
+    {
+      "schema_version": "2",
+      "id": "find-sim-credential-solicitation",
+      "severity": "high",
+      "category": "Prompt Injection",
+      "source": "simulate",
+      "title": "Attack scenario \"Credential solicitation\" not detected"
+    },
+    {
+      "schema_version": "2",
+      "id": "find-verify-browser_shield",
+      "severity": "high",
+      "category": "scanning",
+      "source": "verify_install",
+      "title": "Verification check \"browser_shield\" failed: browser_shield is disabled in config"
+    },
+    {
+      "schema_version": "2",
+      "id": "find-verify-file_sentry",
+      "severity": "high",
+      "category": "scanning",
+      "source": "verify_install",
+      "title": "Verification check \"file_sentry\" failed: file_sentry is disabled in config"
+    }
+  ],
+  "server_counts": {
+    "total_clients": 0,
+    "total_servers": 0,
+    "protected_pipelock": 0,
+    "protected_other": 0,
+    "unprotected": 0,
+    "unknown": 0,
+    "high_risk": 0,
+    "parse_errors": 0,
+    "schema_version": ""
+  },
+  "detection_pct": 95,
+  "signed": true
+}

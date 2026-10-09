@@ -1,0 +1,120 @@
+{{ define "main" }}
+{{ $cfg := site.Data.compare_index }}
+{{ $cat := .Params.compare_cat | default "" }}
+{{ $catLabel := $cat }}
+{{ range $cfg.categories }}
+  {{ if eq .key $cat }}{{ $catLabel = .label }}{{ end }}
+{{ end }}
+{{ $cmp := .Params.compare }}
+{{ if not $cmp }}{{ errorf "compare page %q is missing its `compare` ledger block" .RelPermalink }}{{ end }}
+{{ $sources := .Params.sources | default slice }}
+{{ if not $sources }}{{ errorf "compare page %q lists no checked sources" .RelPermalink }}{{ end }}
+{{/* Section links come from the rendered h2 ids so the markdown, the RSS body and the mirror stay untouched. */}}
+{{ $headings := findRE `<h2 id="[^"]+"[^>]*>[^<]+</h2>` .Content }}
+
+<article id="top" class="compare-article compare-article--{{ $cat }}">
+
+  <header class="compare-article-header" data-hero="editorial-article" data-fx="reveal">
+    <div class="compare-article-header-inner">
+      <nav class="compare-breadcrumbs" aria-label="Breadcrumb">
+        <a href="/">Home</a>
+        <span class="breadcrumb-sep">&gt;</span>
+        <a href="/compare/">Compare</a>
+        <span class="breadcrumb-sep">&gt;</span>
+        <span class="breadcrumb-current" aria-current="page">{{ .Title }}</span>
+      </nav>
+
+      {{ if $cat }}<p class="compare-article-eyebrow"><span class="compare-cat-dot" aria-hidden="true"></span>{{ $catLabel }}</p>{{ end }}
+
+      <h1 data-fx="decrypt">{{ .Title }}</h1>
+      {{ with .Params.subtitle }}<p class="compare-article-lead">{{ . }}</p>{{ end }}
+
+      <dl class="compare-article-meta">
+        {{ with .Params.reviewed }}<div><dt>Reviewed</dt><dd>{{ . }}</dd></div>{{ end }}
+        {{ if .ReadingTime }}<div><dt>Read</dt><dd>{{ .ReadingTime }} min</dd></div>{{ end }}
+        <div><dt>Sources</dt><dd><a href="#sources">{{ len $sources }} checked</a></dd></div>
+      </dl>
+
+      {{ partial "page-formats.html" . }}
+    </div>
+  </header>
+
+  <section class="compare-ledger-wrap" aria-labelledby="compare-ledger-title">
+    <div class="compare-ledger-inner">
+      <h2 id="compare-ledger-title" class="compare-ledger-title">At a glance</h2>
+      <div class="compare-ledger" data-fx="reveal spotlight">
+        <div class="compare-ledger-head">
+          <span class="compare-ledger-corner" aria-hidden="true"></span>
+          <span class="compare-ledger-col compare-ledger-col--pipelock">Pipelock{{ with $cfg.pipelock.source_url }} <a class="compare-ledger-source" href="{{ . }}" target="_blank" rel="noopener noreferrer" title="{{ $cfg.pipelock.source_label }}">source <span aria-hidden="true">&nearr;</span></a>{{ end }}</span>
+          <span class="compare-ledger-col">{{ $cmp.subject }}</span>
+        </div>
+        {{ $rows := slice
+          (dict "label" "Job" "left" $cfg.pipelock.job "right" $cmp.subject_job)
+          (dict "label" "Enforcement point" "left" $cfg.pipelock.boundary "right" $cmp.subject_boundary)
+          (dict "label" "Source" "left" $cfg.pipelock.source "right" $cmp.subject_source)
+          (dict "label" "Pricing shape" "left" $cfg.pipelock.pricing "right" $cmp.subject_pricing)
+          (dict "label" "Runs as" "left" $cfg.pipelock.deploy "right" $cmp.subject_deploy)
+        }}
+        {{ range $rows }}
+        <div class="compare-ledger-row">
+          <span class="compare-ledger-label">{{ .label }}</span>
+          <span class="compare-ledger-cell compare-ledger-cell--pipelock">{{ .left }}</span>
+          <span class="compare-ledger-cell" data-col="{{ $cmp.subject }}">{{ .right | default "Not documented in public sources" }}</span>
+        </div>
+        {{ end }}
+      </div>
+
+      {{ if or $cmp.pick_subject $cmp.pick_pipelock $cmp.pick_both }}
+      <div class="compare-picks">
+        {{ with $cmp.pick_subject }}<div class="compare-pick"><span class="compare-pick-label">Pick {{ $cmp.subject }}</span><p>{{ . }}</p></div>{{ end }}
+        {{ with $cmp.pick_pipelock }}<div class="compare-pick compare-pick--pipelock"><span class="compare-pick-label">Pick Pipelock</span><p>{{ . }}</p></div>{{ end }}
+        {{ with $cmp.pick_both }}<div class="compare-pick"><span class="compare-pick-label">Run both</span><p>{{ . }}</p></div>{{ end }}
+      </div>
+      {{ end }}
+    </div>
+  </section>
+
+  {{ partial "article-cta.html" (dict "page" . "placement" "top") }}
+
+  <div class="compare-article-shell">
+    <div class="compare-article-body" data-fx="live">
+      {{ .Content }}
+
+      <section class="compare-sources" id="sources" aria-labelledby="compare-sources-title">
+        <h2 id="compare-sources-title">Sources checked</h2>
+        <p>Third-party descriptions on this page come from the public materials below, read on the dates shown. Features and pricing change; check the current documentation before you decide.</p>
+        <ul class="compare-sources-list">
+          {{ range $sources }}
+          <li>
+            <a href="{{ .url }}" target="_blank" rel="noopener noreferrer">{{ .label }}</a>
+            <span class="compare-sources-meta">{{ with .checked }}checked {{ . }}{{ end }}{{ with .note }} · {{ . }}{{ end }}</span>
+          </li>
+          {{ end }}
+        </ul>
+        {{ partial "compare-disclaimer.html" . }}
+      </section>
+
+      {{ partial "faq.html" . }}
+    </div>
+
+    <aside class="compare-toc" aria-label="On this page">
+      <div class="compare-toc-inner">
+        <span class="compare-toc-label">On this page</span>
+        <a href="#compare-ledger-title">At a glance</a>
+        {{ range $headings }}
+          {{ $id := replaceRE `<h2 id="([^"]+)".*` "$1" . }}
+          {{ $text := replaceRE `<h2[^>]*>([^<]+)</h2>` "$1" . }}
+          <a href="#{{ $id }}">{{ $text | htmlUnescape }}</a>
+        {{ end }}
+        <a href="#sources">Sources checked</a>
+        {{ with .Params.faq }}<a href="#faq">FAQ</a>{{ end }}
+      </div>
+    </aside>
+  </div>
+
+  {{ partial "compare-related.html" . }}
+
+  {{ partial "article-cta.html" (dict "page" . "placement" "bottom") }}
+</article>
+{{ partial "site-fx.html" . }}
+{{ end }}

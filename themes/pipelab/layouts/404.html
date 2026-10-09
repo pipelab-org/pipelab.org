@@ -1,0 +1,29 @@
+{{ define "main" }}
+<section class="page-section" data-hero="utility" data-fx="reveal" aria-labelledby="not-found-title" style="text-align: center; padding: 4rem 2rem;">
+  <h1 id="not-found-title" data-fx="decrypt" style="font-size: var(--fs-display); margin-bottom: 0.5rem;">404</h1>
+  <p style="font-size: var(--fs-lead); opacity: 0.7; margin-bottom: 2rem;">This page doesn't exist. It may have moved.</p>
+  <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+    <a href="/" class="cta-button">Home</a>
+    <a href="/blog/" class="cta-button" style="background: transparent; border: 1px solid var(--accent);">Blog</a>
+    <a href="/pipelock/" class="cta-button" style="background: transparent; border: 1px solid var(--accent);">Pipelock</a>
+  </div>
+</section>
+{{ with .Site.Params.posthog }}
+<script>
+  // PostHog init is now lazy-loaded (see baseof.html), so window.posthog.capture
+  // is undefined at page-load time. Use the posthogReady() callback queue to
+  // fire the 404 event as soon as analytics initialize. If the visitor closes
+  // the tab before any interaction or the 6s fallback, the event is not
+  // captured — same undercount tradeoff as every other event.
+  if (typeof window.posthogReady === 'function') {
+    window.posthogReady(function (posthog) {
+      posthog.capture('site_404', {
+        path: window.location.pathname,
+        referrer: document.referrer || null
+      });
+    });
+  }
+</script>
+{{ end }}
+{{ partial "site-fx.html" . }}
+{{ end }}

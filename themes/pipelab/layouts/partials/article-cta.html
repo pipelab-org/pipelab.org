@@ -1,0 +1,93 @@
+{{ $page := . }}
+{{ $placement := "bottom" }}
+{{ with .page }}
+  {{ $page = . }}
+{{ end }}
+{{ with .placement }}
+  {{ $placement = . }}
+{{ end }}
+
+{{ $slug := "" }}
+{{ with $page.File }}
+  {{ $slug = .BaseFileName }}
+{{ end }}
+{{ $robots := lower (printf "%v" $page.Params.robots) }}
+{{ $skip := or ($page.Params.disable_cta) (in $robots "noindex") }}
+
+{{ if not $skip }}
+  {{ $copy := "Ready to put a runtime boundary in front of your agents?" }}
+  {{ $primaryLabel := "Get Pipelock" }}
+  {{ $primaryHref := "/pipelock/" }}
+  {{ $secondaryLabel := "See Proof" }}
+  {{ $secondaryHref := "/proof/" }}
+  {{ $extraLabel := "" }}
+  {{ $extraHref := "" }}
+  {{ $ariaLabel := "Page call to action" }}
+
+  {{ if eq $page.Section "learn" }}
+    {{ $copy = "Ready to protect your own setup?" }}
+    {{ $primaryLabel = "Install Pipelock" }}
+    {{ $primaryHref = "/install/" }}
+    {{ $secondaryLabel = "Inspect the proof" }}
+    {{ $secondaryHref = "/proof/" }}
+    {{ $extraLabel = "See Assess reports" }}
+    {{ $extraHref = "/assess/" }}
+    {{ $ariaLabel = "Guide call to action" }}
+  {{ else if eq $page.Section "blog" }}
+    {{ $copy = "Want the runtime boundary behind this write-up?" }}
+    {{ $ariaLabel = "Article call to action" }}
+  {{ else if eq $page.Section "compare" }}
+    {{ $copy = "Want the runtime boundary, not just another checklist?" }}
+    {{ $secondaryLabel = "See Pricing" }}
+    {{ $secondaryHref = "/pricing/" }}
+    {{ $extraLabel = "See all comparisons" }}
+    {{ $extraHref = "/compare/" }}
+    {{ $ariaLabel = "Comparison call to action" }}
+  {{ else if or (eq $slug "agent-firewall") (eq $slug "agent-firewall-checklist") }}
+    {{ $copy = "Want the runtime boundary behind this guidance?" }}
+    {{ $secondaryLabel = "See all comparisons" }}
+    {{ $secondaryHref = "/compare/" }}
+    {{ $ariaLabel = "Agent firewall call to action" }}
+  {{ end }}
+
+  {{ with $page.Params.cta_copy }}{{ $copy = . }}{{ end }}
+  {{ with $page.Params.cta_primary_label }}{{ $primaryLabel = . }}{{ end }}
+  {{ with $page.Params.cta_primary_href }}{{ $primaryHref = . }}{{ end }}
+  {{ with $page.Params.cta_secondary_label }}{{ $secondaryLabel = . }}{{ end }}
+  {{ with $page.Params.cta_secondary_href }}{{ $secondaryHref = . }}{{ end }}
+  {{ with $page.Params.cta_extra_label }}{{ $extraLabel = . }}{{ end }}
+  {{ with $page.Params.cta_extra_href }}{{ $extraHref = . }}{{ end }}
+  {{ with $page.Params.cta_aria_label }}{{ $ariaLabel = . }}{{ end }}
+
+  {{ $classes := "article-cta" }}
+  {{ if eq $placement "top" }}
+    {{ $classes = printf "%s article-cta-top" $classes }}
+  {{ end }}
+  {{ $fx := "" }}
+  {{ with .fx }}
+    {{ if ne . "spotlight" }}{{ errorf "article-cta: unsupported data-fx token %q" . }}{{ end }}
+    {{ $fx = . }}
+  {{ end }}
+  {{ $primaryExternal := or (hasPrefix $primaryHref "https://") (hasPrefix $primaryHref "http://") }}
+  {{ $secondaryExternal := or (hasPrefix $secondaryHref "https://") (hasPrefix $secondaryHref "http://") }}
+  {{ $extraExternal := or (hasPrefix $extraHref "https://") (hasPrefix $extraHref "http://") }}
+
+<section class="{{ $classes }}" aria-label="{{ $ariaLabel }}"{{ if eq $fx "spotlight" }} data-fx="spotlight"{{ end }}>
+  {{ if ne $placement "top" }}
+  <div class="section-divider"></div>
+  {{ end }}
+  <p class="article-cta-copy">{{ $copy }}</p>
+  <div class="hero-buttons">
+    <a href="{{ $primaryHref }}" class="btn btn-primary" data-event="cta_primary_click" data-event-placement="article-{{ $placement }}"{{ if $primaryExternal }} target="_blank" rel="noopener noreferrer"{{ end }}>{{ $primaryLabel }}</a>
+    <a href="{{ $secondaryHref }}" class="btn btn-ghost" data-event="cta_secondary_click" data-event-placement="article-{{ $placement }}"{{ if $secondaryExternal }} target="_blank" rel="noopener noreferrer"{{ end }}>{{ $secondaryLabel }}</a>
+  </div>
+  {{ if and (ne $placement "top") $extraLabel $extraHref }}
+  <div class="article-cta-extra">
+    <a href="{{ $extraHref }}" data-event="cta_extra_click" data-event-placement="article-{{ $placement }}"{{ if $extraExternal }} target="_blank" rel="noopener noreferrer"{{ end }}>{{ $extraLabel }} &rarr;</a>
+  </div>
+  {{ end }}
+  {{ if ne $placement "top" }}
+    {{ partial "newsletter-signup.html" (dict "variant" "compact" "page" $page) }}
+  {{ end }}
+</section>
+{{ end }}

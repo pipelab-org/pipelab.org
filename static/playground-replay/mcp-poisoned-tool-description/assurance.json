@@ -1,0 +1,32 @@
+{
+  "profile": "aarp/v0.1",
+  "subject": {
+    "action_record_sha256": "c2b7a55ce532b53546faaaeacedee2caa034ea087db4dca30b1f3554e052a82f",
+    "receipt_envelope_sha256": "4fdd72427325b95c61e9c10f478cd173867421ade0cf04a93d7146cb52f4df8f",
+    "receipt_signer_key": "91dfb23882a8acf28f624985030ca1798a3efbbcee2bb8bdda8f452612eb755a",
+    "receipt_type": "action_receipt_v1"
+  },
+  "assertion": {
+    "claimed": [
+      "mediated",
+      "complete-mediation"
+    ],
+    "mediator_id": "pipelock-lab",
+    "complete_mediation": true,
+    "issued_at": "2026-08-05T01:16:26.281565312Z"
+  },
+  "signatures": [
+    {
+      "protected": {
+        "profile": "aarp/v0.1",
+        "canon": "jcs-rfc8785-nfc",
+        "alg": "ed25519",
+        "key_type": "ed25519",
+        "key_id": "pipelab-playground-lab",
+        "signer_role": "mediator"
+      },
+      "sig": "ed25519:x1bAqXpaJAPxhqjnvbVBfesZ0l6dWlFiuXWEmGVLkx5LOSWUHH64GxlQSbuXxvM+DOeSlRMd4oDhLWpxUKwPBg=="
+    }
+  ],
+  "crit_ext": []
+}

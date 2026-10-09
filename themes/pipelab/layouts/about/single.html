@@ -1,0 +1,273 @@
+{{ define "main" }}
+{{/* Bespoke /about/ template — overrides _default/single.html.
+     Calm credibility surface, third-person company narrator. The
+     visible HTML deliberately does NOT name the founder; the
+     existing eq .RelPermalink "/about/" branch in baseof.html
+     already emits AboutPage + Person JSON-LD with Josh Waldrep as
+     the founder. Do not add a competing JSON-LD branch.
+
+     Markdown body still renders {{ .Content }} so the markdown
+     alternate output and the audit's inbound-link counter pick up
+     the link list at the bottom of content/about.md. */}}
+
+{{ $version := site.Params.pipelock_version | default "" }}
+{{ $stats := site.Data.stats }}
+{{ $isUpdated := and (not .Lastmod.IsZero) (not (.Lastmod.Equal .Date)) }}
+{{ $dateValue := cond $isUpdated .Lastmod .Date }}
+{{ $dateLabel := $dateValue.Format "Jan 2, 2006" }}
+
+<article id="top" class="about-product">
+
+  {{/* ── 01 — Intro ─────────────────────────────────── */}}
+  <section class="about-intro site-hero brand-field-hero brand-field-hero-standard" data-hero="brand-standard" data-fx="reveal" aria-labelledby="about-intro-h">
+    <div class="about-intro-inner">
+      <p class="about-eyebrow">
+        About{{ if $version }} · v{{ $version }}{{ end }}{{ if $dateLabel }} · {{ $dateLabel }}{{ end }}
+      </p>
+
+      <h1 id="about-intro-h" class="about-headline">
+        <span>{{ with .Params.headline }}{{ . }}{{ else }}{{ .Title }}{{ end }}</span>
+        {{ with .Params.headline_accent }}<span class="about-headline-accent">{{ . }}</span>{{ end }}
+      </h1>
+
+      <p class="about-lead">
+        Pipelock is an open-source agent firewall for MCP and agent traffic. It sits between AI agents and the internet and blocks secret leaks, unsafe tool traffic, and prompt-injection responses.
+      </p>
+
+      <p class="about-meta-line" aria-label="Other surfaces published by PipeLab">
+        <span>Also published:</span>
+        <a href="/gauntlet/">Agent Egress Bench results</a>
+        <span class="about-meta-sep" aria-hidden="true">·</span>
+        <a href="/proof/">Proof</a>
+        <span class="about-meta-sep" aria-hidden="true">·</span>
+        <a href="/compare/">Comparisons</a>
+        <span class="about-meta-sep" aria-hidden="true">·</span>
+        <a href="/learn/">Technical guides</a>
+      </p>
+
+      {{ partial "page-formats.html" . }}
+
+      {{/* Stat strip — every value pulled from data/stats.yaml */}}
+      <div class="about-stats" role="group" aria-label="Pipelock by the numbers">
+        <div class="about-stat">
+          <p class="about-stat-value" data-fx="count">{{ $stats.tests }}<span class="about-stat-unit">+</span></p>
+          <p class="about-stat-label">Test cases</p>
+        </div>
+        <div class="about-stat">
+          <p class="about-stat-value" data-fx="count">{{ $stats.releases }}</p>
+          <p class="about-stat-label">Releases</p>
+        </div>
+        <div class="about-stat">
+          <p class="about-stat-value" data-fx="count">{{ $stats.bench_cases }}</p>
+          <p class="about-stat-label">Bench cases</p>
+        </div>
+        <div class="about-stat">
+          <p class="about-stat-value" data-fx="count">{{ $stats.response_patterns }}</p>
+          <p class="about-stat-label">Injection patterns</p>
+        </div>
+        <div class="about-stat">
+          <p class="about-stat-value">Go</p>
+          <p class="about-stat-label">Single binary</p>
+        </div>
+      </div>
+      {{ partial "bench-provenance.html" . }}
+    </div>
+  </section>
+
+  {{/* ── 02 — Origin: 4-beat timeline ─────────────────── */}}
+  <section class="about-section" id="origin" data-fx="reveal live" aria-labelledby="about-origin-h">
+    <div class="about-section-inner">
+      <div class="about-section-head">
+        <p class="about-eyebrow">Origin</p>
+        <h2 id="about-origin-h" data-fx="decrypt">From a homelab problem to a public security tool</h2>
+        <p>PipeLab started as a homelab project, not a startup. It grew because a real operational problem needed a real fix.</p>
+      </div>
+
+      <ol class="about-timeline" data-fx="reveal">
+        <li class="about-beat">
+          <span class="about-beat-num" aria-hidden="true">01</span>
+          <p class="about-beat-label">2024 · Homelab</p>
+          <p class="about-beat-body">
+            A <strong>plumbing business</strong> wanted to automate operations. The founder spun up a homelab and started building AI agents to take dispatch, scheduling, and back-office work off the calendar.
+          </p>
+        </li>
+        <li class="about-beat">
+          <span class="about-beat-num" aria-hidden="true">02</span>
+          <p class="about-beat-label">The problem</p>
+          <p class="about-beat-body">
+            Those agents had <strong>shell access, API keys, and unrestricted network access</strong>. One bad call or poisoned tool response could send credentials out. The missing piece was an enforcement point between the agent and the internet.
+          </p>
+        </li>
+        <li class="about-beat">
+          <span class="about-beat-num" aria-hidden="true">03</span>
+          <p class="about-beat-label">The fix</p>
+          <p class="about-beat-body">
+            <strong>Pipelock was built to fill the gap.</strong> A single Go binary (Apache-2.0 core; Enterprise features under ELv2). It scans mediated HTTP, WebSocket, and MCP messages for credential leaks, prompt injection, SSRF, and tool poisoning.
+          </p>
+        </li>
+        <li class="about-beat">
+          <span class="about-beat-num" aria-hidden="true">04</span>
+          <p class="about-beat-label">Today</p>
+          <p class="about-beat-body">
+            Pipelock is listed in the <strong><a href="https://landscape.cncf.io/?item=provisioning--security-compliance--pipelock" target="_blank" rel="noopener noreferrer">CNCF Landscape</a></strong> under <em>Security &amp; Compliance</em>, and publishes coverage mappings for OWASP MCP Top 10, OWASP Agentic Top 10, MITRE ATLAS, EU AI Act, NIST AI RMF, HIPAA, and SOC 2.
+          </p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  {{/* ── 03 — What We Ship: 2x2 cards with metadata strips ─ */}}
+  <section class="about-section about-section-elev" id="ship" aria-labelledby="about-ship-h">
+    <div class="about-section-inner">
+      <div class="about-section-head">
+        <p class="about-eyebrow">Ship</p>
+        <h2 id="about-ship-h" data-fx="decrypt">What PipeLab ships</h2>
+        <p>Four public projects cover runtime enforcement, testing, detection rules, and verifiable evidence.</p>
+      </div>
+
+      <div class="about-ship-grid" data-fx="reveal">
+        <article class="about-ship-card" data-fx="reveal spotlight tilt">
+          <a class="about-ship-link" href="/pipelock/"
+             data-event="ship_pipelock_click" data-event-placement="about-ship">
+            <h3>Pipelock</h3>
+            <svg class="about-ship-arrow" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+              <path d="M3.5 10.5L10.5 3.5M5 3.5h5.5V9" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+          <p class="about-ship-desc">
+            The open-source agent firewall. A single Go binary that sits between an AI agent and the internet, scanning mediated messages through a fixed-order pipeline with DLP before DNS.
+          </p>
+          <div class="about-ship-meta" aria-label="Pipelock metadata">
+            <div class="about-ship-meta-cell"><span class="about-ship-meta-key">License</span><span class="about-ship-meta-value">Apache-2.0 core</span></div>
+            <div class="about-ship-meta-cell"><span class="about-ship-meta-key">Tests</span><span class="about-ship-meta-value about-ship-meta-value-accent">{{ $stats.tests }}+</span></div>
+            <div class="about-ship-meta-cell"><span class="about-ship-meta-key">Releases</span><span class="about-ship-meta-value">{{ $stats.releases }}</span></div>
+          </div>
+        </article>
+
+        <article class="about-ship-card" data-fx="reveal spotlight tilt">
+          <a class="about-ship-link" href="/agent-egress-bench/"
+             data-event="ship_bench_click" data-event-placement="about-ship">
+            <h3>Agent Egress Bench</h3>
+            <svg class="about-ship-arrow" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+              <path d="M3.5 10.5L10.5 3.5M5 3.5h5.5V9" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+          <p class="about-ship-desc">
+            A tool-neutral attack corpus for validating any agent egress proxy. Public methodology, public attack cases, public results.
+          </p>
+          {{ partial "bench-provenance.html" . }}
+          <div class="about-ship-meta" aria-label="Agent Egress Bench metadata">
+            <div class="about-ship-meta-cell"><span class="about-ship-meta-key">Cases</span><span class="about-ship-meta-value about-ship-meta-value-accent">{{ $stats.bench_cases }}</span></div>
+            <div class="about-ship-meta-cell"><span class="about-ship-meta-key">Categories</span><span class="about-ship-meta-value">{{ $stats.bench_categories }}</span></div>
+            <div class="about-ship-meta-cell"><span class="about-ship-meta-key">License</span><span class="about-ship-meta-value">Apache-2.0</span></div>
+          </div>
+        </article>
+
+        <article class="about-ship-card" data-fx="reveal spotlight tilt">
+          <a class="about-ship-link" href="/pipelock-rules/"
+             data-event="ship_rules_click" data-event-placement="about-ship">
+            <h3>Pipelock Rules</h3>
+            <svg class="about-ship-arrow" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+              <path d="M3.5 10.5L10.5 3.5M5 3.5h5.5V9" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+          <p class="about-ship-desc">
+            Community detection patterns shipped as signed YAML bundles. Hot-reloadable. Adds DLP, prompt-injection, and tool-poisoning coverage without a redeploy.
+          </p>
+          <div class="about-ship-meta" aria-label="Pipelock Rules metadata">
+            <div class="about-ship-meta-cell"><span class="about-ship-meta-key">DLP patterns</span><span class="about-ship-meta-value about-ship-meta-value-accent">{{ $stats.dlp_patterns }}</span></div>
+            <div class="about-ship-meta-cell"><span class="about-ship-meta-key">Signing</span><span class="about-ship-meta-value">Ed25519</span></div>
+            <div class="about-ship-meta-cell"><span class="about-ship-meta-key">Reload</span><span class="about-ship-meta-value">Hot</span></div>
+          </div>
+        </article>
+
+        <article class="about-ship-card" data-fx="reveal spotlight tilt">
+          <a class="about-ship-link" href="/learn/agent-evidence-levels/"
+             data-event="ship_ael_click" data-event-placement="about-ship">
+            <h3>Agent Evidence Level</h3>
+            <svg class="about-ship-arrow" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+              <path d="M3.5 10.5L10.5 3.5M5 3.5h5.5V9" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+          <p class="about-ship-desc">
+            An open draft standard for grading AI-agent audit evidence by what an independent party can verify and what omission they can detect.
+          </p>
+          <div class="about-ship-meta" aria-label="Agent Evidence Level metadata">
+            <div class="about-ship-meta-cell"><span class="about-ship-meta-key">Status</span><span class="about-ship-meta-value about-ship-meta-value-accent">Draft v0.1</span></div>
+            <div class="about-ship-meta-cell"><span class="about-ship-meta-key">Scale</span><span class="about-ship-meta-value">AEL-0 to AEL-4</span></div>
+            <div class="about-ship-meta-cell"><span class="about-ship-meta-key">Governance</span><span class="about-ship-meta-value">PipeLab maintained</span></div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  {{/* ── 04 — Philosophy: principles list ─────────────── */}}
+  <section class="about-section" id="philosophy" data-fx="reveal" aria-labelledby="about-phil-h">
+    <div class="about-section-inner">
+      <div class="about-section-head">
+        <p class="about-eyebrow">Philosophy</p>
+        <h2 id="about-phil-h" data-fx="decrypt">How PipeLab works</h2>
+      </div>
+
+      <div class="about-principles">
+        <div class="about-principle" data-fx="reveal spotlight">
+          <p class="about-principle-key">01 / Build it yourself</p>
+          <div class="about-principle-body">
+            <p class="about-principle-lede">Build what you can inspect.</p>
+            <p class="about-principle-sub">The scanner pipeline is public, testable, and traceable when something behaves differently than expected.</p>
+          </div>
+        </div>
+
+        <div class="about-principle" data-fx="reveal spotlight">
+          <p class="about-principle-key">02 / Honest engineering</p>
+          <div class="about-principle-body">
+            <p class="about-principle-lede">The security engine stays free. Coordination is paid.</p>
+            <p class="about-principle-sub">Apache-2.0 core; Enterprise features under ELv2. The bench is public. The rules repo is signed and versioned. Pro features pay for multi-agent coordination, not for access to what should be free.</p>
+            <div class="about-principle-anti" aria-label="What PipeLab does not do">
+              <span>Public methodology</span>
+              <span>Offline verification</span>
+              <span>Reproducible tests</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {{/* ── 05 — Bottom CTA pills ────────────────────────── */}}
+  <section class="about-section about-section-links site-link-endcap" id="continue" data-fx="reveal" aria-labelledby="about-continue-h">
+    <div class="about-section-inner site-link-endcap-inner">
+      <p id="about-continue-h" class="about-links-label site-link-endcap-label">Continue</p>
+      <div class="about-pill-row site-link-endcap-row">
+        <a class="about-pill site-link-pill" href="/pipelock/"
+           data-event="pipelock_click" data-event-placement="about-bottom">
+          <span class="about-pill-dot site-link-pill-dot" aria-hidden="true"></span>
+          See Pipelock
+        </a>
+        <a class="about-pill site-link-pill" href="/proof/"
+           data-event="proof_click" data-event-placement="about-bottom">Proof</a>
+        <a class="about-pill site-link-pill" href="/pricing/"
+           data-event="pricing_click" data-event-placement="about-bottom">Pricing</a>
+        <a class="about-pill site-link-pill" href="/learn/"
+           data-event="learn_click" data-event-placement="about-bottom">Learn</a>
+        <a class="about-pill site-link-pill" href="https://github.com/luckyPipewrench/pipelock"
+           target="_blank" rel="noopener noreferrer"
+           data-event="github_click" data-event-placement="about-bottom">
+          GitHub
+        </a>
+      </div>
+    </div>
+  </section>
+
+  {{/* ── Markdown body (link list / audit hook) ────────── */}}
+  {{ if .Content }}
+  <section class="about-further site-further-links" aria-label="Page content">
+    <div class="about-further-inner site-further-links-inner">
+      {{ .Content }}
+    </div>
+  </section>
+  {{ end }}
+</article>
+{{ partial "site-fx.html" . }}
+{{ end }}

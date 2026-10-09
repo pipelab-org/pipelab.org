@@ -1,0 +1,217 @@
+// Provenance reference (Apache-2.0, mirrors the pipelock source it was run from).
+// Committed as documentation of how the playground assurance envelopes were
+// minted; it is not built in this repo. See README.md in this directory.
+
+// Command zz-appraiser-gen is a one-off provenance generator for the pipelab.org
+// playground appraiser-view. For each playground scenario it wraps the decisive
+// lab receipt in a lab-signed AARP v0.1 assurance envelope (computing the receipt
+// digests with pipelock's own receipt package, never reimplementing canonical
+// hashing), and emits a shared pinned trust file. The committed appraisal.json is
+// then reproducible from these inputs with the public `pipelock-verifier aarp`.
+//
+// This is NOT shipped in pipelock; it is run from a checkout to mint the static
+// site artifacts. The signing key is a fixed lab seed: test material only.
+package main
+
+import (
+	"bytes"
+	"crypto/ed25519"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
+	"fmt"
+	"os"
+	"path/filepath"
+	"time"
+
+	"github.com/luckyPipewrench/pipelock/internal/aarp"
+	"github.com/luckyPipewrench/pipelock/internal/receipt"
+)
+
+// labSeed is a fixed, non-secret 32-byte Ed25519 seed for the playground lab
+// mediator key. It exists so the demonstration envelopes are deterministic and
+// reproducible; it is never a production key.
+const labSeed = "pipelab-playground-aarp-lab-0001"
+
+const (
+	labKeyID   = "pipelab-playground-lab"
+	mediatorID = "pipelock-lab"
+	signerRole = "mediator"
+)
+
+// scenarios maps each playground scenario id to its decisive verdict (the
+// receipt the appraiser view wraps).
+var scenarios = []struct {
+	id      string
+	verdict string
+}{
+	{"allowed-safe-read", "allow"},
+	{"secret-exfil-url-blocked", "block"},
+	{"prompt-injection-response-blocked", "block"},
+	{"ssrf-internal-target-blocked", "block"},
+	{"operation-aware-policy", "block"},
+	{"poisoned-ticket-webhook-exfil", "block"},
+	{"poisoned-readme-key-paste", "block"},
+	{"hostile-page-session-keys", "block"},
+	{"amber-warning-observed", "warn"},
+	{"websocket-fragmented-secret", "block"},
+	{"mcp-poisoned-tool-description", "block"},
+	{"multi-step-policy-chain", "block"},
+}
+
+type evidenceLine struct {
+	Type   string          `json:"type"`
+	Detail json.RawMessage `json:"detail"`
+}
+
+func main() {
+	if len(os.Args) != 2 {
+		fmt.Fprintln(os.Stderr, "usage: zz-appraiser-gen <static/playground-replay dir>")
+		os.Exit(2)
+	}
+	root := os.Args[1]
+
+	priv := ed25519.NewKeyFromSeed([]byte(labSeed))
+	pub := priv.Public().(ed25519.PublicKey)
+	signer, err := aarp.NewEd25519Signer(labKeyID, signerRole, priv)
+	must(err)
+	verifyOpts := aarp.VerifyOptions{
+		TrustedKeys: map[string]ed25519.PublicKey{labKeyID: pub},
+		Trust: map[string]aarp.TrustEntry{
+			labKeyID: {MediatorID: mediatorID, Role: signerRole},
+		},
+	}
+
+	for _, s := range scenarios {
+		rec, err := decisiveReceipt(filepath.Join(root, s.id, "evidence.jsonl"), s.verdict)
+		must(err)
+
+		arHash, err := rec.ActionRecord.Hash()
+		must(err)
+		recBytes, err := receipt.Marshal(rec)
+		must(err)
+		envHash := sha256.Sum256(recBytes)
+
+		env := aarp.Envelope{
+			Subject: aarp.Subject{
+				ActionRecordSHA256:    arHash,
+				ReceiptEnvelopeSHA256: hex.EncodeToString(envHash[:]),
+				ReceiptSignerKey:      rec.SignerKey,
+				ReceiptType:           aarp.ReceiptTypeActionV1,
+			},
+			Assertion: aarp.Assertion{
+				// A producer routinely claims both "mediated" (the action was
+				// mediated by this mediator) and "complete-mediation" (nothing
+				// bypassed it). The appraiser confirms the first via the pinned key
+				// and REFUSES the second: it is a self-attested boolean, not
+				// evidence. That refusal is the whole point of the panel.
+				Claimed:           []string{"mediated", "complete-mediation"},
+				MediatorID:        mediatorID,
+				CompleteMediation: true,
+				IssuedAt:          rec.ActionRecord.Timestamp.Format(time.RFC3339Nano),
+			},
+		}
+		signed, err := aarp.Sign(env, signer)
+		must(err)
+		out, err := aarp.Marshal(signed)
+		must(err)
+		writeFile(filepath.Join(root, s.id, "assurance.json"), append(indent(out), '\n'))
+		appraisal, err := aarp.Verify(signed, verifyOpts)
+		must(err)
+		comparable, err := aarp.ComparableAppraisal(appraisal)
+		must(err)
+		writeFile(filepath.Join(root, s.id, "appraisal.json"), append(indent(comparable), '\n'))
+		fmt.Printf("wrote %s/assurance.json (receipt %s, verdict %s)\n", s.id, shortHash(arHash), s.verdict)
+	}
+
+	// Shared pinned trust file for every playground envelope.
+	trust := map[string]any{
+		"trusted_keys": map[string]string{labKeyID: hex.EncodeToString(pub)},
+		"trust_entries": map[string]any{
+			labKeyID: map[string]string{"mediator_id": mediatorID, "role": signerRole},
+		},
+	}
+	tb, err := json.MarshalIndent(trust, "", "  ")
+	must(err)
+	writeFile(filepath.Join(root, "appraiser-trust.json"), append(tb, '\n'))
+	fmt.Println("wrote appraiser-trust.json")
+}
+
+// decisiveReceipt returns the last action_receipt in the evidence stream whose
+// action-record verdict matches want.
+func decisiveReceipt(path, want string) (receipt.Receipt, error) {
+	data, err := os.ReadFile(filepath.Clean(path))
+	if err != nil {
+		return receipt.Receipt{}, err
+	}
+	var found *receipt.Receipt
+	for _, line := range splitLines(data) {
+		if len(line) == 0 {
+			continue
+		}
+		var el evidenceLine
+		if err := json.Unmarshal(line, &el); err != nil {
+			return receipt.Receipt{}, fmt.Errorf("%s: %w", path, err)
+		}
+		if el.Type != "action_receipt" {
+			continue
+		}
+		r, err := receipt.Unmarshal(el.Detail)
+		if err != nil {
+			return receipt.Receipt{}, fmt.Errorf("%s: %w", path, err)
+		}
+		if r.ActionRecord.Verdict == want {
+			rc := r
+			found = &rc
+		}
+	}
+	if found == nil {
+		return receipt.Receipt{}, fmt.Errorf("%s: no action_receipt with verdict %q", path, want)
+	}
+	return *found, nil
+}
+
+func splitLines(b []byte) [][]byte {
+	var out [][]byte
+	start := 0
+	for i, c := range b {
+		if c == '\n' {
+			out = append(out, b[start:i])
+			start = i + 1
+		}
+	}
+	if start < len(b) {
+		out = append(out, b[start:])
+	}
+	return out
+}
+
+// indent re-renders compact JSON with two-space indentation for committed,
+// human-readable artifacts. It uses json.Indent so the exact bytes and key order
+// are preserved (only whitespace is added); the signature is over the
+// re-canonicalized payload, so indentation never affects verification.
+func indent(b []byte) []byte {
+	var buf bytes.Buffer
+	if err := json.Indent(&buf, b, "", "  "); err != nil {
+		return b
+	}
+	return buf.Bytes()
+}
+
+func shortHash(h string) string {
+	if len(h) > 12 {
+		return h[:12]
+	}
+	return h
+}
+
+func writeFile(path string, b []byte) {
+	must(os.WriteFile(path, b, 0o600))
+}
+
+func must(err error) {
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "error:", err)
+		os.Exit(1)
+	}
+}

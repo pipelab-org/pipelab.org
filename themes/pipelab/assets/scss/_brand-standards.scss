@@ -1,0 +1,635 @@
+// ============================================================
+//   Brand standards
+//   ------------------------------------------------------------
+//   Cross-cutting visual rules that lock the look across every
+//   page on pipelab.org. Section-specific stylesheets must NOT
+//   re-introduce native browser chrome (default scrollbars,
+//   default outlines, etc.) and must respect the article-rail
+//   alignment grid documented below.
+// ============================================================
+
+// ── Shared branded hero field ───────────────────────────────
+//   Marketing, product, project, and conversion pages share one
+//   static field asset. The homepage alone owns the interactive
+//   receipt constellation. Editorial and article surfaces stay quiet.
+.brand-field-hero {
+  --brand-field-opacity: .72;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: var(--bg);
+
+  &::after {
+    content: '';
+    position: absolute;
+    z-index: 0;
+    inset: 0;
+    opacity: var(--brand-field-opacity);
+    pointer-events: none;
+    background: center / cover no-repeat url('/images/brand/pipelab-constellation.svg');
+    mask-image: linear-gradient(to bottom, #000, transparent 86%);
+  }
+
+  > * {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+.brand-field-hero-standard {
+  min-height: clamp(32rem, 58svh, 37.5rem);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  @media (max-width: $bp-tablet) {
+    min-height: auto;
+  }
+}
+
+// ── Shared hero structure ──────────────────────────────────
+// A hero ends after identity, one lead, actions, and optional facts.
+// Architecture, demos, and evidence bands are adjacent sections, never
+// hidden inside the viewport-sizing contract.
+.site-hero.brand-field-hero {
+  padding: clamp(3rem, 6vh, 4.5rem) clamp(1.25rem, 4vw, 2rem) clamp(2.5rem, 5vh, 3.5rem);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  text-align: center;
+}
+
+// Pipelock carries one extra metadata row. Its outer padding is slightly
+// tighter so the shared hero ends on the same baseline as other products.
+.site-hero.pipelock-hero {
+  padding-block: 1.5rem;
+}
+
+.site-hero-inner {
+  width: 100%;
+  max-width: 68.75rem;
+  margin-inline: auto;
+}
+
+@media (max-width: $bp-tablet) {
+  .site-hero.brand-field-hero {
+    padding-block: 3rem 2.5rem;
+  }
+}
+
+@media (max-width: $bp-mobile) {
+  .site-hero.brand-field-hero {
+    padding: 2.5rem 1.25rem 2rem;
+  }
+
+  .site-hero .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+.pipelock-after-hero,
+.assess-hero-explainer,
+.enterprise-hero-evidence {
+  width: 100%;
+  max-width: 72rem;
+  margin-inline: auto;
+  padding: clamp(2rem, 5vw, 3.5rem) clamp(1.25rem, 4vw, 2rem);
+}
+
+.pipelock-after-hero {
+  text-align: center;
+}
+
+.pipelock-after-hero .pipelock-deep-dives,
+.pipelock-after-hero .pipelock-hero-architecture,
+.assess-hero-explainer .assess-twoq,
+.enterprise-hero-evidence .enterprise-hero-stats {
+  margin-top: 0;
+}
+
+.enterprise-hero-evidence .bench-provenance {
+  margin-bottom: 0;
+}
+
+// Page-section rails share one desktop alignment. On narrow screens they
+// deliberately return to a left origin so every item remains reachable by
+// horizontal scrolling.
+.pipelock-mini-nav ul,
+.assess-mini-nav ul,
+.enterprise-mini-nav ul,
+.proof-mini-nav ul {
+  width: max-content;
+  max-width: calc(100% - 2rem);
+  margin-inline: auto;
+  justify-content: center;
+}
+
+// Blog, Learn, Compare, and generic indexes are one quiet editorial family.
+// Their controls differ below the header; their title geometry does not.
+[data-hero='editorial-index'] {
+  box-sizing: border-box;
+  min-height: clamp(23.5rem, 49svh, 25rem);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 4rem clamp(1.25rem, 4vw, 2rem) 1.75rem;
+  background:
+    radial-gradient(ellipse 56% 62% at 22% 12%, rgba(0, 229, 160, .13), transparent 65%),
+    radial-gradient(ellipse 48% 54% at 82% 78%, rgba(124, 58, 237, .09), transparent 66%),
+    var(--bg);
+  text-align: center;
+}
+
+[data-hero='editorial-index'] h1 {
+  max-width: 58rem;
+  margin-inline: auto;
+  font-size: unquote("clamp(1.8rem, 3vw, 2.4rem)");
+  line-height: 1.15;
+}
+
+.editorial-index-inner {
+  width: 100%;
+  max-width: 47.5rem;
+  margin-inline: auto;
+}
+
+.editorial-index-eyebrow {
+  margin: 0 0 1rem;
+  color: var(--accent);
+  font: 500 var(--fs-code)/1.4 var(--font-mono);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+}
+
+.editorial-index-lead {
+  max-width: 38.75rem;
+  margin: 0 auto 1.5rem;
+  color: var(--text-muted);
+  font-size: var(--fs-lead);
+  line-height: 1.5;
+}
+
+@media (max-width: $bp-mobile) {
+  .pipelock-mini-nav ul,
+  .assess-mini-nav ul,
+  .enterprise-mini-nav ul,
+  .proof-mini-nav ul {
+    width: max-content;
+    max-width: 100%;
+    margin-inline: 0;
+    justify-content: flex-start;
+  }
+
+  [data-hero='editorial-index'] {
+    min-height: auto;
+    padding-block: 3rem 1.5rem;
+  }
+}
+
+// ── Custom scrollbar (any scrollable container) ─────────────
+//   Native browser scrollbars are off-brand. Every visible scrollbar
+//   on the site should use the Pipelock green thumb, including the
+//   root page scrollbar and future overflow containers.
+//   Notable consumers: .blog-article-toc, .learn-article-toc,
+//   .table-wrap, code blocks (`pre`), .compare-table-wrap.
+html,
+body,
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 229, 160, 0.72) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(0, 229, 160, 0.72);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+  background-clip: content-box;
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+%pl-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 229, 160, 0.72) transparent;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 229, 160, 0.72);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: var(--accent);
+    background-clip: content-box;
+  }
+  &::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+}
+
+// Apply scrollbar branding to every scrollable surface we own.
+.blog-article-toc,
+.learn-article-toc,
+.blog-article-body pre,
+.learn-article-body pre,
+.page-content pre,
+.table-wrap,
+.blog-article-body table,
+.learn-article-body table,
+.compare-table-wrap,
+.proof-product .proof-signed-cli-block,
+.receipt-constellation-detail,
+.hp-receipt-browser[open],
+.nav-links {
+  @extend %pl-scrollbar;
+}
+
+// ── Article body alignment overrides for FAQ partial ────────
+//   The site-wide .accordion partial (used by /pricing/, /enterprise/)
+//   centers its summary + body text. Inside an article-body the body
+//   itself is left-aligned, so the centered FAQ chrome reads as a
+//   misalignment. Override the partial's classes when nested under an
+//   article body so the heading and items line up with the body
+//   rhythm. Other surfaces keep the original centered treatment.
+.blog-article-body,
+.learn-article-body {
+  .faq {
+    margin: 3rem 0 0;
+
+    > h2 {
+      text-align: left;
+      // Skip the article-body H2 numbering (CSS counter prefix) so the
+      // FAQ heading reads as a section heading, not "06 Frequently…".
+      counter-increment: none;
+      &::before {
+        content: none;
+      }
+    }
+  }
+
+  .accordion {
+    max-width: none;
+    margin: 0;
+  }
+
+  .accordion-item summary {
+    justify-content: space-between;
+    text-align: left;
+  }
+
+  .accordion-body {
+    text-align: left;
+  }
+}
+
+// ── Article-CTA width container ─────────────────────────────
+//   Constrain the article-cta to the article grid so its section
+//   divider does not run viewport-edge-to-edge. Content stays
+//   page-centered (NOT body-column-aligned) — pushing CTA copy and
+//   newsletter into the body column on TOC pages was tried and
+//   rejected; the visual right-shift read as worse than the small
+//   off-center offset relative to body.
+$pl-article-grid-max: 1100px;
+$pl-article-toc-width: 220px;
+$pl-article-toc-gap: 2.5rem;
+
+.blog-article > .article-cta,
+.learn-article > .article-cta {
+  max-width: $pl-article-grid-max;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 2rem;
+  padding-right: 2rem;
+
+  &:not(.article-cta-top) {
+    margin-top: 3rem;
+  }
+
+  @media (max-width: $bp-mobile) {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+// The share strip is the one bottom-of-article element that DOES
+// align with the body column on TOC pages — its short row of pills
+// reads as connected to the body when it's left-aligned with body
+// content. Re-anchor to the article grid + TOC offset.
+.blog-article-has-toc > .blog-share,
+.learn-article-has-toc > .blog-share {
+  max-width: $pl-article-grid-max;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: calc(2rem + #{$pl-article-toc-width} + #{$pl-article-toc-gap});
+  padding-right: 2rem;
+
+  @media (max-width: $bp-tablet) {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+// ── Site footer bottom strip — center on desktop too ────────
+//   Existing .footer-bottom uses `space-between` which spreads three
+//   tight items across the full max-width. With short copy that
+//   reads as "left + center + right" rather than a balanced footer
+//   strip. Center the row on desktop and keep the mobile column
+//   layout untouched.
+.footer-bottom {
+  justify-content: center;
+  gap: 0.75rem 2rem;
+  flex-wrap: wrap;
+  text-align: center;
+
+  @media (max-width: $bp-mobile) {
+    gap: 0.5rem;
+  }
+}
+
+// ── Footer columns: center items within each column ────────
+//   Default footer column treatment is left-aligned items inside each
+//   track. With short editorial copy that reads as "left-margined
+//   stack stuck against the column's left edge". Center the heading
+//   + the link list within each column so each track feels balanced
+//   under the centered article + cta + newsletter chain above.
+.footer-col {
+  text-align: center;
+
+  nav { text-align: center; }
+}
+
+.footer-heading {
+  text-align: center;
+}
+
+.footer-links {
+  align-items: center;
+}
+
+// ── Pinned benchmark snapshot provenance ───────────────────
+// Benchmark counts are a committed snapshot, so every live surface that
+// renders one carries its verification date and immutable upstream commit.
+.bench-provenance {
+  margin: 0.9rem auto 0;
+  max-width: 760px;
+  color: var(--text-dim);
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  line-height: 1.5;
+  text-align: center;
+
+  a {
+    color: var(--text-muted);
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+
+    &:hover,
+    &:focus-visible { color: var(--accent); }
+  }
+}
+
+.proof-deep-body .bench-provenance {
+  margin-left: 0;
+  text-align: left;
+}
+
+// ── Heading + body wrap rules (kill orphan-word lines) ──────
+//   Browsers default to "auto" wrapping which loves to drop a single
+//   short word onto its own line ("...Leaking Your | Secrets").
+//   `text-wrap: balance` re-flows headings so each line is roughly
+//   the same length. `text-wrap: pretty` does a lighter pass on body
+//   text — keeps the natural line breaks, only fixes orphans on the
+//   last line. Both ship in modern Chromium, Firefox, Safari (2024).
+//   Apply to every editorial heading + lead so headings never read
+//   as "the title with one word hanging by itself".
+.blog-article-header h1,
+.learn-article-header h1,
+.editorial-index-header h1,
+.blog-article-body h2,
+.blog-article-body h3,
+.learn-article-body h2,
+.learn-article-body h3,
+.faq h2,
+.blog-related-title,
+.editorial-index-card-title {
+  text-wrap: balance;
+}
+
+.blog-lead,
+.learn-lead,
+.editorial-index-lead,
+.article-cta-copy,
+.blog-related-desc,
+.editorial-index-card-summary,
+.blog-article-body p,
+.learn-article-body p {
+  text-wrap: pretty;
+}
+
+// ── Index page subject-pill row centering ───────────────────
+//   Editorial index toolbars place category pills above the search input.
+//   The pills are server-rendered via a flex row and default to flex-start,
+//   which reads as left-margined under the centered hero above. Center the
+//   pill row on wide screens so the visual hierarchy stays balanced, then
+//   restore left alignment where the row scrolls on mobile.
+//   Centering is done with auto margins on the end pills rather than
+//   justify-content: center, because a centered overflowing flex row pushes its
+//   first pill past the left edge with no way to scroll back to it (the "All"
+//   pill was clipped between the mobile breakpoint and the width where seven
+//   pills fit). Auto margins collapse to zero under overflow, so the row starts
+//   at the left edge exactly when it needs to and stays centered otherwise.
+.editorial-index-tabs {
+  justify-content: flex-start;
+
+  > :first-child { margin-left: auto; }
+  > :last-child { margin-right: auto; }
+}
+
+@media (max-width: $bp-mobile) {
+  .editorial-index-tabs > :first-child { margin-left: 0; }
+  .editorial-index-tabs > :last-child { margin-right: 0; }
+}
+
+
+// ── Verified-provenance stamps (replaces the wrapped text line) ──
+.bench-provenance-stamps {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+}
+
+.prov-stamp {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.55rem;
+  padding: 0.42rem 0.9rem;
+  border: 1px solid rgba(0, 229, 160, 0.18);
+  border-radius: 999px;
+  background: rgba(0, 229, 160, 0.04);
+  font-family: var(--font-mono), monospace;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  text-decoration: none;
+  transition: border-color 0.15s, color 0.15s;
+
+  &:hover,
+  &:focus-visible {
+    border-color: rgba(0, 229, 160, 0.45);
+    color: var(--text-muted);
+
+    .prov-ref { color: var(--accent); }
+  }
+}
+
+.prov-check {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.prov-what {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.62rem;
+}
+
+.prov-ref {
+  color: var(--text-muted);
+  transition: color 0.15s;
+}
+
+.prov-date {
+  color: var(--text-dim);
+}
+
+@media (max-width: 640px) {
+  .prov-stamp { flex-wrap: wrap; row-gap: 0.1rem; }
+}
+
+// ── Shared page endcaps ────────────────────────────────────
+// About and Contact close on the same quiet navigation treatment. Page
+// templates only supply the destination set and analytics placement.
+.site-link-endcap {
+  padding: 3rem 2rem 5rem;
+  border-bottom: 0;
+}
+
+.site-link-endcap-inner,
+.site-further-links-inner {
+  width: 100%;
+  max-width: var(--max-width);
+  margin-inline: auto;
+}
+
+.site-link-endcap-label {
+  margin: 0 0 2rem;
+  text-align: center;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+}
+
+.site-link-endcap-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+}
+
+.site-link-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1.1rem;
+  border: 1px solid rgba(0, 229, 160, 0.2);
+  border-radius: 999px;
+  background: rgba(0, 229, 160, 0.02);
+  color: var(--accent);
+  font-family: var(--font-mono), monospace;
+  font-size: 0.8125rem;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--accent);
+    background: rgba(0, 229, 160, 0.07);
+    opacity: 1;
+  }
+}
+
+.site-link-pill-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent);
+}
+
+.site-further-links {
+  padding: 2.5rem 2rem 4rem;
+  border-top: 1px solid var(--border);
+
+  @media (max-width: $bp-mobile) {
+    padding: 2rem 1.5rem 3rem;
+  }
+}
+
+.site-further-links-inner {
+  font-size: 0.84375rem;
+  line-height: 1.7;
+  color: var(--text-dim);
+
+  h2,
+  h3,
+  h4 {
+    margin: 0 0 0.875rem;
+    font-family: var(--font-mono), monospace;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wider);
+  }
+
+  a { color: var(--accent); }
+
+  ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  li::before { content: none; }
+}

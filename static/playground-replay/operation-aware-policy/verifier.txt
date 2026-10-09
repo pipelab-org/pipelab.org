@@ -1,0 +1,9 @@
+Pipelock audit packet — receipt chain verification
+scenario: operation-aware-policy
+receipts: 3
+verdict: valid (trusted)
+root_hash: 27e8aa3a211a8d1a9ca8c7750c0a9af769e80c37a33ba4e38c523cd6b022ed52
+signer_key: 91dfb23882a8acf28f624985030ca1798a3efbbcee2bb8bdda8f452612eb755a
+
+Verify it yourself from this directory:
+  pipelock-verifier audit-packet . --key 91dfb23882a8acf28f624985030ca1798a3efbbcee2bb8bdda8f452612eb755a

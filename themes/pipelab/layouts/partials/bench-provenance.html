@@ -1,0 +1,3 @@
+{{- $stats := site.Data.stats -}}
+{{- $sourceURL := printf "%s/commit/%s" $stats.bench_source_repository $stats.bench_source_commit -}}
+<p class="bench-provenance">Corpus snapshot verified <time datetime="{{ $stats.bench_verified_date }}">{{ $stats.bench_verified_date }}</time> against <a href="{{ $sourceURL }}" target="_blank" rel="noopener noreferrer">agent-egress-bench@{{ substr $stats.bench_source_commit 0 12 }}</a>.</p>

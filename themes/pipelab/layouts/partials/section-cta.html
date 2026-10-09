@@ -1,0 +1,32 @@
+{{ if .IsSection }}
+  {{ $copy := "Ready to put a runtime boundary in front of your agents?" }}
+  {{ $primaryLabel := "Get Pipelock" }}
+  {{ $primaryHref := "/pipelock/" }}
+  {{ $secondaryLabel := "See Proof" }}
+  {{ $secondaryHref := "/proof/" }}
+  {{ $ariaLabel := "Section call to action" }}
+
+  {{ if eq .Section "learn" }}
+    {{ $copy = "Ready to protect your own setup?" }}
+    {{ $secondaryLabel = "Start with Claude Code" }}
+    {{ $secondaryHref = "/learn/claude-code-hooks/" }}
+    {{ $ariaLabel = "Learn section call to action" }}
+  {{ else if eq .Section "blog" }}
+    {{ $copy = "Want the runtime boundary behind these write-ups?" }}
+    {{ $ariaLabel = "Blog section call to action" }}
+  {{ else if eq .Section "compare" }}
+    {{ $copy = "Ready to move from comparisons to deployment?" }}
+    {{ $secondaryLabel = "See Pricing" }}
+    {{ $secondaryHref = "/pricing/" }}
+    {{ $ariaLabel = "Compare section call to action" }}
+  {{ end }}
+
+<section class="article-cta" aria-label="{{ $ariaLabel }}">
+  <div class="section-divider"></div>
+  <p class="article-cta-copy">{{ $copy }}</p>
+  <div class="hero-buttons">
+    <a href="{{ $primaryHref }}" class="btn btn-primary">{{ $primaryLabel }}</a>
+    <a href="{{ $secondaryHref }}" class="btn btn-ghost">{{ $secondaryLabel }}</a>
+  </div>
+</section>
+{{ end }}

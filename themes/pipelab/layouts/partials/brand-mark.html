@@ -1,0 +1,22 @@
+{{- /*
+  Decorative PipeLab mark, inlined as SVG.
+
+  Inlined rather than referenced with <img alt="">, because the Hugo minifier
+  rewrites an empty attribute value to the bare attribute name (alt="" becomes
+  alt). That is equivalent under the HTML5 empty-attribute syntax, but
+  third-party crawlers read the bare form as a missing alt and report it on
+  every page of the site. aria-hidden on an inline SVG states the same intent
+  in a form no minifier can collapse.
+
+  Every call site sits inside a link that already carries its own aria-label,
+  so the mark must stay out of the accessibility tree.
+
+  Params: class (string, optional), size (int, required).
+*/ -}}
+<svg{{ with .class }} class="{{ . }}"{{ end }} width="{{ .size }}" height="{{ .size }}" viewBox="0 0 240 240" fill="none" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+<rect width="240" height="240" rx="52" fill="#09090b"/>
+<g stroke="#00e5a0" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+<path d="M94 30v51L51 162c-9 17 4 37 23 37h92c19 0 32-20 23-37l-43-81V30"/>
+<path d="M85 30h70M68 151h104"/>
+</g><circle cx="101" cy="129" r="8" fill="#00e5a0"/><circle cx="139" cy="168" r="6" fill="#00e5a0"/>
+</svg>

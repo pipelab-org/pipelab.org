@@ -1,0 +1,38 @@
+# Blog index editorial state.
+# Drives the /blog/ index page (themes/pipelab/layouts/blog/list.html).
+# Per-post categories live in each post's frontmatter as `blog_cat: <key>`.
+# Counts come from real .Pages at build time, not from this file.
+
+categories:
+  - key: releases
+    label: Releases
+  - key: mcp
+    label: MCP security
+  - key: industry
+    label: Industry
+  - key: comparisons
+    label: Comparisons
+  - key: technical
+    label: Technical
+  - key: opsec
+    label: OpSec
+
+featured:
+  - check-the-work
+  - pipelock-v360-release
+  - pipelock-v350-release
+  - pipelock-v340-release
+  - pipelock-v330-release
+
+release:
+  version: v3.6.0
+  summary: "Current Pipelock release. See the v3.6.0 release on GitHub for the changelog."
+  notes_url: https://github.com/luckyPipewrench/pipelock/releases
+
+subscribe:
+  - label: dev.to mirror
+    url: https://dev.to/luckypipewrench
+    external: true
+  - label: GitHub
+    url: https://github.com/luckyPipewrench/pipelock
+    external: true

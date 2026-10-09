@@ -1,0 +1,310 @@
+{{ define "main" }}
+{{ $version := site.Params.pipelock_version | default "" }}
+{{ $stats := site.Data.stats }}
+{{ $isUpdated := and (not .Lastmod.IsZero) (not (.Lastmod.Equal .Date)) }}
+{{ $dateValue := cond $isUpdated .Lastmod .Date }}
+{{ $dateLabel := $dateValue.Format "Jan 2, 2006" }}
+
+{{/* Real public signing key (hex) used for the rules bundle signature
+     example. Pulled from MEMORY canonical doc; this is the production key
+     so the example is real, not synthetic. */}}
+{{ $signingKeyHex := "70b991eb77816fc4ef0ae6a54d8a4119ddc5a16c9711c332c39e743079f6c63e" }}
+
+<article id="top" class="proof-product">
+
+  {{/* ── Hero ─────────────────────────────────────────── */}}
+<header class="proof-hero site-hero brand-field-hero brand-field-hero-standard" data-hero="brand-standard">
+<div class="proof-hero-inner site-hero-inner">
+      <p class="proof-eyebrow">
+        <span class="proof-eyebrow-dot" aria-hidden="true"></span>
+        Proof{{ if $version }} · v{{ $version }}{{ end }}{{ if $dateLabel }} · {{ $dateLabel }}{{ end }}
+      </p>
+      <h1 class="proof-headline">
+        <span>{{ with .Params.headline }}{{ . }}{{ else }}{{ .Title }}{{ end }}</span>
+        {{ with .Params.headline_accent }}<span class="proof-headline-accent">{{ . }}</span>{{ end }}
+      </h1>
+      <p class="proof-lead">Every Pipelock detection claim is backed by an open corpus you can re-run, signed rules you can verify, and Ed25519-signed reports your auditor can keep. No marketing assertions. No closed-source vendor box. Run it yourself.</p>
+      <div class="hero-buttons proof-hero-actions">
+        <a href="/learn/verify-a-receipt/" class="btn btn-primary" data-event="proof_verifier_click" data-event-placement="proof-hero">Verify a public receipt</a>
+        <a href="/gauntlet/" class="btn btn-ghost" data-event="gauntlet_results_click" data-event-placement="proof-hero">View benchmark results</a>
+      </div>
+      <ul class="proof-trust-pills" aria-label="Proof guarantees">
+        <li>Apache-2.0 core</li>
+        <li>Public methodology</li>
+        <li>Public attack cases</li>
+        <li>Signed reports</li>
+        <li>Offline license</li>
+      </ul>
+      {{ partial "page-formats.html" . }}
+    </div>
+  </header>
+
+  {{/* ── Cause, decision, proof: one real recorded block ─ */}}
+  {{ partial "proof-sequence.html" . }}
+  {{ $proofSequenceScript := resources.Get "js/proof-sequence.js" | minify | fingerprint }}
+  <script src="{{ $proofSequenceScript.RelPermalink }}" integrity="{{ $proofSequenceScript.Data.Integrity }}" defer></script>
+  {{ partial "site-fx.html" . }}
+
+  {{/* ── Sticky mini-nav ──────────────────────────────── */}}
+  <nav class="proof-mini-nav" aria-label="On this page" data-fx="mininav">
+    <ul>
+      <li><a href="#pillars">Pillars</a></li>
+      <li><a href="#validate">Validate</a></li>
+      <li><a href="#govern">Govern</a></li>
+      <li><a href="#attest">Attest</a></li>
+      <li><a href="#signed">What's signed</a></li>
+      <li><a href="#numbers">Numbers</a></li>
+      <li><a href="#public-evidence">Public evidence</a></li>
+    </ul>
+  </nav>
+
+  {{/* ── Three-pillar band ────────────────────────────── */}}
+  <section class="proof-pillars" id="pillars" aria-label="Three pillars">
+    <div class="proof-section-head">
+      <p class="proof-section-label">The three pillars</p>
+      <h2 data-fx="decrypt">A receipt for every claim</h2>
+      <p class="proof-section-sub">Each pillar is a separate open-source project. Each one feeds the next.</p>
+    </div>
+
+    <div class="proof-pillar-grid">
+      <a class="proof-pillar-card" data-fx="reveal spotlight" href="#validate">
+        <p class="proof-pillar-num">01 / 03</p>
+        <h3 class="proof-pillar-title">Validate</h3>
+        <p class="proof-pillar-claim">{{ $stats.bench_adversarial_cases }} block-expected attack cases test scanner containment claims.</p>
+        <p class="proof-pillar-receipt">{{ $stats.bench_cases }} cases · {{ $stats.bench_categories }} categories</p>
+      </a>
+      <a class="proof-pillar-card" data-fx="reveal spotlight" href="#govern">
+        <p class="proof-pillar-num">02 / 03</p>
+        <h3 class="proof-pillar-title">Govern</h3>
+        <p class="proof-pillar-claim">Signed rule bundles. Hot-reloadable. Tampered rules never load.</p>
+        <p class="proof-pillar-receipt">Ed25519 bundles · Hot-reload</p>
+      </a>
+      <a class="proof-pillar-card" data-fx="reveal spotlight" href="#attest">
+        <p class="proof-pillar-num">03 / 03</p>
+        <h3 class="proof-pillar-title">Attest</h3>
+        <p class="proof-pillar-claim">Signed compliance reports your auditor can verify offline.</p>
+        <p class="proof-pillar-receipt">Signed bundles · {{ $stats.compliance_frameworks }} frameworks</p>
+      </a>
+    </div>
+  </section>
+
+  {{/* ── Pillar deep block: Validate ──────────────────── */}}
+  <section class="proof-deep" data-fx="reveal live" id="validate" aria-label="Validate: Agent Egress Bench">
+    <div class="proof-deep-head">
+      <p class="proof-deep-label">01 · Validate</p>
+      <h2 data-fx="decrypt"><a href="https://github.com/luckyPipewrench/agent-egress-bench" target="_blank" rel="noopener noreferrer">Agent Egress Bench</a></h2>
+      <p class="proof-deep-sub">A public corpus of adversarial test cases. The same corpus Pipelock tests itself against.</p>
+    </div>
+    <div class="proof-deep-body fx-exhibit-band">
+
+      <figure class="fx-exhibit" aria-label="A real attack case file from the public corpus">
+      {{ partial "artifact-bar.html" (dict "label" (printf "agent-egress-bench · %v cases · %v categories" $stats.bench_cases $stats.bench_categories)) }}
+        {{- $ex := readFile "assets/exhibits/bench-case.json" -}}
+        {{- if not $ex -}}{{- errorf "proof exhibit assets/exhibits/bench-case.json is missing or empty" -}}{{- end -}}
+        <pre class="fx-exhibit-doc" data-fx="scan"><code>{{ $ex }}</code></pre>
+        <figcaption class="fx-exhibit-src">real case file &middot; <a href="https://github.com/luckyPipewrench/agent-egress-bench/blob/main/cases/url/url-dlp-aws-key-001.json" target="_blank" rel="noopener noreferrer">url-dlp-aws-key-001.json</a> &middot; snapshot <code>{{ substr $stats.bench_source_commit 0 12 }}</code></figcaption>
+      </figure>
+      <div class="fx-exhibit-claims">
+      <ul class="proof-claim-list">
+        <li><strong>{{ $stats.bench_adversarial_cases }} block-expected attack cases</strong> ({{ $stats.bench_cases }} total incl. {{ $stats.bench_fp_cases }} false-positive controls and {{ $stats.bench_warn_cases }} warn-class drift case) across {{ $stats.bench_categories }} categories: DLP evasion, prompt injection, SSRF, tool poisoning, encoding chains, hostname exfiltration, WebSocket DLP, A2A scanning.</li>
+        <li><strong>Run against any proxy.</strong> The bench is tool-neutral. Same corpus, any defender.</li>
+        <li><strong>Public scoreboard</strong> at <a href="/gauntlet/">/gauntlet/</a> with verifiable per-category results.</li>
+      </ul>
+      {{ partial "bench-provenance.html" . }}
+      <div class="proof-deep-actions">
+        <a href="https://github.com/luckyPipewrench/agent-egress-bench" class="btn btn-primary" target="_blank" rel="noopener noreferrer">Run the bench</a>
+        <a href="/gauntlet/" class="btn btn-ghost">View benchmark results</a>
+      </div>
+      </div>
+    </div>
+  </section>
+
+  {{/* ── Pillar deep block: Govern ────────────────────── */}}
+  <section class="proof-deep" data-fx="reveal live" id="govern" aria-label="Govern: Pipelock Rules">
+    <div class="proof-deep-head">
+      <p class="proof-deep-label">02 · Govern</p>
+      <h2 data-fx="decrypt"><a href="https://github.com/luckyPipewrench/pipelock-rules" target="_blank" rel="noopener noreferrer">Pipelock Rules</a></h2>
+      <p class="proof-deep-sub">Community detection patterns distributed as Ed25519-signed YAML bundles. Hot-reloadable. Tampered rules fail signature verification.</p>
+    </div>
+    <div class="proof-deep-body fx-exhibit-band fx-exhibit-flip">
+
+      <figure class="fx-exhibit" aria-label="The head of the real signed community rules bundle">
+      {{ partial "artifact-bar.html" (dict "label" "rules bundle · ed25519-signed · hot-reload") }}
+        {{- $ex := readFile "assets/exhibits/rules-bundle.yaml" -}}
+        {{- if not $ex -}}{{- errorf "proof exhibit assets/exhibits/rules-bundle.yaml is missing or empty" -}}{{- end -}}
+        <pre class="fx-exhibit-doc" data-fx="scan"><code>{{ $ex }}</code></pre>
+        <figcaption class="fx-exhibit-src">real bundle head &middot; <a href="https://github.com/luckyPipewrench/pipelock-rules/blob/main/published/pipelock-community/bundle.yaml" target="_blank" rel="noopener noreferrer">pipelock-community/bundle.yaml</a> &middot; signature: <code>bundle.yaml.sig</code></figcaption>
+      </figure>
+      <div class="fx-exhibit-claims">
+      <ul class="proof-claim-list">
+        <li><strong>Signed bundles</strong> verified at install time. <code>pipelock rules verify</code> checks signatures against your trusted keyring.</li>
+        <li><strong>One flipped byte is fatal.</strong> Run 2026-08-24 against a copy of the installed bundle:
+          {{- $td := readFile "assets/exhibits/tamper-demo.txt" -}}
+          {{- if not $td -}}{{- errorf "tamper-demo exhibit is missing or empty" -}}{{- end -}}
+          <pre class="proof-mini-term" data-command-lines data-command-text="pipelock rules verify"><code>{{ $td }}</code></pre>
+        </li>
+        <li><strong>Production signing key</strong>: <code class="proof-key">{{ $signingKeyHex }}</code></li>
+        <li><strong>The trust model is public</strong>: which key signs what, and what a failed check refuses to load. <a href="/learn/community-rules/">Install flow + trust model</a>.</li>
+      </ul>
+      <div class="proof-deep-actions">
+        <a href="https://github.com/luckyPipewrench/pipelock-rules" class="btn btn-primary" target="_blank" rel="noopener noreferrer">View bundle source</a>
+        <a href="/learn/community-rules/" class="btn btn-ghost">Install flow</a>
+      </div>
+      </div>
+    </div>
+  </section>
+
+  {{/* ── Pillar deep block: Attest ────────────────────── */}}
+  <section class="proof-deep" data-fx="reveal live" id="attest" aria-label="Attest: Signed compliance reports">
+    <div class="proof-deep-head">
+      <p class="proof-deep-label">03 · Attest</p>
+      <h2 data-fx="decrypt"><a href="/assess/">Pipelock Assess</a></h2>
+      <p class="proof-deep-sub">Generate signed security reports with compliance evidence. Auditors verify offline.</p>
+    </div>
+    <div class="proof-deep-body fx-exhibit-band">
+
+      <figure class="fx-exhibit" aria-label="A real signed audit packet excerpt, servable and verifiable from this site">
+      {{ partial "artifact-bar.html" (dict "label" "assessment report · hash-chained · verified offline") }}
+        {{- $ex := readFile "assets/exhibits/audit-packet.json" -}}
+        {{- if not $ex -}}{{- errorf "proof exhibit assets/exhibits/audit-packet.json is missing or empty" -}}{{- end -}}
+        <pre class="fx-exhibit-doc" data-fx="scan"><code>{{ $ex }}</code></pre>
+        <figcaption class="fx-exhibit-src">real packet excerpt &middot; <a href="/playground-replay/secret-exfil-url-blocked/packet.json">full packet.json on this site</a> &middot; verifier verdict inside is the file’s own</figcaption>
+      </figure>
+      <div class="fx-exhibit-claims">
+      <ul class="proof-claim-list">
+        <li><strong>{{ $stats.compliance_frameworks }} compliance frameworks</strong> mapped:
+          {{/* Chips with a shipped guide link to it. The three without one stay
+               unlinked on purpose: a chip pointing at nothing is worse than no
+               link, and their missing public mappings are tracked for the
+               compliance-content audit. */}}
+          <span class="proof-chip-row" role="list">
+            <a class="proof-chip" role="listitem" href="/learn/owasp-mcp-top10/">OWASP MCP Top&nbsp;10</a>
+            <a class="proof-chip" role="listitem" href="/learn/owasp-agentic-top10/">Agentic Top&nbsp;10</a>
+            <span class="proof-chip" role="listitem">MITRE ATLAS</span>
+            <a class="proof-chip" role="listitem" href="/learn/eu-ai-act-compliance/">EU AI&nbsp;Act</a>
+            <span class="proof-chip" role="listitem">NIST AI&nbsp;RMF</span>
+            <span class="proof-chip" role="listitem">HIPAA</span>
+            <a class="proof-chip" role="listitem" href="/learn/ai-agent-compliance/#framework-mappings">SOC&nbsp;2</a>
+          </span>
+        </li>
+        <li><strong>Ed25519-signed bundles</strong> are tamper-evident. Demo bundles verify against the Pipelock demo key; customer bundles verify against the deployment's pinned key.</li>
+        <li><strong>Offline by design.</strong> No phone home, no telemetry, no third-party verification service.</li>
+        <li><strong>The verifier&rsquo;s own words</strong>, written by the verifier during the recorded run and <a href="/playground-replay/secret-exfil-url-blocked/verifier.txt">served on this site</a>:
+          {{- $vt := readFile "static/playground-replay/secret-exfil-url-blocked/verifier.txt" -}}
+          {{- if not $vt -}}{{- errorf "verifier.txt exhibit is missing or empty" -}}{{- end -}}
+          <pre class="proof-mini-term"><code>{{ $vt }}</code></pre>
+        </li>
+      </ul>
+      <div class="proof-deep-actions">
+        <a href="/assess/" class="btn btn-primary">Get Assess license</a>
+        <a href="/assess/demo-assessment/" class="btn btn-ghost">View a demo report</a>
+      </div>
+      </div>
+    </div>
+  </section>
+
+  {{/* ── What is signed (command-syntax only, no synthetic verify output) ── */}}
+  <section class="proof-signed" id="signed" data-fx="reveal live" aria-label="What is signed">
+    <div class="proof-section-head">
+      <p class="proof-section-label">Cryptographic anchors</p>
+      <h2 data-fx="decrypt">What is signed</h2>
+      <p class="proof-section-sub">Three surfaces, three trust anchors: official rules key, Pipelock demo/report key, and customer deployment key.</p>
+    </div>
+
+    <div class="proof-signed-grid">
+      <div class="proof-signed-card fx-keycard" data-fx="reveal tilt spotlight">
+        <p class="proof-signed-num">01</p>
+        <span class="fx-key-glyph" aria-hidden="true">{{ partial "brands/pipelock-mark.svg" . }}</span>
+        <h3>Rules bundles</h3>
+        <p>Each YAML bundle is signed at publish time. <code>pipelock rules verify</code> checks the signature against your trusted keyring before load. A tampered bundle fails to load and the proxy keeps the previous state.</p>
+        <p class="fx-key-anchor">official rules key &middot; <code>{{ substr $signingKeyHex 0 8 }}&hellip;{{ substr $signingKeyHex -8 }}</code></p>
+      </div>
+      <div class="proof-signed-card fx-keycard" data-fx="reveal tilt spotlight">
+        <p class="proof-signed-num">02</p>
+        <span class="fx-key-glyph" aria-hidden="true">{{ partial "brands/pipelock-mark.svg" . }}</span>
+        <h3>Action receipts</h3>
+        <p>Every block decision can emit a signed action receipt. The receipt is short-form (verdict, layer, classes detected, redaction class counts), and the signature is verifiable against the deployment's pinned public key. Public Pipelock demo receipts use the Pipelock demo key.</p>
+        <p class="fx-key-anchor">pipelock demo key &middot; <code>91dfb238&hellip;12eb755a</code></p>
+      </div>
+      <div class="proof-signed-card fx-keycard" data-fx="reveal tilt spotlight">
+        <p class="proof-signed-num">03</p>
+        <span class="fx-key-glyph" aria-hidden="true">{{ partial "brands/pipelock-mark.svg" . }}</span>
+        <h3>Assess reports</h3>
+        <p><code>pipelock assess</code> writes a hash-chained bundle with Ed25519 signatures over each section. Auditors verify with <code>pipelock assess verify</code> using the trusted public key. No network call.</p>
+        <p class="fx-key-anchor">customer deployment key &middot; <code>pinned per deployment</code></p>
+      </div>
+    </div>
+
+    <div class="proof-signed-cli">
+      <p class="proof-signed-cli-label">Verify yourself</p>
+      <pre class="proof-signed-cli-block" data-fx="type" data-command-lines data-command-text="pipelock rules verify&#10;pipelock assess verify ./assessment-a1b2c3d4/&#10;pipelock verify-receipt ./receipt.json --key 70b991eb77816fc4ef0ae6a54d8a4119ddc5a16c9711c332c39e743079f6c63e"><code>$ pipelock rules verify
+$ pipelock assess verify ./assessment-a1b2c3d4/
+$ pipelock verify-receipt ./receipt.json --key 70b991eb77816fc4ef0ae6a54d8a4119ddc5a16c9711c332c39e743079f6c63e</code></pre>
+      <p class="proof-signed-cli-note">The key above is the official rules signing key, not a universal receipt key. Rules verify against the official key, public demo reports verify against the Pipelock demo key, and customer receipts verify against the deployment's pinned key.</p>
+      <div class="proof-deep-actions">
+        <a href="/learn/verify-a-receipt/" class="btn btn-primary" data-event="proof_verifier_click" data-event-placement="proof-signed">Verify a public receipt</a>
+      </div>
+    </div>
+  </section>
+
+  {{/* ── Numbers strip ────────────────────────────────── */}}
+  <section class="proof-numbers" id="numbers" data-fx="reveal live" aria-label="Receipt totals">
+    <p class="proof-numbers-label">Receipts in numbers</p>
+    <div class="proof-numbers-grid">
+      <div class="proof-stat"><p class="proof-stat-value" data-fx="count">{{ $stats.bench_cases }}</p><p class="proof-stat-label">Bench cases</p></div>
+      <div class="proof-stat"><p class="proof-stat-value" data-fx="count">{{ $stats.bench_categories }}</p><p class="proof-stat-label">Categories</p></div>
+      <div class="proof-stat"><p class="proof-stat-value" data-fx="count">{{ $stats.dlp_patterns }}</p><p class="proof-stat-label">DLP patterns</p></div>
+      <div class="proof-stat"><p class="proof-stat-value" data-fx="count">{{ $stats.response_patterns }}</p><p class="proof-stat-label">Injection patterns</p></div>
+      <div class="proof-stat"><p class="proof-stat-value" data-fx="count">{{ $stats.compliance_frameworks }}</p><p class="proof-stat-label">Frameworks</p></div>
+      <div class="proof-stat"><p class="proof-stat-value" data-fx="count">~{{ $stats.scan_latency_ms }}ms</p><p class="proof-stat-label">Scan latency</p></div>
+    </div>
+  </section>
+
+  {{/* ── Public evidence band (real URLs only) ────────── */}}
+  <section class="proof-evidence" id="public-evidence" aria-label="Public evidence">
+    <div class="proof-section-head">
+      <p class="proof-section-label">Public evidence</p>
+      <h2>Don't take our word for it</h2>
+      <p class="proof-section-sub">Three offline-verifiable surfaces. Every link goes to a real artifact.</p>
+    </div>
+    <div class="proof-evidence-grid">
+      <a class="proof-evidence-card" data-fx="reveal spotlight" href="/gauntlet/">
+        <p class="proof-evidence-eyebrow">Verifiable scoreboard</p>
+        <h3>Agent Egress Bench results</h3>
+        <p>Per-category bench results with reproduction commands.</p>
+      </a>
+      <a class="proof-evidence-card" data-fx="reveal spotlight" href="/assess/demo-assessment/">
+        <p class="proof-evidence-eyebrow">Sample report</p>
+        <h3>Demo assessment</h3>
+        <p>A real signed Assess report so you can see the artifact shape before you license.</p>
+      </a>
+      <a class="proof-evidence-card" data-fx="reveal spotlight" href="https://github.com/luckyPipewrench/pipelock/blob/main/docs/security-assurance.md" target="_blank" rel="noopener noreferrer">
+        <p class="proof-evidence-eyebrow">Threat model</p>
+        <h3>Security assurance case</h3>
+        <p>Trust boundaries, documented limitations, and the cases the binary does not cover.</p>
+      </a>
+    </div>
+  </section>
+
+  {{/* ── Further reading (markdown-source inbound links) ─ */}}
+  {{ if .Content }}
+  <section class="proof-further" aria-label="Further reading">
+    <div class="proof-further-inner">
+      {{ .Content }}
+    </div>
+  </section>
+  {{ end }}
+
+  {{/* ── Bottom close ─────────────────────────────────── */}}
+  <section class="proof-product-cta" aria-label="Verify it yourself">
+    <p class="proof-product-cta-eyebrow">Verify it yourself</p>
+    <p class="proof-product-cta-copy">Public methodology. Public attack cases. Public Pipelock results.</p>
+    <div class="proof-product-cta-actions">
+      <a href="/install/" class="btn btn-primary">Install Pipelock</a>
+      <a href="/assess/" class="btn btn-ghost">See Assess Reports</a>
+      <a href="/gauntlet/" class="btn btn-ghost">Benchmark results</a>
+    </div>
+  </section>
+</article>
+
+{{ end }}

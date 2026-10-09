@@ -1,0 +1,26 @@
+{{ $page := .page }}
+{{ $cat := $page.Params.compare_cat | default "" }}
+{{ $catLabel := $cat }}
+{{ if $cat }}
+  {{ range site.Data.compare_index.categories }}
+    {{ if eq .key $cat }}{{ $catLabel = .label }}{{ end }}
+  {{ end }}
+{{ end }}
+{{ $summary := $page.Params.subtitle | default $page.Description | default "" }}
+{{/* Short reviewed stamp: "Sep 2026". The long boundary text lives in the page ledger, not in a pill. */}}
+{{ $meta := "" }}
+{{ with $page.Params.reviewed }}
+  {{ $parts := split . " " }}
+  {{ $meta = printf "Reviewed %s %s" (substr (index $parts 0) 0 3) (index $parts 1 | default "") | strings.TrimSpace }}
+{{ end }}
+{{ $tags := slice }}
+{{ partial "editorial-index-card.html" (dict
+  "page" $page
+  "kind" "compare"
+  "cat" $cat
+  "catLabel" ($catLabel | default "Comparison")
+  "summary" $summary
+  "featured" (.featured | default false)
+  "tags" $tags
+  "meta" $meta
+) }}

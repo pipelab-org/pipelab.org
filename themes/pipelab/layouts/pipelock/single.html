@@ -1,0 +1,103 @@
+{{ define "main" }}
+{{/* Custom layout for /pipelock/ — overrides _default/single.html.
+     Hero, sticky mini-nav, and bottom product CTA are template-owned;
+     the markdown body still renders {{ .Content }} for the boundary,
+     runbook, controls, pipeline, evidence, and Pro sections. */}}
+
+{{ $version := site.Params.pipelock_version | default "" }}
+{{ $stats := site.Data.stats }}
+
+<article id="top" class="pipelock-product">
+
+  {{/* ── Hero ─────────────────────────────────────────── */}}
+<header class="pipelock-hero site-hero brand-field-hero brand-field-hero-standard" data-hero="brand-standard" data-fx="reveal">
+    <div class="pipelock-hero-inner site-hero-inner">
+      <p class="pipelock-eyebrow"><span class="pipelock-eyebrow-dot" aria-hidden="true"></span> Agent runtime security</p>
+      <div class="pipelock-lockup">
+        <span class="pipelock-lockup-mark">{{ partial "brands/pipelock-mark.svg" . }}</span>
+        <h1 class="pipelock-lockup-type">
+          <span class="pipelock-wordmark" aria-label="Pipelock"><span>Pipe</span><em>lock</em></span>
+          <span class="pipelock-category">Open-source agent firewall</span>
+        </h1>
+      </div>
+      {{ with .Params.subtitle }}<p class="pipelock-lead">{{ . }}</p>{{ end }}
+
+      {{ if $version }}
+      <p class="pipelock-version-meta">
+        <span class="pipelock-version-chip">v{{ $version }}</span>
+        <span class="pipelock-version-tagline">Operator dashboard · Evidence viewer · Strict receipts</span>
+      </p>
+      {{ end }}
+
+      <div class="pipelock-hero-actions">
+        <a href="#install" class="btn btn-primary" data-event="install_section_opened" data-event-placement="pipelock-hero">Install</a>
+        <a href="/pricing/" class="btn btn-ghost" data-event="pricing_click" data-event-placement="pipelock-hero">Pricing</a>
+        <a href="https://github.com/luckyPipewrench/pipelock" class="btn btn-ghost" target="_blank" rel="noopener noreferrer" data-event="github_click" data-event-placement="pipelock-hero">GitHub</a>
+      </div>
+
+      <dl class="pipelock-hero-facts" aria-label="Pipelock facts">
+        <div><dt>Core</dt><dd>Apache 2.0</dd></div>
+        <div><dt>Runtime</dt><dd>Single Go binary</dd></div>
+        <div><dt>Traffic</dt><dd>HTTP · MCP · WebSocket</dd></div>
+        <div><dt>Evidence</dt><dd>Signed decision records</dd></div>
+      </dl>
+
+    </div>
+  </header>
+
+  <div class="pipelock-after-hero">
+      <nav class="pipelock-deep-dives" aria-label="Latest release deep dives">
+        <span class="pipelock-deep-dives-label">v{{ $version }} deep dives</span>
+        <a href="https://github.com/luckyPipewrench/pipelock/releases" target="_blank" rel="noopener noreferrer">Release notes</a>
+        <a href="/proof/">Evidence stack</a>
+        <a href="/learn/open-source-ai-firewall/">Open-source AI firewall guide</a>
+        <a href="/learn/ai-agent-data-loss-prevention/">DLP guide</a>
+        <a href="/gauntlet/">Public benchmark results</a>
+      </nav>
+
+      {{ partial "page-formats.html" . }}
+
+      <div class="pipelock-hero-architecture" data-fx="scan">
+        <img src="/images/architecture.svg"
+             alt="Pipelock architecture: Agent → Pipelock → Internet with Detect, Enforce, Prove runtime capabilities"
+             width="960" height="490"
+             decoding="async" fetchpriority="high">
+      </div>
+  </div>
+
+  {{/* ── Sticky mini-nav ──────────────────────────────── */}}
+  <nav class="pipelock-mini-nav" aria-label="On this page" data-fx="mininav">
+    <ul>
+      <li><a href="#overview">Boundary</a></li>
+      <li><a href="#install">First run</a></li>
+      <li><a href="#details">Controls</a></li>
+      <li><a href="#how-it-works">Pipeline</a></li>
+      <li><a href="#evidence">Evidence</a></li>
+      <li><a href="#pro">Pro</a></li>
+      <li><a href="#faq">FAQ</a></li>
+    </ul>
+  </nav>
+
+  {{/* ── Body content ─────────────────────────────────── */}}
+  <div class="pipelock-product-body">
+    {{ .Content }}
+    {{ partial "faq.html" . }}
+  </div>
+
+  {{/* ── Bespoke bottom CTA ───────────────────────────── */}}
+  {{/* Page sets disable_cta: true so article-cta.html is intentionally
+       skipped. This is a product-page-shaped close instead. */}}
+  <section class="pipelock-product-cta" data-fx="reveal" aria-label="Get started with Pipelock">
+    <p class="pipelock-product-cta-eyebrow">Get started</p>
+    <p class="pipelock-product-cta-copy">Single Go binary (Apache-2.0 core; Enterprise features under ELv2). Install and the proxy is online.</p>
+    <div class="pipelock-product-cta-actions">
+      <a href="/install/" class="btn btn-primary" data-event="cta_primary_click" data-event-placement="pipelock-product-bottom">Install Pipelock</a>
+      <a href="https://github.com/luckyPipewrench/pipelock" class="btn btn-ghost" target="_blank" rel="noopener noreferrer" data-event="github_click" data-event-placement="pipelock-product-bottom">Star on GitHub</a>
+      <a href="/proof/" class="btn btn-ghost" data-event="proof_click" data-event-placement="pipelock-product-bottom">See proof</a>
+    </div>
+  </section>
+</article>
+
+{{ partial "site-fx.html" . }}
+
+{{ end }}

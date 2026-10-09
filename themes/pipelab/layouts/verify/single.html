@@ -1,0 +1,157 @@
+{{ define "main" }}
+{{ $va := partial "verifier-assets.html" . }}
+
+<article class="verify-tool" data-wasm="{{ $va.wasm.url }}" data-wasm-exec="{{ $va.wasmExec.url }}" data-wasm-integrity="{{ $va.wasm.integrity }}" data-wasm-exec-integrity="{{ $va.wasmExec.integrity }}" data-sample-chain="{{ $va.capture.url }}" data-sample-chain-integrity="{{ $va.capture.integrity }}" data-sample-key="{{ $va.key.url }}" data-sample-key-integrity="{{ $va.key.integrity }}">
+  <header class="verify-tool-hero" data-hero="utility">
+    <div class="verify-tool-inner verify-tool-hero-grid">
+      <div class="verify-tool-hero-copy">
+        <p class="verify-tool-eyebrow">Receipt verifier</p>
+        <h1>{{ .Title }}</h1>
+        <p class="verify-tool-lead">{{ .Params.lead }}</p>
+      </div>
+      <p class="verify-tool-local">
+        <span aria-hidden="true"></span>
+        Nothing is uploaded. The verifier runs in this browser.
+      </p>
+    </div>
+  </header>
+
+  {{ partial "site-fx.html" . }}
+
+  <section class="verify-tool-workbench" aria-labelledby="verify-workbench-title">
+    <div class="verify-tool-inner">
+      <div class="verify-tool-heading">
+        <p class="verify-tool-eyebrow">Local input</p>
+        <h2 id="verify-workbench-title" data-fx="decrypt">Add the chain and public key</h2>
+        <p>Use a JSONL receipt chain from any Pipelock deployment, or drop a PipeLab-published session bundle. Files stay on this device.</p>
+      </div>
+
+      <div class="verify-tool-grid">
+        <div class="verify-tool-inputs" data-fx="spotlight">
+          <div class="verify-tool-card-head">
+            <span class="verify-tool-step" aria-hidden="true">01</span>
+            <div>
+              <p class="verify-tool-eyebrow">Receipt data</p>
+              <h2>Receipt chain</h2>
+            </div>
+          </div>
+
+          <div class="verify-tool-drop" data-dropzone tabindex="0" role="button" aria-describedby="verify-file-status">
+            <input id="verify-chain-file" type="file" accept=".jsonl,.gz,.tgz,.tar.gz,application/gzip,application/x-gzip" data-chain-file aria-label="Receipt chain or published session bundle file">
+            <span class="verify-tool-drop-mark" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/>
+              </svg>
+            </span>
+            <span class="verify-tool-drop-copywrap">
+              <span class="verify-tool-drop-title">Drop a chain or published bundle here</span>
+              <span class="verify-tool-drop-copy">JSONL chains and gzip-tar bundles up to 25 MB</span>
+            </span>
+            <span class="verify-tool-drop-action">Choose a file</span>
+          </div>
+
+          <p id="verify-file-status" class="verify-tool-file-status" data-file-status>No file selected. You can paste a JSONL chain below.</p>
+
+          <div class="verify-tool-or" aria-hidden="true"><span>or paste JSONL</span></div>
+
+          <label class="verify-tool-field" for="verify-chain-text">
+            <span>Receipt-chain text</span>
+            <textarea id="verify-chain-text" data-chain-text rows="8" spellcheck="false" placeholder="{&quot;type&quot;:&quot;action_receipt&quot;,...}"></textarea>
+          </label>
+
+          <div class="verify-tool-sample-row">
+            <button type="button" class="btn btn-ghost" data-sample>Try the shipped reference capture</button>
+            <span>Loads PipeLab's published sample into this page.</span>
+          </div>
+        </div>
+
+        <aside class="verify-tool-key" data-fx="spotlight" aria-labelledby="verify-key-title">
+          <div class="verify-tool-card-head">
+            <span class="verify-tool-step" aria-hidden="true">02</span>
+            <div>
+              <p class="verify-tool-eyebrow">Trust anchor</p>
+              <h2 id="verify-key-title">Operator public key</h2>
+            </div>
+          </div>
+
+          <p>A pinned key is how you check that these receipts came from the operator you intended to trust.</p>
+
+          <label class="verify-tool-field" for="verify-key-text">
+            <span>Trusted public key</span>
+            <textarea id="verify-key-text" data-key-text rows="3" spellcheck="false" placeholder="Paste the operator's Ed25519 public key"></textarea>
+          </label>
+
+          <label class="verify-tool-key-file" for="verify-key-file">
+            <input id="verify-key-file" type="file" accept=".txt,.pub,text/plain" data-key-file>
+            <span>Choose a public-key file</span>
+          </label>
+
+          <div class="verify-tool-trust" data-trust-state="unpinned" aria-live="polite">
+            <strong data-trust-title>Internal consistency only</strong>
+            <span data-trust-copy>No key is pinned. The tool can check whether supplied records agree with their embedded signer key, but cannot establish whose key it is.</span>
+          </div>
+        </aside>
+      </div>
+
+      <div class="verify-tool-console" data-console-state="idle">
+        <div class="verify-tool-console-bar">
+          <span class="verify-tool-dots" aria-hidden="true"><span></span><span></span><span></span></span>
+          <span class="verify-tool-console-title">pipelock verify-receipt</span>
+          <span class="verify-tool-console-mode">WASM · browser-local</span>
+        </div>
+
+        <div class="verify-tool-console-body">
+          <div class="verify-tool-console-actions">
+            <div class="verify-tool-console-control">
+              <span class="verify-tool-step" aria-hidden="true">03</span>
+              <span>Run verifier</span>
+            </div>
+            <button type="button" class="btn btn-primary" data-run>Verify locally</button>
+            <span class="verify-tool-console-limit">25 MB input limit</span>
+          </div>
+
+          <div class="verify-tool-console-output">
+            <div class="verify-tool-console-output-head" aria-hidden="true">
+              <span>Verifier output</span>
+              <span class="verify-tool-console-output-state"></span>
+            </div>
+            <pre aria-live="polite" aria-atomic="true"><code data-output>Ready. Add a JSONL receipt chain, or a PipeLab-published session bundle. Nothing leaves this browser.</code></pre>
+          </div>
+
+          <p class="verify-tool-fallback">If the browser verifier cannot load, run <code>pipelock verify-receipt --key &lt;key&gt; &lt;file&gt;</code> locally. <a href="/learn/verify-a-receipt/">Get the standalone verifier instructions.</a></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="verify-tool-limits" aria-labelledby="verify-limits-title">
+    <div class="verify-tool-inner">
+      <div class="verify-tool-heading">
+        <p class="verify-tool-eyebrow">Scope</p>
+        <h2 id="verify-limits-title" data-fx="decrypt">What the result means</h2>
+      </div>
+      <div class="verify-tool-limits-grid">
+        <section data-fx="spotlight">
+          <h3>With a pinned public key</h3>
+          <p>A passing chain verifies signatures, record integrity, and record order for the records you supplied against that key.</p>
+        </section>
+        <section data-fx="spotlight">
+          <h3>Without a pinned public key</h3>
+          <p>A passing chain proves internal consistency only. It cannot establish that the embedded signer key belongs to the operator you meant to trust.</p>
+        </section>
+        <section data-fx="spotlight">
+          <h3>What neither result proves</h3>
+          <p>Verification does not prove the supplied records are complete, that every action crossed the mediation boundary, or that the operator was honest.</p>
+        </section>
+      </div>
+      <div class="verify-tool-links">
+        <a class="btn btn-primary" href="/agent-evidence/">See the signed evidence model</a>
+        <a class="btn btn-ghost" href="https://github.com/luckyPipewrench/agent-evidence-levels" target="_blank" rel="noopener noreferrer">Read the Agent Evidence Levels spec</a>
+      </div>
+    </div>
+  </section>
+</article>
+
+{{ $verifyJS := resources.Get "js/verify-tool.js" | minify | fingerprint }}
+<script src="{{ $verifyJS.RelPermalink }}" integrity="{{ $verifyJS.Data.Integrity }}" defer></script>
+{{ end }}

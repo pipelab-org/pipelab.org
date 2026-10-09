@@ -1,0 +1,42 @@
+{{/* Resolves install methods from data/install.yaml.
+
+     Returns a slice of dicts: id, label, short_label, command — in the published
+     order defined by the data file, with VERSION substituted for the configured
+     release version.
+
+     Optional `only` param: a slice of ids to keep. Filtering PRESERVES the data
+     file's order, so a caller cannot accidentally publish Homebrew ahead of Go by
+     listing ids in a different order.
+
+     Usage:
+       {{ $all  := partial "install/methods.html" (dict) }}
+       {{ $some := partial "install/methods.html" (dict "only" (slice "go" "homebrew")) }}
+*/}}
+
+{{- $version := site.Params.pipelock_version -}}
+{{- if not $version -}}
+  {{- errorf "install/methods.html: site.Params.pipelock_version is not set; install commands would publish a literal VERSION placeholder" -}}
+{{- end -}}
+
+{{- $methods := site.Data.install.methods -}}
+{{- if not $methods -}}
+  {{- errorf "install/methods.html: data/install.yaml has no methods" -}}
+{{- end -}}
+
+{{- $only := .only -}}
+{{- $out := slice -}}
+{{- range $methods -}}
+  {{- if or (not $only) (in $only .id) -}}
+    {{- $out = $out | append (dict
+        "id" .id
+        "label" .label
+        "short_label" (default .label .short_label)
+        "command" (replace .command "VERSION" $version)) -}}
+  {{- end -}}
+{{- end -}}
+
+{{- if and $only (ne (len $out) (len $only)) -}}
+  {{- errorf "install/methods.html: requested ids %v but matched %d method(s); check the ids against data/install.yaml" $only (len $out) -}}
+{{- end -}}
+
+{{- return $out -}}

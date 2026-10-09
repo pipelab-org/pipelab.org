@@ -1,0 +1,34 @@
+{{- /* Founding Pro claimed-count meter.
+
+     Source of truth: site.Params.founding_claimed and site.Params.founding_cap
+     in hugo.toml. Update founding_claimed when a Founding Pro customer signs.
+     Source: business ops.
+
+     Fill width is set inline so _pricing.scss does not hardcode a percentage.
+*/ -}}
+{{- if not (isset site.Params "founding_claimed") -}}
+  {{- errorf "founding-seats: site.Params.founding_claimed must be set in hugo.toml (in %s)" .Page.File.Path -}}
+{{- end -}}
+{{- $claimed := site.Params.founding_claimed -}}
+{{- $cap := site.Params.founding_cap | default 50 -}}
+{{- /* Fail the build loudly on impossible values: a zero or negative cap breaks the
+       percentage math, and a claimed count outside 0..cap would render negative
+       remaining seats or a bar wider than 100%. */ -}}
+{{- if le $cap 0 -}}
+  {{- errorf "founding-seats: founding_cap must be a positive integer, got %v (in %s)" $cap .Page.File.Path -}}
+{{- end -}}
+{{- if or (lt $claimed 0) (gt $claimed $cap) -}}
+  {{- errorf "founding-seats: founding_claimed must be between 0 and founding_cap (%v), got %v (in %s)" $cap $claimed .Page.File.Path -}}
+{{- end -}}
+{{- $remaining := sub $cap $claimed -}}
+{{- $pct := div (mul $claimed 100) $cap -}}
+<div class="pricing-seats">
+  <div class="pricing-seats-row">
+    <span>First {{ $cap }} customers</span>
+    <span class="pricing-seats-left">{{ $claimed }} of {{ $cap }} claimed, {{ $remaining }} remaining</span>
+  </div>
+  <div class="pricing-seats-track" aria-hidden="true">
+    <div class="pricing-seats-fill" style="width: {{ $pct }}%"></div>
+  </div>
+  <p class="pricing-seats-sub">Founding price stays for life once claimed.</p>
+</div>

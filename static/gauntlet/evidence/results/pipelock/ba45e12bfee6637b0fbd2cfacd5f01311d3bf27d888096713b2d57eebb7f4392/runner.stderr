@@ -1,0 +1,43 @@
+Fixtures: HTTP=127.0.0.1:36797 TLS=127.0.0.1:34859 WS=127.0.0.1:46619 DNS=127.0.0.1:55479 MCP_HTTP=127.0.0.1:41189
+2026/09/03 17:49:34 http: TLS handshake error from 127.0.0.1:43230: EOF
+2026/09/03 17:49:55 http: TLS handshake error from 127.0.0.1:55346: EOF
+2026/09/03 17:49:55 http: TLS handshake error from 127.0.0.1:55368: EOF
+2026/09/03 17:56:35 http: TLS handshake error from 127.0.0.1:53528: EOF
+2026/09/03 17:56:35 http: TLS handshake error from 127.0.0.1:53540: EOF
+2026/09/03 17:56:35 http: TLS handshake error from 127.0.0.1:53568: EOF
+2026/09/03 17:56:35 http: TLS handshake error from 127.0.0.1:53586: EOF
+2026/09/03 17:56:35 http: TLS handshake error from 127.0.0.1:53594: EOF
+2026/09/03 17:56:35 http: TLS handshake error from 127.0.0.1:53600: EOF
+2026/09/03 17:56:35 http: TLS handshake error from 127.0.0.1:53616: EOF
+2026/09/03 17:56:35 http: TLS handshake error from 127.0.0.1:53620: EOF
+2026/09/03 17:56:35 http: TLS handshake error from 127.0.0.1:53636: EOF
+2026/09/03 17:56:35 http: TLS handshake error from 127.0.0.1:53648: EOF
+2026/09/03 17:56:35 http: TLS handshake error from 127.0.0.1:53658: EOF
+2026/09/03 17:56:35 http: TLS handshake error from 127.0.0.1:53666: EOF
+2026/09/03 17:56:35 http: TLS handshake error from 127.0.0.1:53668: EOF
+2026/09/03 17:56:35 http: TLS handshake error from 127.0.0.1:53676: EOF
+2026/09/03 17:56:35 http: TLS handshake error from 127.0.0.1:53684: EOF
+2026/09/03 17:56:35 http: TLS handshake error from 127.0.0.1:53696: EOF
+2026/09/03 17:56:35 http: TLS handshake error from 127.0.0.1:53708: EOF
+2026/09/03 17:56:35 http: TLS handshake error from 127.0.0.1:53724: EOF
+2026/09/03 17:56:35 http: TLS handshake error from 127.0.0.1:53726: EOF
+2026/09/03 17:58:16 http: TLS handshake error from 127.0.0.1:47986: EOF
+2026/09/03 17:58:16 http: TLS handshake error from 127.0.0.1:48002: EOF
+2026/09/03 17:58:16 http: TLS handshake error from 127.0.0.1:48014: EOF
+
+--- Gauntlet Summary ---
+Tool:       pipelock 3.5.0
+Adapter:    proxy
+Cases:      254 total, 254 routed, 0 unreachable, 0 N/A, 0 errors
+Outcomes:   249 passed, 5 failed, 0 errors
+
+  Full Corpus Scores (primary):
+    Containment:      98.4%
+    False Positive:   2.9%
+
+  Applicable Scores (diagnostic):
+    Containment:      98.4%
+    False Positive:   2.9%
+Measurement:      measured
+Summary written:  /home/runner/work/_temp/pipelock-gauntlet-candidate/raw-summary.json
+Receipt profile:  /home/runner/work/_temp/pipelock-gauntlet-candidate/receipt-profile.json

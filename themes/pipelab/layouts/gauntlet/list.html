@@ -1,0 +1,72 @@
+{{ define "main" }}
+{{ $stats := site.Data.stats }}
+
+<article class="gauntlet-landing">
+<header class="page-header gauntlet-hero gauntlet-landing-hero site-hero brand-field-hero brand-field-hero-standard" data-hero="brand-standard" data-fx="reveal">
+    <p class="gauntlet-landing-eyebrow">Agent Egress Bench</p>
+    <h1>{{ .Title }}</h1>
+    <div class="hero-buttons gauntlet-landing-actions">
+      <a href="/gauntlet/results/" class="btn btn-primary">View the run history</a>
+      <a href="/gauntlet/submit/" class="btn btn-ghost">Publish your own result</a>
+    </div>
+  </header>
+
+  {{- /* This intro duplicates the body of content/gauntlet/_index.md, which is
+         not rendered into the HTML page but IS rendered into the markdown
+         mirror at /gauntlet/index.md. Both surfaces are published, so an edit
+         to either copy has to be made in both or the human page and the
+         machine-readable page state different things. */ -}}
+  <section class="page-content gauntlet-landing-intro" data-fx="reveal live">
+    <p>This page carries Pipelock&rsquo;s own Agent Egress Bench runs, disclosed as first-party evidence. It is not a ranking and it does not score other tools. Anyone can run the same corpus against any target and publish what they find, including a result that reflects badly on Pipelock, with no notice or approval. The <a href="https://github.com/luckyPipewrench/agent-egress-bench/blob/main/docs/RESULTS-USE.md" target="_blank" rel="noopener noreferrer">results-use and attribution policy</a> defines the labels to use and the facts to publish beside a score, and the <a href="/blog/pipelock-gauntlet-public-benchmark/">launch write-up</a> explains why the scores are published this way.</p>
+  </section>
+
+  <section class="gauntlet-landing-evidence" data-fx="reveal live" aria-label="Corpus evidence">
+    <div class="gauntlet-landing-evidence-inner fx-exhibit-band">
+      <figure class="fx-exhibit" aria-label="Verified Agent Egress Bench corpus snapshot">
+        {{ partial "artifact-bar.html" (dict "label" "corpus snapshot") }}
+        <pre class="fx-exhibit-doc" data-fx="scan"><code>agent-egress-bench
+{{ $stats.bench_cases }} logical cases
+{{ $stats.bench_categories }} categories
+{{ $stats.bench_adversarial_cases }} block-expected attack cases
+{{ $stats.bench_fp_cases }} allow-expected false-positive controls
+{{ $stats.bench_warn_cases }} warn-class drift case</code></pre>
+        <figcaption class="fx-exhibit-src">{{ partial "bench-provenance.html" . }}</figcaption>
+      </figure>
+      <div class="fx-exhibit-claims gauntlet-landing-claims">
+        <p>The corpus covers DLP evasion, prompt injection, SSRF, tool poisoning, encoding chains, shell obfuscation, hostname exfiltration, WebSocket DLP, and A2A scanning. The same corpus Pipelock tests itself against before every release.</p>
+        <p>This tests the security tool, not the agent. <a href="https://github.com/luckyPipewrench/agent-egress-bench/blob/main/docs/gauntlet.md" target="_blank" rel="noopener noreferrer">View the scoring methodology.</a></p>
+      </div>
+    </div>
+    <div class="gauntlet-landing-stats" aria-label="Corpus breakdown">
+      <div><span data-fx="count">{{ $stats.bench_cases }}</span><p>logical cases</p></div>
+      <div><span data-fx="count">{{ $stats.bench_categories }}</span><p>categories</p></div>
+      <div><span data-fx="count">{{ $stats.bench_adversarial_cases }}</span><p>block-expected attack cases</p></div>
+      <div><span data-fx="count">{{ $stats.bench_fp_cases }}</span><p>allow-expected false-positive controls</p></div>
+      <div><span data-fx="count">{{ $stats.bench_warn_cases }}</span><p>warn-class drift case</p></div>
+    </div>
+  </section>
+
+  <section class="page-content gauntlet-landing-run" data-fx="reveal live">
+    <details open>
+      <summary>How to run Agent Egress Bench yourself</summary>
+
+      <p>Run the reviewed Pipelock release from a clean Linux clone:</p>
+      <pre class="fx-terminal" data-fx="type" data-command><code>git clone https://github.com/luckyPipewrench/agent-egress-bench.git
+cd agent-egress-bench
+./scripts/run-pipelock-gauntlet.sh</code></pre>
+
+      <p>For another security tool, build the shared runner and supply that tool&rsquo;s capability profile and adapter:</p>
+      <pre class="fx-terminal" data-command><code>git clone https://github.com/luckyPipewrench/agent-egress-bench.git
+cd agent-egress-bench/runner
+go build -o aeb-gauntlet .
+./aeb-gauntlet --cases ../cases --profile my-profile.json --output results.json</code></pre>
+
+      <p>See the <a href="https://github.com/luckyPipewrench/agent-egress-bench/blob/main/docs/ADOPTION.md" target="_blank" rel="noopener noreferrer">adoption guide</a> for building a runner. You publish and own your result. Label the run and include the identifying facts from the <a href="https://github.com/luckyPipewrench/agent-egress-bench/blob/main/docs/RESULTS-USE.md" target="_blank" rel="noopener noreferrer">results-use policy</a>, then <a href="https://github.com/luckyPipewrench/agent-egress-bench/discussions" target="_blank" rel="noopener noreferrer">open a discussion</a> if you want it looked at.</p>
+    </details>
+
+    {{ partial "section-cta.html" . }}
+  </section>
+</article>
+
+{{ partial "site-fx.html" . }}
+{{ end }}

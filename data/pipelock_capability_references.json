@@ -1,0 +1,135 @@
+{
+  "schema_version": 1,
+  "source_corrections": {
+    "signed-action-receipts": {
+      "label": "Runtime receipt source",
+      "text": "The pinned release manifest records the offline verifier as this capability's implementation. Runtime receipt creation and signing run through the receipt emitter.",
+      "manifest_path": "internal/cli/signing/receipt.go",
+      "manifest_symbol": "VerifyReceiptCmd",
+      "path": "internal/receipt/emitter.go",
+      "symbol": "(*receipt.Emitter).Emit"
+    },
+    "exemption-lifecycle-records": {
+      "label": "List command source",
+      "text": "The pinned release manifest names the parent exemption command as this capability's implementation. The listed operator action is defined by the exemption list command.",
+      "manifest_path": "enterprise/cli/dashboard_exemption.go",
+      "manifest_symbol": "exemptionCmd",
+      "path": "enterprise/cli/dashboard_exemption.go",
+      "symbol": "exemptionListCmd"
+    },
+    "legal-hold-metadata": {
+      "label": "List command source",
+      "text": "The pinned release manifest names the parent legal-hold command as this capability's implementation. The listed operator action is defined by the legal-hold list command.",
+      "manifest_path": "enterprise/cli/dashboard_legal_hold.go",
+      "manifest_symbol": "legalHoldCmd",
+      "path": "enterprise/cli/dashboard_legal_hold.go",
+      "symbol": "legalHoldListCmd"
+    }
+  },
+  "capabilities": {
+    "network-mediation": [
+      { "label": "Secure an agent deployment", "path": "/learn/secure-ai-agent-deployment/", "kind": "site" },
+      { "label": "Transport modes", "path": "docs/guides/transport-modes.md", "kind": "source" }
+    ],
+    "mcp-proxy-scanning": [
+      { "label": "MCP proxy guide", "path": "/learn/mcp-proxy/", "kind": "site" },
+      { "label": "MCP integrity controls", "path": "docs/cli/mcp-integrity.md", "kind": "source" }
+    ],
+    "signed-action-receipts": [
+      { "label": "Agent action receipts", "path": "/learn/agent-action-receipts/", "kind": "site" },
+      { "label": "Flight recorder guide", "path": "docs/guides/flight-recorder.md", "kind": "source" }
+    ],
+    "agent-containment": [
+      { "label": "Linux containment walkthrough", "path": "/blog/three-uid-agent-containment-linux/", "kind": "site" },
+      { "label": "Contain command reference", "path": "docs/contain-cli.md", "kind": "source" }
+    ],
+    "single-agent-sandbox": [
+      { "label": "Install Pipelock", "path": "/install/", "kind": "site" },
+      { "label": "Deployment recipes", "path": "docs/guides/deployment-recipes.md", "kind": "source" }
+    ],
+    "global-canary-tokens": [
+      { "label": "Canary token guide", "path": "/learn/canary-tokens/", "kind": "site" },
+      { "label": "Canary token configuration", "path": "docs/guides/canary-tokens.md", "kind": "source" }
+    ],
+    "named-agent-profiles": [
+      { "label": "Pro reference deployment", "path": "/learn/pipelock-pro-reference-deployment/", "kind": "site" },
+      { "label": "Operator command reference", "path": "docs/cli/operator.md", "kind": "source" }
+    ],
+    "per-agent-sandbox-overrides": [
+      { "label": "Pro reference deployment", "path": "/learn/pipelock-pro-reference-deployment/", "kind": "site" },
+      { "label": "Deployment recipes", "path": "docs/guides/deployment-recipes.md", "kind": "source" }
+    ],
+    "per-agent-address-allowlists": [
+      { "label": "Pro reference deployment", "path": "/learn/pipelock-pro-reference-deployment/", "kind": "site" },
+      { "label": "Configuration source", "path": "internal/config/schema.go", "kind": "source" }
+    ],
+    "operator-dashboard": [
+      { "label": "Operator console guide", "path": "/learn/operator-console/", "kind": "site" },
+      { "label": "Operator command reference", "path": "docs/cli/operator.md", "kind": "source" }
+    ],
+    "assessment-artifacts": [
+      { "label": "Inspect agent evidence", "path": "/agent-evidence/", "kind": "site" },
+      { "label": "Assessment mapping", "path": "docs/compliance/assess-mapping.md", "kind": "source" }
+    ],
+    "conductor-fleet-coordination": [
+      { "label": "Pro reference deployment", "path": "/learn/pipelock-pro-reference-deployment/", "kind": "site" },
+      { "label": "Conductor operator guide", "path": "docs/guides/conductor-operator-quickstart.md", "kind": "source" }
+    ],
+    "coverage-certificates": [
+      { "label": "Operator console guide", "path": "/learn/operator-console/", "kind": "site" },
+      { "label": "Inspect agent evidence", "path": "/agent-evidence/", "kind": "site" }
+    ],
+    "exemption-lifecycle-records": [
+      { "label": "Operator console guide", "path": "/learn/operator-console/", "kind": "site" },
+      { "label": "Operator command reference", "path": "docs/cli/operator.md", "kind": "source" }
+    ],
+    "legal-hold-metadata": [
+      { "label": "Operator console guide", "path": "/learn/operator-console/", "kind": "site" },
+      { "label": "Operator command reference", "path": "docs/cli/operator.md", "kind": "source" }
+    ],
+    "fleet-audit-sink": [
+      { "label": "Operator console guide", "path": "/learn/operator-console/", "kind": "site" },
+      { "label": "Fleet audit sink specification", "path": "docs/specs/pipelock-conductor-audit-sink.md", "kind": "source" }
+    ],
+    "fleet-receipt-reports": [
+      { "label": "Agent evidence overview", "path": "/agent-evidence/", "kind": "site" },
+      { "label": "Fleet receipt verification", "path": "docs/specs/fleet-receipt-v1-verification.md", "kind": "source" }
+    ],
+    "emergency-kill-switch": [
+      { "label": "Kill switch guide", "path": "/learn/kill-switch/", "kind": "site" },
+      { "label": "Filesystem sentinel", "path": "docs/guides/filesystem-sentinel.md", "kind": "source" }
+    ],
+    "rule-bundles": [
+      { "label": "Pipelock Rules", "path": "/pipelock-rules/", "kind": "site" },
+      { "label": "Rule format and loading", "path": "docs/rules.md", "kind": "source" }
+    ],
+    "adaptive-enforcement": [
+      { "label": "Request policy guide", "path": "/learn/request-policy/", "kind": "site" },
+      { "label": "Session implementation", "path": "internal/proxy/session.go", "kind": "source" }
+    ],
+    "tls-interception": [
+      { "label": "Secure an agent deployment", "path": "/learn/secure-ai-agent-deployment/", "kind": "site" },
+      { "label": "TLS interception guide", "path": "docs/guides/tls-interception.md", "kind": "source" }
+    ],
+    "a2a-scanning": [
+      { "label": "MCP runtime security", "path": "/learn/mcp-runtime-security/", "kind": "site" },
+      { "label": "Supported paths", "path": "docs/security/current-unsupported-paths.md", "kind": "source" }
+    ],
+    "browser-shield": [
+      { "label": "Browser Shield guide", "path": "/learn/browser-shield/", "kind": "site" },
+      { "label": "Production readiness", "path": "docs/security/browser-shield-production-readiness.md", "kind": "source" }
+    ],
+    "offline-receipt-verification": [
+      { "label": "Verify a receipt", "path": "/learn/verify-a-receipt/", "kind": "site" },
+      { "label": "Receipt verification guide", "path": "docs/guides/receipt-verification.md", "kind": "source" }
+    ],
+    "verdict-explanations": [
+      { "label": "Inspect agent evidence", "path": "/agent-evidence/", "kind": "site" },
+      { "label": "Explanation command source", "path": "internal/cli/explain.go", "kind": "source" }
+    ],
+    "deployment-diagnostics": [
+      { "label": "Secure an agent deployment", "path": "/learn/secure-ai-agent-deployment/", "kind": "site" },
+      { "label": "Diagnostics command source", "path": "internal/cli/diag/doctor.go", "kind": "source" }
+    ]
+  }
+}

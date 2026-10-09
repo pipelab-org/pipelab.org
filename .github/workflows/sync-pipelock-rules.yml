@@ -1,0 +1,114 @@
+name: Sync Pipelock Rules
+
+on:
+  schedule:
+    - cron: '23 7 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sync-pipelock-rules
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PIPELOCK_VERSION: 3.4.0
+      PIPELOCK_SHA256: 37c267a9c7a5472324e3bb07def179e810a5ae7c8e761537ad1e9b2e32e9abac
+      RULES_KEY_SHA256: d63673b9fb7546dd5f223dc8df3b39a51eb8298d914fc602ba75c5d22910dd9f
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          repository: luckyPipewrench/pipelock-rules
+          path: _rules
+          persist-credentials: false
+
+      - name: Require the site-only pull request token
+        env:
+          SYNC_TOKEN: ${{ secrets.PIPELAB_RULES_SYNC_TOKEN }}
+        run: |
+          if [[ -z "$SYNC_TOKEN" ]]; then
+            echo 'PIPELAB_RULES_SYNC_TOKEN is required' >&2
+            exit 1
+          fi
+
+      - name: Install pinned Pipelock
+        run: |
+          set -euo pipefail
+          archive="pipelock_${PIPELOCK_VERSION}_linux_amd64.tar.gz"
+          release_url="https://github.com/luckyPipewrench/pipelock/releases/download/v${PIPELOCK_VERSION}"
+          curl -fsSLo "/tmp/${archive}" "${release_url}/${archive}"
+          printf '%s  %s\n' "$PIPELOCK_SHA256" "/tmp/${archive}" | sha256sum -c -
+          tar xzf "/tmp/${archive}" -C /usr/local/bin pipelock
+          pipelock --version
+
+      - name: Install pinned Pipelock verifier
+        run: scripts/install-pipelock-verifier.sh
+
+      - name: Verify the Rules trust anchor and signatures
+        run: |
+          set -euo pipefail
+          public_key=_rules/.github/rules-official/pipelock-official.pub
+          printf '%s  %s\n' "$RULES_KEY_SHA256" "$public_key" | sha256sum -c -
+          keystore="$RUNNER_TEMP/rules-keystore"
+          mkdir -p "$keystore/agents/pipelock-official"
+          cp "$public_key" "$keystore/agents/pipelock-official/id_ed25519.pub"
+          mapfile -t bundles < <(find _rules/published -mindepth 2 -maxdepth 2 -name bundle.yaml -type f | LC_ALL=C sort)
+          if (( ${#bundles[@]} == 0 )); then
+            echo 'No published Pipelock Rules bundles found' >&2
+            exit 1
+          fi
+          for bundle in "${bundles[@]}"; do
+            pipelock verify "$bundle" --keystore "$keystore" --agent pipelock-official
+          done
+
+      - name: Synchronize signed bundle assets
+        run: |
+          printf '_rules/\n' >> .git/info/exclude
+          bash scripts/sync-pipelock-rules.sh --write _rules static/rules
+
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.0.0
+        with:
+          node-version: 22
+
+      - id: hugo-version
+        name: Read authoritative Hugo version
+        run: echo "version=$(tr -d '\n' < .hugo-version)" >> "$GITHUB_OUTPUT"
+
+      - uses: peaceiris/actions-hugo@2752ce1d29631191ea3f27c23495fa06139a5b78 # v3.0.0
+        with:
+          hugo-version: ${{ steps.hugo-version.outputs.version }}
+          extended: true
+
+      - name: Validate the synchronized site
+        run: |
+          npm ci
+          make preflight
+          npm run site:audit
+          npm run site:links -- --fail-on-blocked
+
+      - name: Open or update the synchronization pull request
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          token: ${{ secrets.PIPELAB_RULES_SYNC_TOKEN }}
+          add-paths: |
+            static/rules/**
+            static/rules/.pipelock-rules-sync-manifest
+          branch: automation/sync-pipelock-rules
+          delete-branch: true
+          commit-message: 'chore: sync Pipelock Rules bundles'
+          committer: 'github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>'
+          author: 'github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>'
+          title: 'chore: sync Pipelock Rules bundles'
+          body: |
+            ## What changed
+
+            Synchronizes the served Pipelock Rules bundles and detached signatures after verifying the source key and signed bytes.

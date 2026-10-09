@@ -1,0 +1,779 @@
+{
+  "schema_version": 1,
+  "source": {
+    "repository": "https://github.com/luckyPipewrench/pipelock",
+    "ref": "v3.6.0",
+    "commit": "3e868ac5d5b62d3a2790958542171143af8a0e38",
+    "manifest_sha256": "f62fd126d9b9ca212f1c95941e628fa2b65104131e48024ad02422bc15ffcca1",
+    "release_version": "3.6.0",
+    "status": "release"
+  },
+  "tier_counts": {
+    "free": 15,
+    "pro": 22,
+    "enterprise": 25,
+    "assess": 1
+  },
+  "capabilities": [
+    {
+      "id": "network-mediation",
+      "group": "boundary",
+      "name": "HTTP, WebSocket, and proxy mediation",
+      "summary": "Mediates agent traffic and applies URL, DLP, injection, and SSRF controls.",
+      "tier": "Free",
+      "access_tiers": [
+        "free",
+        "pro",
+        "enterprise"
+      ],
+      "operator_entry_point": {
+        "kind": "command",
+        "value": "pipelock run",
+        "source": {
+          "file": "internal/cli/runtime/run.go",
+          "symbol": "RunCmd"
+        }
+      },
+      "implementation": {
+        "file": "internal/cli/runtime/run.go",
+        "symbol": "RunCmd"
+      },
+      "detail": {
+        "family": "traffic-mediation",
+        "path": "/capabilities/network-mediation/"
+      },
+      "availability": {
+        "scope": "mediated_traffic",
+        "qualifier": "Applies only to traffic routed through Pipelock; direct agent egress needs containment or network policy."
+      }
+    },
+    {
+      "id": "mcp-proxy-scanning",
+      "group": "boundary",
+      "name": "MCP proxy scanning",
+      "summary": "Scans MCP traffic and applies configured tool, chain, and session controls.",
+      "tier": "Free",
+      "access_tiers": [
+        "free",
+        "pro",
+        "enterprise"
+      ],
+      "operator_entry_point": {
+        "kind": "command",
+        "value": "pipelock mcp proxy",
+        "source": {
+          "file": "internal/cli/runtime/mcp.go",
+          "symbol": "mcpProxyCmdWithAuditLoggerFactory"
+        }
+      },
+      "implementation": {
+        "file": "internal/cli/runtime/mcp.go",
+        "symbol": "mcpProxyCmdWithAuditLoggerFactory"
+      },
+      "detail": {
+        "family": "traffic-mediation",
+        "path": "/capabilities/mcp-proxy-scanning/"
+      },
+      "availability": {
+        "scope": "mediated_traffic",
+        "qualifier": "Applies only to MCP transports that run through the Pipelock proxy."
+      }
+    },
+    {
+      "id": "signed-action-receipts",
+      "group": "evidence",
+      "name": "Signed action receipts",
+      "summary": "Writes signed, hash-chained mediation evidence and verifies it offline.",
+      "tier": "Free",
+      "access_tiers": [
+        "free",
+        "pro",
+        "enterprise"
+      ],
+      "operator_entry_point": {
+        "kind": "config",
+        "value": "flight_recorder",
+        "source": {
+          "file": "internal/config/schema.go",
+          "symbol": "Config"
+        }
+      },
+      "implementation": {
+        "file": "internal/cli/signing/receipt.go",
+        "symbol": "VerifyReceiptCmd"
+      },
+      "detail": {
+        "family": "receipts-and-evidence",
+        "path": "/capabilities/signed-action-receipts/"
+      },
+      "availability": null
+    },
+    {
+      "id": "agent-containment",
+      "group": "enforcement",
+      "name": "Host containment for agent processes",
+      "summary": "Installs, verifies, and rolls back nftables-backed host containment.",
+      "tier": "Free",
+      "access_tiers": [
+        "free",
+        "pro",
+        "enterprise"
+      ],
+      "operator_entry_point": {
+        "kind": "command",
+        "value": "pipelock contain",
+        "source": {
+          "file": "internal/cli/contain/cmd.go",
+          "symbol": "Cmd"
+        }
+      },
+      "implementation": {
+        "file": "internal/cli/contain/cmd.go",
+        "symbol": "Cmd"
+      },
+      "detail": {
+        "family": "process-containment",
+        "path": "/capabilities/agent-containment/"
+      },
+      "availability": {
+        "scope": "platform_dependent",
+        "qualifier": "Kernel-enforced containment requires Linux, a private network namespace, nftables, and the managed identities. The recommended unprivileged systemd service emits signed pre-launch posture from a root signer that verifies its own managed namespace and proxy doorway; contain run instead signs a host-side preflight and also emits a post-session workspace statement."
+      }
+    },
+    {
+      "id": "single-agent-sandbox",
+      "group": "enforcement",
+      "name": "Single-agent process sandbox",
+      "summary": "Runs one command with unprivileged process and filesystem restrictions.",
+      "tier": "Free",
+      "access_tiers": [
+        "free",
+        "pro",
+        "enterprise"
+      ],
+      "operator_entry_point": {
+        "kind": "command",
+        "value": "pipelock sandbox",
+        "source": {
+          "file": "internal/cli/runtime/sandbox.go",
+          "symbol": "SandboxCmd"
+        }
+      },
+      "implementation": {
+        "file": "internal/cli/runtime/sandbox.go",
+        "symbol": "SandboxCmd"
+      },
+      "detail": {
+        "family": "process-containment",
+        "path": "/capabilities/single-agent-sandbox/"
+      },
+      "availability": {
+        "scope": "platform_dependent",
+        "qualifier": "Kernel isolation requires Linux user namespaces. Without them, best-effort network isolation only sets HTTP(S)_PROXY; seccomp adds restrictions only on linux/amd64."
+      }
+    },
+    {
+      "id": "global-canary-tokens",
+      "group": "enforcement",
+      "name": "Global canary tokens",
+      "summary": "Detects configured synthetic secrets without a license gate.",
+      "tier": "Free",
+      "access_tiers": [
+        "free",
+        "pro",
+        "enterprise"
+      ],
+      "operator_entry_point": {
+        "kind": "config",
+        "value": "canary_tokens",
+        "source": {
+          "file": "internal/config/schema.go",
+          "symbol": "Config"
+        }
+      },
+      "implementation": {
+        "file": "internal/config/canary.go",
+        "symbol": "validateCanaryTokens"
+      },
+      "detail": {
+        "family": "detection-and-response",
+        "path": "/capabilities/global-canary-tokens/"
+      },
+      "availability": null
+    },
+    {
+      "id": "named-agent-profiles",
+      "group": "coordination",
+      "name": "Named agent profiles",
+      "summary": "Applies separate listeners and policy profiles for named agents.",
+      "tier": "Pro",
+      "access_tiers": [
+        "pro",
+        "enterprise"
+      ],
+      "operator_entry_point": {
+        "kind": "config",
+        "value": "agents.<profile>",
+        "source": {
+          "file": "internal/config/schema.go",
+          "symbol": "Config"
+        }
+      },
+      "implementation": {
+        "file": "enterprise/config.go",
+        "symbol": "EnforceLicenseGate"
+      },
+      "detail": {
+        "family": "profiles-and-policy",
+        "path": "/capabilities/named-agent-profiles/"
+      },
+      "availability": null
+    },
+    {
+      "id": "per-agent-sandbox-overrides",
+      "group": "coordination",
+      "name": "Per-agent sandbox overrides",
+      "summary": "Overrides sandbox settings for a named agent profile.",
+      "tier": "Pro",
+      "access_tiers": [
+        "pro",
+        "enterprise"
+      ],
+      "operator_entry_point": {
+        "kind": "config",
+        "value": "agents.<profile>.sandbox",
+        "source": {
+          "file": "internal/config/schema.go",
+          "symbol": "AgentProfile"
+        }
+      },
+      "implementation": {
+        "file": "internal/config/schema.go",
+        "symbol": "AgentProfile"
+      },
+      "detail": {
+        "family": "profiles-and-policy",
+        "path": "/capabilities/per-agent-sandbox-overrides/"
+      },
+      "availability": null
+    },
+    {
+      "id": "per-agent-address-allowlists",
+      "group": "coordination",
+      "name": "Per-agent crypto address allowlists",
+      "summary": "Adds a named agent's address allowlist to the global baseline.",
+      "tier": "Pro",
+      "access_tiers": [
+        "pro",
+        "enterprise"
+      ],
+      "operator_entry_point": {
+        "kind": "config",
+        "value": "agents.<profile>.allowed_addresses",
+        "source": {
+          "file": "internal/config/schema.go",
+          "symbol": "AgentProfile"
+        }
+      },
+      "implementation": {
+        "file": "internal/config/schema.go",
+        "symbol": "AgentProfile"
+      },
+      "detail": {
+        "family": "profiles-and-policy",
+        "path": "/capabilities/per-agent-address-allowlists/"
+      },
+      "availability": null
+    },
+    {
+      "id": "operator-dashboard",
+      "group": "evidence",
+      "name": "Read-only operator dashboard",
+      "summary": "Serves authenticated evidence and operator views from local receipt data.",
+      "tier": "Pro or Enterprise",
+      "access_tiers": [
+        "pro",
+        "enterprise"
+      ],
+      "operator_entry_point": {
+        "kind": "command",
+        "value": "pipelock dashboard serve",
+        "source": {
+          "file": "enterprise/cli/dashboard.go",
+          "symbol": "dashboardServeCmd"
+        }
+      },
+      "implementation": {
+        "file": "enterprise/cli/dashboard.go",
+        "symbol": "dashboardServeCmd"
+      },
+      "detail": {
+        "family": "operator-visibility",
+        "path": "/capabilities/operator-dashboard/"
+      },
+      "availability": null
+    },
+    {
+      "id": "assessment-artifacts",
+      "group": "coordination",
+      "name": "Full assessment artifacts",
+      "summary": "Produces the full assessment report, attestation, and badge artifacts.",
+      "tier": "Assess",
+      "access_tiers": [
+        "assess"
+      ],
+      "operator_entry_point": {
+        "kind": "command",
+        "value": "pipelock assess finalize",
+        "source": {
+          "file": "internal/cli/assess/finalize.go",
+          "symbol": "assessFinalizeCmd"
+        }
+      },
+      "implementation": {
+        "file": "internal/cli/assess/finalize.go",
+        "symbol": "runAssessFinalize"
+      },
+      "detail": {
+        "family": "receipts-and-evidence",
+        "path": "/capabilities/assessment-artifacts/"
+      },
+      "availability": null
+    },
+    {
+      "id": "conductor-fleet-coordination",
+      "group": "coordination",
+      "name": "Conductor fleet coordination",
+      "summary": "Coordinates signed policy distribution and fleet audit ingestion.",
+      "tier": "Enterprise",
+      "access_tiers": [
+        "enterprise"
+      ],
+      "operator_entry_point": {
+        "kind": "command",
+        "value": "pipelock conductor serve",
+        "source": {
+          "file": "enterprise/cli/conductor/cmd.go",
+          "symbol": "serveCmd"
+        }
+      },
+      "implementation": {
+        "file": "enterprise/cli/conductor/cmd.go",
+        "symbol": "serveCmd"
+      },
+      "detail": {
+        "family": "fleet-coordination",
+        "path": "/capabilities/conductor-fleet-coordination/"
+      },
+      "availability": null
+    },
+    {
+      "id": "coverage-certificates",
+      "group": "evidence",
+      "name": "Per-agent coverage certificates",
+      "summary": "Generates a signed receipt-coverage certificate for one agent.",
+      "tier": "Pro",
+      "access_tiers": [
+        "pro",
+        "enterprise"
+      ],
+      "operator_entry_point": {
+        "kind": "command",
+        "value": "pipelock dashboard coverage-cert generate",
+        "source": {
+          "file": "enterprise/cli/dashboard_coveragecert.go",
+          "symbol": "coverageCertGenerateCmd"
+        }
+      },
+      "implementation": {
+        "file": "enterprise/cli/dashboard_coveragecert.go",
+        "symbol": "coverageCertGenerateCmd"
+      },
+      "detail": {
+        "family": "receipts-and-evidence",
+        "path": "/capabilities/coverage-certificates/"
+      },
+      "availability": null
+    },
+    {
+      "id": "exemption-lifecycle-records",
+      "group": "evidence",
+      "name": "Exemption lifecycle records",
+      "summary": "Lists and manages exemption records used by the operator dashboard.",
+      "tier": "Pro",
+      "access_tiers": [
+        "pro",
+        "enterprise"
+      ],
+      "operator_entry_point": {
+        "kind": "command",
+        "value": "pipelock dashboard exemption list",
+        "source": {
+          "file": "enterprise/cli/dashboard_exemption.go",
+          "symbol": "exemptionListCmd"
+        }
+      },
+      "implementation": {
+        "file": "enterprise/cli/dashboard_exemption.go",
+        "symbol": "exemptionCmd"
+      },
+      "detail": {
+        "family": "receipts-and-evidence",
+        "path": "/capabilities/exemption-lifecycle-records/"
+      },
+      "availability": null
+    },
+    {
+      "id": "legal-hold-metadata",
+      "group": "evidence",
+      "name": "Legal-hold metadata",
+      "summary": "Lists and manages legal-hold metadata outside dashboard HTTP authority.",
+      "tier": "Pro",
+      "access_tiers": [
+        "pro",
+        "enterprise"
+      ],
+      "operator_entry_point": {
+        "kind": "command",
+        "value": "pipelock dashboard legal-hold list",
+        "source": {
+          "file": "enterprise/cli/dashboard_legal_hold.go",
+          "symbol": "legalHoldListCmd"
+        }
+      },
+      "implementation": {
+        "file": "enterprise/cli/dashboard_legal_hold.go",
+        "symbol": "legalHoldCmd"
+      },
+      "detail": {
+        "family": "receipts-and-evidence",
+        "path": "/capabilities/legal-hold-metadata/"
+      },
+      "availability": null
+    },
+    {
+      "id": "fleet-audit-sink",
+      "group": "coordination",
+      "name": "Fleet audit sink",
+      "summary": "Receives signed Conductor audit batches on a dedicated listener.",
+      "tier": "Enterprise",
+      "access_tiers": [
+        "enterprise"
+      ],
+      "operator_entry_point": {
+        "kind": "command",
+        "value": "pipelock fleet-sink",
+        "source": {
+          "file": "enterprise/cli/fleet/sink.go",
+          "symbol": "SinkCmd"
+        }
+      },
+      "implementation": {
+        "file": "enterprise/cli/fleet/sink.go",
+        "symbol": "SinkCmd"
+      },
+      "detail": {
+        "family": "fleet-coordination",
+        "path": "/capabilities/fleet-audit-sink/"
+      },
+      "availability": null
+    },
+    {
+      "id": "fleet-receipt-reports",
+      "group": "coordination",
+      "name": "Fleet receipt reports",
+      "summary": "Mints a signed report from Conductor audit evidence for offline verification.",
+      "tier": "Enterprise",
+      "access_tiers": [
+        "enterprise"
+      ],
+      "operator_entry_point": {
+        "kind": "command",
+        "value": "pipelock conductor fleet report",
+        "source": {
+          "file": "enterprise/cli/conductor/fleet_report.go",
+          "symbol": "fleetReportCmd"
+        }
+      },
+      "implementation": {
+        "file": "enterprise/cli/conductor/fleet_report.go",
+        "symbol": "fleetReportCmd"
+      },
+      "detail": {
+        "family": "fleet-coordination",
+        "path": "/capabilities/fleet-receipt-reports/"
+      },
+      "availability": null
+    },
+    {
+      "id": "emergency-kill-switch",
+      "group": "enforcement",
+      "name": "Emergency kill switch",
+      "summary": "Denies mediated traffic when any configured, local, or fleet kill source is active.",
+      "tier": "Free",
+      "access_tiers": [
+        "free",
+        "pro",
+        "enterprise"
+      ],
+      "operator_entry_point": {
+        "kind": "config",
+        "value": "kill_switch",
+        "source": {
+          "file": "internal/config/schema.go",
+          "symbol": "Config"
+        }
+      },
+      "implementation": {
+        "file": "internal/killswitch/killswitch.go",
+        "symbol": "buildRuntime"
+      },
+      "detail": {
+        "family": "detection-and-response",
+        "path": "/capabilities/emergency-kill-switch/"
+      },
+      "availability": null
+    },
+    {
+      "id": "rule-bundles",
+      "group": "boundary",
+      "name": "Rule bundles",
+      "summary": "Loads signed rule bundles and applies their configured detection coverage.",
+      "tier": "Free",
+      "access_tiers": [
+        "free",
+        "pro",
+        "enterprise"
+      ],
+      "operator_entry_point": {
+        "kind": "config",
+        "value": "rules",
+        "source": {
+          "file": "internal/config/schema.go",
+          "symbol": "Config"
+        }
+      },
+      "implementation": {
+        "file": "internal/cli/runtime/server_rule_bundles.go",
+        "symbol": "reportStartupRuleBundleResult"
+      },
+      "detail": {
+        "family": "detection-and-response",
+        "path": "/capabilities/rule-bundles/"
+      },
+      "availability": null
+    },
+    {
+      "id": "adaptive-enforcement",
+      "group": "enforcement",
+      "name": "Adaptive enforcement",
+      "summary": "Escalates a risky session's enforcement level from accumulated security signals.",
+      "tier": "Free",
+      "access_tiers": [
+        "free",
+        "pro",
+        "enterprise"
+      ],
+      "operator_entry_point": {
+        "kind": "config",
+        "value": "adaptive_enforcement",
+        "source": {
+          "file": "internal/config/schema.go",
+          "symbol": "Config"
+        }
+      },
+      "implementation": {
+        "file": "internal/proxy/session.go",
+        "symbol": "NewSessionManager"
+      },
+      "detail": {
+        "family": "detection-and-response",
+        "path": "/capabilities/adaptive-enforcement/"
+      },
+      "availability": null
+    },
+    {
+      "id": "tls-interception",
+      "group": "boundary",
+      "name": "TLS interception",
+      "summary": "Decrypts configured CONNECT tunnels so Pipelock can inspect HTTP bodies and headers.",
+      "tier": "Free",
+      "access_tiers": [
+        "free",
+        "pro",
+        "enterprise"
+      ],
+      "operator_entry_point": {
+        "kind": "config",
+        "value": "tls_interception",
+        "source": {
+          "file": "internal/config/schema.go",
+          "symbol": "Config"
+        }
+      },
+      "implementation": {
+        "file": "internal/proxy/forward.go",
+        "symbol": "handleConnect"
+      },
+      "detail": {
+        "family": "traffic-mediation",
+        "path": "/capabilities/tls-interception/"
+      },
+      "availability": {
+        "scope": "deployment_dependent",
+        "qualifier": "Requires a configured local CA that the intercepted client trusts; passthrough traffic remains encrypted and cannot be body-scanned."
+      }
+    },
+    {
+      "id": "a2a-scanning",
+      "group": "boundary",
+      "name": "A2A protocol scanning",
+      "summary": "Scans Agent-to-Agent messages and Agent Cards for poisoning, drift, and session smuggling.",
+      "tier": "Free",
+      "access_tiers": [
+        "free",
+        "pro",
+        "enterprise"
+      ],
+      "operator_entry_point": {
+        "kind": "config",
+        "value": "a2a_scanning",
+        "source": {
+          "file": "internal/config/schema.go",
+          "symbol": "Config"
+        }
+      },
+      "implementation": {
+        "file": "internal/cli/runtime/mcp.go",
+        "symbol": "applyMCPA2AOpts"
+      },
+      "detail": {
+        "family": "traffic-mediation",
+        "path": "/capabilities/a2a-scanning/"
+      },
+      "availability": {
+        "scope": "mediated_traffic",
+        "qualifier": "Applies to A2A traffic carried on Pipelock's supported forward-proxy and MCP HTTP paths."
+      }
+    },
+    {
+      "id": "browser-shield",
+      "group": "boundary",
+      "name": "Browser shield",
+      "summary": "Sanitizes proxied HTML and SVG while leaving JavaScript response bytes unchanged.",
+      "tier": "Free",
+      "access_tiers": [
+        "free",
+        "pro",
+        "enterprise"
+      ],
+      "operator_entry_point": {
+        "kind": "config",
+        "value": "browser_shield",
+        "source": {
+          "file": "internal/config/schema.go",
+          "symbol": "Config"
+        }
+      },
+      "implementation": {
+        "file": "internal/shield/shield.go",
+        "symbol": "Rewrite"
+      },
+      "detail": {
+        "family": "traffic-mediation",
+        "path": "/capabilities/browser-shield/"
+      },
+      "availability": {
+        "scope": "mediated_traffic",
+        "qualifier": "Applies only to supported browser response traffic that flows through Pipelock. JavaScript responses are scanned but not rewritten."
+      }
+    },
+    {
+      "id": "offline-receipt-verification",
+      "group": "evidence",
+      "name": "Offline receipt verification",
+      "summary": "Verifies signed action receipts and receipt chains without contacting a Pipelock server.",
+      "tier": "Free",
+      "access_tiers": [
+        "free",
+        "pro",
+        "enterprise"
+      ],
+      "operator_entry_point": {
+        "kind": "command",
+        "value": "pipelock verify-receipt",
+        "source": {
+          "file": "internal/cli/signing/receipt.go",
+          "symbol": "VerifyReceiptCmd"
+        }
+      },
+      "implementation": {
+        "file": "internal/cli/signing/receipt.go",
+        "symbol": "VerifyReceiptCmd"
+      },
+      "detail": {
+        "family": "receipts-and-evidence",
+        "path": "/capabilities/offline-receipt-verification/"
+      },
+      "availability": null
+    },
+    {
+      "id": "verdict-explanations",
+      "group": "evidence",
+      "name": "Verdict explanations",
+      "summary": "Explains a URL, command, tool, or file verdict and names the configuration that controls it.",
+      "tier": "Free",
+      "access_tiers": [
+        "free",
+        "pro",
+        "enterprise"
+      ],
+      "operator_entry_point": {
+        "kind": "command",
+        "value": "pipelock explain",
+        "source": {
+          "file": "internal/cli/explain.go",
+          "symbol": "explainCmd"
+        }
+      },
+      "implementation": {
+        "file": "internal/cli/explain.go",
+        "symbol": "explainCmd"
+      },
+      "detail": {
+        "family": "operator-visibility",
+        "path": "/capabilities/verdict-explanations/"
+      },
+      "availability": null
+    },
+    {
+      "id": "deployment-diagnostics",
+      "group": "evidence",
+      "name": "Deployment diagnostics",
+      "summary": "Reports whether configured protections can enforce in the current host and network topology.",
+      "tier": "Free",
+      "access_tiers": [
+        "free",
+        "pro",
+        "enterprise"
+      ],
+      "operator_entry_point": {
+        "kind": "command",
+        "value": "pipelock doctor",
+        "source": {
+          "file": "internal/cli/diag/doctor.go",
+          "symbol": "DoctorCmd"
+        }
+      },
+      "implementation": {
+        "file": "internal/cli/diag/doctor.go",
+        "symbol": "DoctorCmd"
+      },
+      "detail": {
+        "family": "operator-visibility",
+        "path": "/capabilities/deployment-diagnostics/"
+      },
+      "availability": null
+    }
+  ]
+}

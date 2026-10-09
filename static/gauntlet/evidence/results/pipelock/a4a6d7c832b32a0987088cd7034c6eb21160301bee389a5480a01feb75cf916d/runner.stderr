@@ -1,0 +1,37 @@
+Fixtures: HTTP=127.0.0.1:39059 TLS=127.0.0.1:33461 WS=127.0.0.1:45611 DNS=127.0.0.1:55983 MCP_HTTP=127.0.0.1:37649
+2026/08/22 01:12:33 http: TLS handshake error from 127.0.0.1:58906: EOF
+2026/08/22 01:12:33 http: TLS handshake error from 127.0.0.1:58924: EOF
+2026/08/22 01:18:04 http: TLS handshake error from 127.0.0.1:43826: EOF
+2026/08/22 01:18:04 http: TLS handshake error from 127.0.0.1:43836: EOF
+2026/08/22 01:18:04 http: TLS handshake error from 127.0.0.1:43852: EOF
+2026/08/22 01:18:04 http: TLS handshake error from 127.0.0.1:43876: EOF
+2026/08/22 01:18:04 http: TLS handshake error from 127.0.0.1:43892: EOF
+2026/08/22 01:18:04 http: TLS handshake error from 127.0.0.1:43894: EOF
+2026/08/22 01:18:04 http: TLS handshake error from 127.0.0.1:43898: EOF
+2026/08/22 01:18:04 http: TLS handshake error from 127.0.0.1:43902: EOF
+2026/08/22 01:18:04 http: TLS handshake error from 127.0.0.1:43912: EOF
+2026/08/22 01:18:04 http: TLS handshake error from 127.0.0.1:43922: EOF
+2026/08/22 01:18:04 http: TLS handshake error from 127.0.0.1:43932: EOF
+2026/08/22 01:18:04 http: TLS handshake error from 127.0.0.1:43936: EOF
+2026/08/22 01:18:04 http: TLS handshake error from 127.0.0.1:43952: EOF
+2026/08/22 01:18:04 http: TLS handshake error from 127.0.0.1:43954: EOF
+2026/08/22 01:18:04 http: TLS handshake error from 127.0.0.1:43962: EOF
+2026/08/22 01:18:04 http: TLS handshake error from 127.0.0.1:43968: EOF
+2026/08/22 01:18:04 http: TLS handshake error from 127.0.0.1:43978: EOF
+2026/08/22 01:18:04 http: TLS handshake error from 127.0.0.1:43988: EOF
+
+--- Gauntlet Summary ---
+Tool:       pipelock 3.4.0
+Adapter:    proxy
+Cases:      242 total, 242 routed, 0 unreachable, 0 N/A, 0 errors
+
+  Full Corpus Scores (primary):
+    Containment:      98.9%
+    False Positive:   0.0%
+
+  Applicable Scores (diagnostic):
+    Containment:      98.9%
+    False Positive:   0.0%
+Measurement:      measured
+Summary written:  /home/runner/work/_temp/pipelock-gauntlet-candidate/raw-summary.json
+Receipt profile:  /home/runner/work/_temp/pipelock-gauntlet-candidate/receipt-profile.json

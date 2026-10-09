@@ -1,0 +1,103 @@
+baseURL = "https://pipelab.org/"
+languageCode = "en-US"
+title = "PipeLab"
+theme = "pipelab"
+ignoreFiles = ['\.devto\.md$', '\.dzone\.(md|html)$']
+
+[params]
+  description = "Pipelock is an open-source agent firewall for MCP and AI agent egress. It mediates MCP, HTTP, and WebSocket traffic and can emit signed evidence for mediated actions when receipt or flight-recorder signing is configured."
+  email = "luckypipe@pipelab.org"
+  github = "https://github.com/luckyPipewrench"
+  twitter = "https://x.com/pipelockhq"
+  linkedin = "https://www.linkedin.com/company/pipelab-org"
+  discord = "https://discord.com/invite/badNfhGKTc"
+pipelock_version = "3.6.0"
+  # Founding Pro seats claimed. Update this integer when a Founding Pro
+  # customer signs. Source: business ops. Cap is founding_cap (50).
+  founding_claimed = 2
+  founding_cap = 50
+  google_analytics = "G-8KL63733NT"
+  posthog = "phc_uakkA4aZoV6TPMq6x8Ez3t7efpZJsR4nTSsZT4En6L2m"
+  # Buttondown newsletter username. Drives the newsletter-signup partial
+  # (full + compact variants). Empty disables the forms site-wide.
+  buttondown_user = "luckypipewrench"
+  # Cloudflare Turnstile site key for the /contact/ form. Public value;
+  # the secret half lives in wrangler secrets (TURNSTILE_SECRET_KEY).
+  # Empty disables the form and shows a fallback "email instead" message.
+  turnstile_site_key = "0x4AAAAAADMKCRBgc2BUUXCr"
+
+[menus]
+  [[menus.main]]
+    name = "Pipelock"
+    url = "/pipelock/"
+    weight = 10
+  [[menus.main]]
+    name = "Compare"
+    url = "/compare/"
+    weight = 15
+  [[menus.main]]
+    name = "Learn"
+    url = "/learn/"
+    weight = 20
+  [[menus.main]]
+    name = "Proof"
+    url = "/proof/"
+    weight = 25
+  [[menus.main]]
+    name = "Benchmark results"
+    url = "/gauntlet/"
+    weight = 26
+  [[menus.main]]
+    name = "Playground"
+    url = "/playground/"
+    weight = 27
+  [[menus.main]]
+    name = "About"
+    url = "/about/"
+    weight = 30
+  [[menus.main]]
+    name = "Pricing"
+    url = "/pricing/"
+    weight = 40
+  [[menus.main]]
+    name = "Enterprise"
+    url = "/enterprise/"
+    weight = 50
+
+[taxonomies]
+  tag = "tags"
+
+[markup.goldmark.renderer]
+  unsafe = true
+
+[mediaTypes."text/markdown"]
+  suffixes = ["md"]
+
+[outputFormats.markdown]
+  mediaType = "text/markdown"
+  isPlainText = true
+  permalinkable = true
+  rel = "alternate"
+
+[outputFormats.productFacts]
+  mediaType = "application/json"
+  baseName = "product-facts"
+  path = ".well-known"
+  isPlainText = true
+  notAlternative = true
+
+[outputs]
+  home = ["html", "rss", "markdown", "productFacts"]
+  page = ["html", "markdown"]
+  section = ["html", "rss", "markdown"]
+
+# Keep attribute values quoted in minified HTML.
+#
+# The minifier otherwise drops the quotes from any value with no spaces, so
+# alt="Keith" ships as alt=Keith. That is valid HTML and real parsers read it
+# correctly, but third-party crawlers and this repo's own site-audit regex read
+# the unquoted form as a missing alt. An empty value is collapsed further, to a
+# bare attribute name, which no setting here prevents -- decorative images
+# therefore use an inlined aria-hidden SVG rather than alt="".
+[minify.tdewolff.html]
+  keepQuotes = true

@@ -1,0 +1,210 @@
+// == Shared showpiece styling =================================
+// The visual half of site-fx.js. A page opts an element into an effect with a
+// data-fx token and gets the styling with it, so adopting an effect on a new
+// page needs no new CSS.
+//
+// Imported BEFORE the page partials on purpose: where a page already styles a
+// card its own way, the page's rule wins on equal specificity, and these stay
+// the default rather than an override.
+
+// Scroll reveal. The hidden state is applied by JS, so a page with scripting
+// blocked never hides anything.
+@media (prefers-reduced-motion: no-preference) {
+  .fx-prep {
+    opacity: 0;
+    transform: translateY(22px);
+    transition: opacity 0.65s ease, transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .fx-in {
+    opacity: 1;
+    transform: none;
+  }
+
+  // Published figures. The number itself is never animated, because it is
+  // evidence and a half-counted figure is a false statement about our own
+  // product. Only its entrance moves. The hidden state is applied by JS, so a
+  // page with scripting blocked shows the figure immediately.
+  // The transition lives on the shown state, not the hidden one. Put it on the
+  // hidden class and applying that class animates a visible figure OUT over
+  // half a second, which the shown class then reverses a frame later: the
+  // result is a flicker rather than an entrance.
+  .fx-figure-prep {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  .fx-figure-in {
+    opacity: 1;
+    transform: none;
+    transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
+
+// Cursor spotlight: an accent pool that follows the pointer across a card.
+// JS sets --mx/--my and injects the .fx-glow layer; with no pointer, or with
+// scripting off, the pool simply never appears.
+// Use it on bounded card surfaces with their own border, radius, and background.
+// Full-width bands, navigation rails, tables, and ordinary buttons stay still so
+// the effect keeps one predictable meaning across the site.
+//
+// The layer is a real element rather than ::before on purpose. A component may
+// already use its own ::before for something visible: the pricing tier cards
+// use it for the numbered badge, and claiming that pseudo-element pulled the
+// badge out of the card's flex flow and shrank every card by 43px.
+[data-fx~="spotlight"] {
+  position: relative;
+}
+
+.fx-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(240px circle at var(--mx, 50%) var(--my, 50%), rgba(0, 229, 160, 0.09), transparent 65%);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+}
+
+[data-fx~="spotlight"]:hover > .fx-glow,
+[data-fx~="spotlight"]:focus-visible > .fx-glow {
+  opacity: 1;
+}
+
+// Pointer tilt. JS sets --tx/--ty; without it the card sits flat.
+[data-fx~="tilt"] {
+  transform: perspective(950px) rotateX(var(--tx, 0deg)) rotateY(var(--ty, 0deg));
+  transition: transform 0.18s ease-out;
+  will-change: transform;
+}
+
+// Neither effect should fight a reader who asked for less motion.
+@media (prefers-reduced-motion: reduce) {
+  [data-fx~="tilt"] {
+    transform: none;
+    transition: none;
+  }
+
+  .fx-glow {
+    display: none;
+  }
+
+  .fx-scan,
+  .fx-star {
+    display: none;
+  }
+}
+// == The portable half of the /proof/ visual language ==========
+// These are the pieces that made /proof/ read as finished rather than plain:
+// the star field behind a section, the scan line that sweeps an artifact once
+// as it arrives. They were written as
+// proof-only components; keyed on data-fx they belong to every page.
+//
+// Each decorative layer is injected by JS as a real element, never ::before, so
+// it cannot displace a component that already uses its own pseudo-elements.
+
+// The sky: the same field the homepage orbit floats in.
+[data-fx~="sky"] {
+  position: relative;
+  isolation: isolate;
+}
+
+.fx-sky {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+// Opacity lives on the field, not the sky host, so a shooting star
+// nested in the clip box stays full brightness.
+.fx-sky::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.5;
+  background-image:
+    radial-gradient(1px 1px at 12% 18%, rgba(255, 255, 255, 0.55), transparent 60%),
+    radial-gradient(1px 1px at 27% 74%, rgba(255, 255, 255, 0.4), transparent 60%),
+    radial-gradient(1.5px 1.5px at 41% 9%, rgba(0, 229, 160, 0.5), transparent 60%),
+    radial-gradient(1px 1px at 58% 88%, rgba(255, 255, 255, 0.45), transparent 60%),
+    radial-gradient(1px 1px at 66% 31%, rgba(255, 255, 255, 0.35), transparent 60%),
+    radial-gradient(1.5px 1.5px at 79% 63%, rgba(124, 58, 237, 0.55), transparent 60%),
+    radial-gradient(1px 1px at 88% 14%, rgba(255, 255, 255, 0.5), transparent 60%),
+    radial-gradient(1px 1px at 93% 81%, rgba(0, 229, 160, 0.45), transparent 60%),
+    radial-gradient(1px 1px at 5% 52%, rgba(255, 255, 255, 0.35), transparent 60%),
+    radial-gradient(1px 1px at 48% 47%, rgba(255, 255, 255, 0.25), transparent 60%);
+}
+
+// One shooting star, rare on purpose: it crosses the sky about every
+// half minute, only while the host is on screen.
+.fx-star {
+  opacity: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.92), rgba(0, 229, 160, 0.85), transparent);
+  box-shadow: 0 0 8px rgba(0, 229, 160, 0.72);
+  transform: rotate(-16deg);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-fx~="sky"].fx-live > .fx-sky > .fx-star {
+    animation: fx-star 31s cubic-bezier(0.2, 0.7, 0.3, 1) infinite;
+    will-change: transform, opacity;
+  }
+}
+
+@keyframes fx-star {
+  0%, 84%, 100% { opacity: 0; transform: translate3d(0, 0, 0) rotate(-16deg); }
+  85% { opacity: 0; }
+  86% { opacity: 1; }
+  89% { opacity: 0; transform: translate3d(125vw, 22rem, 0) rotate(-16deg); }
+}
+
+// The sky layer is pinned to z-index 0 by LAYER_BOX in site-fx.js and is
+// injected before the host's own children inside an isolated host, so in-flow
+// content and any absolutely positioned decoration the page already has
+// (a hero wash, a numbered badge) paint above it without this module
+// rewriting their position. Forcing position:relative on every direct
+// child collapsed .afw-hero-bg from absolute fill to a 0-height box.
+
+// The scan line: one pass over an artifact as it arrives, then gone.
+// Clipping is applied only for the duration of the sweep. Left on permanently it
+// truncates any element that scrolls horizontally, which cut the install command
+// off mid-URL on /install/, and it clips a host's box-shadow.
+[data-fx~="scan"] {
+  position: relative;
+}
+
+[data-fx~="scan"].fx-scanning {
+  overflow: hidden;
+}
+
+.fx-scan {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -18%;
+  height: 14%;
+  background: linear-gradient(180deg,
+    transparent,
+    rgba(0, 229, 160, 0.14) 45%,
+    rgba(0, 229, 160, 0.28) 50%,
+    rgba(0, 229, 160, 0.14) 55%,
+    transparent);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-fx~="scan"].fx-scanning > .fx-scan {
+    animation: fx-scanline 1.6s 0.45s ease-in-out 1 forwards;
+  }
+}
+
+@keyframes fx-scanline {
+  0%   { opacity: 0; top: -18%; }
+  12%  { opacity: 1; }
+  88%  { opacity: 1; }
+  100% { opacity: 0; top: 104%; }
+}

@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "families": [
+    {
+      "id": "traffic-mediation",
+      "number": "01",
+      "eyebrow": "Route and inspect",
+      "title": "Traffic mediation",
+      "description": "See where Pipelock can inspect HTTP, WebSocket, MCP, TLS, A2A, and supported browser response traffic.",
+      "capabilities": ["network-mediation", "mcp-proxy-scanning", "tls-interception", "a2a-scanning", "browser-shield"]
+    },
+    {
+      "id": "detection-and-response",
+      "number": "02",
+      "eyebrow": "Detect and act",
+      "title": "Detection and response",
+      "description": "Load signed rules, detect synthetic secrets, raise enforcement, and stop mediated traffic when a kill source activates.",
+      "capabilities": ["rule-bundles", "global-canary-tokens", "adaptive-enforcement", "emergency-kill-switch"]
+    },
+    {
+      "id": "process-containment",
+      "number": "03",
+      "eyebrow": "Close the bypass",
+      "title": "Process containment",
+      "description": "Put an agent behind the mediated path with host containment or run one command inside Pipelock's process sandbox.",
+      "capabilities": ["agent-containment", "single-agent-sandbox"]
+    },
+    {
+      "id": "receipts-and-evidence",
+      "number": "04",
+      "eyebrow": "Keep and verify",
+      "title": "Receipts and evidence",
+      "description": "Record signed action receipts, verify them offline, and produce the licensed evidence records listed in the product manifest.",
+      "capabilities": ["signed-action-receipts", "offline-receipt-verification", "coverage-certificates", "exemption-lifecycle-records", "legal-hold-metadata", "assessment-artifacts"]
+    },
+    {
+      "id": "profiles-and-policy",
+      "number": "05",
+      "eyebrow": "Separate agent policy",
+      "title": "Profiles and policy",
+      "description": "Give named agents separate listeners, sandbox settings, and crypto-address allowlists above the Community baseline.",
+      "capabilities": ["named-agent-profiles", "per-agent-sandbox-overrides", "per-agent-address-allowlists"]
+    },
+    {
+      "id": "operator-visibility",
+      "number": "06",
+      "eyebrow": "Inspect the deployment",
+      "title": "Operator visibility",
+      "description": "Explain verdicts, inspect deployment readiness, and read local receipt data through the licensed operator dashboard.",
+      "capabilities": ["verdict-explanations", "deployment-diagnostics", "operator-dashboard"]
+    },
+    {
+      "id": "fleet-coordination",
+      "number": "07",
+      "eyebrow": "Coordinate the fleet",
+      "title": "Fleet coordination",
+      "description": "Distribute signed policy, collect fleet audit records, and mint offline-verifiable fleet reports with Enterprise controls.",
+      "capabilities": ["conductor-fleet-coordination", "fleet-audit-sink", "fleet-receipt-reports"]
+    }
+  ]
+}

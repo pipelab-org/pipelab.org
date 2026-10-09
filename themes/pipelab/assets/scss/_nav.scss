@@ -1,0 +1,544 @@
+// ============================================================
+//   Site navigation
+//   Grouped menus (Product, Learn), flat links (Proof, Pricing),
+//   GitHub star chip + primary CTA. Desktop: hover/focus reveals
+//   a panel. Mobile: the hamburger opens a stacked sheet and each
+//   group is an accordion driven by the same aria-expanded state.
+// ============================================================
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  background: rgba(9, 9, 11, 0.72);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border-bottom: 1px solid var(--border);
+}
+
+.nav-container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 2rem;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  gap: 2.25rem;
+}
+
+// ── Wordmark ───────────────────────────────────────────────
+.nav-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.nav-logo-mark {
+  width: 28px;
+  height: 28px;
+  display: block;
+}
+
+.logo-text {
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-h3);
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+
+.accent {
+  color: var(--accent);
+}
+
+// ── Link row ───────────────────────────────────────────────
+.nav-links {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  gap: 1.5rem;
+}
+
+.nav-primary {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1;
+}
+
+.nav-item {
+  position: relative;
+}
+
+.nav-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.8rem;
+  border-radius: 8px;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-code);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  transition: color 0.15s, background-color 0.15s;
+
+  &:hover,
+  &:focus-visible,
+  &[aria-current="page"],
+  &[aria-expanded="true"] {
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  &[aria-current="page"] {
+    color: var(--accent);
+  }
+}
+
+.nav-item.is-current > .nav-link {
+  color: var(--text);
+
+  &::after {
+    content: "";
+    position: absolute;
+    left: 0.8rem;
+    right: 0.8rem;
+    bottom: 0.18rem;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    box-shadow: 0 0 9px rgba(0, 229, 160, 0.45);
+  }
+}
+
+.nav-caret {
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: translateY(-2px) rotate(45deg);
+  opacity: 0.7;
+  transition: transform 0.2s;
+}
+
+.nav-menu-btn[aria-expanded="true"] .nav-caret {
+  transform: translateY(1px) rotate(225deg);
+}
+
+// ── Dropdown panel ─────────────────────────────────────────
+.nav-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-6px);
+  min-width: 560px;
+  padding: 0.6rem;
+  background: rgba(14, 14, 17, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.4),
+    0 24px 60px rgba(0, 0, 0, 0.6),
+    0 0 40px rgba(0, 229, 160, 0.05);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0s linear 0.18s;
+
+  // a soft accent line along the top edge, the constellation's color
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0 18% auto 18%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0, 229, 160, 0.5), transparent);
+  }
+}
+
+.nav-item-menu:hover > .nav-menu,
+.nav-item-menu:focus-within > .nav-menu,
+.nav-menu-btn[aria-expanded="true"] + .nav-menu {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0s;
+}
+
+// Keyboard users open a menu with the disclosure button. Without this
+// override, a focused button with aria-expanded="false" would still reveal
+// its panel through :focus-within, leaving the visible state and ARIA state
+// out of sync.
+.nav-menu-btn:focus[aria-expanded="false"] + .nav-menu {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateX(-50%) translateY(-6px);
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0s linear 0.18s;
+}
+
+// keep the panel reachable while the pointer crosses the gap
+.nav-item-menu::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: 14px;
+}
+
+.nav-menu-grid {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.nav-menu-grid-2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+.nav-menu-narrow {
+  min-width: 360px;
+}
+
+.nav-menu-col {
+  padding: 0.4rem;
+
+  & + & {
+    border-left: 1px solid var(--border);
+  }
+}
+
+.nav-menu-eyebrow {
+  margin: 0.35rem 0.75rem 0.5rem;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.68rem;
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.nav-menu-row {
+  position: relative;
+  display: block;
+  padding: 0.6rem 0.75rem;
+  border-radius: 9px;
+  text-decoration: none;
+  transition: background-color 0.15s;
+
+  &:hover,
+  &:focus-visible,
+  &[aria-current="page"] {
+    background: rgba(0, 229, 160, 0.07);
+
+    .nav-menu-title {
+      color: var(--accent);
+    }
+  }
+
+  &[aria-current="page"] {
+    box-shadow: inset 2px 0 0 var(--accent);
+
+    &::after {
+      content: "current";
+      position: absolute;
+      top: 0.65rem;
+      right: 0.75rem;
+      font-family: var(--font-mono), monospace;
+      font-size: 0.58rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      opacity: 0.72;
+    }
+  }
+}
+
+.nav-menu-title {
+  display: block;
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-code);
+  font-weight: 600;
+  color: var(--text);
+  transition: color 0.15s;
+}
+
+.nav-menu-desc {
+  display: block;
+  margin-top: 0.15rem;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+// Tablet band: anchor panels to the bar, not the item, so a menu
+// near either edge can never clip offscreen.
+@media (min-width: ($bp-mobile + 1px)) and (max-width: 1080px) {
+  .nav-container {
+    position: relative;
+  }
+
+  .nav-item-menu {
+    position: static;
+  }
+
+  .nav-menu {
+    min-width: 0;
+    width: max-content;
+    max-width: calc(100vw - 2.5rem);
+  }
+}
+
+// ── Right-side actions ─────────────────────────────────────
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-shrink: 0;
+}
+
+.nav-discord {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: var(--text-muted);
+  transition: color 0.15s, border-color 0.15s, background-color 0.15s;
+
+  &:hover,
+  &:focus-visible {
+    color: #8ab4ff;
+    border-color: rgba(138, 180, 255, 0.4);
+    background: rgba(138, 180, 255, 0.06);
+  }
+}
+
+.nav-github {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  height: 36px;
+  padding: 0 0.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: var(--text-muted);
+  font-family: var(--font-mono), monospace;
+  font-size: 0.8rem;
+  text-decoration: none;
+  transition: color 0.15s, border-color 0.15s, background-color 0.15s;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--text);
+    border-color: rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.04);
+  }
+}
+
+.nav-cta {
+  display: inline-flex;
+  align-items: center;
+  height: 36px;
+  padding: 0 1rem;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #09090b;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 0 0 1px rgba(0, 229, 160, 0.3), 0 0 22px rgba(0, 229, 160, 0.18);
+  transition: transform 0.15s, box-shadow 0.15s;
+
+  &:hover,
+  &:focus-visible {
+    transform: translateY(-1px);
+    box-shadow: 0 0 0 1px rgba(0, 229, 160, 0.5), 0 0 30px rgba(0, 229, 160, 0.32);
+  }
+}
+
+// ── Hamburger ──────────────────────────────────────────────
+.nav-toggle {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin-left: auto;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+
+  span {
+    display: block;
+    width: 22px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--text-muted);
+    margin: 4.5px 0;
+    transition: transform 0.2s, opacity 0.2s;
+  }
+}
+
+.nav-container.open .nav-toggle {
+  span:first-child { transform: translateY(6.5px) rotate(45deg); }
+  span:nth-child(2) { opacity: 0; }
+  span:last-child { transform: translateY(-6.5px) rotate(-45deg); }
+}
+
+// ── Mobile sheet ───────────────────────────────────────────
+@media (max-width: $bp-mobile) {
+  .nav-container {
+    gap: 0;
+    padding: 0 1.25rem;
+  }
+
+  .nav-toggle {
+    display: flex;
+  }
+
+  .nav-links {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    padding: 0.5rem 1.25rem 1.5rem;
+    background: #0b0b0e;
+    border-bottom: 1px solid var(--border);
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+    max-height: calc(100dvh - 64px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .nav-container.open .nav-links {
+    display: flex;
+  }
+
+  .nav-primary {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+  }
+
+  .nav-item + .nav-item {
+    border-top: 1px solid var(--border);
+  }
+
+  .nav-link {
+    width: 100%;
+    justify-content: space-between;
+    min-height: 48px;
+    padding: 0.6rem 0.25rem;
+    border-radius: 0;
+    font-size: 0.95rem;
+
+    &:hover,
+    &[aria-expanded="true"] {
+      background: none;
+    }
+  }
+
+  .nav-item.is-current > .nav-link::after {
+    left: 0;
+    right: auto;
+    top: 50%;
+    bottom: auto;
+    width: 3px;
+    height: 18px;
+    transform: translateY(-50%);
+    background: var(--accent);
+    box-shadow: 0 0 10px rgba(0, 229, 160, 0.45);
+  }
+
+  // accordion: no hover reveal on touch, only the explicit toggle
+  .nav-item-menu:hover > .nav-menu,
+  .nav-item-menu:focus-within > .nav-menu {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .nav-item-menu::after {
+    display: none;
+  }
+
+  .nav-menu {
+    position: static;
+    transform: none;
+    min-width: 0;
+    padding: 0 0 0.75rem;
+    background: none;
+    border: 0;
+    box-shadow: none;
+    display: none;
+
+    &::before {
+      display: none;
+    }
+  }
+
+  .nav-menu-btn[aria-expanded="true"] + .nav-menu {
+    display: block;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: none;
+  }
+
+  .nav-menu-grid-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .nav-menu-col {
+    padding: 0;
+
+    & + & {
+      border-left: 0;
+      margin-top: 0.5rem;
+    }
+  }
+
+  .nav-menu-row {
+    padding: 0.55rem 0.5rem;
+
+    &[aria-current="page"]::after {
+      top: 0.6rem;
+      right: 0.5rem;
+    }
+  }
+
+  .nav-actions {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    justify-content: stretch;
+
+    .nav-discord,
+    .nav-github,
+    .nav-cta {
+      flex: 1;
+      justify-content: center;
+      height: 44px;
+    }
+  }
+}

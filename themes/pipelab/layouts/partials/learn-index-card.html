@@ -1,0 +1,16 @@
+{{ $page := .page }}
+{{ $cat := $page.Params.learn_cat | default "concepts" }}
+{{ $catLabel := $cat }}
+{{ range site.Data.learn_index.categories }}
+  {{ if eq .key $cat }}{{ $catLabel = .label }}{{ end }}
+{{ end }}
+{{ partial "editorial-index-card.html" (dict
+  "page" $page
+  "kind" "learn"
+  "cat" $cat
+  "catLabel" $catLabel
+  "summary" ($page.Description | default "")
+  "featured" (.featured | default false)
+  "level" ($page.Params.level | default "")
+  "tags" ($page.Params.tags | default slice)
+) }}

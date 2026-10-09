@@ -1,0 +1,86 @@
+/research/ /blog/ 301
+/research/securing-claude-code-with-pipelock/ /blog/securing-claude-code-with-pipelock/ 301
+/research/lateral-movement-multi-agent-llm/ /blog/lateral-movement-multi-agent-llm/ 301
+/research/leaky-clawhub-skills/ /blog/leaky-clawhub-skills/ 301
+/product/pipelock/ /pipelock/ 301
+/docs/ /learn/ 301
+/ecosystem/ /proof/ 301
+/categories/ /tags/ 301
+/categories/:slug /tags/:slug 301
+/rules/pipelock-community /learn/community-rules/ 301
+/rules/pipelock-community/ /learn/community-rules/ 301
+/gauntlet/results/:id /gauntlet/results/ 200
+/assess/demo-assessment.html /assess/demo-assessment/ 301
+/assess/demo-egress-report.html /assess/demo-egress-report/ 301
+/assess/demo-summary.html /assess/demo-summary/ 301
+/security.txt /.well-known/security.txt 301
+
+# /rules/ landing previously 404'd; redirect to the canonical community-rules page.
+/rules /learn/community-rules/ 301
+/rules/ /learn/community-rules/ 301
+
+# License welcome email links to /pipelock/guides/license-setup/ (placeholder URL
+# that was never wired up). Canonical guide lives at /learn/license-setup/.
+/pipelock/guides/license-setup /learn/license-setup/ 301
+/pipelock/guides/license-setup/ /learn/license-setup/ 301
+
+# Enterprise asset HTML proxy pages were meta-refresh shims for shareable URLs
+# that point at the underlying PDFs. Replace the meta-refresh with a clean 301
+# so Ahrefs and other crawlers see a server-side redirect, not a JavaScript one.
+/enterprise/pipelock-solution-brief.html /enterprise/pipelock-solution-brief.pdf 301
+/enterprise/eu-ai-act-article-26-matrix.html /enterprise/eu-ai-act-article-26-matrix.pdf 301
+
+# Recorded Playground scenarios now live in the durable replay archive.
+/playground/allowed-safe-read /playground/replay/allowed-safe-read/ 301
+/playground/allowed-safe-read/ /playground/replay/allowed-safe-read/ 301
+/playground/allowed-safe-read/index.html /playground/replay/allowed-safe-read/ 301
+/playground/allowed-safe-read/index.md /playground/replay/allowed-safe-read/index.md 301
+/playground/amber-warning-observed /playground/replay/amber-warning-observed/ 301
+/playground/amber-warning-observed/ /playground/replay/amber-warning-observed/ 301
+/playground/amber-warning-observed/index.html /playground/replay/amber-warning-observed/ 301
+/playground/amber-warning-observed/index.md /playground/replay/amber-warning-observed/index.md 301
+/playground/hostile-page-session-keys /playground/replay/hostile-page-session-keys/ 301
+/playground/hostile-page-session-keys/ /playground/replay/hostile-page-session-keys/ 301
+/playground/hostile-page-session-keys/index.html /playground/replay/hostile-page-session-keys/ 301
+/playground/hostile-page-session-keys/index.md /playground/replay/hostile-page-session-keys/index.md 301
+/playground/mcp-poisoned-tool-description /playground/replay/mcp-poisoned-tool-description/ 301
+/playground/mcp-poisoned-tool-description/ /playground/replay/mcp-poisoned-tool-description/ 301
+/playground/mcp-poisoned-tool-description/index.html /playground/replay/mcp-poisoned-tool-description/ 301
+/playground/mcp-poisoned-tool-description/index.md /playground/replay/mcp-poisoned-tool-description/index.md 301
+/playground/multi-step-policy-chain /playground/replay/multi-step-policy-chain/ 301
+/playground/multi-step-policy-chain/ /playground/replay/multi-step-policy-chain/ 301
+/playground/multi-step-policy-chain/index.html /playground/replay/multi-step-policy-chain/ 301
+/playground/multi-step-policy-chain/index.md /playground/replay/multi-step-policy-chain/index.md 301
+/playground/operation-aware-policy /playground/replay/operation-aware-policy/ 301
+/playground/operation-aware-policy/ /playground/replay/operation-aware-policy/ 301
+/playground/operation-aware-policy/index.html /playground/replay/operation-aware-policy/ 301
+/playground/operation-aware-policy/index.md /playground/replay/operation-aware-policy/index.md 301
+/playground/poisoned-readme-key-paste /playground/replay/poisoned-readme-key-paste/ 301
+/playground/poisoned-readme-key-paste/ /playground/replay/poisoned-readme-key-paste/ 301
+/playground/poisoned-readme-key-paste/index.html /playground/replay/poisoned-readme-key-paste/ 301
+/playground/poisoned-readme-key-paste/index.md /playground/replay/poisoned-readme-key-paste/index.md 301
+/playground/poisoned-ticket-webhook-exfil /playground/replay/poisoned-ticket-webhook-exfil/ 301
+/playground/poisoned-ticket-webhook-exfil/ /playground/replay/poisoned-ticket-webhook-exfil/ 301
+/playground/poisoned-ticket-webhook-exfil/index.html /playground/replay/poisoned-ticket-webhook-exfil/ 301
+/playground/poisoned-ticket-webhook-exfil/index.md /playground/replay/poisoned-ticket-webhook-exfil/index.md 301
+/playground/prompt-injection-response-blocked /playground/replay/prompt-injection-response-blocked/ 301
+/playground/prompt-injection-response-blocked/ /playground/replay/prompt-injection-response-blocked/ 301
+/playground/prompt-injection-response-blocked/index.html /playground/replay/prompt-injection-response-blocked/ 301
+/playground/prompt-injection-response-blocked/index.md /playground/replay/prompt-injection-response-blocked/index.md 301
+/playground/secret-exfil-url-blocked /playground/replay/secret-exfil-url-blocked/ 301
+/playground/secret-exfil-url-blocked/ /playground/replay/secret-exfil-url-blocked/ 301
+/playground/secret-exfil-url-blocked/index.html /playground/replay/secret-exfil-url-blocked/ 301
+/playground/secret-exfil-url-blocked/index.md /playground/replay/secret-exfil-url-blocked/index.md 301
+/playground/ssrf-internal-target-blocked /playground/replay/ssrf-internal-target-blocked/ 301
+/playground/ssrf-internal-target-blocked/ /playground/replay/ssrf-internal-target-blocked/ 301
+/playground/ssrf-internal-target-blocked/index.html /playground/replay/ssrf-internal-target-blocked/ 301
+/playground/ssrf-internal-target-blocked/index.md /playground/replay/ssrf-internal-target-blocked/index.md 301
+/playground/websocket-fragmented-secret /playground/replay/websocket-fragmented-secret/ 301
+/playground/websocket-fragmented-secret/ /playground/replay/websocket-fragmented-secret/ 301
+/playground/websocket-fragmented-secret/index.html /playground/replay/websocket-fragmented-secret/ 301
+/playground/websocket-fragmented-secret/index.md /playground/replay/websocket-fragmented-secret/index.md 301
+
+# Preserve the retired benchmark path shape on the site-owned evidence host.
+/gauntlet-site/* /gauntlet/evidence/:splat 301
+/compare/pipelock-vs-agent-wall/ /compare/pipelock-vs-open-source-mcp-gateways/ 301
+/compare/pipelock-vs-agent-wall/index.md /compare/pipelock-vs-open-source-mcp-gateways/index.md 301

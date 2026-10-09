@@ -1,0 +1,21 @@
+{{- /* Verified-provenance stamps. Values come from data/stats.yaml, which each
+       verification run refreshes; this partial only presents them. Keeping the
+       repo, commit, and date visible is the claim: these numbers were checked
+       against exact code, on a date, and you can click through to it. */ -}}
+{{- $stats := site.Data.stats -}}
+{{- $productURL := printf "%s/commit/%s" $stats.product_source_repository $stats.product_source_commit -}}
+{{- $benchURL := printf "%s/commit/%s" $stats.bench_source_repository $stats.bench_source_commit -}}
+<div class="bench-provenance bench-provenance-stamps">
+  <a class="prov-stamp" href="{{ $productURL }}" target="_blank" rel="noopener noreferrer">
+    <span class="prov-check" aria-hidden="true">&#10003;</span>
+    <span class="prov-what">product metrics</span>
+    <span class="prov-ref">pipelock@{{ substr $stats.product_source_commit 0 9 }}</span>
+    <time class="prov-date" datetime="{{ $stats.product_verified_date }}">{{ $stats.product_verified_date }}</time>
+  </a>
+  <a class="prov-stamp" href="{{ $benchURL }}" target="_blank" rel="noopener noreferrer">
+    <span class="prov-check" aria-hidden="true">&#10003;</span>
+    <span class="prov-what">corpus snapshot</span>
+    <span class="prov-ref">agent-egress-bench@{{ substr $stats.bench_source_commit 0 9 }}</span>
+    <time class="prov-date" datetime="{{ $stats.bench_verified_date }}">{{ $stats.bench_verified_date }}</time>
+  </a>
+</div>

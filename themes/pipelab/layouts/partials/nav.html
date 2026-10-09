@@ -1,0 +1,196 @@
+{{- $stats := site.Data.stats -}}
+{{- $path := .RelPermalink -}}
+{{- $projectsActive := or
+  (hasPrefix $path "/pipelock/")
+  (and (hasPrefix $path "/playground/") (not (hasPrefix $path "/playground/replay/")))
+  (hasPrefix $path "/assess/")
+  (hasPrefix $path "/enterprise/")
+  (hasPrefix $path "/agent-egress-bench/")
+  (hasPrefix $path "/pipelock-rules/")
+  (hasPrefix $path "/learn/agent-evidence-levels/")
+-}}
+{{- $proofActive := or
+  (hasPrefix $path "/proof/")
+  (hasPrefix $path "/gauntlet/")
+  (hasPrefix $path "/agent-evidence/")
+  (hasPrefix $path "/verify/")
+  (hasPrefix $path "/learn/verify-a-receipt/")
+  (hasPrefix $path "/playground/replay/")
+-}}
+{{- $learnActive := or
+  (and
+    (hasPrefix $path "/learn/")
+    (not (hasPrefix $path "/learn/agent-evidence-levels/"))
+    (not (hasPrefix $path "/learn/verify-a-receipt/")))
+  (hasPrefix $path "/compare/")
+  (hasPrefix $path "/blog/")
+  (hasPrefix $path "/capabilities/")
+  (hasPrefix $path "/agent-firewall-checklist/")
+  (hasPrefix $path "/about/")
+  (hasPrefix $path "/contact/")
+-}}
+{{- $capabilitiesPage := site.GetPage "/capabilities" -}}
+<header class="site-header">
+  <nav class="nav-container" aria-label="Main navigation">
+    <a href="/" class="nav-logo" aria-label="PipeLab home">
+      {{ partial "brand-mark.html" (dict "class" "nav-logo-mark" "size" 28) }}
+      <span class="logo-text">Pipe<span class="accent">Lab</span></span>
+    </a>
+
+    <button class="nav-toggle" type="button" aria-label="Menu" aria-expanded="false" aria-controls="nav-links">
+      <span></span><span></span><span></span>
+    </button>
+
+    <div class="nav-links" id="nav-links">
+      <ul class="nav-primary" role="list">
+
+        <li class="nav-item nav-item-menu{{ if $projectsActive }} is-current{{ end }}">
+          <button class="nav-link nav-menu-btn" type="button" aria-expanded="false" aria-controls="nav-menu-product"{{ if $projectsActive }} data-current-section="true"{{ end }}>
+            Projects <span class="nav-caret" aria-hidden="true"></span>
+          </button>
+          <div class="nav-menu" id="nav-menu-product">
+            <div class="nav-menu-grid nav-menu-grid-2 nav-menu-projects">
+              <div class="nav-menu-col">
+                <p class="nav-menu-eyebrow">Pipelock</p>
+                <a class="nav-menu-row" href="/pipelock/"{{ if eq $path "/pipelock/" }} aria-current="page"{{ end }}>
+                  <span class="nav-menu-title">Pipelock</span>
+                  <span class="nav-menu-desc">Open-source agent firewall. Apache 2.0 core.</span>
+                </a>
+                <a class="nav-menu-row" href="/playground/"{{ if eq $path "/playground/" }} aria-current="page"{{ end }}>
+                  <span class="nav-menu-title">Playground</span>
+                  <span class="nav-menu-desc">Run a real contained agent against Pipelock. No signup.</span>
+                </a>
+                <a class="nav-menu-row" href="/assess/"{{ if eq $path "/assess/" }} aria-current="page"{{ end }}>
+                  <span class="nav-menu-title">Assess</span>
+                  <span class="nav-menu-desc">Signed compliance evidence, verifiable offline.</span>
+                </a>
+                <a class="nav-menu-row" href="/enterprise/"{{ if eq $path "/enterprise/" }} aria-current="page"{{ end }}>
+                  <span class="nav-menu-title">Enterprise</span>
+                  <span class="nav-menu-desc">Fleet control plane, central policy, dashboard.</span>
+                </a>
+              </div>
+              <div class="nav-menu-col">
+                <p class="nav-menu-eyebrow">Ecosystem</p>
+                <a class="nav-menu-row" href="/agent-egress-bench/"{{ if eq $path "/agent-egress-bench/" }} aria-current="page"{{ end }}>
+                  <span class="nav-menu-title">Agent Egress Bench</span>
+                  <span class="nav-menu-desc">Tool-neutral attack corpus and reproducible scoring.</span>
+                </a>
+                <a class="nav-menu-row" href="/pipelock-rules/"{{ if eq $path "/pipelock-rules/" }} aria-current="page"{{ end }}>
+                  <span class="nav-menu-title">Pipelock Rules</span>
+                  <span class="nav-menu-desc">Signed detection bundles that extend Pipelock.</span>
+                </a>
+                <a class="nav-menu-row" href="/learn/agent-evidence-levels/"{{ if eq $path "/learn/agent-evidence-levels/" }} aria-current="page"{{ end }}>
+                  <span class="nav-menu-title">Agent Evidence Level</span>
+                  <span class="nav-menu-desc">Open draft standard for grading audit evidence.</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </li>
+
+        <li class="nav-item nav-item-menu{{ if $proofActive }} is-current{{ end }}">
+          <button class="nav-link nav-menu-btn" type="button" aria-expanded="false" aria-controls="nav-menu-proof"{{ if $proofActive }} data-current-section="true"{{ end }}>
+            Proof <span class="nav-caret" aria-hidden="true"></span>
+          </button>
+          <div class="nav-menu nav-menu-narrow" id="nav-menu-proof">
+            <div class="nav-menu-grid">
+              <div class="nav-menu-col">
+                <p class="nav-menu-eyebrow">Verify it yourself</p>
+                <a class="nav-menu-row" href="/proof/"{{ if eq $path "/proof/" }} aria-current="page"{{ end }}>
+                  <span class="nav-menu-title">Public proof</span>
+                  <span class="nav-menu-desc">Signed evidence from real sessions, verifiable in your browser or offline.</span>
+                </a>
+                <a class="nav-menu-row" href="/gauntlet/"{{ if eq $path "/gauntlet/" }} aria-current="page"{{ end }}>
+                  <span class="nav-menu-title">Agent Egress Bench results</span>
+                  <span class="nav-menu-desc">Public benchmark results across vendors, from the open attack corpus.</span>
+                </a>
+                <a class="nav-menu-row" href="/agent-evidence/"{{ if eq $path "/agent-evidence/" }} aria-current="page"{{ end }}>
+                  <span class="nav-menu-title">Runtime evidence</span>
+                  <span class="nav-menu-desc">Signed receipts from a real contained agent, mapped to AIUC-1.</span>
+                </a>
+                <a class="nav-menu-row" href="/verify/"{{ if eq $path "/verify/" }} aria-current="page"{{ end }}>
+                  <span class="nav-menu-title">Receipt verifier</span>
+                  <span class="nav-menu-desc">Check your own receipt chain in your browser. Nothing uploads.</span>
+                </a>
+                <a class="nav-menu-row" href="/learn/verify-a-receipt/"{{ if eq $path "/learn/verify-a-receipt/" }} aria-current="page"{{ end }}>
+                  <span class="nav-menu-title">Verify a receipt</span>
+                  <span class="nav-menu-desc">Check a signed action receipt offline, step by step.</span>
+                </a>
+                <a class="nav-menu-row" href="/playground/replay/"{{ if eq $path "/playground/replay/" }} aria-current="page"{{ end }}>
+                  <span class="nav-menu-title">Recorded replays</span>
+                  <span class="nav-menu-desc">Watch real allowed and blocked sessions, receipt by receipt.</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </li>
+
+        <li class="nav-item nav-item-menu{{ if $learnActive }} is-current{{ end }}">
+          <button class="nav-link nav-menu-btn" type="button" aria-expanded="false" aria-controls="nav-menu-learn"{{ if $learnActive }} data-current-section="true"{{ end }}>
+            Learn <span class="nav-caret" aria-hidden="true"></span>
+          </button>
+          <div class="nav-menu" id="nav-menu-learn">
+            <div class="nav-menu-grid nav-menu-grid-2">
+              <div class="nav-menu-col">
+                <p class="nav-menu-eyebrow">Guides</p>
+                <a class="nav-menu-row" href="/learn/"{{ if eq $path "/learn/" }} aria-current="page"{{ end }}>
+                  <span class="nav-menu-title">All guides</span>
+                  <span class="nav-menu-desc">MCP security, agent egress, receipts, compliance.</span>
+                </a>
+                {{- with $capabilitiesPage }}
+                <a class="nav-menu-row" href="/capabilities/"{{ if eq $path .RelPermalink }} aria-current="page"{{ end }}>
+                  <span class="nav-menu-title">Capabilities</span>
+                  <span class="nav-menu-desc">Every control Pipelock can inspect, enforce, and prove.</span>
+                </a>
+                {{- end }}
+                <a class="nav-menu-row" href="/agent-firewall-checklist/"{{ if eq $path "/agent-firewall-checklist/" }} aria-current="page"{{ end }}>
+                  <span class="nav-menu-title">Evaluation checklist</span>
+                  <span class="nav-menu-desc">What to demand from any agent firewall before you trust it.</span>
+                </a>
+                <a class="nav-menu-row" href="/learn/owasp-mcp-top10/"{{ if eq $path "/learn/owasp-mcp-top10/" }} aria-current="page"{{ end }}>
+                  <span class="nav-menu-title">OWASP MCP Top 10</span>
+                  <span class="nav-menu-desc">Each risk mapped to the control that covers it.</span>
+                </a>
+              </div>
+              <div class="nav-menu-col">
+                <p class="nav-menu-eyebrow">More from PipeLab</p>
+                <a class="nav-menu-row" href="/compare/"{{ if eq $path "/compare/" }} aria-current="page"{{ end }}>
+                  <span class="nav-menu-title">Compare</span>
+                  <span class="nav-menu-desc">Pipelock against gateways, proxies, and guardrails.</span>
+                </a>
+                <a class="nav-menu-row" href="/blog/"{{ if eq $path "/blog/" }} aria-current="page"{{ end }}>
+                  <span class="nav-menu-title">Research and updates</span>
+                  <span class="nav-menu-desc">Release notes, research, and findings.</span>
+                </a>
+                <a class="nav-menu-row" href="/about/"{{ if eq $path "/about/" }} aria-current="page"{{ end }}>
+                  <span class="nav-menu-title">About PipeLab</span>
+                  <span class="nav-menu-desc">Who builds this and why.</span>
+                </a>
+                <a class="nav-menu-row" href="/contact/"{{ if eq $path "/contact/" }} aria-current="page"{{ end }}>
+                  <span class="nav-menu-title">Contact</span>
+                  <span class="nav-menu-desc">Trials, licensing, support, disclosures, and press.</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </li>
+
+        <li class="nav-item"><a class="nav-link" href="/pricing/"{{ if eq .RelPermalink "/pricing/" }} aria-current="page"{{ end }}>Pricing</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        {{ with site.Params.discord }}
+        <a class="nav-discord" href="{{ . }}" target="_blank" rel="noopener noreferrer" aria-label="PipeLab community Discord"
+           data-event="nav_discord_click" data-event-placement="nav">
+          <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor" aria-hidden="true"><path d="M20.317 4.37a19.79 19.79 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.058a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128c.126-.094.252-.192.372-.291a.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+        </a>
+        {{ end }}
+        <a class="nav-github" href="https://github.com/luckyPipewrench/pipelock" rel="noopener" aria-label="Pipelock on GitHub, {{ $stats.stars }} stars" data-nav-star-link>
+          <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          <span class="nav-github-count" data-nav-star-count>{{ $stats.stars }}</span>
+        </a>
+        <a class="nav-cta" href="/playground/" data-event="nav_try_demo_click" data-event-placement="nav">Try the live demo</a>
+      </div>
+    </div>
+  </nav>
+</header>

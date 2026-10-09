@@ -1,0 +1,42 @@
+{{- $pages := .RegularPages -}}
+{{- if .IsHome -}}
+  {{- $pages = site.RegularPages -}}
+{{- end -}}
+{{- $pages = $pages.ByLastmod.Reverse -}}
+{{- /* Keep feeds bounded even when the global RSS limit is -1 (unlimited).
+      Rendering every page's full content makes a local or production build
+      unbounded; corrections rise promptly because the feed sorts by Lastmod. */ -}}
+{{- $limit := 20 -}}
+{{- with site.Config.Services.RSS.Limit -}}
+  {{- if gt . 0 }}{{ $limit = . }}{{ end -}}
+{{- end -}}
+{{- printf "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>" | safeHTML }}
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>{{ if .IsHome }}{{ site.Title }}{{ else }}{{ printf "%s on %s" .Title site.Title }}{{ end }}</title>
+    <link>{{ .Permalink }}</link>
+    <description>{{ with .Description }}{{ . }}{{ else }}{{ site.Params.description }}{{ end }}</description>
+    <generator>Hugo</generator>
+    <language>{{ site.Language.LanguageCode }}</language>
+    <lastBuildDate>{{ now.Format "Mon, 02 Jan 2006 15:04:05 -0700" }}</lastBuildDate>
+    {{- /* Guarded: OutputFormats.Get returns nil when the format name case
+           differs across Hugo versions, and .Permalink on nil aborts the build. */ -}}
+    {{- with .OutputFormats.Get "rss" }}
+    <atom:link href="{{ .Permalink }}" rel="self" type="application/rss+xml" />
+    {{- end }}
+    {{ range first $limit $pages }}
+      {{- /* This template exists only so a correction notice reaches the feed.
+             It otherwise mirrors Hugo's built-in RSS output: a summary in
+             description, and no full-text content:encoded element. */ -}}
+      {{- $correction := partial "blog-updates.html" (dict "page" . "format" "rss") -}}
+      {{- $description := printf "%s%s" $correction (or .Summary .Description) -}}
+      <item>
+        <title>{{ .Title }}</title>
+        <link>{{ .Permalink }}</link>
+        <guid>{{ .Permalink }}</guid>
+        <pubDate>{{ .Date.Format "Mon, 02 Jan 2006 15:04:05 -0700" }}</pubDate>
+        <description>{{ printf "<![CDATA[%s]]>" $description | safeHTML }}</description>
+      </item>
+    {{ end }}
+  </channel>
+</rss>

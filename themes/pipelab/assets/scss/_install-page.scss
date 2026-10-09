@@ -1,0 +1,338 @@
+// ============================================================
+//   /install/ — split hero: claim left, one big tabbed terminal
+//   right (methods from data/install.yaml). Below, the three
+//   protect-an-agent steps use the shared product runbook,
+//   closing on the receipt promise.
+// ============================================================
+
+.inst-hero {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  padding: 4.5rem 2rem 4.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.inst-hero-inner {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  gap: 3.5rem;
+  align-items: center;
+}
+
+// The shared exhibit band supplies the artifact treatment, but the install
+// terminal needs this page's wider command column. Its component breakpoint
+// otherwise overrides the page's single-column layout from 901px through
+// 1024px and clips the default Go command at wider desktop sizes.
+.inst-hero-inner.fx-exhibit-band.fx-exhibit-band {
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  gap: 3.5rem;
+}
+
+.inst-eyebrow {
+  margin: 0 0 1rem;
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.inst-h1 {
+  margin: 0 0 1rem;
+  font-family: var(--font-mono), monospace;
+  font-size: clamp(1.7rem, 2.6vw, 2.35rem);
+  line-height: 1.2;
+  letter-spacing: var(--tracking-tight);
+  color: var(--text);
+}
+
+.inst-lead {
+  margin: 0 0 1.5rem;
+  font-size: var(--fs-lead);
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.inst-facts {
+  list-style: none;
+  margin: 0 0 1.5rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    font-family: var(--font-mono), monospace;
+    font-size: 0.86rem;
+    color: var(--text-muted);
+  }
+}
+
+.inst-fact-dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 99px;
+  background: var(--accent);
+  box-shadow: 0 0 10px rgba(0, 229, 160, 0.55);
+}
+
+.inst-provenance {
+  margin: 0;
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  color: var(--text-dim);
+
+  a {
+    color: var(--accent);
+    text-decoration: none;
+
+    &:hover { text-decoration: underline; text-underline-offset: 3px; }
+  }
+}
+
+// ── The terminal panel ─────────────────────────────────────
+.inst-panel {
+  min-width: 0;
+}
+
+.inst-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-bottom: 0.9rem;
+}
+
+.inst-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: none;
+  border-radius: 999px;
+  padding: 0.45rem 1.05rem;
+  cursor: pointer;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  transition: color 0.15s, border-color 0.15s, background-color 0.15s;
+
+  &:hover { color: var(--text); border-color: rgba(255, 255, 255, 0.25); }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+
+  &.is-active {
+    color: #09090b;
+    background: var(--accent);
+    border-color: var(--accent);
+    font-weight: 700;
+    box-shadow: 0 0 18px rgba(0, 229, 160, 0.25);
+  }
+}
+
+.inst-term {
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #0e0e11;
+  overflow: hidden;
+}
+
+.inst-term-hero {
+  border-radius: 16px;
+  border: 1px solid rgba(0, 229, 160, 0.16);
+  background:
+    linear-gradient(165deg, rgba(0, 229, 160, 0.05), transparent 45%),
+    #0d0f10;
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.5),
+    0 0 46px rgba(0, 229, 160, 0.07);
+}
+
+.inst-term-head {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.65rem 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid var(--border);
+}
+
+.inst-term-dots {
+  display: flex;
+  gap: 6px;
+
+  span {
+    width: 8px;
+    height: 8px;
+    border-radius: 99px;
+    background: rgba(255, 255, 255, 0.14);
+  }
+}
+
+.inst-term-title {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+}
+
+.inst-term-head .hp-term-copy {
+  margin-left: auto;
+}
+
+.inst-term-body {
+  --cmd-row-padding: 1.3rem 1.2rem;
+  padding: 1.3rem 1.2rem;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--text);
+  overflow-x: auto;
+  white-space: pre;
+
+  .prompt { color: var(--text-dim); }
+
+  p {
+    margin: 0 0 0.9rem;
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--text-muted);
+    white-space: normal;
+  }
+}
+
+.inst-term-body[hidden] {
+  display: none !important;
+}
+
+.inst-term-binary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding-block: 1rem;
+
+  p {
+    max-width: 27rem;
+    margin: 0;
+  }
+}
+
+.inst-binary-link {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.88rem;
+  color: var(--accent);
+  text-decoration: none;
+
+  &:hover { text-decoration: underline; text-underline-offset: 3px; }
+}
+
+.inst-term-foot {
+  padding: 0.65rem 1.2rem;
+  border-top: 1px solid var(--border);
+  font-family: var(--font-mono), monospace;
+  font-size: 0.76rem;
+  color: var(--text-dim);
+
+  code { color: var(--text-muted); }
+}
+
+.inst-term-check {
+  color: var(--accent);
+}
+
+// ── First-agent runbook ────────────────────────────────────
+.inst-next {
+  text-align: left;
+}
+
+.inst-next .product-runbook-artifact {
+  border-color: rgba(0, 229, 160, 0.14);
+  background: rgba(7, 9, 10, 0.86);
+
+  .inst-term-body {
+    width: 100%;
+    text-align: left;
+  }
+}
+
+.inst-cta-row {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-top: 3.5rem;
+}
+
+.inst-btn-primary,
+.inst-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.75rem 1.4rem;
+  border-radius: 9px;
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-code);
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.15s, box-shadow 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.inst-btn-primary {
+  background: var(--accent);
+  color: #09090b;
+  box-shadow: 0 0 0 1px rgba(0, 229, 160, 0.3), 0 0 24px rgba(0, 229, 160, 0.2);
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 0 0 1px rgba(0, 229, 160, 0.5), 0 0 34px rgba(0, 229, 160, 0.35);
+  }
+}
+
+.inst-btn-ghost {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: var(--text);
+
+  &:hover { border-color: rgba(0, 229, 160, 0.4); color: var(--accent); }
+}
+
+// ── Responsive ─────────────────────────────────────────────
+@media (max-width: 1024px) {
+  .inst-hero-inner,
+  .inst-hero-inner.fx-exhibit-band.fx-exhibit-band {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+}
+
+@media (max-width: $bp-mobile) {
+  .inst-hero { padding: 3rem 1.25rem 3rem; }
+
+  // The install command is the point of this page, and at 390 the single-line
+  // form hid 194px of a 542px command behind a sideways scroll inside a button,
+  // so a phone visitor read "$ go install github.com/luckyPipewrench/pipel" and
+  // had to discover the scroll to see what to run. Wrap it instead. Copy still
+  // yields the whole command; only the display breaks across lines.
+  .inst-term-body {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    overflow-x: visible;
+  }
+
+  .inst-term-binary {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+
+  .inst-next .inst-term-body { font-size: 0.82rem; }
+}

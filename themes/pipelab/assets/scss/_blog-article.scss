@@ -1,0 +1,577 @@
+// ============================================================
+//   Blog article layout
+//   ------------------------------------------------------------
+//   Used by themes/pipelab/layouts/blog/single.html only.
+//   Three-zone layout: header / (TOC + body) / share + related + CTA.
+//   Adapted from _learn.scss so blog and learn share a visual family.
+// ============================================================
+
+.blog-article {
+  position: relative;
+}
+
+// ── Reading progress bar (top of viewport) ──────────────────
+// Reuses .reading-progress + .reading-progress-fill from _learn.scss.
+
+// ── Article header ──────────────────────────────────────────
+.blog-article-header {
+  padding: 4rem 2rem 1.75rem;
+  border-bottom: 1px solid var(--border);
+  background:
+    radial-gradient(ellipse at 22% 0%, rgba(0, 229, 160, .085) 0%, transparent 48%),
+    linear-gradient(180deg, rgba(255, 255, 255, .025), transparent 70%);
+
+  .blog-article-header-inner {
+    position: relative;
+    max-width: 760px;
+    margin: 0 auto;
+    border-left: 1px solid rgba(0, 229, 160, .35);
+    padding-left: clamp(1.25rem, 3vw, 2.25rem);
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -2px;
+      width: 3px;
+      height: 3rem;
+      background: var(--accent);
+    }
+  }
+
+  .blog-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    min-height: 1.8rem;
+    border: 1px solid rgba(0, 229, 160, .22);
+    border-radius: 999px;
+    padding: .3rem .7rem;
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-caption);
+    color: var(--accent);
+    letter-spacing: var(--tracking-wider);
+    text-transform: uppercase;
+    margin: 0 0 1rem;
+  }
+
+  h1 {
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-h1);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: var(--tracking-tight);
+    color: var(--text);
+    margin: 0 0 1rem;
+  }
+
+  .blog-lead {
+    font-size: var(--fs-lead);
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin: 0 0 1.5rem;
+  }
+
+  .blog-article-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem 2rem;
+    margin: 0 0 1.25rem;
+    border: 1px solid rgba(255, 255, 255, .09);
+    border-radius: var(--radius);
+    padding: .85rem 1rem;
+    background: linear-gradient(100deg, rgba(255, 255, 255, .045), rgba(255, 255, 255, .012));
+
+    > div {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      margin: 0;
+    }
+
+    dt {
+      font-family: var(--font-mono), monospace;
+      font-size: var(--fs-caption);
+      color: var(--text-dim);
+      letter-spacing: var(--tracking-wide);
+      text-transform: uppercase;
+      margin: 0;
+    }
+
+    dd {
+      font-family: var(--font-mono), monospace;
+      font-size: var(--fs-caption);
+      color: var(--text);
+      margin: 0;
+    }
+
+    .blog-meta-dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      margin-right: 0.45rem;
+      vertical-align: middle;
+    }
+  }
+
+  // Reuse the .page-formats pill treatment.
+  .page-formats {
+    display: flex;
+    justify-content: flex-start;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-top: 0;
+
+    a {
+      font-family: var(--font-mono), monospace;
+      font-size: var(--fs-caption);
+      color: var(--accent);
+      text-decoration: none;
+      border: 1px solid rgba(0, 229, 160, 0.18);
+      border-radius: 999px;
+      padding: 0.35rem 0.9rem;
+      transition: border-color 0.2s ease, background 0.2s ease;
+    }
+
+    a:hover,
+    a:focus-visible {
+      border-color: rgba(0, 229, 160, 0.36);
+      background: rgba(0, 229, 160, 0.06);
+    }
+  }
+
+  @media (max-width: $bp-mobile) {
+    padding: 3rem 1.5rem 1.5rem;
+    h1 { font-size: var(--fs-stat); }
+
+    .blog-article-header-inner { padding-left: 1rem; }
+
+    .blog-article-meta {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: .85rem;
+    }
+  }
+}
+
+// ── Two-column grid: TOC left, body center ──────────────────
+.blog-article-grid {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 760px);
+  gap: 2.5rem;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 2rem 4rem;
+
+  @media (max-width: $bp-tablet) {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+    padding: 1.5rem 1.5rem 3rem;
+  }
+}
+
+// Pages without a TOC: collapse to single column at every breakpoint.
+.blog-article:not(.blog-article-has-toc) .blog-article-grid {
+  grid-template-columns: minmax(0, 760px);
+  justify-content: center;
+}
+
+.blog-update-notice {
+  margin: 0 0 2rem;
+  padding: 1rem 1.15rem;
+  border: 1px solid rgba(0, 229, 160, 0.35);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  background: rgba(0, 229, 160, 0.06);
+
+  p { margin: 0; color: var(--text-muted); }
+  p + p { margin-top: 0.45rem; }
+
+  .blog-update-label {
+    color: var(--accent);
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-caption);
+    font-weight: 700;
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+  }
+
+  a { color: var(--accent); }
+}
+
+// ── Sticky TOC sidebar ──────────────────────────────────────
+.blog-article-toc {
+  font-family: var(--font-mono), monospace;
+  position: sticky;
+  top: 1.5rem;
+  align-self: start;
+  max-height: calc(100vh - 3rem);
+  border-top: 1px solid rgba(0, 229, 160, .34);
+  border-bottom: 1px solid var(--border);
+  padding: .75rem 0 1rem;
+  overflow-y: auto;
+
+  @media (max-width: $bp-tablet) {
+    position: static;
+    max-height: none;
+    overflow: visible;
+    background: var(--bg);
+  }
+
+  .blog-toc-disclosure {
+    summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      padding: 0.5rem 0;
+      list-style: none;
+
+      &::-webkit-details-marker { display: none; }
+    }
+
+    .blog-toc-label {
+      font-size: var(--fs-caption);
+      color: var(--text-dim);
+      letter-spacing: var(--tracking-wider);
+      text-transform: uppercase;
+    }
+
+    .blog-toc-chevron {
+      color: var(--text-dim);
+      font-size: var(--fs-body);
+      display: none;
+    }
+
+    @media (max-width: $bp-tablet) {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.75rem 1rem;
+      background: var(--bg-card);
+
+      .blog-toc-chevron {
+        display: inline-block;
+        transition: transform 0.2s ease;
+      }
+
+      &[open] .blog-toc-chevron { transform: rotate(45deg); }
+    }
+  }
+
+  // Hugo .TableOfContents emits <nav id="TableOfContents"><ul>...</ul></nav>
+  nav, ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  ul ul {
+    margin-left: 0.75rem;
+    border-left: 1px solid var(--border);
+    padding-left: 0.5rem;
+    margin-top: 0.25rem;
+  }
+
+  li { margin: 0; }
+
+  a {
+    display: block;
+    font-size: var(--fs-caption);
+    color: var(--text-muted);
+    text-decoration: none;
+    padding: 0.4rem 0 0.4rem 0.85rem;
+    border-left: 2px solid transparent;
+    line-height: 1.4;
+    transition: color 0.15s ease, border-color 0.15s ease;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--text);
+      border-left-color: var(--border-strong, rgba(255, 255, 255, 0.18));
+    }
+
+    &.is-current {
+      color: var(--accent);
+      border-left-color: var(--accent);
+    }
+  }
+
+  .blog-toc-back {
+    display: inline-block;
+    margin-top: 1rem;
+    padding-left: 0;
+    border-left: none;
+    font-size: var(--fs-caption);
+    color: var(--text-dim);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+
+    &:hover { color: var(--accent); }
+  }
+}
+
+// ── Article body ────────────────────────────────────────────
+.blog-article-body {
+  counter-reset: blog-section;
+  // min-width: 0 lets the grid track shrink below its content width,
+  // which is what allows inner pre / code / table to scroll instead of
+  // pushing the whole page wide on narrow viewports.
+  min-width: 0;
+
+  > p:first-of-type {
+    color: var(--text);
+    font-size: unquote("clamp(1.08rem, 1.6vw, 1.22rem)");
+    line-height: 1.72;
+  }
+
+  // Long inline code, URLs, and identifiers wrap rather than overflow.
+  code, a {
+    overflow-wrap: anywhere;
+  }
+
+  // Numbered prefix on h2 via CSS counter — stays out of Markdown / RSS / JSON-LD.
+  h2 {
+    counter-increment: blog-section;
+    position: relative;
+    margin-top: 3.5rem;
+    margin-bottom: 1.25rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border);
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-h2);
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.25;
+    letter-spacing: var(--tracking-tight);
+
+    &::before {
+      content: counter(blog-section, decimal-leading-zero);
+      display: inline-block;
+      margin-right: 0.6rem;
+      font-size: var(--fs-code);
+      color: var(--accent);
+      font-weight: 400;
+      letter-spacing: var(--tracking-wide);
+      vertical-align: 0.18em;
+    }
+
+    &:first-of-type {
+      margin-top: 1.5rem;
+      padding-top: 0;
+      border-top: 0;
+    }
+  }
+
+  h3 {
+    margin-top: 2.25rem;
+    margin-bottom: 0.75rem;
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-h3);
+    color: var(--text);
+  }
+
+  p {
+    color: var(--text-muted);
+    font-size: var(--fs-body);
+    line-height: 1.7;
+    margin-bottom: 1.1rem;
+  }
+
+  ul, ol {
+    color: var(--text-muted);
+    font-size: var(--fs-body);
+    line-height: 1.7;
+    margin: 1rem 0 1.25rem 1.5rem;
+  }
+
+  li { margin-bottom: 0.45rem; }
+
+  ul li::marker { color: var(--accent); }
+  ol li::marker { color: var(--accent); font-weight: 600; }
+
+  strong { color: var(--text); }
+
+  // Wide tables scroll horizontally on mobile rather than overflowing
+  // the viewport.
+  table {
+    @media (max-width: $bp-mobile) {
+      display: block;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+  }
+
+  // Markdown blockquote becomes a soft pull-quote callout.
+  blockquote {
+    margin: 2rem 0;
+    padding: 1rem 1.25rem;
+    background: rgba(0, 229, 160, 0.04);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    color: var(--text);
+
+    p { margin-bottom: 0.5rem; color: var(--text); }
+    p:last-child { margin-bottom: 0; }
+
+    cite {
+      display: block;
+      font-family: var(--font-mono), monospace;
+      font-style: normal;
+      font-size: var(--fs-caption);
+      color: var(--text-dim);
+      letter-spacing: var(--tracking-wide);
+      text-transform: uppercase;
+      margin-top: 0.65rem;
+
+      &::before { content: "— "; color: var(--accent); }
+    }
+  }
+}
+
+// ── Share strip ─────────────────────────────────────────────
+.blog-share {
+  max-width: 760px;
+  margin: 3rem auto 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.15rem;
+  background: linear-gradient(100deg, rgba(255, 255, 255, .035), rgba(255, 255, 255, .01));
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+
+  @media (max-width: $bp-mobile) {
+    margin-inline: 1.5rem;
+    padding: .9rem;
+  }
+}
+
+.blog-share-label {
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  color: var(--text-dim);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  margin-right: 0.25rem;
+}
+
+.blog-share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.85rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  color: var(--text-muted);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+
+  &:hover,
+  &:focus-visible {
+    border-color: rgba(0, 229, 160, 0.36);
+    color: var(--accent);
+    background: var(--bg-card-hover);
+  }
+
+  &.is-copied {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+}
+
+// ── Related posts 3-up at the article footer ───────────────
+.blog-related {
+  max-width: 1100px;
+  margin: 1rem auto 0;
+  padding: 1.5rem 2rem 0;
+
+  @media (max-width: $bp-mobile) {
+    padding: 1rem 1.5rem 0;
+  }
+}
+
+.blog-related-label {
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  color: var(--text-dim);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  margin: 0 0 0.75rem;
+}
+
+.blog-related-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+
+  @media (max-width: $bp-tablet) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.blog-related-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  background:
+    radial-gradient(circle at 10% 0%, rgba(0, 229, 160, .055), transparent 44%),
+    linear-gradient(150deg, rgba(255, 255, 255, .055), rgba(255, 255, 255, .018)),
+    var(--bg-card);
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: var(--radius);
+  padding: 1rem 1.1rem;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+
+  &:hover,
+  &:focus-visible {
+    border-color: rgba(0, 229, 160, 0.36);
+    background: var(--bg-card-hover);
+    transform: translateY(-1px);
+  }
+}
+
+.blog-related-cat {
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  color: var(--accent);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.blog-related-title {
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-h3);
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.25;
+  margin: 0;
+}
+
+.blog-related-desc {
+  font-size: var(--fs-code);
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.blog-related-meta {
+  margin: 0.25rem 0 0;
+  display: flex;
+  gap: 0.75rem;
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  color: var(--text-dim);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}

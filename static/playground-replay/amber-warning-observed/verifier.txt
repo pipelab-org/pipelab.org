@@ -1,0 +1,9 @@
+Pipelock audit packet — receipt chain verification
+scenario: amber-warning-observed
+receipts: 2
+verdict: valid (trusted)
+root_hash: b6d639307de7605f8ed04e37b6ee3017dc4486565a6fb90edec6914b4cb97b35
+signer_key: 91dfb23882a8acf28f624985030ca1798a3efbbcee2bb8bdda8f452612eb755a
+
+Verify it yourself from this directory:
+  pipelock-verifier audit-packet . --key 91dfb23882a8acf28f624985030ca1798a3efbbcee2bb8bdda8f452612eb755a

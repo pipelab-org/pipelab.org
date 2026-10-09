@@ -1,0 +1,26 @@
+{"name":"AWS access key in URL path","category":"DLP Exfiltration","detected":true,"detail":"core_dlp"}
+{"name":"Base64-encoded GitHub token","category":"DLP Exfiltration","detected":true,"detail":"core_dlp"}
+{"name":"Hex-encoded Slack token","category":"DLP Exfiltration","detected":true,"detail":"core_dlp"}
+{"name":"Anthropic API key in text body","category":"DLP Exfiltration","detected":true,"detail":"2 matches"}
+{"name":"OpenAI API key in URL","category":"DLP Exfiltration","detected":true,"detail":"dlp"}
+{"name":"Private key (WIF format) in URL","category":"DLP Exfiltration","detected":true,"detail":"dlp"}
+{"name":"Classic instruction override","category":"Prompt Injection","detected":true,"detail":"Prompt Injection, System Prompt Disclosure"}
+{"name":"Leetspeak evasion","category":"Prompt Injection","detected":true,"detail":"Prompt Injection, System Prompt Disclosure"}
+{"name":"Base64-wrapped injection","category":"Prompt Injection","detected":true,"detail":"Prompt Injection"}
+{"name":"Credential solicitation","category":"Prompt Injection","detected":false}
+{"name":"Memory persistence directive","category":"Prompt Injection","detected":true,"detail":"Memory Persistence Directive, Memory Persistence Clause"}
+{"name":"Role override (DAN jailbreak)","category":"Prompt Injection","detected":true,"detail":"Role Override"}
+{"name":"IMPORTANT tag in description","category":"Tool Poisoning","detected":true,"detail":"1 matches"}
+{"name":"Exfiltration in schema default","category":"Tool Poisoning","detected":true,"detail":"1 matches"}
+{"name":"Cross-tool manipulation","category":"Tool Poisoning","detected":true,"detail":"1 matches"}
+{"name":"Vendor extension with instructions","category":"Tool Poisoning","detected":true,"detail":"1 matches"}
+{"name":"URL-encoded secret in path","category":"URL Evasion","detected":true,"detail":"core_dlp"}
+{"name":"CRLF injection in URL","category":"URL Evasion","detected":true,"detail":"crlf_injection"}
+{"name":"Overlong URL","category":"URL Evasion","detected":true,"detail":"length"}
+{"name":"Path traversal","category":"URL Evasion","detected":true,"detail":"path_traversal"}
+{"name":"ETH address in text body","category":"Address Poisoning","detected":true,"detail":"2 matches"}
+{"name":"Lookalike ETH address (homoglyph)","category":"Address Poisoning","detected":true,"detail":"2 matches","limitation":true}
+{"name":"12-word BIP-39 mnemonic","category":"Seed Phrase","detected":true,"detail":"1 matches"}
+{"name":"Hidden privilege escalation in skill body","category":"Skill Poisoning","detected":false,"detail":"missed by DLP; response-scanning required","limitation":true}
+{"name":"Secret split across two text scans","category":"Split Payload","detected":false,"detail":"partial1=0 partial2=0","limitation":true}
+{"name":"Mixed-encoding chain (URL-encoded base64 of secret)","category":"URL Evasion","detected":true,"detail":"core_dlp"}

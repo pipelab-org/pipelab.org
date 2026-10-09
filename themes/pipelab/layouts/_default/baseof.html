@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {{ $pageTitle := .LinkTitle }}
+  {{ with .Params.seoTitle }}{{ $pageTitle = . }}{{ end }}
+  {{ $displayTitle := cond .IsHome $pageTitle (printf "%s | %s" $pageTitle .Site.Title) }}
+  {{ $pageDescription := .Description | default .Site.Params.description }}
+  {{ if eq .Type "capability-detail" }}
+    {{ $pageDescription = truncate 152 (printf "%s Review its operator surface, availability, source record, and documented limits." $pageDescription) }}
+  {{ else if eq .Type "capabilities" }}
+    {{ $pageDescription = truncate 152 (printf "%s Browse the release-pinned controls, tier availability, operator surfaces, and source records." $pageDescription) }}
+  {{ end }}
+  <title>{{ $displayTitle }}</title>
+  <meta name="description" content="{{ $pageDescription }}">
+  <link rel="canonical" href="{{ .Permalink }}">
+  {{ if not .IsHome }}
+  <link rel="alternate" type="application/rss+xml" title="{{ .Site.Title }}" href="{{ .Site.BaseURL }}index.xml">
+  {{ end }}
+  {{ range .AlternativeOutputFormats }}
+  <link rel="{{ .Rel }}" type="{{ .MediaType.Type }}" href="{{ .Permalink }}">
+  {{ end }}
+  {{ if .Params.robots }}<meta name="robots" content="{{ .Params.robots }}">
+  {{ else if or (eq .Kind "taxonomy") (eq .Kind "term") }}<meta name="robots" content="noindex, follow">{{ end }}
+  <meta name="theme-color" content="#09090b">
+  <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">
+  <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/x-icon" sizes="16x16 32x32 48x48 64x64" href="/favicon.ico">
+  <link rel="apple-touch-icon" type="image/png" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="mask-icon" href="/images/brand/pipelab-mark-mono-dark.svg" color="#00e5a0">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="preload" href="/fonts/inter-variable.woff2" as="font" type="font/woff2" crossorigin>
+  {{ $style := resources.Get "scss/style.scss" | toCSS (dict "targetPath" "css/style.css") | minify | fingerprint }}
+  <link rel="stylesheet" href="{{ $style.RelPermalink }}" integrity="{{ $style.Data.Integrity }}">
+  <meta property="og:title" content="{{ $displayTitle }}">
+  <meta property="og:description" content="{{ $pageDescription }}">
+  <meta property="og:type" content="{{ if .IsHome }}website{{ else if and (eq .Section "blog") (not .IsSection) }}article{{ else }}website{{ end }}">
+  <meta property="og:url" content="{{ .Permalink }}">
+  <meta property="og:site_name" content="{{ .Site.Title }}">
+  {{ $ogImage := .Site.BaseURL | printf "%sog-image.png" }}
+  {{ if eq .Section "compare" }}{{ $ogImage = printf "%simages/og/og-compare.png" .Site.BaseURL }}
+  {{ else if eq .Section "blog" }}{{ $ogImage = printf "%simages/og/og-blog.png" .Site.BaseURL }}
+  {{ else if eq .Section "learn" }}{{ $ogImage = printf "%simages/og/og-learn.png" .Site.BaseURL }}
+  {{ end }}
+  {{ with .Params.og_image }}{{ $ogImage = . }}{{ end }}
+  <meta property="og:image" content="{{ $ogImage }}">
+  {{ if and (eq .Section "blog") (not .IsSection) }}
+  <meta property="article:published_time" content="{{ .Date.Format "2006-01-02T15:04:05Z07:00" }}">
+  <meta property="article:modified_time" content="{{ .Lastmod.Format "2006-01-02T15:04:05Z07:00" }}">
+  <meta property="article:author" content="{{ with .Params.author }}{{ . }}{{ else }}Josh Waldrep{{ end }}">
+  {{ end }}
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@luckyPipewrench">
+  <meta name="twitter:title" content="{{ $displayTitle }}">
+  <meta name="twitter:description" content="{{ $pageDescription }}">
+  <meta name="twitter:image" content="{{ $ogImage }}">
+  {{ $siteSameAs := slice }}
+  {{ with .Site.Params.github }}{{ $siteSameAs = $siteSameAs | append . }}{{ end }}
+  {{ with .Site.Params.twitter }}{{ $siteSameAs = $siteSameAs | append . }}{{ end }}
+  {{ with .Site.Params.linkedin }}{{ $siteSameAs = $siteSameAs | append . }}{{ end }}
+  {{ if .IsHome }}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "PipeLab",
+    "url": "{{ .Site.BaseURL }}",
+    "logo": "{{ .Site.BaseURL }}favicon.svg",
+    "description": "{{ .Site.Params.description }}",
+    "founder": {
+      "@type": "Person",
+      "name": "Josh Waldrep",
+      "url": "{{ .Site.BaseURL }}about/"
+    },
+    "sameAs": {{ $siteSameAs | jsonify | safeJS }}
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "PipeLab",
+    "url": "{{ .Site.BaseURL }}"
+  }
+  </script>
+  {{ else if and (eq .Section "blog") (not .IsSection) }}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "{{ .Title }}",
+    "description": "{{ with .Description }}{{ . }}{{ else }}{{ .Site.Params.description }}{{ end }}",
+    "url": "{{ .Permalink }}",
+    {{ if not .Date.IsZero }}"datePublished": "{{ .Date.Format "2006-01-02" }}",
+    "dateModified": "{{ .Lastmod.Format "2006-01-02" }}",
+    {{ end }}"author": {
+      "@type": "Person",
+      "name": "{{ with .Params.author }}{{ . }}{{ else }}Josh Waldrep{{ end }}",
+      "url": "{{ .Site.BaseURL }}about/"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "PipeLab",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "{{ .Site.BaseURL }}favicon.svg"
+      }
+    },
+    "image": "{{ $ogImage }}"
+  }
+  </script>
+  {{ else if eq .Type "pipelock" }}
+  {{ $sameAs := slice
+    "https://github.com/luckyPipewrench/pipelock"
+    "https://github.com/luckyPipewrench/homebrew-tap"
+    "https://github.com/luckyPipewrench/pipelock-agent-egress-action"
+    "https://github.com/luckyPipewrench/pipelock-verify-python"
+    "https://github.com/luckyPipewrench/agent-egress-bench"
+  }}
+  {{ range $siteSameAs }}{{ $sameAs = $sameAs | append . }}{{ end }}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": {{ (printf "%s#organization" .Site.BaseURL) | jsonify | safeJS }},
+        "name": "PipeLab",
+        "url": {{ .Site.BaseURL | jsonify | safeJS }},
+        "logo": {{ (printf "%sfavicon.svg" .Site.BaseURL) | jsonify | safeJS }},
+        "sameAs": {{ $siteSameAs | jsonify | safeJS }}
+      },
+      {
+        "@type": "SoftwareApplication",
+        "@id": {{ (printf "%spipelock/#software" .Site.BaseURL) | jsonify | safeJS }},
+        "name": "Pipelock",
+        "url": {{ .Permalink | jsonify | safeJS }},
+        "description": {{ (or .Description .Site.Params.description) | jsonify | safeJS }},
+        "applicationCategory": "SecurityApplication",
+        "operatingSystem": "Linux, macOS, Windows",
+        "softwareVersion": {{ .Site.Params.pipelock_version | jsonify | safeJS }},
+        "license": "https://www.apache.org/licenses/LICENSE-2.0",
+        {{- /* No codeRepository here: schema.org scopes that property to
+               SoftwareSourceCode, not SoftwareApplication, and validators
+               reject it. The repository URL is carried by sameAs below. */}}
+        "downloadUrl": "https://github.com/luckyPipewrench/pipelock/releases",
+        "isAccessibleForFree": true,
+        "image": {{ (or .Params.og_image (printf "%simages/og/og-product.png" .Site.BaseURL)) | jsonify | safeJS }},
+        "offers": {
+          "@type": "Offer",
+          "name": "Pipelock Community",
+          "url": {{ (printf "%spricing/" .Site.BaseURL) | jsonify | safeJS }},
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "publisher": {
+          "@id": {{ (printf "%s#organization" .Site.BaseURL) | jsonify | safeJS }}
+        },
+        "sameAs": {{ $sameAs | jsonify | safeJS }}
+      }
+    ]
+  }
+  </script>
+  {{ else if or (eq .Section "learn") (eq .Section "compare") (eq .Section "receipt") (in (slice "/agent-firewall/" "/agent-firewall-checklist/" "/capabilities/") .RelPermalink) }}
+  {{ if not .IsSection }}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "{{ .Title }}",
+    "description": "{{ with .Description }}{{ . }}{{ else }}{{ .Site.Params.description }}{{ end }}",
+    "url": "{{ .Permalink }}",
+    {{ if not .Date.IsZero }}"datePublished": "{{ .Date.Format "2006-01-02" }}",
+    "dateModified": "{{ .Lastmod.Format "2006-01-02" }}",
+    {{ end }}"author": {
+      "@type": "Person",
+      "name": "Josh Waldrep",
+      "url": "{{ .Site.BaseURL }}"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "PipeLab",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "{{ .Site.BaseURL }}favicon.svg"
+      }
+    }
+  }
+  </script>
+  {{ end }}
+  {{ else if eq .Type "proof" }}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": {{ .Title | jsonify | safeJS }},
+    "description": {{ (or .Description .Site.Params.description) | jsonify | safeJS }},
+    "url": {{ .Permalink | jsonify | safeJS }},
+    {{ if not .Date.IsZero }}"datePublished": "{{ .Date.Format "2006-01-02" }}",
+    "dateModified": "{{ .Lastmod.Format "2006-01-02" }}",
+    {{ end }}"author": {
+      "@type": "Person",
+      "name": "Josh Waldrep",
+      "url": {{ (printf "%sabout/" .Site.BaseURL) | jsonify | safeJS }}
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "PipeLab",
+      "logo": {
+        "@type": "ImageObject",
+        "url": {{ (printf "%sfavicon.svg" .Site.BaseURL) | jsonify | safeJS }}
+      }
+    },
+    "image": {{ $ogImage | jsonify | safeJS }}
+  }
+  </script>
+  {{ else if eq .Type "enterprise" }}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": {{ .Title | jsonify | safeJS }},
+    "description": {{ (or .Description .Site.Params.description) | jsonify | safeJS }},
+    "url": {{ .Permalink | jsonify | safeJS }},
+    {{ if not .Date.IsZero }}"datePublished": "{{ .Date.Format "2006-01-02" }}",
+    "dateModified": "{{ .Lastmod.Format "2006-01-02" }}",
+    {{ end }}"author": {
+      "@type": "Person",
+      "name": "Josh Waldrep",
+      "url": {{ (printf "%sabout/" .Site.BaseURL) | jsonify | safeJS }}
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "PipeLab",
+      "logo": {
+        "@type": "ImageObject",
+        "url": {{ (printf "%sfavicon.svg" .Site.BaseURL) | jsonify | safeJS }}
+      }
+    },
+    "image": {{ $ogImage | jsonify | safeJS }}
+  }
+  </script>
+  {{ else if eq .Type "assess" }}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": {{ .Title | jsonify | safeJS }},
+    "description": {{ (or .Description .Site.Params.description) | jsonify | safeJS }},
+    "url": {{ .Permalink | jsonify | safeJS }},
+    {{ if not .Date.IsZero }}"datePublished": "{{ .Date.Format "2006-01-02" }}",
+    "dateModified": "{{ .Lastmod.Format "2006-01-02" }}",
+    {{ end }}"author": {
+      "@type": "Person",
+      "name": "Josh Waldrep",
+      "url": {{ (printf "%sabout/" .Site.BaseURL) | jsonify | safeJS }}
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "PipeLab",
+      "logo": {
+        "@type": "ImageObject",
+        "url": {{ (printf "%sfavicon.svg" .Site.BaseURL) | jsonify | safeJS }}
+      }
+    },
+    "image": {{ $ogImage | jsonify | safeJS }}
+  }
+  </script>
+  {{ else if eq .RelPermalink "/contact/" }}
+  {{ $contactDesc := or .Description .Site.Params.description }}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ContactPage",
+    "name": "Contact PipeLab",
+    "url": {{ .Permalink | jsonify | safeJS }},
+    "description": {{ $contactDesc | jsonify | safeJS }},
+    "mainEntity": {
+      "@type": "Organization",
+      "name": "PipeLab",
+      "url": {{ .Site.BaseURL | jsonify | safeJS }},
+      "logo": {{ (printf "%sfavicon.svg" .Site.BaseURL) | jsonify | safeJS }},
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "email": "luckypipe@pipelab.org",
+        "contactType": "customer support",
+        "availableLanguage": ["English"]
+      },
+      "sameAs": {{ $siteSameAs | jsonify | safeJS }}
+    }
+  }
+  </script>
+  {{ else if eq .RelPermalink "/about/" }}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "AboutPage",
+    "name": "About PipeLab",
+    "url": "{{ .Permalink }}",
+    "description": "{{ with .Description }}{{ . }}{{ else }}{{ .Site.Params.description }}{{ end }}",
+    "mainEntity": {
+      "@type": "Organization",
+      "name": "PipeLab",
+      "url": "{{ .Site.BaseURL }}",
+      "logo": "{{ .Site.BaseURL }}favicon.svg",
+      "founder": {
+        "@type": "Person",
+        "name": "Josh Waldrep"
+      }
+    }
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "Josh Waldrep",
+    "url": "{{ .Permalink }}",
+    "jobTitle": "Founder",
+    "worksFor": {
+      "@type": "Organization",
+      "name": "PipeLab",
+      "url": "{{ .Site.BaseURL }}"
+    },
+    "knowsAbout": [
+      "AI agent security",
+      "Model Context Protocol",
+      "agent firewall",
+      "prompt injection",
+      "MCP security",
+      "data loss prevention",
+      "agent egress security",
+      "tool poisoning"
+    ],
+    "sameAs": {{ $siteSameAs | jsonify | safeJS }}
+  }
+  </script>
+  {{ end }}
+  {{ with .Params.faq }}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {{ range $i, $item := . }}{{ if $i }},{{ end }}
+      {
+        "@type": "Question",
+        "name": "{{ $item.q | safeJS }}",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "{{ $item.a | markdownify | plainify | safeJS }}"
+        }
+      }{{ end }}
+    ]
+  }
+  </script>
+  {{ end }}
+  {{ with .Params.howto_steps }}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "name": {{ $.Title | jsonify | safeJS }},
+    "description": {{ (or $.Description $.Site.Params.description) | jsonify | safeJS }},
+    "url": {{ $.Permalink | jsonify | safeJS }},
+    "step": [
+      {{ range $i, $step := . }}{{ if $i }},{{ end }}
+      {
+        "@type": "HowToStep",
+        "position": {{ add $i 1 }},
+        "name": {{ $step.name | jsonify | safeJS }},
+        "text": {{ $step.text | jsonify | safeJS }}
+      }{{ end }}
+    ]
+  }
+  </script>
+  {{ end }}
+  {{ if not .IsHome }}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "{{ .Site.BaseURL }}"
+      }{{ if eq .Section "blog" }},
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Blog",
+        "item": "{{ .Site.BaseURL }}blog/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": "{{ .Title }}"
+      }{{ else if eq .Section "compare" }},
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Compare",
+        "item": "{{ .Site.BaseURL }}compare/"
+      }{{ if not .IsSection }},
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": "{{ .Title }}"
+      }{{ end }}{{ else if eq .Section "learn" }},
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Learn",
+        "item": "{{ .Site.BaseURL }}learn/"
+      }{{ if not .IsSection }},
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": "{{ .Title }}"
+      }{{ end }}{{ else }},
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "{{ .Title }}"
+      }{{ end }}
+    ]
+  }
+  </script>
+  {{ end }}
+  <script type="application/json" id="pl-site-config">{{ dict "googleAnalytics" .Site.Params.google_analytics "posthog" .Site.Params.posthog | jsonify | safeJS }}</script>
+  {{ partial "site-base.html" . }}
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+  {{ partial "nav.html" . }}
+  <main id="main-content">
+    {{ block "main" . }}{{ end }}
+  </main>
+  {{ partial "footer.html" . }}
+</body>
+</html>

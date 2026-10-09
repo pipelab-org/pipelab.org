@@ -1,0 +1,90 @@
+name: Portfolio Brand Contract
+
+on:
+  pull_request:
+    paths:
+      - 'assets/brand/**'
+      - 'scripts/brand_contract.py'
+      - 'scripts/brand_contract_test.py'
+      - 'scripts/render_pipelab_brand.py'
+      - 'static/images/brand/**'
+      - 'static/favicon*'
+      - 'static/apple-touch-icon*'
+      - 'static/site.webmanifest'
+      - 'static/og-image*'
+      - 'static/images/og/**'
+      - 'themes/pipelab/layouts/partials/nav.html'
+      - 'themes/pipelab/layouts/partials/footer.html'
+      - 'themes/pipelab/assets/scss/_nav.scss'
+      - 'themes/pipelab/assets/scss/_footer.scss'
+      - 'themes/pipelab/assets/scss/_variables.scss'
+      - 'Makefile'
+      - '.brand/**'
+      - '.github/workflows/brand-contract.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'assets/brand/**'
+      - 'scripts/brand_contract.py'
+      - 'scripts/brand_contract_test.py'
+      - 'scripts/render_pipelab_brand.py'
+      - 'static/images/brand/**'
+      - 'static/favicon*'
+      - 'static/apple-touch-icon*'
+      - 'static/site.webmanifest'
+      - 'static/og-image*'
+      - 'static/images/og/**'
+      - 'themes/pipelab/layouts/partials/nav.html'
+      - 'themes/pipelab/layouts/partials/footer.html'
+      - 'themes/pipelab/assets/scss/_nav.scss'
+      - 'themes/pipelab/assets/scss/_footer.scss'
+      - 'themes/pipelab/assets/scss/_variables.scss'
+      - 'Makefile'
+      - '.brand/**'
+      - '.github/workflows/brand-contract.yml'
+  schedule:
+    - cron: '17 8 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      # No rasterizer is installed on purpose. PNG bytes are not reproducible
+      # across inkscape builds and font stacks, so re-rendering here and
+      # byte-comparing would test the runner rather than the repository: a
+      # rasterizing run on this image reports every committed PNG stale and
+      # fails the optical-centering assertion on brand assets the change never
+      # touched.
+      #
+      # What runs here is the deterministic half, and it is the half that
+      # catches drift. Card SVGs are regenerated from the table and compared,
+      # so generator-versus-committed-source drift fails. Each raster is then
+      # checked against its provenance sidecar, so an edited PNG or an
+      # unrendered SVG edit fails too. Raster fidelity and centering stay an
+      # authoring-time check: run the script with --require-renderer locally.
+      - name: Verify generated brand assets
+        run: python3 scripts/render_pipelab_brand.py --check
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          repository: luckyPipewrench/pipelock
+          path: _portfolio/pipelock
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          repository: luckyPipewrench/pipelock-rules
+          path: _portfolio/pipelock-rules
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          repository: luckyPipewrench/agent-egress-bench
+          path: _portfolio/agent-egress-bench
+      - name: Verify shared tokens and card wording
+        run: >-
+          python3 scripts/brand_contract.py
+          --site .
+          --pipelock _portfolio/pipelock
+          --rules _portfolio/pipelock-rules
+          --bench _portfolio/agent-egress-bench

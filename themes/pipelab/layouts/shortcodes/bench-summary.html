@@ -1,0 +1,3 @@
+{{- $stats := site.Data.stats -}}
+<p>{{ $stats.bench_cases }} logical cases across {{ $stats.bench_categories }} categories: {{ $stats.bench_adversarial_cases }} block-expected attack cases, {{ $stats.bench_fp_cases }} allow-expected false-positive controls, and {{ $stats.bench_warn_cases }} warn-class drift case. The corpus covers DLP evasion, prompt injection, SSRF, tool poisoning, encoding chains, shell obfuscation, hostname exfiltration, WebSocket DLP, and A2A scanning. The same corpus Pipelock tests itself against before every release.</p>
+{{ partial "bench-provenance.html" .Page }}

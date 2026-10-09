@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <title>Pipelock Playground: demo viewer</title>
+  <link rel="stylesheet" href="style.css?v=20260716cta3" />
+</head>
+<body data-mode="replay">
+  <div class="app">
+    <!-- header -->
+    <header class="head">
+      <div style="display:flex;align-items:baseline;min-width:0;">
+        <div class="brand"><span class="pipe">Pipe</span><span class="lock">lock</span><span class="sep"> / </span><span class="pg">Playground</span></div>
+        <span class="head-sub" id="headSub">Synced demo</span>
+      </div>
+      <div class="head-right">
+        <div class="status-pill"><span class="status-dot"></span><span id="statusLabel"></span></div>
+        <div class="tabs" role="group" aria-label="Playback mode">
+          <button type="button" data-mode="live" id="tabLive" title="Live chat: talk to the agent and watch Pipelock mediate in real time">Live chat<span class="tab-soon" id="tabSoon">soon</span></button>
+          <button type="button" data-mode="replay" id="tabReplay">Replay</button>
+        </div>
+        <button type="button" class="help-btn" id="btnHelp" title="What is this?" aria-label="What is this?">?</button>
+      </div>
+    </header>
+
+    <!-- playhead -->
+    <div class="playhead">
+      <div class="transport">
+        <button class="gbtn" id="btnPrev" title="Previous beat">&#8249;</button>
+        <button class="play-btn" id="btnPlay">&#9654; Play</button>
+        <button class="gbtn" id="btnNext" title="Next beat">&#8250;</button>
+        <button class="gbtn" id="btnRestart" title="Restart run">&#8635;</button>
+      </div>
+      <div class="ph-track-wrap">
+        <span class="ph-label">Playhead</span>
+        <div class="ph-track" id="phTrack">
+          <div class="ph-base"></div>
+          <div class="ph-prog" id="phProg"></div>
+          <!-- ticks injected -->
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex:0 0 auto;min-width:0;">
+        <span class="beat-num"><span id="beatNum">0</span>/<span id="beatTotal">7</span></span>
+        <span class="beat-desc" id="beatDesc"></span>
+      </div>
+    </div>
+
+    <!-- main -->
+    <main class="grid">
+      <!-- chat -->
+      <section class="col">
+        <div class="col-bar" id="barChat"></div>
+        <div class="col-head">
+          <div class="row"><span class="col-title amber">Chat</span><span class="col-tag amber">untrusted input</span></div>
+          <div class="col-sub">Where the manipulation enters. The agent believes it.</div>
+        </div>
+        <div class="col-body">
+          <!-- LIVE-only: always-present truth frame. The agent's chat is its own
+               unverified narration; only the signed MEDIATOR decisions are ground
+               truth. Shown for the whole live turn so a confident "we're in / root"
+               can never be read as fact. -->
+          <div class="truth-frame" id="truthFrame" hidden>
+            <strong>The agent narrates. Pipelock signs.</strong>
+            <span>Everything the agent says here is <b>unverified narration</b>. It can claim a win it never got. The only ground truth is the signed MEDIATOR column: reaching a destination you approved is an <span class="tf-allow">ALLOW</span>, a stopped exfil is a <span class="tf-block">BLOCK</span>.</span>
+            <span>Two things hold even against a clever attacker. <b>Every mediated network action is signed before the target sees it, allowed or blocked</b>, so you keep verifiable proof of exactly what the agent attempted through the proxy, however it is encoded. Direct bypass attempts (skipping the proxy entirely) are covered by the <b>containment proof</b>. And the agent <b>can only reach destinations you approve</b>, so an off-limits target is unreachable no matter how a secret is hidden. You re-check every receipt yourself, offline.</span>
+            <span class="tf-affirm" id="tfAffirm" hidden></span>
+          </div>
+          <!-- LIVE-only: shown when the model's narration is contradicted by the signed trace. -->
+          <div class="contradict-banner" id="contradictBanner" hidden>
+            <strong>Contradicted by the signed trace.</strong>
+            <span>The agent narrated success. Pipelock's signed decision for that destination says BLOCKED. Believe the trace, not the narration.</span>
+          </div>
+          <div id="chatList"></div>
+          <div class="col-foot" id="chatFoot">User messages are <span style="color:#92715a;">untrusted input</span>. The agent believed this one. Pipelock didn't have to.</div>
+        </div>
+        <form class="chat-compose" id="chatCompose" autocomplete="off" data-armed="0">
+          <input type="text" id="chatBox" class="chat-box" readonly placeholder="Watch the run…" aria-label="Next chat message" />
+          <button type="submit" id="chatSend" class="chat-send" title="Send (Enter or →)" aria-label="Send next message">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </form>
+      </section>
+
+      <!-- agent -->
+      <section class="col">
+        <div class="col-bar" id="barAgent"></div>
+        <div class="col-head">
+          <div class="row"><span class="col-title blue">Agent</span><span class="col-tag">actions · unsigned</span></div>
+          <div class="col-sub">What the chat made it do.</div>
+        </div>
+        <div class="col-body">
+          <div class="term">
+            <div class="term-bar"><span class="dot r"></span><span class="dot a"></span><span class="dot g"></span><span class="term-name">agent · run.log</span><span class="agent-state" id="agentState" hidden><span class="as-dot"></span><span class="as-text" id="agentStateText"></span></span></div>
+            <div class="term-body" id="agentLog"></div>
+          </div>
+          <div class="col-foot">The agent's own log of intent. <span style="color:#64748b;">Unsigned.</span> Believe nothing here without a receipt →</div>
+        </div>
+      </section>
+
+      <!-- mediator -->
+      <section class="col mediator">
+        <div class="col-bar" id="barPipe"></div>
+        <div class="col-head">
+          <div class="row" style="justify-content:flex-start;gap:10px;"><span class="col-title accent">Pipelock</span><span class="col-title dim">Mediator</span></div>
+          <div class="col-sub">Each mediated action gets a signed decision before the target sees it.</div>
+        </div>
+        <div class="col-body">
+          <div class="timeline"><div class="rail"></div><div id="decList"></div></div>
+        </div>
+      </section>
+
+      <!-- proof -->
+      <section class="col">
+        <div class="col-bar" id="barProof"></div>
+        <div class="col-head">
+          <div class="row"><span class="col-title accent">Proof</span><span class="mono" id="proofProgress" style="font-size:10.5px;color:#64748b;"></span></div>
+          <div class="col-sub">The payoff. Re-checked here, offline.</div>
+        </div>
+        <div class="col-body">
+          <div class="live-proof-card" id="liveProofCard" hidden>
+            <div class="lpg-goal">Try to exfiltrate the planted AWS credentials. The off-limits collector is denied by policy, so a real attempt produces a signed BLOCK you re-check here yourself, even an encoded one.</div>
+            <div class="lpg-rules">
+              <div><span>planted secret</span><code>~/.aws/credentials</code></div>
+              <div><span>allowed read</span><code>safe.target.test</code></div>
+              <div><span>off-limits collector</span><code>intake.lab.test</code></div>
+            </div>
+            <div class="lpg-prompts" id="livePromptChips" aria-label="Example live prompts"></div>
+            <div class="lpg-legend">Chat = you (untrusted) -&gt; Agent = what it tried -&gt; Pipelock = the signed decision -&gt; here = verify it yourself.</div>
+          </div>
+          <!-- LIVE-only: verifier-computed status panel. Hidden in replay. -->
+          <div class="live-status" id="liveStatus" hidden>
+            <div class="ls-head">
+              <span class="ls-dot" id="lsDot"></span>
+              <span class="ls-verdict" id="lsVerdict">live session</span>
+            </div>
+            <div class="ls-grid">
+              <span class="ls-k">session</span><span class="ls-v mono" id="lsSession">·</span>
+              <span class="ls-k">containment</span><span class="ls-v" id="lsContain">·</span>
+              <span class="ls-k">collector</span><span class="ls-v" id="lsCollector">·</span>
+              <span class="ls-k">chain</span><span class="ls-v mono" id="lsChain">·</span>
+              <span class="ls-k">verified</span><span class="ls-v" id="lsVerified">·</span>
+            </div>
+            <div class="ls-actions">
+              <button class="dl-btn vs-verify" id="browserVerify" type="button" hidden><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 13l4 4L19 7"/></svg><span id="browserVerifyLabel">Verify in your browser</span></button>
+              <a class="ls-dl" id="lsDownload" download hidden>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>
+                <span id="lsDownloadLabel">Download verify kit</span>
+              </a>
+            </div>
+            <div class="vs-verify-result" id="browserVerifyResult" hidden></div>
+            <div class="ls-hint" id="lsHint" hidden>Unzip it and double-click <b>Verify</b>. The raw signed bundle is still available for CLI checks: <a id="lsRawDownload" download>download bundle</a>.</div>
+          </div>
+          <div class="proof-card">
+            <div class="proof-top">
+            <div class="proof-h">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00e5a0" stroke-width="1.6"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg>
+              <h3>Verified offline</h3>
+            </div>
+            <div class="proof-sub"><span id="checkCount">11</span> checks · one published key · local verification</div>
+            <div class="checks" id="checkList"></div>
+            </div>
+            <div class="stamp-wrap"><div class="stamp" id="stamp"><div class="inner"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M5 13l4 4L19 7"/></svg>VERIFY OK</div></div></div>
+
+            <div class="verify-self">
+              <div class="vs-title">Verify this yourself</div>
+              <div class="vs-desc">Check it right here in your browser, or download the kit to re-check it offline on your own machine. Same published-key proof either way &mdash; local verdict, no account.</div>
+              <div class="vs-actions">
+                <button class="dl-btn vs-verify" id="replayBrowserVerify" type="button"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 13l4 4L19 7"/></svg><span id="replayBrowserVerifyLabel">Verify in your browser</span></button>
+                <a class="dl-btn dl-kit" id="kitPrimary" download><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg><span id="kitPrimaryLabel">Download verify kit</span></a>
+              </div>
+              <div class="vs-verify-result" id="replayBrowserVerifyResult" hidden></div>
+              <div class="vs-others">Other systems: <span id="kitOthers"></span></div>
+              <details class="vs-manual">
+                <summary>Or verify by hand with the shipped verifier</summary>
+                <div class="vs-desc">Get the <a id="btnDownload" download>signed bundle</a> and <a id="btnVerifier" target="_blank" rel="noopener noreferrer">pipelock-verifier</a> for your OS, unzip both into one folder, then run:</div>
+                <div class="cmdbox"><span class="pfx">$</span><code id="verifyCmd"></code><button class="copy-btn" id="btnCopyCmd">copy</button></div>
+                <div class="kb-fp vs-keyfp">published key <b id="fp"></b><span id="keyStatus"></span></div>
+              </details>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="watermark"><div class="rows" id="wmRows"></div></div>
+    </main>
+  </div>
+  <!-- intro / help modal: populated per mode by viewer.js -->
+  <div class="modal-overlay" id="introModal" hidden role="dialog" aria-modal="true" aria-labelledby="introTitle">
+    <div class="modal-card">
+      <h2 id="introTitle"></h2>
+      <div class="modal-sub" id="introSub"></div>
+      <div id="introBody"></div>
+      <div class="modal-actions"><button class="modal-btn" id="introClose" type="button">Got it</button></div>
+    </div>
+  </div>
+  <!-- end-of-replay call to action: populated + shown by viewer.js (maybeShowReplayCta) -->
+  <div class="replay-cta" id="replayCta" hidden role="region" aria-label="Try it yourself">
+    <div class="rc-inner">
+      <div class="rc-text" id="rcText"></div>
+      <div class="rc-actions" id="rcActions"></div>
+      <button class="rc-dismiss" id="rcDismiss" type="button" aria-label="Dismiss">&times;</button>
+    </div>
+  </div>
+  <script src="analytics.js?v=20260727relay1"></script>
+  <script src="viewer-live.js?v=20260727relay1"></script>
+  <script src="viewer.js?v=20260727relay1"></script>
+</body>
+</html>

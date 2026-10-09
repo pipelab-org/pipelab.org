@@ -1,0 +1,113 @@
+.waitlist-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  backdrop-filter: blur(8px);
+  padding: 2.5rem;
+  max-width: 980px;
+  margin: 3rem auto 0;
+  text-align: center;
+}
+
+.waitlist-heading {
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-h2);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--accent);
+  margin-bottom: 1rem;
+}
+
+.waitlist-intro {
+  color: var(--text-muted);
+  font-size: var(--fs-body);
+  margin-bottom: 1.2rem;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.page-content .waitlist-features {
+  list-style: none;
+  padding-left: 0;
+  margin: 1.5rem auto;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+
+  li {
+    color: var(--text-muted);
+    font-size: var(--fs-body);
+    padding: 0.8rem 1.2rem 0.8rem 2.8rem;
+    position: relative;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 8px;
+    text-align: left;
+
+    &::before {
+      content: '\2713';
+      position: absolute;
+      left: 1rem;
+      color: var(--accent);
+      font-weight: 700;
+    }
+  }
+}
+
+.waitlist-cta-text {
+  color: var(--text);
+  font-size: var(--fs-body);
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+
+.waitlist-form {
+  max-width: 460px;
+  margin: 0 auto;
+}
+
+.waitlist-input-row {
+  display: flex;
+  gap: 0.5rem;
+
+  @media (max-width: $bp-mobile) {
+    flex-direction: column;
+  }
+}
+
+.waitlist-email {
+  flex: 1;
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-body);
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.4);
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s;
+
+  &::placeholder {
+    color: var(--text-dim);
+  }
+
+  &:focus {
+    border-color: var(--accent);
+  }
+}
+
+.waitlist-submit {
+  white-space: nowrap;
+
+  @media (max-width: $bp-mobile) {
+    width: 100%;
+  }
+}
+
+.waitlist-note {
+  color: var(--text-dim);
+  font-size: var(--fs-caption);
+  margin-top: 0.8rem;
+}

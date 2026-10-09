@@ -1,0 +1,26 @@
+# Distribution-first machine access policy: every crawler is allowed, including
+# AI training crawlers.
+#
+# This is deliberate. PipeLab publishes agent-security research, and a model
+# that trained on it can answer questions about agent egress control, signed
+# receipts, and prompt-injection defense without the operator having to find us
+# first. Training reach is distribution for a project like this, so we do not
+# spend it to withhold public documentation.
+#
+# The previous policy disallowed GPTBot and ClaudeBot while allowing
+# Google-Extended, Applebot-Extended, DeepseekBot, Meta-ExternalAgent and
+# anthropic-ai. That was not a coherent position: anthropic-ai and ClaudeBot are
+# both Anthropic training crawlers, so Anthropic training was blocked under one
+# name and allowed under another. A partial block is worse than either honest
+# answer, because it reads as a policy while enforcing nothing.
+#
+# If this ever reverses, block the full current list of training crawlers rather
+# than the two best-known names.
+#
+# The Content-Signal directive (a Cloudflare proposal, not yet part of RFC 9309)
+# is omitted so RFC 9309 validators do not flag this file as invalid.
+
+User-agent: *
+Allow: /
+
+Sitemap: https://pipelab.org/sitemap.xml

@@ -1,0 +1,124 @@
+{{/* Shared homepage hero — single source of truth.
+     Rendered on / (index.html) and /buildhop/ so the two never drift. */}}
+{{ $version := site.Params.pipelock_version | default "" }}
+{{ $releasePostURL := printf "/blog/pipelock-v%s-release/" (replace $version "." "") }}
+{{ $stats := site.Data.stats }}
+{{ $gallery := transform.Unmarshal (readFile "static/playground-replay/gallery.json") }}
+{{ $receiptTotal := 0 }}
+{{ $receiptFallback := slice }}
+{{ range index $gallery "scenarios" }}
+  {{ $scenario := . }}
+  {{ $galleryReceiptCount := int (index . "receipt_count") }}
+  {{ $receiptTotal = add $receiptTotal $galleryReceiptCount }}
+  {{ $manifest := transform.Unmarshal (readFile (printf "static/playground-replay/%s" (index . "manifest_path"))) }}
+  {{ $manifestReceipts := index $manifest "receipts" }}
+  {{ if ne (len $manifestReceipts) $galleryReceiptCount }}
+    {{ errorf "replay receipt count mismatch for %s: gallery=%d manifest=%d" (index . "id") $galleryReceiptCount (len $manifestReceipts) }}
+  {{ end }}
+  {{ range $receiptIndex, $receipt := $manifestReceipts }}
+    {{ $receiptFallback = $receiptFallback | append (dict "scenario" $scenario "receipt" $receipt "index" $receiptIndex) }}
+  {{ end }}
+{{ end }}
+{{ if gt $receiptTotal 90 }}
+  {{ errorf "homepage receipt particle limit exceeded: %d records (maximum 90)" $receiptTotal }}
+{{ end }}
+<section class="hp-hero receipt-constellation-ambient" data-hero="home" data-receipt-constellation data-gallery="/playground-replay/gallery.json">
+    <div class="hp-hero-bg" aria-hidden="true"></div>
+    <canvas class="hp-hero-canvas" id="hp-hero-canvas" data-constellation-canvas aria-hidden="true"></canvas>
+    <div class="hp-hero-inner">
+      <div class="hp-eyebrow-row">
+        <a class="hp-chip"
+           href="{{ $releasePostURL }}"
+           data-event="release_click" data-event-placement="hero-eyebrow">
+          <span class="hp-chip-dot" aria-hidden="true"></span>
+          v{{ $version }} · fail-closed defaults + signed self-update
+        </a>
+        <a class="hp-chip hp-chip-cncf"
+           href="https://landscape.cncf.io/?item=provisioning--security-compliance--pipelock"
+           target="_blank" rel="noopener noreferrer"
+           data-event="cncf_chip_click" data-event-placement="hero-eyebrow">
+          <strong>CNCF</strong> Landscape · Security &amp; Compliance
+        </a>
+      </div>
+
+      <h1 class="hp-h1">
+        Open-source <span class="accent">agent firewall</span> for MCP and AI agent egress
+      </h1>
+
+      <p class="hp-lead">
+        Pipelock mediates MCP, HTTP, and WebSocket traffic at the agent boundary, wraps stdio MCP servers, and emits <a class="link" href="/learn/agent-action-receipts/">signed action receipts</a> any third party can <a class="link" href="/learn/verify-a-receipt/">verify offline</a> when receipt signing is configured.
+      </p>
+
+      <div class="hp-cta-row">
+        <a href="/install/" class="hp-btn hp-btn-primary"
+           data-event="hero_install_click" data-event-placement="hero">
+          Install Pipelock
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
+        </a>
+        <a href="/proof/" class="hp-btn hp-btn-ghost"
+           data-event="hero_proof_click" data-event-placement="hero">
+          Inspect the proof
+        </a>
+      </div>
+
+      <div class="hp-artifact">
+        <div class="hp-term">
+          <div class="hp-term-head">
+            <div class="hp-term-dots" aria-hidden="true"><span></span><span></span><span></span></div>
+            <span class="hp-term-title">install</span>
+          </div>
+          <div class="hp-term-body">
+            <button type="button" class="hp-term-row" data-cmd-copy aria-label="Copy the install command" data-event="hero_copy_install" data-event-placement="hero-terminal"><span class="prompt">$ </span><span class="cmd-text" id="hp-hero-cmd">{{ (index (partial "install/methods.html" (dict "only" (slice "go"))) 0).command }}</span></button>
+            <button type="button" class="hp-term-row" data-cmd-copy aria-label="Copy: pipelock claude setup" data-event="hero_copy_claude" data-event-placement="hero-terminal"><span class="prompt">$ </span><span class="cmd-text">pipelock claude setup</span><span class="comment">   # protect Claude Code</span></button>
+            <button type="button" class="hp-term-row" data-cmd-copy aria-label="Copy: pipelock mcp proxy" data-event="hero_copy_mcp" data-event-placement="hero-terminal"><span class="prompt">$ </span><span class="cmd-text">pipelock mcp proxy -- ./mcp-server</span><span class="comment">   # wrap a stdio MCP server</span></button>
+            <button type="button" class="hp-term-row" data-cmd-copy aria-label="Copy: pipelock verify-receipt" data-event="hero_copy_verify" data-event-placement="hero-terminal"><span class="prompt">$ </span><span class="cmd-text">pipelock verify-receipt receipt.json --key signer.pub</span><span class="comment">   # verify offline</span></button>
+          </div>
+        </div>
+      </div>
+
+      <p class="hp-hero-foot">
+        New to the category? <a class="link" href="/agent-firewall/">What an agent firewall does</a> and where its boundary stops.
+      </p>
+
+    </div>
+    <p class="hp-receipt-status ph-no-capture" data-constellation-status hidden>
+      <span class="hp-receipt-status-dot" aria-hidden="true"></span>
+      <span class="hp-receipt-status-label" aria-hidden="true">demo receipts</span>
+      <span class="hp-receipt-status-text" data-constellation-status-text>Select a star for details.</span>
+    </p>
+    <aside class="receipt-constellation-detail hp-receipt-detail ph-no-capture" data-constellation-detail hidden role="region" aria-label="Receipt details" tabindex="-1">
+      <button type="button" class="receipt-constellation-close" data-constellation-close aria-label="Close receipt details">&times;</button>
+      <p class="receipt-constellation-verdict" data-detail-verdict></p>
+      <h3 data-detail-title></h3>
+      <dl>
+        <div><dt>Chain record</dt><dd data-detail-sequence></dd></div>
+        <div><dt>Transport</dt><dd data-detail-transport></dd></div>
+        <div><dt>Detection</dt><dd data-detail-layer></dd></div>
+        <div><dt>Finding</dt><dd data-detail-pattern></dd></div>
+        <div><dt>Target</dt><dd data-detail-target></dd></div>
+        <div><dt>Action ID</dt><dd data-detail-action></dd></div>
+      </dl>
+      <div class="receipt-constellation-nav" role="group" aria-label="Browse signed receipts">
+        <button type="button" data-detail-previous aria-label="Previous signed receipt">&larr; Previous</button>
+        <span data-detail-position aria-live="polite"></span>
+        <button type="button" data-detail-next aria-label="Next signed receipt">Next &rarr;</button>
+      </div>
+      <div class="receipt-constellation-actions">
+        <a class="btn btn-primary" data-detail-replay data-analytics-private href="/playground/replay/">Open replay + verifier</a>
+        <a class="btn btn-secondary" data-detail-manifest data-analytics-private href="/playground-replay/gallery.json">Raw manifest</a>
+      </div>
+    </aside>
+    <details class="hp-receipt-browser receipt-constellation-browser ph-no-capture" data-constellation-browser>
+      <summary>Browse <span data-constellation-receipts>{{ $receiptTotal }}</span> demo receipts</summary>
+      <div class="receipt-constellation-buttons" role="group" aria-label="Public demo receipt replays">
+        {{ range $receiptFallback }}
+          {{ $scenario := index . "scenario" }}
+          {{ $receipt := index . "receipt" }}
+          {{ $receiptIndex := int (index . "index") }}
+          {{ $receiptLabel := index $receipt "verdict" | default "other" }}
+          {{ if eq (index $receipt "transport") "receipt_session" }}{{ $receiptLabel = "session anchor" }}{{ end }}
+          <a href="/playground/replay/{{ index $scenario "id" }}/">{{ index $scenario "title" }}, receipt {{ add $receiptIndex 1 }}, {{ $receiptLabel }}</a>
+        {{ end }}
+      </div>
+    </details>
+  </section>

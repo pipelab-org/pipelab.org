@@ -1,0 +1,11 @@
+{
+  "asset": "pipelock_3.6.0_linux_amd64.tar.gz",
+  "asset_sha256": "2f5ed499ae715c33f38ef7794f71c7c2df9cc475475c54eee0bee67d783a67d4",
+  "binary_sha256": "a9627e2f8bc7eeeeec01aa902040ef76beb5cc92e4479c34b6156914fdf43bf6",
+  "released_binary": true,
+  "repository": "luckyPipewrench/pipelock",
+  "schema_version": 1,
+  "tag": "v3.6.0",
+  "version": "3.6.0",
+  "version_output": "pipelock version 3.6.0"
+}

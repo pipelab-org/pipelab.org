@@ -1,0 +1,9 @@
+Pipelock audit packet — receipt chain verification
+scenario: ssrf-internal-target-blocked
+receipts: 2
+verdict: valid (trusted)
+root_hash: 23cd1e9a7d3bdf5973bac5df6ac7d530b3b70ee6eb59879c83be8e16100d01d6
+signer_key: 91dfb23882a8acf28f624985030ca1798a3efbbcee2bb8bdda8f452612eb755a
+
+Verify it yourself from this directory:
+  pipelock-verifier audit-packet . --key 91dfb23882a8acf28f624985030ca1798a3efbbcee2bb8bdda8f452612eb755a

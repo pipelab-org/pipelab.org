@@ -1,0 +1,1387 @@
+// ============================================================
+//   /gauntlet/results/ - public evidence scoreboard
+// ============================================================
+
+.gauntlet-hero {
+  overflow: hidden;
+  padding: 5rem 2rem 3.25rem;
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+  background: var(--bg);
+
+  h1 {
+    max-width: 900px;
+    margin: 0 auto 0.85rem;
+    font-family: var(--font-mono), monospace;
+    font-size: clamp(var(--fs-h1), 5vw, var(--fs-display));
+    line-height: 1.08;
+    letter-spacing: var(--tracking-tight);
+  }
+
+  .subtitle {
+    max-width: 640px;
+    margin: 0 auto;
+    color: var(--text-muted);
+    font-size: var(--fs-lead);
+  }
+
+  @media (max-width: $bp-mobile) {
+    padding: 3.6rem 1.25rem 2.25rem;
+  }
+}
+
+.gauntlet-record-eyebrow {
+  margin: 0 auto 1rem;
+  color: var(--accent);
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  font-weight: 700;
+  letter-spacing: var(--tracking-wider);
+}
+
+.gauntlet-hero.is-record {
+  padding-top: clamp(4.5rem, 9vw, 7rem);
+  padding-bottom: clamp(3rem, 6vw, 4.75rem);
+  background:
+    radial-gradient(circle at 22% 22%, rgba(0, 229, 160, 0.1), transparent 32%),
+    radial-gradient(circle at 78% 72%, rgba(248, 113, 113, 0.07), transparent 28%),
+    var(--bg);
+
+  h1 {
+    max-width: 68rem;
+    font-size: clamp(2.6rem, 6.5vw, 5.4rem);
+    line-height: 0.98;
+    letter-spacing: -0.045em;
+  }
+
+  .subtitle {
+    max-width: 52rem;
+    font-family: var(--font-mono), monospace;
+    font-size: clamp(var(--fs-body), 2vw, var(--fs-lead));
+  }
+}
+
+// Record hero meta pills + actions, shown only once a record loads.
+.gauntlet-record-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.55rem 0.7rem;
+  margin: 1.5rem auto 0;
+
+  span {
+    padding: 0.35rem 0.8rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text-muted);
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-caption);
+    letter-spacing: var(--tracking-wide);
+  }
+}
+
+.gauntlet-record-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+  margin: 1.6rem auto 0;
+}
+
+.gauntlet-record-actions[hidden],
+.gauntlet-record-meta[hidden],
+.gl-result-hero-actions[hidden],
+.gr-annotation[hidden] {
+  display: none;
+}
+
+.gauntlet-page-content {
+  max-width: var(--max-width);
+  padding-top: 3rem;
+}
+
+// == /gauntlet/ landing ======================================
+// The landing is intentionally its own evidence surface instead of inheriting
+// the generic section list. It uses the same hero and artifact language as
+// /gauntlet/results/ while leaving the results page's live record untouched.
+.gauntlet-landing-hero {
+  .gauntlet-landing-eyebrow {
+    margin: 0 0 0.85rem;
+    color: var(--accent);
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-caption);
+    font-weight: 700;
+    letter-spacing: var(--tracking-wider);
+    text-transform: uppercase;
+  }
+
+  .gauntlet-landing-actions {
+    justify-content: center;
+    margin: 1.75rem 0 0;
+  }
+}
+
+.gauntlet-landing-intro {
+  padding-top: 4rem;
+  padding-bottom: 4rem;
+
+  > p {
+    max-width: 52rem;
+    margin: 0 auto;
+    color: var(--text-muted);
+    font-size: var(--fs-lead);
+    line-height: 1.7;
+  }
+}
+
+.gauntlet-landing-evidence {
+  position: relative;
+  padding: 4rem 2rem;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background:
+    linear-gradient(135deg, rgba(0, 229, 160, 0.045), transparent 45%),
+    var(--bg-card);
+}
+
+.gauntlet-landing-evidence-inner {
+  max-width: var(--max-width);
+  margin: 0 auto;
+}
+
+.gauntlet-landing-claims {
+  p {
+    max-width: 38rem;
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--fs-lead);
+    line-height: 1.65;
+  }
+
+  p + p {
+    margin-top: 1.25rem;
+    color: var(--text-dim);
+    font-size: var(--fs-body);
+  }
+}
+
+.gauntlet-landing-stats {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  max-width: var(--max-width);
+  gap: 1px;
+  margin: 3rem auto 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 4px);
+  background: var(--border);
+
+  > div {
+    min-width: 0;
+    padding: 1.3rem 1rem;
+    background: rgba(9, 9, 11, 0.72);
+  }
+
+  span {
+    display: block;
+    color: var(--accent);
+    font-family: var(--font-mono), monospace;
+    font-size: clamp(var(--fs-h2), 4vw, var(--fs-display));
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: var(--tracking-tight);
+    font-variant-numeric: tabular-nums;
+  }
+
+  p {
+    margin: 0.75rem 0 0;
+    color: var(--text-dim);
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-caption);
+    line-height: 1.45;
+  }
+}
+
+.gauntlet-landing-run {
+  padding-top: 4rem;
+  padding-bottom: 4rem;
+
+  details {
+    padding: clamp(1.25rem, 3vw, 2rem);
+    border: 1px solid var(--border);
+    border-radius: calc(var(--radius) + 4px);
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0)),
+      var(--bg-card);
+  }
+
+  summary {
+    color: var(--text);
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-h3);
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  details > p {
+    max-width: 48rem;
+    margin: 1.4rem 0 0;
+    line-height: 1.65;
+  }
+
+  .fx-terminal {
+    margin: 0.9rem 0 0;
+    padding: 1rem 1.15rem;
+    overflow-x: auto;
+    border: 1px solid rgba(0, 229, 160, 0.22);
+    border-radius: 8px;
+    background: rgba(9, 9, 11, 0.82);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+
+    code {
+      color: var(--accent);
+      font-family: var(--font-mono), monospace;
+      font-size: var(--fs-code);
+      line-height: 1.6;
+      white-space: pre;
+    }
+  }
+
+  .article-cta { margin-bottom: 0; }
+}
+
+@media (max-width: $bp-tablet) {
+  .gauntlet-landing-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: $bp-mobile) {
+  .gauntlet-landing-evidence { padding: 3rem 1.25rem; }
+  .gauntlet-landing-intro,
+  .gauntlet-landing-run { padding-top: 3rem; padding-bottom: 3rem; }
+  .gauntlet-landing-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.gauntlet-page-content #results-landing .bench-provenance {
+  margin: -1.3rem auto 3rem;
+  padding: 0.9rem 1.2rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+// Results runtime states and shared record primitives live here rather than in
+// the template so listing and detail views cannot grow separate visual systems.
+.results-state { padding: 3rem 1rem; text-align: center; }
+.results-spinner {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto 1rem;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: gauntlet-spin 0.8s linear infinite;
+}
+@keyframes gauntlet-spin { to { transform: rotate(360deg); } }
+.results-error-msg { color: #f87171; font-size: var(--fs-lead); }
+.btn-sm { padding: 0.4rem 1rem; font-size: var(--fs-caption); }
+
+// Shared score-value colors, used by the record measurement strip and the
+// listing cards alike.
+.c-green { color: var(--accent); }
+.c-red { color: #f87171; }
+.c-amber { color: #fbbf24; }
+.c-muted { color: var(--text-dim); }
+
+// ============================================================
+//   Single-record view  (#results-view)
+// ============================================================
+// Rebuilt from the accepted /proof/ and /assess/ showpiece grammar: one branded
+// hero (above), then a centered chapter spine using the shared showpiece
+// primitives. No tilting exhibit, no dashboard tiles, no wide table. The
+// results-use contract sets the order — every failed case is named before the
+// aggregate score.
+
+.gr-record {
+  padding-bottom: 0;
+}
+
+.gr-chapter {
+  // Separation between chapters comes from the shared showpiece-chapter-head
+  // top rule and accent tick, matching /assess/. No extra section border here,
+  // or the two hairlines double up.
+  padding-block: clamp(2.5rem, 6vw, 4.5rem);
+}
+
+.gr-chapter-inner {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding-inline: clamp(0.25rem, 2vw, 1rem);
+}
+
+.gr-chapter-head {
+  margin-bottom: clamp(1.75rem, 4vw, 2.75rem);
+
+  h2 {
+    margin: 0.9rem 0 0;
+    font-family: var(--font-mono), monospace;
+    font-size: clamp(var(--fs-h2), 4vw, 3rem);
+    line-height: 1.05;
+    letter-spacing: var(--tracking-tight);
+  }
+}
+
+.gr-chapter-sub {
+  max-width: 46rem;
+  margin: 0.9rem 0 0;
+  color: var(--text-muted);
+  font-size: var(--fs-body);
+  line-height: 1.65;
+}
+
+.gr-subhead {
+  margin: 0 0 0.7rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  font-weight: 700;
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+}
+.gr-subhead-spaced { margin-top: 1.4rem; }
+
+// ── 01 · Failure docket ──────────────────────────────────────
+.gr-failure-panel {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 4px);
+  background:
+    linear-gradient(160deg, rgba(248, 113, 113, 0.05), transparent 42%),
+    rgba(9, 9, 11, 0.9);
+  box-shadow: 0 26px 60px rgba(0, 0, 0, 0.32);
+}
+
+.gr-failure-body {
+  padding: clamp(1.25rem, 3vw, 1.9rem);
+}
+
+.gr-failure-count {
+  margin: 0;
+  color: #f87171;
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-code);
+  font-weight: 700;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+.gr-failure-summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.1rem;
+}
+
+.gr-failure-source {
+  color: var(--accent);
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  text-decoration: none;
+
+  &:hover { text-decoration: underline; }
+}
+
+.gr-failure-list {
+  display: grid;
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--border);
+  list-style: none;
+
+  li {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.9rem;
+    padding: 0.95rem 1.1rem;
+    background: rgba(9, 9, 11, 0.94);
+    border-left: 2px solid transparent;
+  }
+
+  li.is-missed-attack { border-left-color: rgba(248, 113, 113, 0.7); }
+  li.is-false-positive { border-left-color: rgba(251, 191, 36, 0.7); }
+
+  .gr-failure-id {
+    display: block;
+    margin-top: 0.28rem;
+    color: var(--text);
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-code);
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+
+  p {
+    margin: 0.28rem 0 0;
+    color: var(--text-dim);
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-caption);
+  }
+}
+
+.gr-failure-index {
+  color: var(--text-dim);
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-code);
+  font-variant-numeric: tabular-nums;
+}
+
+.gr-failure-type {
+  display: inline-block;
+  color: #f87171;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: var(--tracking-wider);
+}
+
+.gr-failure-list .is-false-positive .gr-failure-type { color: #fbbf24; }
+
+// The unavailable and clean states must never read as a passing green. Amber
+// says "no verified detail here"; muted-green says "measured, zero losses".
+.gr-failure-unavailable,
+.gr-failure-clean {
+  margin: 0;
+  padding: 1.1rem;
+  font-size: var(--fs-code);
+  line-height: 1.6;
+  list-style: none;
+}
+.gr-failure-unavailable {
+  border-left: 2px solid rgba(251, 191, 36, 0.7);
+  background: rgba(251, 191, 36, 0.05);
+  color: var(--text-muted);
+}
+.gr-failure-clean {
+  border-left: 2px solid rgba(0, 229, 160, 0.5);
+  background: rgba(0, 229, 160, 0.04);
+  color: var(--text-muted);
+}
+
+// Maintainer-authored annotation. Deliberately NOT the evidence chrome: a quiet
+// dashed panel in a neutral tone, so it can never read as a measured result. The
+// tag names its author; the body carries the standing norm and current status.
+.gr-annotation {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.85rem 1.25rem;
+  align-items: start;
+  margin-top: clamp(1.25rem, 3vw, 1.9rem);
+  padding: 1.2rem 1.35rem;
+  border: 1px dashed rgba(255, 255, 255, 0.16);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.gr-annotation-tag {
+  align-self: start;
+  padding: 0.32rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-muted);
+  font-family: var(--font-mono), monospace;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.gr-annotation-body { min-width: 0; }
+
+.gr-annotation-lead {
+  margin: 0;
+  color: var(--text);
+  font-size: var(--fs-body);
+  line-height: 1.6;
+}
+
+.gr-annotation-note {
+  margin: 0.55rem 0 0;
+  color: var(--text-dim);
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  line-height: 1.55;
+}
+
+// ── 02 · Measured result ─────────────────────────────────────
+.gr-measure {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: clamp(1.5rem, 4vw, 3rem);
+  align-items: start;
+}
+
+.gr-measure-headline { min-width: 0; }
+
+.gr-record-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.gr-record-score {
+  margin: 1.1rem 0 0;
+  color: var(--accent);
+  font-family: var(--font-mono), monospace;
+  font-size: clamp(4rem, 10vw, 7rem);
+  font-weight: 700;
+  line-height: 0.9;
+  letter-spacing: -0.055em;
+  font-variant-numeric: tabular-nums;
+}
+
+.gr-record-heading {
+  margin: 0.8rem 0 0;
+  color: var(--text);
+  font-family: var(--font-mono), monospace;
+  font-size: clamp(var(--fs-h3), 2.4vw, var(--fs-h2));
+  line-height: 1.15;
+  letter-spacing: var(--tracking-tight);
+  overflow-wrap: anywhere;
+}
+
+.gr-record-verdict {
+  max-width: 34rem;
+  margin: 1rem 0 0;
+  color: var(--text);
+  font-size: var(--fs-lead);
+  line-height: 1.55;
+}
+
+.gr-record-diagnostic {
+  max-width: 34rem;
+  margin: 1rem 0 0;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  color: var(--text-dim);
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  line-height: 1.6;
+}
+
+.gr-measure-stats {
+  display: grid;
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--border);
+
+  .score-card {
+    padding: 1.4rem 1.35rem;
+    background: var(--bg-card);
+  }
+
+  .sc-label {
+    margin-bottom: 0.35rem;
+    color: var(--text-muted);
+    font-size: var(--fs-caption);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .sc-value {
+    font-family: var(--font-mono), monospace;
+    font-size: clamp(var(--fs-h3), 2.5vw, var(--fs-h1));
+    font-weight: 700;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .sc-sub {
+    margin-top: 0.35rem;
+    color: var(--text-dim);
+    font-size: var(--fs-caption);
+  }
+
+  > .sc-sub {
+    padding: 0.9rem 1.35rem;
+    background: rgba(9, 9, 11, 0.6);
+    color: var(--text-dim);
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-caption);
+    line-height: 1.5;
+  }
+}
+
+.gr-coverage-block { margin-top: clamp(2rem, 5vw, 3.25rem); }
+
+.gr-coverage-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--border);
+}
+
+.gr-cov-item {
+  display: grid;
+  align-content: start;
+  gap: 0.4rem;
+  padding: 1.25rem 1.15rem;
+  background: var(--bg);
+
+  strong {
+    color: var(--text);
+    font-family: var(--font-mono), monospace;
+    font-size: clamp(1.75rem, 3.5vw, 2.6rem);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  span {
+    color: var(--text);
+    font-size: var(--fs-caption);
+    font-weight: 700;
+  }
+
+  small {
+    color: var(--text-dim);
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-caption);
+    line-height: 1.4;
+  }
+
+  &.is-primary {
+    background: linear-gradient(150deg, rgba(0, 229, 160, 0.1), rgba(0, 229, 160, 0.02));
+    strong { color: var(--accent); }
+  }
+
+  &.is-alert strong { color: #f87171; }
+}
+
+.gr-cov-reasons {
+  margin: 1rem 0 0;
+  color: var(--text-dim);
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  line-height: 1.55;
+}
+
+// ── 03 · Category readout (reuses the listing category-bar grammar) ──
+.gr-category-grid {
+  // grid template inherited from .gl-category-grid
+}
+
+.gl-category.is-loss {
+  border-color: rgba(248, 113, 113, 0.4);
+
+  .gl-category-score { color: #f87171; }
+  .gl-category-bar-fill { background: linear-gradient(90deg, rgba(248, 113, 113, 0.55), #f87171); }
+}
+
+.gr-cats-note {
+  margin: 1.3rem 0 0;
+  color: var(--text-dim);
+  font-size: var(--fs-caption);
+  line-height: 1.55;
+}
+
+// ── 04 · Scope and provenance ────────────────────────────────
+.gr-support { margin-bottom: clamp(1.75rem, 4vw, 2.5rem); }
+
+.gr-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.gr-tag {
+  padding: 0.25rem 0.65rem;
+  border-radius: 5px;
+  background: var(--accent-dim);
+  color: var(--accent);
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+}
+.gr-tag.muted { background: var(--purple-dim); color: var(--text-muted); }
+
+.gr-prov-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(unquote("min(100%, 20rem)"), 1fr));
+  gap: 1px;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--border);
+}
+
+.gr-prov-row {
+  display: grid;
+  gap: 0.3rem;
+  padding: 1rem 1.15rem;
+  background: var(--bg);
+
+  dt {
+    color: var(--text-muted);
+    font-size: var(--fs-caption);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+    color: var(--text);
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-caption);
+    line-height: 1.5;
+  }
+}
+
+// ── Close ────────────────────────────────────────────────────
+.gr-final-band {
+  padding-block: clamp(3.5rem, 8vw, 6rem);
+  border-top: 1px solid var(--border);
+}
+
+.gr-final {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: clamp(2rem, 5vw, 3.25rem);
+  border-radius: calc(var(--radius) + 6px);
+  text-align: center;
+
+  h2 {
+    margin: 0.6rem 0 0;
+    font-family: var(--font-mono), monospace;
+    font-size: clamp(var(--fs-h2), 3.5vw, 2.75rem);
+    line-height: 1.1;
+    letter-spacing: var(--tracking-tight);
+  }
+
+  > p {
+    max-width: 44rem;
+    margin: 1rem auto 0;
+    color: var(--text-muted);
+    font-size: var(--fs-lead);
+    line-height: 1.6;
+  }
+}
+
+.gr-final-eyebrow {
+  margin: 0;
+  color: var(--accent);
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  font-weight: 700;
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+}
+
+.gr-final-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.7rem;
+  margin-top: 1.75rem;
+}
+
+// ── 05 · Raw record exhibit ──────────────────────────────────
+// The raw bytes framed as a deliberate evidence artifact, sharing the
+// artifact-bar chrome the failure docket and listing exhibit use. The bar bleeds
+// to the padded edge, so the padding here matches its negative margin.
+.gr-raw-exhibit {
+  margin: 0;
+  padding: 1.75rem;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 4px);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.028), rgba(255, 255, 255, 0)),
+    rgba(9, 9, 11, 0.9);
+  box-shadow: 0 26px 60px rgba(0, 0, 0, 0.32);
+}
+
+.gr-raw-doc {
+  max-height: 32rem;
+  margin: 0;
+  padding: 1.15rem 1.25rem;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+
+  code {
+    color: var(--text);
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-caption);
+    line-height: 1.55;
+    white-space: pre;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .results-spinner { animation: none; }
+}
+
+// The headline record is intentionally empty in the source HTML. The runtime
+// fills it from /api/results, which lets the JS-off landing stay complete
+// without claiming a score it cannot verify.
+.gl-result-hero {
+  margin: 0 0 1.5rem;
+  // Layout, tilt, scan and caption all come from the shared exhibit band; this
+  // page adds only the reading beside it.
+}
+
+.gl-result-exhibit .fx-exhibit-doc {
+  max-height: 22rem;
+}
+
+.gl-result-hero-score {
+  margin-top: 0.9rem;
+  color: var(--accent);
+  font-family: var(--font-mono), monospace;
+  font-size: clamp(2.75rem, 6vw, 4.5rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+}
+
+.gl-result-hero-claim-note {
+  margin: 1rem 0 0;
+  color: var(--text-dim);
+  font-size: var(--fs-caption);
+  line-height: 1.55;
+  max-width: 34rem;
+}
+
+.gl-result-hero-body {
+  min-width: 0;
+
+  h2 {
+    margin: 0.6rem 0 0.5rem;
+    color: var(--text);
+    font-family: var(--font-mono), monospace;
+    // Sits with the score rather than competing with it.
+    font-size: clamp(var(--fs-h3), 2vw, var(--fs-h2));
+    line-height: 1.1;
+    letter-spacing: var(--tracking-tight);
+    overflow-wrap: anywhere;
+  }
+}
+
+.gl-result-hero-labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.gl-result-hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem 1.1rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-code);
+
+  span + span {
+    padding-left: 1.1rem;
+    border-left: 1px solid var(--border);
+  }
+}
+
+// ── Listing chapters (below the exhibit) ─────────────────────
+// The listing reuses the record view's chapter spine. Its sections are hairline
+// seam grids and flat ledgers in the shared grammar, never floating dashboard
+// tiles. The chapter frame comes from .gr-chapter / showpiece-chapter.
+
+// Corpus facts: one hairline seam grid, the same grammar as the record view's
+// coverage and provenance grids.
+.gl-facts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--border);
+}
+
+.gl-fact {
+  display: grid;
+  align-content: start;
+  gap: 0.45rem;
+  padding: 1.4rem 1.25rem;
+  background: var(--bg);
+
+  &:first-child {
+    background: linear-gradient(150deg, rgba(0, 229, 160, 0.1), rgba(0, 229, 160, 0.02));
+    .gl-fact-value { color: var(--accent); }
+  }
+}
+
+.gl-fact-value {
+  color: var(--text);
+  font-family: var(--font-mono), monospace;
+  font-size: clamp(1.9rem, 3.6vw, 2.9rem);
+  line-height: 1;
+  letter-spacing: var(--tracking-tight);
+  font-variant-numeric: tabular-nums;
+}
+
+.gl-fact-label {
+  color: var(--text);
+  font-size: var(--fs-caption);
+  font-weight: 700;
+}
+
+.gl-fact small {
+  color: var(--text-dim);
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  line-height: 1.4;
+}
+
+// The corpus provenance line sits under the facts as a quiet caption, not a
+// framed pill row.
+.gauntlet-page-content #results-landing .gl-chapter .bench-provenance {
+  margin: 1.25rem 0 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-dim);
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+}
+
+// Continuous verification: two flat ledger cells on one hairline, each with a
+// status pill the loader repaints. No billboard cards, no giant min-height.
+.gc-ledger {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--border);
+
+  .gc-card {
+    display: grid;
+    align-content: start;
+    gap: 0.5rem;
+    padding: 1.5rem 1.5rem 1.7rem;
+    background: var(--bg);
+  }
+
+  .gc-card h3 {
+    margin: 0.35rem 0 0;
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-h3);
+    letter-spacing: var(--tracking-tight);
+  }
+
+  .gc-message { margin: 0; color: var(--text-muted); line-height: 1.6; }
+
+  .gc-meta {
+    margin: 0.35rem 0 0;
+    color: var(--text-dim);
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-caption);
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+
+    a { color: var(--text-muted); }
+    a:hover { color: var(--accent); }
+  }
+}
+
+// Status pill for the verification cells. Colour follows the outcome; a positive
+// "digests match" reads as a plain confirmed state, never a benchmark mark.
+.gc-state {
+  justify-self: start;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-muted);
+  font-family: var(--font-mono), monospace;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+}
+.gc-state-pass { border-color: rgba(0, 229, 160, 0.4); background: rgba(0, 229, 160, 0.1); color: var(--accent); }
+.gc-state-neutral { border-color: rgba(255, 255, 255, 0.16); color: var(--text); }
+.gc-state-running { border-color: rgba(251, 191, 36, 0.35); background: rgba(251, 191, 36, 0.08); color: #fbbf24; }
+.gc-state-stale { border-color: rgba(251, 191, 36, 0.35); color: #fbbf24; }
+.gc-state-blocked { border-color: rgba(248, 113, 113, 0.4); background: rgba(248, 113, 113, 0.08); color: #f87171; }
+.gc-state-unavailable { color: var(--text-dim); }
+
+.gc-actions { margin-top: 1.25rem; }
+
+// Run-history chapter head: kicker + title on the left, publish action on the
+// right, sharing the showpiece chapter-head seam (no extra top rule of its own).
+.gl-history-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem 1.5rem;
+
+  > div { min-width: 0; }
+
+  h2 {
+    margin: 0.6rem 0 0;
+    color: var(--text);
+    font-family: var(--font-mono), monospace;
+    font-size: clamp(var(--fs-h2), 4vw, 3rem);
+    line-height: 1.05;
+    letter-spacing: var(--tracking-tight);
+  }
+}
+
+.gauntlet-page-content .rl-cards { display: grid; gap: 1.25rem; margin-top: clamp(1.75rem, 4vw, 2.5rem); }
+
+.gauntlet-page-content .rl-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1.5rem;
+  align-items: center;
+  padding: clamp(1.4rem, 3vw, 2.4rem);
+  overflow: hidden;
+  border-color: rgba(255, 255, 255, 0.1);
+  border-radius: calc(var(--radius) + 4px);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0)),
+    var(--bg-card);
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+
+  // The same single lit edge as the hero, so the two read as one family of
+  // evidence rather than a billboard above a second billboard.
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 2px;
+    background: linear-gradient(180deg, transparent, rgba(0, 229, 160, 0.7), transparent);
+  }
+
+  &:hover {
+    border-color: rgba(0, 229, 160, 0.48);
+    transform: translateY(-2px);
+    box-shadow: 0 26px 58px rgba(0, 0, 0, 0.32);
+  }
+
+  .rl-card-left {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: clamp(1.4rem, 4vw, 3.5rem);
+  }
+
+  .rl-card-score {
+    min-width: 0;
+    color: var(--accent);
+    font-family: var(--font-mono), monospace;
+    font-size: clamp(2rem, 4vw, 3.25rem);
+    line-height: 1;
+    letter-spacing: var(--tracking-tight);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .rl-card-info h3 {
+    margin: 0;
+    font-family: var(--font-mono), monospace;
+    font-size: clamp(var(--fs-h3), 2.5vw, var(--fs-h2));
+    letter-spacing: var(--tracking-tight);
+
+    a { color: var(--text); text-decoration: none; }
+    a:hover,
+    a:focus-visible { color: var(--accent); }
+  }
+
+  .rl-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    color: var(--text-muted);
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-caption);
+  }
+
+  .rl-history {
+    margin-top: 0.9rem;
+    color: var(--text-muted);
+    font-size: var(--fs-caption);
+
+    summary { color: var(--accent); cursor: pointer; }
+    ul { margin: 0.6rem 0 0; padding-left: 1.25rem; }
+    a { color: var(--text-muted); }
+  }
+
+  .rl-card-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.55rem;
+  }
+
+  .rl-card-inspect { margin-top: 0.35rem; white-space: nowrap; }
+}
+
+.gauntlet-page-content .rl-badge {
+  padding: 0.35rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted);
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  letter-spacing: var(--tracking-wide);
+}
+
+.gauntlet-page-content .rl-badge:first-child {
+  border-color: rgba(0, 229, 160, 0.35);
+  background: rgba(0, 229, 160, 0.1);
+  color: var(--accent);
+}
+
+// The record hero badges share the listing badge chrome so MEASURED reads the
+// same on both surfaces.
+.gr-record-badges .rl-badge {
+  padding: 0.35rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted);
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  letter-spacing: var(--tracking-wide);
+}
+.gr-record-badges .rl-badge:first-child {
+  border-color: rgba(0, 229, 160, 0.35);
+  background: rgba(0, 229, 160, 0.1);
+  color: var(--accent);
+}
+
+// The listing hero's action row and clickable tool name. The result must never
+// look inert: the name is a real link and the action opens the same record.
+.gl-result-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 1.4rem;
+}
+
+.gl-result-hero-body h2 a {
+  color: inherit;
+  text-decoration: none;
+}
+.gl-result-hero-body h2 a:hover,
+.gl-result-hero-body h2 a:focus-visible { color: var(--accent); }
+
+@media (max-width: $bp-tablet) {
+  .gr-measure { grid-template-columns: 1fr; }
+  .gr-coverage-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .gl-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .gc-ledger { grid-template-columns: 1fr; }
+}
+
+@media (max-width: $bp-mobile) {
+  // The shared exhibit band already stacks to one column on small screens.
+  .gl-result-hero-score { text-align: left; }
+
+  .gl-result-hero-meta span + span {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .gauntlet-page-content { padding-top: 2rem; }
+  .gauntlet-hero.is-record {
+    padding-top: 3.5rem;
+    padding-bottom: 3rem;
+  }
+  .gr-record-score { font-size: clamp(3.4rem, 18vw, 5rem); }
+  .gl-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .gc-ledger { grid-template-columns: 1fr; }
+  .gr-annotation { grid-template-columns: 1fr; gap: 0.6rem; }
+
+  .gl-list-header {
+    flex-direction: column;
+    align-items: stretch;
+
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 44px;
+    }
+  }
+
+  .gauntlet-page-content .rl-card {
+    .rl-card-left {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.8rem;
+    }
+
+    .rl-card-right { align-items: flex-start; }
+  }
+}
+
+// A quiet second reading of the same number: how much of the applicable corpus
+// the record covers. Width is set at runtime from the record, never authored.
+.gl-result-hero-meter {
+  position: relative;
+  height: 3px;
+  margin-top: 1rem;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+}
+
+.gl-result-hero-meter-fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(0, 229, 160, 0.55), var(--accent));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .gl-result-hero-meter-fill {
+    transition: width 1.1s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
+
+// == Containment by category ==================================
+// One cell per attack category in the record. The bar is the category's own
+// containment figure; a control set (no containment figure) reads as such.
+// Shared by the listing hero and the single-record readout.
+.gl-categories {
+  position: relative;
+  margin: 0 0 2.5rem;
+  padding: clamp(1.5rem, 3vw, 2.25rem) clamp(1.25rem, 3vw, 2.5rem);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 6px);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0)),
+    var(--bg-card);
+}
+
+.gl-categories-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem 1.5rem;
+  margin-bottom: 1.25rem;
+
+  h2 {
+    margin: 0;
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-h3);
+    color: var(--accent);
+    letter-spacing: var(--tracking-tight);
+  }
+}
+
+.gl-categories-sub {
+  margin: 0;
+  color: var(--text-muted);
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+}
+
+.gl-category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11.5rem, 1fr));
+  gap: 0.75rem;
+}
+
+.gl-category {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "name score" "cases cases" "bar bar";
+  gap: 0.2rem 0.5rem;
+  padding: 0.85rem 0.95rem 0.95rem;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.025);
+  overflow: hidden;
+  transition: border-color 0.2s ease;
+
+  &:hover { border-color: rgba(0, 229, 160, 0.4); }
+}
+
+.gl-category-name {
+  grid-area: name;
+  color: var(--text);
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.gl-category-score {
+  grid-area: score;
+  color: var(--accent);
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-body);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.gl-category-cases {
+  grid-area: cases;
+  color: var(--text-dim);
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+}
+
+.gl-category-bar {
+  grid-area: bar;
+  display: block;
+  height: 3px;
+  margin-top: 0.45rem;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+}
+
+.gl-category-bar-fill {
+  display: block;
+  height: 100%;
+  width: var(--fill, 0%);
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(0, 229, 160, 0.55), var(--accent));
+}
+
+.gl-category.is-control {
+  .gl-category-score { color: var(--text-dim); font-weight: 500; text-transform: lowercase; }
+  .gl-category-bar { background: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.12) 0 4px, transparent 4px 8px); }
+}
+
+.gl-categories-note {
+  margin: 1.1rem 0 0;
+  color: var(--text-dim);
+  font-size: var(--fs-caption);
+  line-height: 1.55;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .gl-category-bar-fill {
+    transition: width 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}

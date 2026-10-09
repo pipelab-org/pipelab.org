@@ -1,0 +1,8 @@
+ide: "Put Pipelock between your coding agent and the network."
+mcp: "Inspect tool calls, responses, and server behavior before they reach the agent."
+injection: "See how hostile instructions enter agent workflows and where to stop them."
+compliance: "Map agent activity to controls, records, and audit requirements."
+evidence: "Create and verify records of what the agent tried to do."
+operator: "Run, tune, and troubleshoot Pipelock in real environments."
+comparison: "Check Pipelock against adjacent tools and different security models."
+concepts: "Build the mental model before changing the deployment."

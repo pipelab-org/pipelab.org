@@ -1,0 +1,129 @@
+{{- /* Integration showcase. Data-driven from data/integrations.yaml.
+       Desktop: the agents and frameworks orbit the Pipelock mark on two
+       rings, threaded to the center (the constellation language), each
+       node in its official brand color. Below: the runtime, observability,
+       and verifier surfaces as colored tiles. Small screens skip the orbit
+       and show every node as a tile. Rows without an official mark get a
+       neutral monogram, never an invented logo. */ -}}
+{{- $d := site.Data.integrations -}}
+{{- $brandColorPattern := `^#[0-9A-Fa-f]{6}$` -}}
+{{- range $d.orbit -}}
+  {{- if ne (len (findRE $brandColorPattern (printf "%v" .color))) 1 -}}
+    {{- errorf "works-with.html: integration %q has invalid brand color %q" .name .color -}}
+  {{- end -}}
+{{- end -}}
+{{- range $d.rows -}}
+  {{- range .items -}}
+    {{- if ne (len (findRE $brandColorPattern (printf "%v" .color))) 1 -}}
+      {{- errorf "works-with.html: integration %q has invalid brand color %q" .name .color -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- $guideCount := 0 -}}
+{{- range $d.orbit -}}
+  {{- if ne .kind "protocol" -}}
+    {{- $guideCount = add $guideCount 1 -}}
+  {{- end -}}
+{{- end -}}
+<section class="hp-section hp-works">
+  <div class="hp-section-inner">
+    <div class="hp-section-head">
+      <p class="hp-eyebrow">Works with</p>
+      <h2 class="hp-section-h2">The agents you already run</h2>
+      <p class="hp-section-sub">{{ $guideCount }} shipped agent and framework guides, one boundary. Same binary, same scanner pipeline, whichever agent is on the other side.</p>
+    </div>
+
+    <div class="hp-orbit" aria-label="Agents and frameworks Pipelock ships guides for" data-fx="sky">
+      <div class="hp-orbit-dust" aria-hidden="true"></div>
+      <svg class="hp-orbit-threads" viewBox="0 0 1000 520" preserveAspectRatio="none" aria-hidden="true">
+        <defs>
+          <radialGradient id="hp-orbit-light" gradientUnits="userSpaceOnUse" cx="500" cy="260" r="420">
+            <stop offset="0" stop-color="#00e5a0" stop-opacity="0.55"></stop>
+            <stop offset="0.55" stop-color="#00e5a0" stop-opacity="0.16"></stop>
+            <stop offset="1" stop-color="#00e5a0" stop-opacity="0.02"></stop>
+          </radialGradient>
+          <filter id="hp-orbit-soft" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="2.5"></feGaussianBlur>
+          </filter>
+        </defs>
+        <g class="hp-orbit-rings">
+          <ellipse cx="500" cy="260" rx="190" ry="120" class="hp-orbit-ring hp-orbit-ring-glow"></ellipse>
+          <ellipse cx="500" cy="260" rx="190" ry="120" class="hp-orbit-ring hp-orbit-ring-inner"></ellipse>
+          <ellipse cx="500" cy="260" rx="400" ry="215" class="hp-orbit-ring hp-orbit-ring-glow"></ellipse>
+          <ellipse cx="500" cy="260" rx="400" ry="215" class="hp-orbit-ring hp-orbit-ring-outer"></ellipse>
+        </g>
+        {{ range $d.orbit }}
+        <line x1="500" y1="260" x2="{{ .px }}" y2="{{ .py }}" class="hp-orbit-thread" style="--brand: {{ .color }};"></line>
+        {{ end }}
+      </svg>
+      <div class="hp-orbit-core" aria-hidden="true">
+        <span class="hp-orbit-corona"></span>
+        <span class="hp-orbit-solar-flare hp-orbit-solar-flare-one"></span>
+        <span class="hp-orbit-solar-flare hp-orbit-solar-flare-two"></span>
+        <span class="hp-orbit-sun">{{ partial "brands/pipelock-mark.svg" . }}</span>
+        <span class="hp-orbit-core-label">pipelock</span>
+      </div>
+      {{ range $i, $n := $d.orbit }}
+      {{- $hasImg := partial "integration-mark.html" (dict "entry" . "context" "works-with.html: integration" "required" false) -}}
+      {{- /* Fail the build rather than ship a collapsed orbit. Every node needs
+             both coordinates; a missing one renders as an empty custom property
+             (--y:%), which CSS drops, stacking every planet on the sun. The
+             coordinate key is `ypct`, never `y`: YAML 1.1 treats a bare `y` key
+             as boolean true, so the pinned Hugo in .hugo-version resolves `.y`
+             to nothing while newer local Hugo resolves it fine. That mismatch
+             ships a broken homepage that looks correct in local preview. */ -}}
+      {{- $xv := printf "%v" .x -}}
+      {{- $yv := printf "%v" .ypct -}}
+      {{- if or (eq $xv "") (eq $xv "<nil>") (eq $yv "") (eq $yv "<nil>") -}}
+        {{- errorf "works-with.html: orbit node %q is missing x or ypct (x=%q ypct=%q). Coordinates must use the key `ypct`, not the YAML-reserved `y`, which the pinned Hugo parses as a boolean." .name $xv $yv -}}
+      {{- end -}}
+      <a class="hp-orbit-node{{ if lt $i 6 }} hp-orbit-node-inner{{ else }} hp-orbit-node-outer{{ end }}{{ if not (or .brand $hasImg) }} hp-orbit-node-mono{{ end }}" href="{{ strings.TrimPrefix "/" .href | relURL }}"
+         {{- if hasPrefix .href "http" }} target="_blank" rel="noopener noreferrer"{{ end }}
+         {{- with .brand }} data-brand="{{ . }}"{{ end }}
+         style="--x: {{ .x }}%; --y: {{ .ypct }}%; --brand: {{ .color }}; --delay: {{ .delay }}s;"
+         data-event="works_with_click" data-event-value="{{ .name | urlize }}" data-event-placement="works-with-orbit">
+        <span class="hp-orbit-mark" aria-hidden="true">
+          {{- if .brand }}{{ partial (printf "brands/%s.svg" .brand) . }}{{ else if $hasImg }}<img src="{{ strings.TrimPrefix "/" .img | relURL }}" alt="{{ .name }} logo" width="28" height="28" loading="lazy" decoding="async">{{ else }}{{ substr .name 0 2 | upper }}{{ end -}}
+        </span>
+        <span class="hp-orbit-name">{{ .name }}</span>
+      </a>
+      {{ end }}
+    </div>
+
+    {{/* small screens: the same nodes as tiles */}}
+    <div class="hp-works-group hp-works-group-orbit-fallback">
+      <p class="hp-works-label">Coding agents and frameworks</p>
+      <ul class="hp-works-grid" role="list">
+        {{ range $d.orbit }}
+        {{- $hasImg := partial "integration-mark.html" (dict "entry" . "context" "works-with.html: integration" "required" false) -}}
+        <li>
+          <a class="hp-works-tile{{ if not (or .brand $hasImg) }} hp-works-tile-mono{{ end }}" href="{{ strings.TrimPrefix "/" .href | relURL }}" style="--brand: {{ .color }};"
+             {{- if hasPrefix .href "http" }} target="_blank" rel="noopener noreferrer"{{ end }}{{ with .brand }} data-brand="{{ . }}"{{ end }}>
+            <span class="hp-works-mark" aria-hidden="true">{{- if .brand }}{{ partial (printf "brands/%s.svg" .brand) . }}{{ else if $hasImg }}<img src="{{ strings.TrimPrefix "/" .img | relURL }}" alt="{{ .name }} logo" width="28" height="28" loading="lazy" decoding="async">{{ else }}{{ substr .name 0 2 | upper }}{{ end -}}</span>
+            <span class="hp-works-name">{{ .name }}</span>
+          </a>
+        </li>
+        {{ end }}
+      </ul>
+    </div>
+
+    {{ range $d.rows }}
+    <div class="hp-works-group">
+      <p class="hp-works-label">{{ .label }}</p>
+      <ul class="hp-works-grid" role="list">
+        {{ range .items }}
+        {{- $hasImg := partial "integration-mark.html" (dict "entry" . "context" "works-with.html: integration" "required" false) -}}
+        <li>
+          <a class="hp-works-tile{{ if not (or .brand $hasImg) }} hp-works-tile-mono{{ end }}" href="{{ strings.TrimPrefix "/" .href | relURL }}" style="--brand: {{ .color }};"
+             {{- if hasPrefix .href "http" }} target="_blank" rel="noopener noreferrer"{{ end }}
+             data-event="works_with_click" data-event-value="{{ .name | urlize }}" data-event-placement="works-with">
+            <span class="hp-works-mark" aria-hidden="true">{{- if .brand }}{{ partial (printf "brands/%s.svg" .brand) . }}{{ else if $hasImg }}<img src="{{ strings.TrimPrefix "/" .img | relURL }}" alt="{{ .name }} logo" width="28" height="28" loading="lazy" decoding="async">{{ else }}{{ substr .name 0 2 | upper }}{{ end -}}</span>
+            <span class="hp-works-name">{{ .name }}</span>
+          </a>
+        </li>
+        {{ end }}
+      </ul>
+    </div>
+    {{ end }}
+  </div>
+</section>

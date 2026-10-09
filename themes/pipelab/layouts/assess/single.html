@@ -1,0 +1,411 @@
+{{ define "main" }}
+{{/* Bespoke /assess/ template — overrides _default/single.html.
+     Two-product story (Runtime Forensics + Security Assessment) with a
+     reciprocal terminal pair, free vs paid tier cards, and three real
+     demo-page anchors. Markdown body still renders {{ .Content }} so the
+     markdown alternate output and the audit's inbound-link counter pick
+     up the link list at the bottom of content/assess.md. */}}
+
+{{ $version := site.Params.pipelock_version | default "" }}
+{{ $stats := site.Data.stats }}
+{{ $isUpdated := and (not .Lastmod.IsZero) (not (.Lastmod.Equal .Date)) }}
+{{ $dateValue := cond $isUpdated .Lastmod .Date }}
+{{ $dateLabel := $dateValue.Format "Jan 2, 2006" }}
+{{ $polarUrl := "https://buy.polar.sh/polar_cl_xiD0xkZuLFvPG0nTYpezAnar0vU6MWd3qbWdj4XcB9D" }}
+
+<article id="top" class="assess-product showpiece-page">
+
+  {{/* ── Hero ─────────────────────────────────────────── */}}
+<header class="assess-hero site-hero brand-field-hero brand-field-hero-standard" data-hero="brand-standard" data-fx="reveal">
+    <div class="assess-hero-inner site-hero-inner">
+      <p class="assess-eyebrow">
+        <span class="assess-eyebrow-dot" aria-hidden="true"></span>
+        Pipelock Assess{{ if $version }} · v{{ $version }}{{ end }}{{ if $dateLabel }} · {{ $dateLabel }}{{ end }}
+      </p>
+
+      <h1 class="assess-headline">
+        <span>{{ with .Params.headline }}{{ . }}{{ else }}{{ .Title }}{{ end }}</span>
+        {{ with .Params.headline_accent }}<span class="assess-headline-accent">{{ . }}</span>{{ end }}
+      </h1>
+
+      <p class="assess-tagline">Runtime Forensics + Security Assessment</p>
+
+      <p class="assess-lead">
+        <code>pipelock report</code> turns your JSONL audit logs into a forensic record of mediated agent actions.
+        <code>pipelock assess</code> evaluates whether the deployment around them is safe.
+        Same binary. Two views of the same agent fleet. Assess signs the manifest by default in both tiers after finalization; <code>pipelock report --format bundle --sign</code> can sign report bundles too.
+      </p>
+
+      <div class="assess-hero-actions">
+        <a class="btn btn-primary" href="#tiers"
+           data-event="tier_compare_click" data-event-placement="assess-hero">
+          Compare Free &amp; Paid
+        </a>
+        <a class="btn btn-ghost" href="#run-it"
+           data-event="run_it_click" data-event-placement="assess-hero">
+          Run it yourself
+        </a>
+      </div>
+
+      {{ partial "page-formats.html" . }}
+
+    </div>
+  </header>
+
+  <section class="assess-hero-explainer" aria-label="Two ways to inspect a deployment">
+      {{/* Two-question explainer band */}}
+      <div class="assess-twoq">
+        <div class="assess-twoq-card assess-twoq-card-audit" data-fx="spotlight">
+          <p class="assess-twoq-role">Runtime forensics · backwards</p>
+          <p class="assess-twoq-mark">"What did my agents actually do?"</p>
+          <p class="assess-twoq-cmd">$ pipelock report --input events.jsonl</p>
+        </div>
+        <div class="assess-twoq-link" aria-hidden="true"><span>Evidence chain</span></div>
+        <div class="assess-twoq-card assess-twoq-card-assess" data-fx="spotlight">
+          <p class="assess-twoq-role">Security assessment · forwards</p>
+          <p class="assess-twoq-mark">"Is this deployment secure?"</p>
+          <p class="assess-twoq-cmd">$ pipelock assess run my-assessment/</p>
+        </div>
+      </div>
+  </section>
+
+  {{/* ── Sticky mini-nav ──────────────────────────────── */}}
+  <nav class="assess-mini-nav showpiece-mini-nav" aria-label="On this page" data-fx="mininav">
+    <ul>
+      <li><a href="#two-products"><span class="assess-mini-num">01</span>Two products</a></li>
+      <li><a href="#demos"><span class="assess-mini-num">02</span>Demos</a></li>
+      <li><a href="#tiers"><span class="assess-mini-num">03</span>Free vs Paid</a></li>
+      <li><a href="#run-it"><span class="assess-mini-num">04</span>Run it</a></li>
+      <li><a href="#what-inside"><span class="assess-mini-num">05</span>What's inside</a></li>
+      <li><a href="#license"><span class="assess-mini-num">06</span>License</a></li>
+    </ul>
+  </nav>
+
+  {{/* ── 01 — Two product lanes ───────────────────────── */}}
+  <section class="assess-section showpiece-chapter" data-chapter="01" id="two-products" aria-label="The two tools">
+    <div class="assess-section-inner">
+      <div class="assess-section-head assess-section-head-center showpiece-chapter-head" data-fx="reveal">
+        <span class="assess-section-num showpiece-chapter-kicker">01 · The two tools</span>
+        <h2 data-fx="decrypt">One records. One evaluates. <span class="assess-headline-accent">Both run from the same binary.</span></h2>
+        <p>The report is the forensic record of every byte your agents sent. The assessment is a {{ $stats.simulate_scenarios }}-scenario adversarial exam against the deployment that wraps them. Pick one. Run both. Both Assess tiers sign the manifest by default after finalization; <code>pipelock report</code> can also emit a signed bundle when invoked with <code>--format bundle --sign</code>.</p>
+      </div>
+
+      <div class="assess-lanes">
+        {{/* AUDIT REPORT lane (purple-tipped, free, backwards) */}}
+        <article class="assess-lane assess-lane-audit" data-fx="reveal spotlight">
+          <div class="assess-lane-tag">
+            <span class="assess-lane-tag-dot" aria-hidden="true"></span>
+            <span>Runtime Forensics · Free</span>
+          </div>
+          <h3>pipelock report</h3>
+          <div class="assess-lane-cmdbar"><span class="assess-lane-cmdbar-pr">$</span>&nbsp;pipelock report --input events.jsonl</div>
+          <p class="assess-lane-q">"What did my agents actually do?"</p>
+          <p class="assess-lane-body">Reads the JSONL audit logs Pipelock writes for every scanner decision. Reconstructs the timeline of every egress, every block, every drop, every flag. Outputs a single self-contained HTML page (or JSON, or a signed bundle) you can open in a browser or attach to a ticket. No login, no daemon, no cloud.</p>
+          <div class="assess-lane-meta">
+            <div class="assess-lane-meta-cell"><span class="assess-lane-meta-label">Input</span><span class="assess-lane-meta-value">JSONL logs</span></div>
+            <div class="assess-lane-meta-cell"><span class="assess-lane-meta-label">Output</span><span class="assess-lane-meta-value">HTML page</span></div>
+            <div class="assess-lane-meta-cell"><span class="assess-lane-meta-label">Cost</span><span class="assess-lane-meta-value">Free</span></div>
+          </div>
+          <div class="assess-lane-cta">
+            <a class="btn btn-ghost" href="/assess/demo-egress-report/" target="_blank" rel="noopener noreferrer"
+               data-event="demo_egress_click" data-event-placement="assess-audit-lane">Open demo report</a>
+            <a class="btn btn-ghost" href="https://github.com/luckyPipewrench/pipelock" target="_blank" rel="noopener noreferrer"
+               data-event="github_click" data-event-placement="assess-audit-lane">Source</a>
+          </div>
+        </article>
+
+        {{/* ASSESS lane (teal-tipped, free + paid, forwards) */}}
+        <article class="assess-lane assess-lane-assess" data-fx="reveal spotlight">
+          <div class="assess-lane-tag">
+            <span class="assess-lane-tag-dot" aria-hidden="true"></span>
+            <span>Security Assessment · Free + Paid</span>
+          </div>
+          <h3>pipelock assess</h3>
+          <div class="assess-lane-cmdbar"><span class="assess-lane-cmdbar-pr">$</span>&nbsp;pipelock assess finalize my-assessment/</div>
+          <p class="assess-lane-q">"Is this deployment secure?"</p>
+          <p class="assess-lane-body">Runs {{ $stats.simulate_scenarios }} adversarial scenarios against your Pipelock configuration, scores {{ $stats.assess_config_categories }} config-hardening categories, and maps findings to {{ $stats.compliance_frameworks }} compliance frameworks. Run collects evidence; finalize generates an HTML and JSON summary with an Ed25519-signed manifest for free. The ${{ $stats.assess_license_usd }}/yr Assess license adds full findings, remediation guidance, detailed framework mappings, and optional attestation and badge. Verification is free for everyone.</p>
+          <div class="assess-lane-meta">
+            <div class="assess-lane-meta-cell"><span class="assess-lane-meta-label">Scenarios</span><span class="assess-lane-meta-value assess-lane-meta-value-accent">{{ $stats.simulate_scenarios }}</span></div>
+            <div class="assess-lane-meta-cell"><span class="assess-lane-meta-label">Categories</span><span class="assess-lane-meta-value assess-lane-meta-value-accent">{{ $stats.assess_config_categories }}</span></div>
+            <div class="assess-lane-meta-cell"><span class="assess-lane-meta-label">Frameworks</span><span class="assess-lane-meta-value assess-lane-meta-value-accent">{{ $stats.compliance_frameworks }}</span></div>
+          </div>
+          <div class="assess-lane-cta">
+            <a class="btn btn-primary" href="#tiers"
+               data-event="tier_compare_click" data-event-placement="assess-assess-lane">Compare tiers</a>
+            <a class="btn btn-ghost" href="/assess/demo-assessment/" target="_blank" rel="noopener noreferrer"
+               data-event="demo_assess_click" data-event-placement="assess-assess-lane">Open demo</a>
+          </div>
+        </article>
+      </div>
+
+      <div class="assess-chain">
+        <strong>Evidence chain.</strong> Both tools read from the same Pipelock log stream. A report can be cited inside a paid assessment. An assessment can reference back to a specific audit window. When you need signed evidence, both Assess tiers and <code>pipelock report --format bundle --sign</code> both use the same Ed25519 keystore.
+      </div>
+    </div>
+  </section>
+
+  {{/* ── 02 — Demos ───────────────────────────────────── */}}
+  <section class="assess-section assess-section-elev showpiece-chapter" data-chapter="02" id="demos" aria-label="Demo pages">
+    <div class="assess-section-inner">
+      <div class="assess-section-head assess-section-head-center showpiece-chapter-head" data-fx="reveal">
+        <span class="assess-section-num showpiece-chapter-kicker">02 · Demos · Static HTML, no login</span>
+        <h2 data-fx="decrypt">Three real outputs you can open right now</h2>
+        <p>Each demo is a static HTML snapshot of what the CLI generates. Click through, read the markup, save them locally. The same artifact shape is built for independent auditor review.</p>
+      </div>
+
+      <div class="assess-demos">
+        <a class="assess-demo" data-fx="reveal spotlight scan" href="/assess/demo-egress-report/" target="_blank" rel="noopener noreferrer"
+           data-event="demo_egress_click" data-event-placement="assess-demos">
+          <div class="assess-demo-thumb">
+            <img src="/images/sample-report.webp"
+                 alt="Pipelock agent egress report sample showing scanner decisions, top domains, and MITRE ATT&CK mapping"
+                 width="500" height="1542" loading="lazy" decoding="async">
+          </div>
+          <div class="assess-demo-body">
+            <p class="assess-demo-ribbon assess-demo-ribbon-audit">
+              <span class="assess-demo-ribbon-dot" aria-hidden="true"></span>Runtime Forensics
+            </p>
+            <h4>/assess/demo-egress-report/</h4>
+            <p>The HTML page <code>pipelock report</code> generates. Activity timeline, top domains, MITRE ATT&amp;CK mapping, full evidence appendix. Critical events at the top.</p>
+            <span class="assess-demo-open">Open demo →</span>
+          </div>
+        </a>
+
+        <a class="assess-demo" data-fx="reveal spotlight scan" href="/assess/demo-assessment/" target="_blank" rel="noopener noreferrer"
+           data-event="demo_assess_click" data-event-placement="assess-demos">
+          <div class="assess-demo-thumb">
+            <img src="/images/assess-summary.webp"
+                 alt="Pipelock signed security assessment showing scenario results, config category scoring, and framework mappings"
+                 width="800" height="1414" loading="lazy" decoding="async">
+          </div>
+          <div class="assess-demo-body">
+            <p class="assess-demo-ribbon assess-demo-ribbon-assess">
+              <span class="assess-demo-ribbon-dot" aria-hidden="true"></span>Security Assessment · Paid
+            </p>
+            <h4>/assess/demo-assessment/</h4>
+            <p>The full Ed25519-signed evidence bundle. Letter grade, all {{ $stats.simulate_scenarios }} scenario results, all {{ $stats.assess_config_categories }} category scores, mapping into {{ $stats.compliance_frameworks }} frameworks, evidence appendix, signature block.</p>
+            <span class="assess-demo-open">Open demo →</span>
+          </div>
+        </a>
+
+        <a class="assess-demo" data-fx="reveal spotlight" href="/assess/demo-summary/" target="_blank" rel="noopener noreferrer"
+           data-event="demo_summary_click" data-event-placement="assess-demos">
+          <div class="assess-demo-thumb assess-demo-thumb-placeholder" aria-hidden="true">
+            <div class="assess-demo-thumb-stack">
+              <span class="assess-demo-thumb-tag">Legacy demo · Unsigned</span>
+              <span class="assess-demo-thumb-glyph">summary.html</span>
+              <span class="assess-demo-thumb-note">No screenshot. Open the page.</span>
+            </div>
+          </div>
+          <div class="assess-demo-body">
+            <p class="assess-demo-ribbon assess-demo-ribbon-summary">
+              <span class="assess-demo-ribbon-dot" aria-hidden="true"></span>Security Assessment · Free
+            </p>
+            <h4>/assess/demo-summary/</h4>
+            <p>Legacy unsigned summary snapshot: coverage scores, finding totals, and per-server posture. This stored demo is unsigned; current free summaries are signed by default at finalization.</p>
+            <span class="assess-demo-open">Open demo →</span>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  {{/* ── 03 — Free vs Paid ────────────────────────────── */}}
+  <section class="assess-section showpiece-chapter" data-chapter="03" id="tiers" aria-label="Free vs Paid">
+    <div class="assess-section-inner">
+      <div class="assess-section-head assess-section-head-center showpiece-chapter-head" data-fx="reveal">
+        <span class="assess-section-num showpiece-chapter-kicker">03 · Assess · Free vs Paid</span>
+        <h2 data-fx="decrypt">Same scan engine. <span class="assess-headline-accent">Different evidence.</span></h2>
+        <p>Both tiers run the same {{ $stats.simulate_scenarios }} scenarios against the same {{ $stats.assess_config_categories }} categories. Finalize either tier to generate HTML and JSON output with an Ed25519-signed manifest by default. Free provides a summary; the Assess license adds full findings, remediation guidance, detailed framework mappings, and optional attestation and badge. Verification is free for everyone.</p>
+      </div>
+
+      <div class="assess-tiers">
+        <article class="assess-tier assess-tier-free" data-fx="reveal spotlight">
+          <p class="assess-tier-name">Free Summary</p>
+          <p class="assess-tier-price">$0<span class="assess-tier-per"> / forever</span></p>
+          <p class="assess-tier-desc">Same {{ $stats.simulate_scenarios }}-scenario scan. Run collects evidence; finalize writes an HTML and JSON summary and signs the manifest by default.</p>
+          <div class="assess-tier-cli"><span class="assess-tier-cli-pr">$</span>&nbsp;pipelock assess finalize my-assessment/</div>
+          <p class="assess-tier-out">→ writes <strong>summary.html + summary.json</strong> in the run directory · signed manifest</p>
+          <ul class="assess-tier-list">
+            <li>All {{ $stats.simulate_scenarios }} scenarios run locally</li>
+            <li>All {{ $stats.assess_config_categories }} categories scored</li>
+            <li>Letter grade, section scores, and top findings</li>
+            <li class="is-dim">No per-finding detail</li>
+            <li>Framework coverage totals; detailed mappings require a license</li>
+            <li>Ed25519-signed manifest by default</li>
+            <li>Free offline verification with <code>pipelock assess verify</code></li>
+          </ul>
+          <div class="assess-tier-cta">
+            <a class="btn btn-ghost" href="/assess/demo-summary/" target="_blank" rel="noopener noreferrer"
+               data-event="demo_summary_click" data-event-placement="assess-tier-free">See legacy unsigned demo</a>
+            <a class="btn btn-ghost" href="https://github.com/luckyPipewrench/pipelock" target="_blank" rel="noopener noreferrer"
+               data-event="install_click" data-event-placement="assess-tier-free">Install</a>
+          </div>
+        </article>
+
+        <article class="assess-tier assess-tier-paid" data-fx="reveal spotlight">
+          <p class="assess-tier-name">Paid · Assess License</p>
+          <p class="assess-tier-price">${{ $stats.assess_license_usd }}<span class="assess-tier-per"> / year, per org</span></p>
+          <p class="assess-tier-desc">Adds full findings, remediation guidance, and detailed mappings to {{ $stats.compliance_frameworks }} frameworks. Finalize signs the manifest by default; optional attestation and badge are available with the license.</p>
+          <div class="assess-tier-cli"><span class="assess-tier-cli-pr">$</span>&nbsp;pipelock assess finalize my-assessment/</div>
+          <p class="assess-tier-out">→ writes <strong>assessment.html + assessment.json</strong> in the run directory · signed manifest</p>
+          <ul class="assess-tier-list">
+            <li>Everything in Free</li>
+            <li>Per-finding evidence appendix</li>
+            <li>Mapping to {{ $stats.compliance_frameworks }} compliance frameworks</li>
+            <li>Ed25519-signed bundle</li>
+            <li>Optional attestation and badge</li>
+            <li>Full evidence bundle built for independent review</li>
+          </ul>
+          <div class="assess-tier-cta">
+            <a class="btn btn-primary" href="{{ $polarUrl }}" target="_blank" rel="noopener noreferrer"
+               data-event="checkout_started" data-event-placement="assess-tier-paid" data-event-value="assess_annual">Get a license · Polar</a>
+            <a class="btn btn-ghost" href="/assess/demo-assessment/" target="_blank" rel="noopener noreferrer"
+               data-event="demo_assess_click" data-event-placement="assess-tier-paid">See paid output</a>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  {{/* ── 04 — Run it yourself: reciprocal terminals ───── */}}
+  <section class="assess-section assess-section-elev showpiece-chapter" data-chapter="04" id="run-it" aria-label="Run it yourself" data-fx="live">
+    <div class="assess-section-inner">
+      <div class="assess-section-head assess-section-head-center showpiece-chapter-head" data-fx="reveal">
+        <span class="assess-section-num showpiece-chapter-kicker">04 · Run it yourself</span>
+        <h2 data-fx="decrypt">Two flows. <span class="assess-headline-accent">Both real CLI.</span></h2>
+        <p>Left: turn JSONL logs into a forensic report (HTML, JSON, or signed bundle). Right: collect evidence, finalize the signed output, and verify it locally. These commands work in both tiers. Third parties can check offline against the published key after importing the signer's public key into their local keystore. <a href="#verify-another-operators-assessment">See the key-exchange and verification steps below.</a></p>
+      </div>
+
+      <div class="assess-terms">
+        {{/* AUDIT terminal — command-syntax only */}}
+        <div class="assess-term assess-term-audit" id="audit-flow">
+          <div class="assess-term-head">
+            <span class="assess-term-dot assess-term-dot-1" aria-hidden="true"></span>
+            <span class="assess-term-dot assess-term-dot-2" aria-hidden="true"></span>
+            <span class="assess-term-dot assess-term-dot-3" aria-hidden="true"></span>
+            <span class="assess-term-name">audit.sh</span>
+            <span class="assess-term-tag assess-term-tag-audit">Audit · Free</span>
+          </div>
+          <pre class="assess-term-body" data-fx="type" data-command-lines data-command-text="pipelock report --input events.jsonl&#10;pipelock report --input events.jsonl --format json -o report.json&#10;pipelock report --input events.jsonl --since 2026-04-01&#10;pipelock report --input events.jsonl --format bundle -o ./bundle/ --sign"><code>$ pipelock report --input events.jsonl
+$ pipelock report --input events.jsonl --format json -o report.json
+$ pipelock report --input events.jsonl --since 2026-04-01
+$ pipelock report --input events.jsonl --format bundle -o ./bundle/ --sign</code></pre>
+        </div>
+
+        {{/* ASSESS terminal — command-syntax only */}}
+        <div class="assess-term assess-term-assess" id="assess-flow">
+          <div class="assess-term-head">
+            <span class="assess-term-dot assess-term-dot-1" aria-hidden="true"></span>
+            <span class="assess-term-dot assess-term-dot-2" aria-hidden="true"></span>
+            <span class="assess-term-dot assess-term-dot-3" aria-hidden="true"></span>
+            <span class="assess-term-name">assess.sh</span>
+            <span class="assess-term-tag assess-term-tag-assess">Assess · Free + Paid</span>
+          </div>
+          <pre class="assess-term-body" data-command-lines data-command-text="pipelock assess init --config pipelock.yaml --output-dir my-assessment/&#10;pipelock assess run my-assessment/&#10;pipelock assess finalize my-assessment/&#10;pipelock assess verify my-assessment/"><code>$ pipelock assess init --config pipelock.yaml --output-dir my-assessment/
+$ pipelock assess run my-assessment/
+$ pipelock assess finalize my-assessment/
+$ pipelock assess verify my-assessment/</code></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {{/* ── 05 — What's inside ───────────────────────────── */}}
+  <section class="assess-section showpiece-chapter" data-chapter="05" id="what-inside" aria-label="What's inside the assessment">
+    <div class="assess-section-inner">
+      <div class="assess-section-head assess-section-head-center showpiece-chapter-head" data-fx="reveal">
+        <span class="assess-section-num showpiece-chapter-kicker">05 · What's inside</span>
+        <h2 data-fx="decrypt">What the assessment actually checks.</h2>
+        <p>No black box. The full scenario list, category list, and framework mapping ships in the binary and is reproduced in the demo report.</p>
+      </div>
+
+      <div class="assess-stack-3">
+        <article class="assess-what" data-fx="reveal spotlight tilt">
+          <p class="assess-what-stat" data-fx="count">{{ $stats.simulate_scenarios }}</p>
+          <h4>Attack scenarios</h4>
+          <p>Adversarial inputs run against your live config. Tool poisoning, system-prompt override, base64-wrapped DLP, SSRF to private CIDRs, encoded JWT exfil, prompt-injection responses, MCP frame abuse, and more. Each scenario is a pass/fail with a sample payload kept in the bundle.</p>
+          <div class="assess-chips">
+            <span class="assess-chip">tool-poisoning</span>
+            <span class="assess-chip">dlp-evasion</span>
+            <span class="assess-chip">ssrf</span>
+            <span class="assess-chip">prompt-injection</span>
+            <span class="assess-chip">mcp-frame</span>
+            <span class="assess-chip">jwt-exfil</span>
+          </div>
+        </article>
+
+        <article class="assess-what" data-fx="reveal spotlight tilt">
+          <p class="assess-what-stat" data-fx="count">{{ $stats.assess_config_categories }}</p>
+          <h4>Config categories</h4>
+          <p>The hardening checklist. Each category scores how your <code>pipelock.yaml</code> compares to a hardened baseline. Egress allowlist scope, per-agent budgets, kill-switch wiring, rule-bundle freshness, fail-closed defaults, A2A scanning depth.</p>
+          <div class="assess-chips">
+            <span class="assess-chip">egress-allowlist</span>
+            <span class="assess-chip">budgets</span>
+            <span class="assess-chip">kill-switch</span>
+            <span class="assess-chip">rule-freshness</span>
+            <span class="assess-chip">fail-closed</span>
+            <span class="assess-chip">a2a-depth</span>
+          </div>
+        </article>
+
+        <article class="assess-what" data-fx="reveal spotlight tilt">
+          <p class="assess-what-stat" data-fx="count">{{ $stats.compliance_frameworks }}</p>
+          <h4>Compliance frameworks</h4>
+          <p>The paid bundle maps every finding into the controls auditors check. The full list ships with the binary and is reproduced in the demo summary page; each finding cites specific control IDs, not a generic "we comply" claim.</p>
+          <div class="assess-chips">
+            <a class="assess-chip" href="/learn/owasp-mcp-top10/">OWASP MCP Top 10</a>
+            <a class="assess-chip" href="/learn/owasp-agentic-top10/">OWASP Agentic Top 10</a>
+            <a class="assess-chip" href="/learn/mitre-atlas/">MITRE ATLAS</a>
+            <a class="assess-chip" href="/learn/eu-ai-act-compliance/">EU AI Act</a>
+            <a class="assess-chip" href="/learn/nist-ai-rmf/">NIST AI RMF</a>
+            <a class="assess-chip" href="/learn/hipaa-security-rule/">HIPAA</a>
+            <a class="assess-chip" href="/learn/soc2-trust-services-criteria/">SOC 2</a>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  {{/* ── 06 — Bottom CTA ──────────────────────────────── */}}
+  <section class="assess-section assess-section-elev showpiece-chapter" data-chapter="06" id="license" aria-label="Get a license">
+    <div class="assess-section-inner">
+      <div class="assess-cta showpiece-final" data-fx="reveal">
+        <div class="assess-cta-left">
+          <span class="assess-cta-eyebrow showpiece-chapter-kicker">06 · Get started</span>
+          <h2 data-fx="decrypt">Get an Assess License.</h2>
+          <p>One license per organization. Adds full findings, remediation guidance, detailed framework mappings, and optional attestation and badge. Free summaries are signed by default; finalization and verification are free for everyone.</p>
+          <div class="assess-cta-actions">
+            <a class="btn btn-primary" href="{{ $polarUrl }}" target="_blank" rel="noopener noreferrer"
+               data-event="checkout_started" data-event-placement="assess-bottom-cta" data-event-value="assess_annual">Get a license · ${{ $stats.assess_license_usd }}/yr</a>
+            <a class="btn btn-ghost" href="https://github.com/luckyPipewrench/pipelock" target="_blank" rel="noopener noreferrer"
+               data-event="github_click" data-event-placement="assess-bottom-cta">View source on GitHub</a>
+          </div>
+        </div>
+        <div class="assess-cta-right">
+          <dl class="assess-cta-meta">
+            <div class="assess-cta-meta-row"><dt>License</dt><dd>${{ $stats.assess_license_usd }}/yr · per organization</dd></div>
+            <div class="assess-cta-meta-row"><dt>Adds</dt><dd>Full findings + remediation + detailed mappings</dd></div>
+            <div class="assess-cta-meta-row"><dt>Checkout</dt><dd><a href="{{ $polarUrl }}" target="_blank" rel="noopener noreferrer" data-event="checkout_started" data-event-placement="assess-meta" data-event-value="assess_annual">Polar</a></dd></div>
+            <div class="assess-cta-meta-row"><dt>Source</dt><dd><a href="https://github.com/luckyPipewrench/pipelock" target="_blank" rel="noopener noreferrer">luckyPipewrench/pipelock</a></dd></div>
+            <div class="assess-cta-meta-row"><dt>Free tier</dt><dd>Always · Apache-2.0 core</dd></div>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {{/* ── Markdown body (link list for inbound-link counter +
+         markdown alternate output). */}}
+  {{ if .Content }}
+  <section class="assess-further" aria-label="Page content">
+    <div class="assess-further-inner">
+      {{ .Content }}
+    </div>
+  </section>
+  {{ end }}
+</article>
+
+{{ partial "site-fx.html" . }}
+
+{{ end }}

@@ -1,0 +1,18 @@
+{{- $page := .page -}}
+{{- $format := .format | default "html" -}}
+{{- with $page.Params.updates -}}
+  {{- range . -}}
+    {{- $date := time.Format "2006-01-02" .date -}}
+    {{- if eq $format "html" -}}
+<aside class="blog-update-notice" aria-label="Post correction">
+  <p class="blog-update-label">Correction · <time datetime="{{ $date }}">{{ $date }}</time></p>
+  <p>{{ .note }}{{ with .link }} <a href="{{ . }}">View current corpus details.</a>{{ end }}</p>
+</aside>
+    {{- else if eq $format "markdown" -}}
+> **Correction ({{ $date }}):** {{ .note }}{{ with .link }} [View current corpus details.]({{ . }}){{ end }}
+
+    {{- else if eq $format "rss" -}}
+<p><strong>Correction ({{ $date }}):</strong> {{ .note }}{{ with .link }} <a href="{{ . }}">View current corpus details.</a>{{ end }}</p>
+    {{- end -}}
+  {{- end -}}
+{{- end -}}

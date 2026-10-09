@@ -1,0 +1,389 @@
+[data-constellation-canvas] {
+  display: block;
+  width: 100%;
+
+  &.is-over-star {
+    cursor: pointer;
+  }
+}
+
+.receipt-constellation-detail {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 3;
+  width: calc(100% - 2rem);
+  max-width: 390px;
+  max-height: calc(100% - 3.5rem);
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 1.25rem;
+  background: rgba(9, 9, 11, 0.96);
+  border: 1px solid rgba(0, 229, 160, 0.38);
+  border-radius: var(--radius);
+  backdrop-filter: blur(12px);
+
+  &[data-verdict='block'] {
+    border-color: rgba(255, 77, 77, 0.5);
+  }
+
+  &[data-verdict='warn'] {
+    border-color: rgba(245, 158, 11, 0.55);
+  }
+
+  h3 {
+    margin: 0.35rem 2rem 1rem 0;
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-h3);
+    line-height: 1.3;
+  }
+
+  dl {
+    display: grid;
+    gap: 0.55rem;
+    margin: 0;
+  }
+
+  dl div {
+    display: grid;
+    grid-template-columns: 5.7rem minmax(0, 1fr);
+    gap: 0.65rem;
+  }
+
+  dt {
+    color: var(--text-dim);
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-caption);
+    text-transform: uppercase;
+  }
+
+  dd {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--fs-caption);
+    overflow-wrap: anywhere;
+  }
+}
+
+.receipt-constellation-close {
+  position: absolute;
+  top: 0.7rem;
+  right: 0.75rem;
+  width: 2.75rem;
+  height: 2.75rem;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  cursor: pointer;
+}
+
+.receipt-constellation-verdict {
+  margin: 0;
+  color: var(--accent);
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+  font-weight: 700;
+  letter-spacing: var(--tracking-wider);
+}
+
+[data-verdict='block'] .receipt-constellation-verdict {
+  color: #ff4d4d;
+}
+
+[data-verdict='warn'] .receipt-constellation-verdict {
+  color: #f59e0b;
+}
+
+[data-verdict='control'] .receipt-constellation-verdict {
+  color: #94a3b8;
+}
+
+.receipt-constellation-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 1rem;
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    min-height: 2.75rem;
+    padding: 0.58rem 0.75rem;
+    font-size: var(--fs-caption);
+  }
+}
+
+.receipt-constellation-nav {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.75rem;
+    padding: 0.55rem 0.65rem;
+    color: var(--text-muted);
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-caption);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--accent);
+      border-color: rgba(0, 229, 160, 0.5);
+    }
+  }
+
+  span {
+    color: var(--text-dim);
+    font-family: var(--font-mono), monospace;
+    font-size: var(--fs-caption);
+    white-space: nowrap;
+  }
+}
+
+.receipt-constellation-browser {
+  color: var(--text-dim);
+  font-family: var(--font-mono), monospace;
+  font-size: var(--fs-caption);
+
+  summary {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    width: fit-content;
+    cursor: pointer;
+  }
+}
+
+.receipt-constellation-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 0.45rem;
+  margin-top: 0.7rem;
+
+  a {
+    display: flex;
+    align-items: center;
+    min-height: 2.75rem;
+    padding: 0.55rem 0.65rem;
+    color: var(--text-muted);
+    font: inherit;
+    text-align: left;
+    text-decoration: none;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--text);
+      border-color: rgba(0, 229, 160, 0.5);
+      outline: none;
+    }
+  }
+}
+
+// The homepage keeps its original full-bleed particle field. Receipt data is
+// attached to the original particles instead of dictating a separate chart.
+.receipt-constellation-ambient {
+  &.is-over-star {
+    cursor: pointer;
+  }
+
+  [data-constellation-canvas] {
+    height: 100%;
+  }
+
+  .hp-receipt-status {
+    position: absolute;
+    bottom: 1rem;
+    left: 1.25rem;
+    z-index: 3;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    max-width: 24rem;
+    margin: 0;
+    padding: 0.3rem 0.7rem 0.3rem 0.6rem;
+    color: var(--text-dim);
+    font-family: var(--font-mono), monospace;
+    font-size: 0.62rem;
+    line-height: 1.5;
+    background: rgba(9, 9, 11, 0.72);
+    border: 1px solid rgba(0, 229, 160, 0.18);
+    border-radius: 999px;
+    backdrop-filter: blur(10px);
+    pointer-events: none;
+
+    &[hidden] {
+      display: none;
+    }
+  }
+
+  .hp-receipt-status-dot {
+    flex: none;
+    width: 6px;
+    height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--accent);
+  }
+
+  .hp-receipt-status-label {
+    flex: none;
+    color: rgba(0, 229, 160, 0.72);
+    font-weight: 700;
+    letter-spacing: var(--tracking-wider);
+    text-transform: uppercase;
+  }
+
+  .hp-receipt-status-text {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--text-dim);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .hp-receipt-status[data-verdict='warn'] .hp-receipt-status-dot {
+    background: #f59e0b;
+    box-shadow: 0 0 8px #f59e0b;
+  }
+
+  .hp-receipt-status[data-verdict='block'] .hp-receipt-status-dot {
+    background: #ff4d4d;
+    box-shadow: 0 0 8px #ff4d4d;
+  }
+
+  .hp-receipt-status[data-verdict='control'] .hp-receipt-status-dot {
+    background: #ffd54a;
+    box-shadow: 0 0 8px #ffd54a;
+  }
+
+  .hp-receipt-detail {
+    z-index: 5;
+  }
+
+  .hp-receipt-browser {
+    position: absolute;
+    right: 1.25rem;
+    bottom: 0.75rem;
+    z-index: 4;
+    margin: 0;
+
+    summary {
+      padding: 0.38rem 0.65rem;
+      background: rgba(9, 9, 11, 0.82);
+      border: 1px solid rgba(0, 229, 160, 0.24);
+      border-radius: 999px;
+      backdrop-filter: blur(10px);
+
+      [data-constellation-receipts] {
+        margin-left: 0.35em;
+        margin-right: 0.35em;
+      }
+    }
+
+    &[open] {
+      width: calc(100% - 2.5rem);
+      max-width: 520px;
+      height: 52vh;
+      max-height: 410px;
+      overflow: auto;
+      padding: 0.75rem;
+      background: rgba(9, 9, 11, 0.96);
+      border: 1px solid rgba(0, 229, 160, 0.32);
+      border-radius: var(--radius);
+      backdrop-filter: blur(12px);
+    }
+  }
+
+  @media (max-width: $bp-mobile) {
+    &.has-receipt-sheet {
+      z-index: 110;
+      overflow: visible;
+    }
+
+    &.hp-hero {
+      padding-bottom: 6rem;
+    }
+
+    .hp-receipt-detail {
+      position: fixed;
+      top: auto;
+      right: 1rem;
+      bottom: 1rem;
+      left: 1rem;
+      z-index: 120;
+      width: auto;
+      max-width: none;
+      max-height: 72dvh;
+    }
+
+    .hp-receipt-status {
+      right: 1rem;
+      bottom: 3.45rem;
+      left: 1rem;
+      max-width: none;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .hp-receipt-browser {
+      right: 50%;
+      bottom: 0.7rem;
+      transform: translateX(50%);
+
+      &[open] {
+        position: fixed;
+        right: 1rem;
+        bottom: 1rem;
+        left: 1rem;
+        z-index: 120;
+        width: auto;
+        height: 72dvh;
+        max-width: none;
+        max-height: 34rem;
+        overscroll-behavior: contain;
+        transform: none;
+
+        summary {
+          position: sticky;
+          top: -0.75rem;
+          z-index: 1;
+        }
+      }
+    }
+  }
+}
+
+// Audit fix: on small screens the ambient hero's status pill and the
+// receipts browser flow in-page with real gaps (declared last to win
+// source order over the absolute-position rules above).
+@media (max-width: $bp-mobile) {
+  .receipt-constellation-ambient .hp-receipt-status {
+    position: static;
+    margin: 1rem auto 0;
+    max-width: calc(100% - 2rem);
+    justify-content: center;
+  }
+
+  .receipt-constellation-ambient .receipt-constellation-browser {
+    position: static;
+    margin: 0.85rem auto 1.25rem;
+    max-width: calc(100% - 2rem);
+    transform: none;
+  }
+}

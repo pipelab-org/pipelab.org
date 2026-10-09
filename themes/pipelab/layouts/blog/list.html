@@ -1,0 +1,113 @@
+{{ define "main" }}
+{{ $cfg := site.Data.blog_index }}
+{{ $cats := $cfg.categories }}
+{{ $allBlog := where .Site.RegularPages "Section" "blog" }}
+{{ $bySlug := dict }}
+{{ range $allBlog }}
+  {{ if .File }}{{ $bySlug = merge $bySlug (dict .File.BaseFileName .) }}{{ end }}
+{{ end }}
+
+{{ $countAll := len $allBlog }}
+{{ $counts := dict }}
+{{ range $cats }}
+  {{ $counts = merge $counts (dict .key (len (where $allBlog ".Params.blog_cat" .key))) }}
+{{ end }}
+
+<article id="top" class="editorial-index editorial-index--blog" data-editorial-index data-item-singular="post" data-item-plural="posts" data-all-label="All posts" data-directory-default="Latest field notes">
+  <header class="editorial-index-header" data-hero="editorial-index">
+    <div class="editorial-index-inner">
+      <p class="editorial-index-eyebrow">PipeLab Blog</p>
+      <h1 data-fx="decrypt">{{ .Title }}</h1>
+      {{ with .Params.subtitle }}<p class="editorial-index-lead">{{ . }}</p>{{ end }}
+      {{ partial "page-formats.html" . }}
+    </div>
+  </header>
+
+  <div class="editorial-index-toolbar">
+    <div class="editorial-index-toolbar-inner">
+      <div class="editorial-index-tabs" aria-label="Filter posts by category">
+        <button type="button" class="editorial-index-tab is-active" data-filter-cat="all" data-filter-label="All posts" aria-pressed="true">
+          All <span>{{ $countAll }}</span>
+        </button>
+        {{ range $cats }}
+        <button type="button" class="editorial-index-tab" data-filter-cat="{{ .key }}" data-filter-label="{{ .label }}" aria-pressed="false">
+          {{ .label }} <span>{{ index $counts .key }}</span>
+        </button>
+        {{ end }}
+      </div>
+      <div class="editorial-index-search">
+        <label class="editorial-index-search-label" for="blog-search-input">Search field notes</label>
+        <div class="editorial-index-search-field">
+          <input type="search" id="blog-search-input" data-index-search placeholder="Title, topic, or tag" autocomplete="off" spellcheck="false">
+          <button type="button" class="editorial-index-search-clear" data-search-clear hidden aria-label="Clear search">&times;</button>
+          <span class="editorial-index-search-key" aria-hidden="true">/</span>
+        </div>
+      </div>
+      <p class="editorial-index-result-meta" data-result-meta aria-live="polite">{{ $countAll }} posts</p>
+    </div>
+  </div>
+
+  <div class="editorial-index-page">
+    <main class="editorial-index-main">
+      <section class="editorial-index-featured" data-featured-row aria-labelledby="blog-featured-title">
+        <div class="editorial-index-section-head">
+          <div>
+            <p class="editorial-index-kicker">Selected field notes</p>
+            <h2 id="blog-featured-title">Start with the work behind the product</h2>
+          </div>
+          <p>Three good places to start</p>
+        </div>
+        <div class="editorial-index-featured-grid">
+          {{ range $cfg.featured }}
+            {{ with index $bySlug . }}{{ partial "blog-index-card.html" (dict "page" . "featured" true) }}{{ end }}
+          {{ end }}
+        </div>
+      </section>
+
+      <section class="editorial-index-directory editorial-index-directory--blog" aria-labelledby="blog-directory-title">
+        <div class="editorial-index-section-head editorial-index-section-head--directory">
+          <div>
+            <p class="editorial-index-kicker">Writing archive</p>
+            <h2 id="blog-directory-title" data-directory-label>Latest field notes</h2>
+          </div>
+          <p data-directory-hint>{{ $countAll }} posts, newest first</p>
+        </div>
+        <div class="editorial-index-directory-grid editorial-index-directory-grid--blog">
+          {{ range $allBlog }}{{ partial "blog-index-card.html" (dict "page" .) }}{{ end }}
+        </div>
+        <div class="editorial-index-empty" data-empty-state hidden>
+          <p>No posts match this filter.</p>
+          <button type="button" class="btn btn-ghost" data-empty-reset>Reset filters</button>
+        </div>
+      </section>
+    </main>
+
+    <aside class="editorial-index-aside" aria-label="Blog index details">
+      <div class="editorial-index-aside-sticky">
+        {{ with $cfg.release }}
+        <section class="editorial-index-aside-block editorial-index-aside-block--status">
+          <p class="editorial-index-aside-label"><span></span>Latest release</p>
+          <p class="editorial-index-aside-value">Pipelock {{ .version }}</p>
+          {{ with .summary }}<p class="editorial-index-aside-copy">{{ . }}</p>{{ end }}
+          {{ with .notes_url }}<a href="{{ . }}"{{ if hasPrefix . "http" }} target="_blank" rel="noopener noreferrer"{{ end }}>Read release notes <span aria-hidden="true">&#8599;</span></a>{{ end }}
+        </section>
+        {{ end }}
+
+        <section class="editorial-index-aside-block">
+          <p class="editorial-index-aside-label">Keep the feed</p>
+          <ul class="editorial-index-aside-list">
+            {{ with .OutputFormats.Get "rss" }}<li><a href="{{ .RelPermalink }}">RSS feed</a></li>{{ end }}
+            {{ with .OutputFormats.Get "markdown" }}<li><a href="{{ .RelPermalink }}">Markdown index</a></li>{{ end }}
+            {{ with $cfg.subscribe }}{{ range . }}<li><a href="{{ .url }}"{{ if .external }} target="_blank" rel="noopener noreferrer"{{ end }}>{{ .label }}</a></li>{{ end }}{{ end }}
+          </ul>
+        </section>
+      </div>
+    </aside>
+  </div>
+
+  {{ partial "article-cta.html" (dict "page" . "placement" "bottom") }}
+</article>
+
+{{ partial "editorial-index-script.html" . }}
+{{ partial "site-fx.html" . }}
+{{ end }}

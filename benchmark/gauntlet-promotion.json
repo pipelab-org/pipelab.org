@@ -1,0 +1,11 @@
+{
+  "artifact_name_prefix": "pipelock-gauntlet-candidate-attempt-",
+  "artifact_prefix": "github-actions:luckyPipewrench/pipelock:",
+  "benchmark_repository": "luckyPipewrench/agent-egress-bench",
+  "schema_version": 1,
+  "source_acceptance_baseline": "benchmark/gauntlet-baseline.json",
+  "source_branch": "main",
+  "source_repository": "luckyPipewrench/pipelock",
+  "source_workflow": ".github/workflows/continuous-gauntlet.yaml",
+  "url_prefix": "https://github.com/luckyPipewrench/pipelock/actions/runs/"
+}

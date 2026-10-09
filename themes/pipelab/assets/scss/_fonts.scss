@@ -1,0 +1,23 @@
+// Self-hosted variable fonts. The Google Fonts stylesheet was a render-
+// blocking cross-origin request. Self-hosting eliminates that round-trip;
+// font-display: swap keeps fallback fonts visible until the variable file
+// arrives, so first paint never blocks on font load.
+//
+// Sources: Inter v20 latin subset, JetBrains Mono v24 latin subset.
+// Variable-axis files cover the site's required weights in one resource.
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/inter-variable.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 100 800;
+  font-display: swap;
+  src: url('/fonts/jetbrains-mono-variable.woff2') format('woff2');
+}

@@ -1,0 +1,563 @@
+{
+  "title": "Pipelock Agent Egress Report",
+  "generated": "2026-10-03T02:12:33.27478785Z",
+  "version": "3.6.0",
+  "config_hashes": [
+    "e4f7a2b1c9d3"
+  ],
+  "mode": "balanced",
+  "time_range": {
+    "start": "2026-03-28T09:00:01Z",
+    "end": "2026-03-28T09:59:59Z"
+  },
+  "risk": "red",
+  "summary": {
+    "total_events": 48,
+    "blocks": 10,
+    "warnings": 4,
+    "criticals": 6,
+    "allowed": 30,
+    "unique_domains": 25
+  },
+  "categories": [
+    {
+      "name": "DLP / Exfiltration",
+      "count": 8,
+      "severity": "critical",
+      "mitre_techniques": [
+        "T1041",
+        "T1048.003"
+      ],
+      "sample_evidence": [
+        "https://evil-exfil.example.com (DLP: Anthropic API Key)",
+        "https://pastebin.com (DLP: GitHub Token)",
+        "https://webhook.site (DLP: OpenAI API Key)"
+      ]
+    },
+    {
+      "name": "Domain Policy",
+      "count": 2,
+      "severity": "high",
+      "mitre_techniques": [
+        "T1071.001"
+      ],
+      "sample_evidence": [
+        "https://c2-server.example.com (blocklist: c2-server.example.com)",
+        "https://malware-cdn.example.com (blocklist: malware-cdn.example.com)"
+      ]
+    },
+    {
+      "name": "MCP / Tool Abuse",
+      "count": 2,
+      "severity": "high",
+      "mitre_techniques": [
+        "T1059",
+        "T1059.007"
+      ]
+    },
+    {
+      "name": "SSRF",
+      "count": 2,
+      "severity": "high",
+      "mitre_techniques": [
+        "T1552.005"
+      ],
+      "sample_evidence": [
+        "[redacted-url] (SSRF: link-local metadata service)",
+        "[redacted-url] (SSRF: private IP range)"
+      ]
+    },
+    {
+      "name": "Prompt Injection",
+      "count": 1,
+      "severity": "high",
+      "mitre_techniques": [
+        "T1059.007"
+      ],
+      "sample_evidence": [
+        "https://untrusted-api.example.com (injection: Prompt Injection)"
+      ]
+    }
+  ],
+  "domains": [
+    {
+      "domain": "attacker.example.com",
+      "total": 2,
+      "blocks": 2,
+      "warns": 0,
+      "allowed": 0
+    },
+    {
+      "domain": "169.254.169.254",
+      "total": 1,
+      "blocks": 1,
+      "warns": 0,
+      "allowed": 0
+    },
+    {
+      "domain": "192.168.1.1",
+      "total": 1,
+      "blocks": 1,
+      "warns": 0,
+      "allowed": 0
+    },
+    {
+      "domain": "c2-server.example.com",
+      "total": 1,
+      "blocks": 1,
+      "warns": 0,
+      "allowed": 0
+    },
+    {
+      "domain": "evil-exfil.example.com",
+      "total": 1,
+      "blocks": 1,
+      "warns": 0,
+      "allowed": 0
+    },
+    {
+      "domain": "hnr4kx.oast.fun",
+      "total": 1,
+      "blocks": 1,
+      "warns": 0,
+      "allowed": 0
+    },
+    {
+      "domain": "malware-cdn.example.com",
+      "total": 1,
+      "blocks": 1,
+      "warns": 0,
+      "allowed": 0
+    },
+    {
+      "domain": "pastebin.com",
+      "total": 1,
+      "blocks": 1,
+      "warns": 0,
+      "allowed": 0
+    },
+    {
+      "domain": "webhook.site",
+      "total": 1,
+      "blocks": 1,
+      "warns": 0,
+      "allowed": 0
+    },
+    {
+      "domain": "api.github.com",
+      "total": 9,
+      "blocks": 0,
+      "warns": 0,
+      "allowed": 9
+    },
+    {
+      "domain": "api.anthropic.com",
+      "total": 5,
+      "blocks": 0,
+      "warns": 0,
+      "allowed": 5
+    },
+    {
+      "domain": "api.openai.com",
+      "total": 4,
+      "blocks": 0,
+      "warns": 0,
+      "allowed": 4
+    },
+    {
+      "domain": "api.example.com",
+      "total": 2,
+      "blocks": 0,
+      "warns": 2,
+      "allowed": 0
+    },
+    {
+      "domain": "docs.python.org",
+      "total": 2,
+      "blocks": 0,
+      "warns": 0,
+      "allowed": 2
+    },
+    {
+      "domain": "api.provider.example",
+      "total": 1,
+      "blocks": 0,
+      "warns": 0,
+      "allowed": 1
+    },
+    {
+      "domain": "cdn.jsdelivr.net",
+      "total": 1,
+      "blocks": 0,
+      "warns": 0,
+      "allowed": 1
+    },
+    {
+      "domain": "crates.io",
+      "total": 1,
+      "blocks": 0,
+      "warns": 0,
+      "allowed": 1
+    },
+    {
+      "domain": "huggingface.co",
+      "total": 1,
+      "blocks": 0,
+      "warns": 0,
+      "allowed": 1
+    },
+    {
+      "domain": "pypi.org",
+      "total": 1,
+      "blocks": 0,
+      "warns": 0,
+      "allowed": 1
+    },
+    {
+      "domain": "registry.npmjs.org",
+      "total": 1,
+      "blocks": 0,
+      "warns": 0,
+      "allowed": 1
+    }
+  ],
+  "timeline": [
+    {
+      "start": "2026-03-28T09:00:00Z",
+      "blocks": 8,
+      "warns": 0,
+      "allowed": 12
+    },
+    {
+      "start": "2026-03-28T09:05:00Z",
+      "blocks": 1,
+      "warns": 3,
+      "allowed": 13
+    },
+    {
+      "start": "2026-03-28T09:10:00Z",
+      "blocks": 1,
+      "warns": 0,
+      "allowed": 8
+    }
+  ],
+  "evidence": [
+    {
+      "time": "2026-03-28T09:02:00Z",
+      "level": "warn",
+      "event": "blocked",
+      "method": "GET",
+      "url": "https://evil-exfil.example.com",
+      "scanner": "dlp",
+      "reason": "DLP: Anthropic API Key",
+      "client_ip": "[redacted]",
+      "mitre_technique": "T1041",
+      "version": "3.6.0",
+      "pattern": "Anthropic API Key",
+      "severity": "critical",
+      "transport": "fetch",
+      "category": "credential_exfiltration"
+    },
+    {
+      "time": "2026-03-28T09:02:05Z",
+      "level": "warn",
+      "event": "blocked",
+      "method": "POST",
+      "url": "https://pastebin.com",
+      "scanner": "dlp",
+      "reason": "DLP: GitHub Token",
+      "client_ip": "[redacted]",
+      "mitre_technique": "T1041",
+      "version": "3.6.0",
+      "pattern": "GitHub Token",
+      "severity": "critical",
+      "transport": "fetch",
+      "category": "credential_exfiltration"
+    },
+    {
+      "time": "2026-03-28T09:02:10Z",
+      "level": "warn",
+      "event": "blocked",
+      "method": "POST",
+      "url": "https://webhook.site",
+      "scanner": "dlp",
+      "reason": "DLP: OpenAI API Key",
+      "client_ip": "[redacted]",
+      "mitre_technique": "T1041",
+      "version": "3.6.0",
+      "pattern": "OpenAI API Key",
+      "severity": "critical",
+      "transport": "forward",
+      "category": "credential_exfiltration"
+    },
+    {
+      "time": "2026-03-28T09:04:30Z",
+      "level": "warn",
+      "event": "blocked",
+      "method": "GET",
+      "url": "https://attacker.example.com",
+      "scanner": "dlp",
+      "reason": "DLP: AWS Access Key",
+      "client_ip": "[redacted]",
+      "mitre_technique": "T1041",
+      "version": "3.6.0",
+      "pattern": "AWS Access Key",
+      "severity": "critical",
+      "transport": "fetch",
+      "category": "credential_exfiltration"
+    },
+    {
+      "time": "2026-03-28T09:05:30Z",
+      "level": "warn",
+      "event": "body_dlp",
+      "method": "POST",
+      "url": "https://api.example.com",
+      "scanner": "body_dlp",
+      "reason": "DLP: Stripe Secret Key in request body",
+      "client_ip": "[redacted]",
+      "mitre_technique": "T1041",
+      "version": "3.6.0",
+      "pattern": "Stripe Secret Key",
+      "severity": "critical",
+      "transport": "forward",
+      "category": "credential_exfiltration"
+    },
+    {
+      "time": "2026-03-28T09:10:30Z",
+      "level": "warn",
+      "event": "blocked",
+      "method": "GET",
+      "url": "https://attacker.example.com",
+      "scanner": "dlp",
+      "reason": "DLP: GitHub Personal Access Token",
+      "client_ip": "[redacted]",
+      "mitre_technique": "T1041",
+      "version": "3.6.0",
+      "pattern": "GitHub Personal Access Token",
+      "severity": "critical",
+      "transport": "forward",
+      "category": "credential_exfiltration"
+    },
+    {
+      "time": "2026-03-28T09:02:30Z",
+      "level": "warn",
+      "event": "blocked",
+      "method": "GET",
+      "url": "[redacted-url]",
+      "scanner": "ssrf",
+      "reason": "SSRF: link-local metadata service",
+      "client_ip": "[redacted]",
+      "mitre_technique": "T1552.005",
+      "version": "3.6.0",
+      "severity": "high",
+      "transport": "fetch",
+      "category": "ssrf"
+    },
+    {
+      "time": "2026-03-28T09:02:35Z",
+      "level": "warn",
+      "event": "blocked",
+      "method": "GET",
+      "url": "[redacted-url]",
+      "scanner": "ssrf",
+      "reason": "SSRF: private IP range",
+      "client_ip": "[redacted]",
+      "mitre_technique": "T1552.005",
+      "version": "3.6.0",
+      "severity": "high",
+      "transport": "forward",
+      "category": "ssrf"
+    },
+    {
+      "time": "2026-03-28T09:03:00Z",
+      "level": "warn",
+      "event": "blocked",
+      "method": "GET",
+      "url": "https://c2-server.example.com",
+      "scanner": "blocklist",
+      "reason": "blocklist: c2-server.example.com",
+      "client_ip": "[redacted]",
+      "mitre_technique": "T1071.001",
+      "version": "3.6.0",
+      "severity": "high",
+      "transport": "forward",
+      "category": "c2_communication"
+    },
+    {
+      "time": "2026-03-28T09:03:05Z",
+      "level": "warn",
+      "event": "blocked",
+      "method": "GET",
+      "url": "https://malware-cdn.example.com",
+      "scanner": "blocklist",
+      "reason": "blocklist: malware-cdn.example.com",
+      "client_ip": "[redacted]",
+      "mitre_technique": "T1071.001",
+      "version": "3.6.0",
+      "severity": "high",
+      "transport": "forward",
+      "category": "c2_communication"
+    },
+    {
+      "time": "2026-03-28T09:05:00Z",
+      "level": "warn",
+      "event": "response_scan",
+      "url": "https://untrusted-api.example.com",
+      "scanner": "response",
+      "reason": "injection: Prompt Injection",
+      "client_ip": "[redacted]",
+      "mitre_technique": "T1059.007",
+      "version": "3.6.0",
+      "severity": "high",
+      "transport": "fetch",
+      "category": "prompt_injection"
+    },
+    {
+      "time": "2026-03-28T09:05:45Z",
+      "level": "warn",
+      "event": "header_dlp",
+      "method": "POST",
+      "url": "https://api.example.com",
+      "scanner": "header_dlp",
+      "reason": "DLP: Bearer token in non-Authorization header",
+      "client_ip": "[redacted]",
+      "mitre_technique": "T1041",
+      "version": "3.6.0",
+      "pattern": "Bearer Token Header",
+      "severity": "high",
+      "transport": "forward",
+      "category": "credential_exfiltration"
+    },
+    {
+      "time": "2026-03-28T09:06:30Z",
+      "level": "warn",
+      "event": "blocked",
+      "method": "GET",
+      "url": "https://hnr4kx.oast.fun",
+      "scanner": "dlp",
+      "reason": "DLP: high entropy subdomain",
+      "client_ip": "[redacted]",
+      "mitre_technique": "T1048.003",
+      "version": "3.6.0",
+      "pattern": "Subdomain Entropy",
+      "severity": "high",
+      "transport": "fetch",
+      "category": "dns_exfiltration"
+    },
+    {
+      "time": "2026-03-28T09:07:00Z",
+      "level": "warn",
+      "event": "chain_detection",
+      "scanner": "chain",
+      "reason": "chain: read-then-exec (file_read -\u003e bash_exec)",
+      "client_ip": "[redacted]",
+      "mitre_technique": "T1059",
+      "version": "3.6.0",
+      "severity": "high",
+      "session": "sess-7f3a",
+      "tool": "bash_exec",
+      "transport": "mcp",
+      "category": "tool_chain"
+    },
+    {
+      "time": "2026-03-28T09:07:15Z",
+      "level": "warn",
+      "event": "mcp_unknown_tool",
+      "scanner": "session_binding",
+      "reason": "unknown tool: data_exfil_helper (not in session baseline)",
+      "client_ip": "[redacted]",
+      "mitre_technique": "T1059.007",
+      "version": "3.6.0",
+      "severity": "high",
+      "session": "sess-2b9c",
+      "tool": "data_exfil_helper",
+      "transport": "mcp",
+      "category": "tool_poisoning"
+    },
+    {
+      "time": "2026-03-28T09:07:30Z",
+      "level": "warn",
+      "event": "anomaly",
+      "scanner": "adaptive",
+      "reason": "anomaly: agent score escalated to 0.85 (threshold 0.7)",
+      "client_ip": "[redacted]",
+      "score": 0.85,
+      "version": "3.6.0",
+      "severity": "high",
+      "session": "sess-4d1e",
+      "transport": "mcp",
+      "category": "behavioral_anomaly"
+    }
+  ],
+  "dlp_breakdown": [
+    {
+      "surface": "URL",
+      "blocks": 6,
+      "warns": 0,
+      "total": 6
+    },
+    {
+      "surface": "Request Body",
+      "blocks": 0,
+      "warns": 1,
+      "total": 1
+    },
+    {
+      "surface": "Request Header",
+      "blocks": 0,
+      "warns": 1,
+      "total": 1
+    }
+  ],
+  "transport_breakdown": [
+    {
+      "transport": "HTTP Fetch",
+      "blocks": 10,
+      "warns": 2,
+      "allowed": 31,
+      "total": 43
+    },
+    {
+      "transport": "MCP",
+      "blocks": 0,
+      "warns": 1,
+      "allowed": 2,
+      "total": 3
+    }
+  ],
+  "agent_breakdown": [
+    {
+      "agent": "[redacted]",
+      "blocks": 10,
+      "warns": 3,
+      "allowed": 33,
+      "total": 46
+    }
+  ],
+  "mitre_techniques": [
+    {
+      "technique": "T1041",
+      "count": 7
+    },
+    {
+      "technique": "T1059.007",
+      "count": 2
+    },
+    {
+      "technique": "T1071.001",
+      "count": 2
+    },
+    {
+      "technique": "T1552.005",
+      "count": 2
+    },
+    {
+      "technique": "T1048.003",
+      "count": 1
+    },
+    {
+      "technique": "T1059",
+      "count": 1
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+# Operator testimonials rendered by partials/quote-card.html.
+# Real quotes only. Adding a row here is the ONLY step to add a card;
+# the template keeps every card consistent.
+quotes:
+  - name: "Christopher"
+    role: "his agent was compromised. the firewall held."
+    quote: "If I hadn't had Pipelock installed, I would've handed the keys to the kingdom to my compromised agent. It gave me enough time to figure out something was wrong, as it kept trying to get around it."
+    avatar: "/images/testimonials/chris-avatar.png"
+    href: "/playground/"
+    event_placement: "testimonial-chris"
+  - name: "Keith"
+    role: "engineer running coding agents on real repos"
+    tools: "Claude Code · Codex · Grok · Antigravity · OpenCode"
+    quote: "Even innocent debugging work is protected from my keys showing up where they shouldn't, like an agent reading a git-ignored .env during a troubleshooting run."
+    avatar: "/images/testimonials/keith-avatar.png"
+    href: "/playground/"
+    event_placement: "testimonial-keith"

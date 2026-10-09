@@ -1,0 +1,1093 @@
+.capref-page {
+  --capref-max: 1240px;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.capref-hero {
+  overflow: hidden;
+  border-bottom: 1px solid var(--border);
+  background:
+    radial-gradient(circle at 22% 26%, rgba(0, 229, 160, 0.09), transparent 34rem),
+    radial-gradient(circle at 82% 18%, rgba(124, 58, 237, 0.08), transparent 30rem),
+    #09090b;
+}
+
+.capref-hero-inner,
+.capref-controls-inner,
+.capref-directory,
+.capref-bottom {
+  width: calc(100% - 3rem);
+  max-width: var(--capref-max);
+  margin-inline: auto;
+}
+
+.capref-hero-inner {
+  padding: clamp(6.5rem, 10vw, 9.5rem) 0 clamp(3.5rem, 7vw, 6rem);
+}
+
+.capref-kicker,
+.capref-group-eyebrow,
+.capref-item-id,
+.capref-search-label,
+.capref-provenance-label,
+.capref-entry > span,
+.capref-group-count {
+  margin: 0;
+  color: var(--accent);
+  font: 600 var(--fs-caption)/1.4 var(--font-mono), monospace;
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+}
+
+.capref-hero h1 {
+  max-width: 900px;
+  margin: 1rem 0 1.25rem;
+  font: 700 clamp(2.5rem, 6vw, 5rem)/0.98 var(--font-mono), monospace;
+  letter-spacing: -0.055em;
+}
+
+.capref-lede {
+  max-width: 720px;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: clamp(1.05rem, 1.8vw, 1.3rem);
+  line-height: 1.7;
+}
+
+.capref-provenance {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(170px, 1fr));
+  margin-top: clamp(2.5rem, 5vw, 4.5rem);
+  overflow: hidden;
+  border: 1px solid rgba(0, 229, 160, 0.22);
+  border-radius: var(--radius);
+  background: rgba(5, 16, 14, 0.82);
+  box-shadow: 0 22px 70px rgba(0, 0, 0, 0.26);
+}
+
+.capref-provenance-stat {
+  display: flex;
+  min-height: 6.2rem;
+  padding: 1.15rem 1.4rem;
+  border-right: 1px solid rgba(0, 229, 160, 0.13);
+  flex-direction: column;
+  justify-content: center;
+}
+
+.capref-provenance-value {
+  color: var(--text);
+  font: 700 1.35rem/1.25 var(--font-mono), monospace;
+}
+
+.capref-provenance-label {
+  margin-top: 0.35rem;
+  color: var(--text-dim);
+  letter-spacing: 0.1em;
+}
+
+.capref-provenance-source {
+  display: flex;
+  gap: 1rem;
+  min-height: 6.2rem;
+  padding: 1.15rem 1.4rem;
+  background: linear-gradient(120deg, rgba(0, 229, 160, 0.055), rgba(0, 229, 160, 0.015));
+  align-items: center;
+  justify-content: space-between;
+}
+
+.capref-provenance-source > div {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.capref-provenance-commit {
+  color: var(--text);
+  font: 700 1.1rem/1.3 var(--font-mono), monospace;
+}
+
+.capref-provenance-link {
+  display: inline-flex;
+  gap: 0.6rem;
+  color: var(--accent);
+  font: 600 var(--fs-code)/1.5 var(--font-mono), monospace;
+  text-decoration: none;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.capref-provenance-link span { flex: none; }
+
+.capref-provenance-link:hover,
+.capref-provenance-link:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 0.3em;
+}
+
+.capref-dev-note {
+  max-width: 850px;
+  margin: 1rem 0 0;
+  padding-left: 1rem;
+  border-left: 2px solid #f59e0b;
+  color: #cbd5e1;
+  font-size: var(--fs-code);
+  line-height: 1.65;
+}
+
+.capref-controls {
+  position: sticky;
+  z-index: 10;
+  top: 65px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(9, 9, 11, 0.92);
+  backdrop-filter: blur(18px);
+}
+
+.capref-controls[hidden] { display: none; }
+
+.capref-controls-inner {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) auto auto;
+  gap: 1rem;
+  padding-block: 1rem;
+  align-items: end;
+}
+
+.capref-search {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.capref-search-label {
+  color: var(--text-dim);
+}
+
+.capref-search-field {
+  display: flex;
+  min-height: 2.85rem;
+  padding: 0 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.025);
+  align-items: center;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.capref-search-field:focus-within {
+  border-color: rgba(0, 229, 160, 0.58);
+  background: rgba(0, 229, 160, 0.035);
+}
+
+.capref-search-field svg {
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0.7rem;
+  fill: none;
+  stroke: var(--text-dim);
+  stroke-linecap: round;
+  stroke-width: 1.7;
+}
+
+.capref-search-field input {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font: 500 var(--fs-code)/1.4 var(--font-mono), monospace;
+}
+
+.capref-search-field input::placeholder { color: #526176; }
+
+.capref-filters {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.capref-tier-control {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.capref-filter {
+  min-height: 2.85rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font: 600 var(--fs-caption)/1 var(--font-mono), monospace;
+  letter-spacing: 0.04em;
+  transition: color 0.2s, border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+
+.capref-filter:hover,
+.capref-filter:focus-visible {
+  border-color: rgba(0, 229, 160, 0.42);
+  color: var(--text);
+}
+
+.capref-filter.is-active {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #04100c;
+  box-shadow: 0 0 18px rgba(0, 229, 160, 0.12);
+}
+
+.capref-filter > span {
+  display: inline-grid;
+  min-width: 1.35rem;
+  min-height: 1.35rem;
+  margin-left: 0.3rem;
+  padding-inline: 0.3rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-dim);
+  place-items: center;
+}
+
+.capref-filter.is-active > span {
+  background: rgba(4, 16, 12, 0.13);
+  color: #04100c;
+}
+
+.capref-result {
+  max-width: 21rem;
+  min-width: 13rem;
+  margin: 0 0 0.8rem;
+  color: var(--text-dim);
+  font: 500 var(--fs-caption)/1.3 var(--font-mono), monospace;
+  text-align: right;
+}
+
+.capref-result span { color: var(--accent); }
+
+.capref-directory {
+  padding: 2rem 0 clamp(5rem, 9vw, 8rem);
+}
+
+.capref-group {
+  --group-accent: var(--accent);
+  display: grid;
+  grid-template-columns: minmax(220px, 0.32fr) minmax(0, 0.68fr);
+  gap: clamp(2rem, 5vw, 5rem);
+  padding: clamp(4rem, 8vw, 7rem) 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.capref-group-enforcement { --group-accent: #f59e0b; }
+.capref-group-evidence { --group-accent: #38bdf8; }
+.capref-group-coordination { --group-accent: #a78bfa; }
+
+.capref-group-intro {
+  position: sticky;
+  top: 8.5rem;
+  height: max-content;
+  padding-left: 1.2rem;
+  border-left: 2px solid var(--group-accent);
+}
+
+.capref-group-number {
+  display: block;
+  margin-bottom: 2rem;
+  color: var(--group-accent);
+  font: 700 2.5rem/1 var(--font-mono), monospace;
+  opacity: 0.48;
+}
+
+.capref-group-eyebrow { color: var(--group-accent); }
+
+.capref-group-intro h2 {
+  max-width: 290px;
+  margin: 0.65rem 0 1rem;
+  color: var(--text);
+  font: 700 clamp(1.7rem, 3vw, 2.6rem)/1.06 var(--font-mono), monospace;
+  letter-spacing: -0.04em;
+}
+
+.capref-group-intro > p:not(.capref-group-eyebrow) {
+  max-width: 310px;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--fs-body);
+  line-height: 1.7;
+}
+
+.capref-group-count {
+  display: inline-block;
+  margin-top: 1.5rem;
+  color: var(--text-dim);
+  letter-spacing: 0.08em;
+}
+
+.capref-list {
+  --balanced-grid-gap: 1rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  @include center-odd-grid-item;
+}
+
+.capref-item {
+  display: flex;
+  min-height: 17rem;
+  padding: 1.45rem;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.025);
+  flex-direction: column;
+  transition: border-color 0.25s, background 0.25s, transform 0.25s;
+}
+
+.capref-item:hover {
+  border-color: color-mix(in srgb, var(--group-accent) 36%, transparent);
+  background: rgba(255, 255, 255, 0.04);
+  transform: translateY(-2px);
+}
+
+.capref-item-head {
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.capref-item-id {
+  color: var(--group-accent);
+  letter-spacing: 0.08em;
+  overflow-wrap: anywhere;
+}
+
+.capref-item h3 {
+  margin: 0.45rem 0 0;
+  color: var(--text);
+  font: 650 1.05rem/1.35 var(--font-mono), monospace;
+  letter-spacing: -0.02em;
+}
+
+.capref-tier {
+  flex: 0 0 auto;
+  padding: 0.42rem 0.62rem;
+  border: 1px solid rgba(0, 229, 160, 0.2);
+  border-radius: 999px;
+  color: var(--accent);
+  font: 600 0.66rem/1 var(--font-mono), monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.capref-tier-pro,
+.capref-tier-pro-or-enterprise { border-color: rgba(56, 189, 248, 0.25); color: #7dd3fc; }
+.capref-tier-enterprise { border-color: rgba(167, 139, 250, 0.28); color: #c4b5fd; }
+.capref-tier-assess { border-color: rgba(245, 158, 11, 0.28); color: #fbbf24; }
+
+.capref-summary {
+  margin: 1.2rem 0 1.5rem;
+  color: var(--text-muted);
+  font-size: var(--fs-code);
+  line-height: 1.65;
+}
+
+.capref-entry {
+  display: grid;
+  gap: 0.4rem;
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.capref-entry > span {
+  color: var(--text-dim);
+  letter-spacing: 0.08em;
+}
+
+.capref-entry code {
+  display: block;
+  padding: 0.55rem 0.7rem;
+  overflow-x: auto;
+  border: 1px solid rgba(0, 229, 160, 0.14);
+  border-radius: 7px;
+  background: rgba(0, 0, 0, 0.32);
+  color: #cbd5e1;
+  font: 500 0.78rem/1.45 var(--font-mono), monospace;
+  white-space: nowrap;
+}
+
+.capref-qualifier {
+  margin-top: 0.85rem;
+  color: var(--text-muted);
+  font-size: var(--fs-caption);
+}
+
+.capref-qualifier summary {
+  color: var(--group-accent);
+  cursor: pointer;
+  font: 600 var(--fs-caption)/1.4 var(--font-mono), monospace;
+}
+
+.capref-qualifier p {
+  margin: 0.65rem 0 0;
+  padding-left: 0.8rem;
+  border-left: 1px solid color-mix(in srgb, var(--group-accent) 40%, transparent);
+  line-height: 1.55;
+}
+
+.capref-detail-link {
+  display: inline-flex;
+  gap: 0.55rem;
+  width: fit-content;
+  margin-top: 1rem;
+  color: var(--group-accent);
+  font: 650 var(--fs-caption)/1.4 var(--font-mono), monospace;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  text-transform: uppercase;
+  align-items: center;
+}
+
+.capref-detail-link span {
+  transition: transform 0.18s ease;
+}
+
+.capref-detail-link:hover,
+.capref-detail-link:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 0.28em;
+}
+
+.capref-detail-link:hover span,
+.capref-detail-link:focus-visible span {
+  transform: translateX(0.2rem);
+}
+
+.capref-empty {
+  margin: 4rem auto;
+  padding: 2rem;
+  border: 1px dashed rgba(255, 255, 255, 0.14);
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  font-family: var(--font-mono), monospace;
+  text-align: center;
+}
+
+.capref-bottom {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 3rem;
+  padding: clamp(3.5rem, 7vw, 6rem);
+  margin-bottom: clamp(4rem, 8vw, 7rem);
+  border: 1px solid rgba(0, 229, 160, 0.2);
+  border-radius: var(--radius);
+  background: linear-gradient(120deg, rgba(0, 229, 160, 0.075), rgba(124, 58, 237, 0.045));
+  align-items: center;
+}
+
+.capref-bottom h2 {
+  margin: 0.7rem 0 1rem;
+  font: 700 clamp(1.8rem, 4vw, 3.1rem)/1.05 var(--font-mono), monospace;
+  letter-spacing: -0.045em;
+}
+
+.capref-bottom > div > p:last-child {
+  max-width: 690px;
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.7;
+}
+
+.capref-bottom-actions {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 210px;
+}
+
+[data-capability-card][hidden],
+[data-capability-group][hidden],
+.capref-empty[hidden] { display: none; }
+
+@media (max-width: 1060px) {
+  .capref-controls-inner { grid-template-columns: 1fr; align-items: stretch; }
+  .capref-controls { position: static; }
+  .capref-result { margin: 0; text-align: left; }
+  .capref-list { grid-template-columns: 1fr; }
+}
+
+@media (max-width: $bp-mobile) {
+  .capref-hero-inner,
+  .capref-controls-inner,
+  .capref-directory,
+  .capref-bottom { width: calc(100% - 2rem); }
+
+  .capref-hero-inner { padding-top: 5.5rem; }
+  .capref-hero h1 { font-size: clamp(2.25rem, 12vw, 3.4rem); }
+  .capref-provenance { grid-template-columns: 1fr 1fr; }
+  .capref-provenance-stat { min-height: 5rem; }
+  .capref-provenance-stat:nth-child(2) { border-right: 0; }
+  .capref-provenance-source {
+    grid-column: 1 / -1;
+    min-height: 4.25rem;
+    border-top: 1px solid rgba(0, 229, 160, 0.13);
+  }
+  .capref-controls { position: static; }
+  .capref-filter { flex: 1 1 auto; }
+
+  .capref-group {
+    grid-template-columns: 1fr;
+    gap: 2.25rem;
+    padding: 4rem 0;
+  }
+
+  .capref-group-intro { position: static; }
+  .capref-group-number { margin-bottom: 1.35rem; }
+  .capref-item { min-height: 0; }
+  .capref-item-head { display: grid; }
+  .capref-tier { width: fit-content; }
+  .capref-bottom { grid-template-columns: 1fr; padding: 2rem; }
+  .capref-bottom-actions { min-width: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .capref-item { transition: none; }
+  .capref-item:hover { transform: none; }
+  .capref-detail-link span { transition: none; }
+}
+
+// ── Capability documentation ───────────────────────────────
+
+.capdoc-page {
+  --capdoc-max: 1320px;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.capdoc-hero {
+  border-bottom: 1px solid var(--border);
+  background: #09090b;
+}
+
+.capdoc-hero-inner,
+.capdoc-shell {
+  width: calc(100% - 3rem);
+  max-width: var(--capdoc-max);
+  margin-inline: auto;
+}
+
+.capdoc-hero-inner {
+  padding: clamp(3.75rem, 7vw, 6rem) 0 clamp(3.5rem, 6vw, 5rem);
+}
+
+.capdoc-breadcrumbs {
+  display: flex;
+  gap: 0.65rem;
+  margin-bottom: clamp(2.5rem, 5vw, 4rem);
+  color: var(--text-dim);
+  font: 600 var(--fs-caption)/1.4 var(--font-mono), monospace;
+  letter-spacing: 0.07em;
+  align-items: center;
+}
+
+.capdoc-breadcrumbs a {
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.capdoc-breadcrumbs a:hover,
+.capdoc-breadcrumbs a:focus-visible {
+  color: var(--accent);
+}
+
+.capdoc-hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(16rem, 0.32fr);
+  gap: clamp(3rem, 8vw, 8rem);
+  align-items: end;
+}
+
+.capdoc-kicker,
+.capdoc-label {
+  margin: 0;
+  color: var(--accent);
+  font: 650 var(--fs-caption)/1.4 var(--font-mono), monospace;
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+}
+
+.capdoc-hero h1 {
+  max-width: 55rem;
+  margin: 0.75rem 0 1.25rem;
+  color: var(--text);
+  font: 700 clamp(2.3rem, 5vw, 4.6rem)/1 var(--font-mono), monospace;
+  letter-spacing: -0.055em;
+  text-wrap: balance;
+}
+
+.capdoc-lede {
+  max-width: 48rem;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: clamp(1.05rem, 1.7vw, 1.22rem);
+  line-height: 1.7;
+  text-wrap: pretty;
+}
+
+.capdoc-hero-meta {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.capdoc-hero-meta code {
+  color: var(--text-dim);
+  font: 550 var(--fs-caption)/1.4 var(--font-mono), monospace;
+}
+
+.capdoc-source-card {
+  display: grid;
+  gap: 0.45rem;
+  padding: 1.5rem;
+  border: 1px solid rgba(0, 229, 160, 0.2);
+  border-radius: var(--radius);
+  background: rgba(0, 229, 160, 0.035);
+}
+
+.capdoc-source-card strong {
+  color: var(--text);
+  font: 700 1.2rem/1.35 var(--font-mono), monospace;
+}
+
+.capdoc-source-card > span:not(.capdoc-label) {
+  color: var(--text-dim);
+  font: 500 var(--fs-caption)/1.4 var(--font-mono), monospace;
+}
+
+.capdoc-source-card a {
+  width: fit-content;
+  margin-top: 0.55rem;
+  color: var(--accent);
+  font: 600 var(--fs-caption)/1.4 var(--font-mono), monospace;
+  text-decoration: none;
+}
+
+.capdoc-source-card a:hover,
+.capdoc-source-card a:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
+
+.capdoc-shell {
+  display: grid;
+  grid-template-columns: minmax(12rem, 15rem) minmax(0, 1fr) minmax(9rem, 11rem);
+  gap: clamp(2rem, 4vw, 4.5rem);
+  padding-block: clamp(4rem, 8vw, 7rem) clamp(6rem, 10vw, 9rem);
+}
+
+.capdoc-nav-inner,
+.capdoc-toc > div {
+  position: sticky;
+  top: 6rem;
+}
+
+.capdoc-nav-title {
+  display: block;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(0, 229, 160, 0.22);
+  color: var(--text);
+  font: 700 0.92rem/1.35 var(--font-mono), monospace;
+  text-decoration: none;
+}
+
+.capdoc-nav section {
+  padding: 1.25rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.055);
+}
+
+.capdoc-nav h2 {
+  margin: 0 0 0.65rem;
+  color: var(--text-dim);
+  font: 650 0.68rem/1.4 var(--font-mono), monospace;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.capdoc-nav ul {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.capdoc-nav a:not(.capdoc-nav-title) {
+  display: block;
+  padding: 0.48rem 0.65rem;
+  border-left: 2px solid transparent;
+  color: var(--text-dim);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  text-decoration: none;
+}
+
+.capdoc-nav a:hover,
+.capdoc-nav a:focus-visible,
+.capdoc-nav a[aria-current='page'] {
+  color: var(--text);
+}
+
+.capdoc-nav a[aria-current='page'] {
+  border-left-color: var(--accent);
+  background: rgba(0, 229, 160, 0.045);
+}
+
+.capdoc-content {
+  min-width: 0;
+}
+
+.capdoc-section {
+  padding: 0 0 clamp(4.5rem, 8vw, 7rem);
+  scroll-margin-top: 6rem;
+}
+
+.capdoc-section + .capdoc-section {
+  padding-top: clamp(4.5rem, 8vw, 7rem);
+  border-top: 1px solid rgba(255, 255, 255, 0.075);
+}
+
+.capdoc-section h2 {
+  max-width: 47rem;
+  margin: 0.7rem 0 1.2rem;
+  color: var(--text);
+  font: 700 clamp(1.65rem, 3vw, 2.35rem)/1.12 var(--font-mono), monospace;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+}
+
+.capdoc-section > p:not(.capdoc-kicker) {
+  max-width: 47rem;
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.75;
+  text-wrap: pretty;
+}
+
+.capdoc-entry {
+  display: grid;
+  grid-template-columns: minmax(8rem, 0.28fr) minmax(0, 1fr) auto;
+  margin-top: 2rem;
+  border: 1px solid rgba(0, 229, 160, 0.22);
+  border-radius: var(--radius);
+  background: rgba(0, 229, 160, 0.025);
+  align-items: stretch;
+}
+
+.capdoc-entry > * {
+  display: flex;
+  min-width: 0;
+  padding: 1.2rem 1.35rem;
+  align-items: center;
+}
+
+.capdoc-entry > * + * {
+  border-left: 1px solid rgba(0, 229, 160, 0.13);
+}
+
+.capdoc-entry > span {
+  color: var(--text-dim);
+  font: 600 var(--fs-caption)/1.4 var(--font-mono), monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.capdoc-entry code {
+  color: var(--text);
+  font: 650 clamp(0.88rem, 1.5vw, 1rem)/1.55 var(--font-mono), monospace;
+  overflow-wrap: anywhere;
+}
+
+.capdoc-entry a {
+  color: var(--accent);
+  font: 600 var(--fs-caption)/1.4 var(--font-mono), monospace;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.capdoc-tier-list {
+  display: flex;
+  gap: 0.65rem;
+  margin: 1.8rem 0 2rem;
+  flex-wrap: wrap;
+}
+
+.capdoc-tier-list span {
+  padding: 0.55rem 0.8rem;
+  border: 1px solid rgba(0, 229, 160, 0.22);
+  border-radius: 999px;
+  color: var(--accent);
+  font: 650 var(--fs-caption)/1 var(--font-mono), monospace;
+}
+
+.capdoc-boundary,
+.capdoc-no-qualifier {
+  margin-top: 1.5rem;
+  padding: 1.35rem 1.5rem;
+  border-left: 2px solid var(--accent);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.capdoc-boundary p {
+  margin: 0.7rem 0 0;
+  color: var(--text-muted);
+  line-height: 1.7;
+}
+
+.capdoc-no-qualifier {
+  color: var(--text-dim) !important;
+  font-size: 0.9rem;
+}
+
+.capdoc-source-grid,
+.capdoc-related-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.capdoc-source-grid a,
+.capdoc-reference-list a,
+.capdoc-related-grid a {
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.025);
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.capdoc-source-grid a {
+  display: grid;
+  gap: 0.55rem;
+  min-width: 0;
+  padding: 1.4rem;
+}
+
+.capdoc-source-grid a > span,
+.capdoc-reference-list a > span:first-child,
+.capdoc-related-grid a > span {
+  color: var(--accent);
+  font: 650 var(--fs-caption)/1.4 var(--font-mono), monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.capdoc-source-grid strong,
+.capdoc-reference-list strong,
+.capdoc-related-grid strong {
+  color: var(--text);
+  font-family: var(--font-mono), monospace;
+}
+
+.capdoc-source-grid code {
+  color: var(--text-dim);
+  font: 500 0.72rem/1.55 var(--font-mono), monospace;
+  overflow-wrap: anywhere;
+}
+
+.capdoc-source-note {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 1rem;
+  padding: 1.25rem 1.4rem;
+  border-left: 2px solid var(--accent);
+  background: rgba(0, 229, 160, 0.035);
+}
+
+.capdoc-source-note p {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.7;
+}
+
+.capdoc-source-note a {
+  width: fit-content;
+  color: var(--accent);
+  font: 600 var(--fs-caption)/1.5 var(--font-mono), monospace;
+  text-decoration: none;
+}
+
+.capdoc-reference-list {
+  display: grid;
+  margin-top: 2rem;
+  border-block: 1px solid rgba(255, 255, 255, 0.075);
+}
+
+.capdoc-reference-list a {
+  display: grid;
+  grid-template-columns: 9rem minmax(0, 1fr) auto;
+  gap: 1rem;
+  padding: 1.25rem 0.2rem;
+  border-width: 0 0 1px;
+  border-radius: 0;
+  background: transparent;
+  align-items: center;
+}
+
+.capdoc-reference-list a:last-child {
+  border-bottom: 0;
+}
+
+.capdoc-reference-list a > span:last-child {
+  color: var(--accent);
+  font-family: var(--font-mono), monospace;
+}
+
+.capdoc-related-grid a {
+  display: grid;
+  gap: 0.55rem;
+  padding: 1.4rem;
+}
+
+.capdoc-related-grid small {
+  color: var(--text-dim);
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+
+.capdoc-source-grid a:hover,
+.capdoc-source-grid a:focus-visible,
+.capdoc-reference-list a:hover,
+.capdoc-reference-list a:focus-visible,
+.capdoc-related-grid a:hover,
+.capdoc-related-grid a:focus-visible {
+  border-color: rgba(0, 229, 160, 0.42);
+  transform: translateY(-2px);
+}
+
+.capdoc-toc > div {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.capdoc-toc .capdoc-label {
+  padding-bottom: 0.8rem;
+  margin-bottom: 0.45rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  color: var(--text-dim);
+}
+
+.capdoc-toc a {
+  padding: 0.45rem 0;
+  color: var(--text-dim);
+  font-size: 0.76rem;
+  line-height: 1.4;
+  text-decoration: none;
+}
+
+.capdoc-toc a:hover,
+.capdoc-toc a:focus-visible {
+  color: var(--accent);
+}
+
+@media (max-width: 1100px) {
+  .capdoc-shell {
+    grid-template-columns: minmax(12rem, 15rem) minmax(0, 1fr);
+  }
+
+  .capdoc-toc {
+    display: none;
+  }
+}
+
+@media (max-width: $bp-tablet) {
+  .capdoc-hero-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .capdoc-source-card {
+    max-width: 27rem;
+  }
+
+  .capdoc-shell {
+    grid-template-columns: 1fr;
+    gap: 3.5rem;
+  }
+
+  .capdoc-nav-inner {
+    position: static;
+  }
+
+  .capdoc-nav {
+    overflow-x: auto;
+    padding-bottom: 0.75rem;
+  }
+
+  .capdoc-nav-inner {
+    display: flex;
+    width: max-content;
+    gap: 0;
+    border-block: 1px solid rgba(255, 255, 255, 0.07);
+  }
+
+  .capdoc-nav-title,
+  .capdoc-nav section {
+    width: 15rem;
+    padding: 1rem;
+    border-right: 1px solid rgba(255, 255, 255, 0.07);
+    border-bottom: 0;
+  }
+
+  .capdoc-source-grid,
+  .capdoc-related-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: $bp-mobile) {
+  .capdoc-hero-inner,
+  .capdoc-shell {
+    width: calc(100% - 2rem);
+  }
+
+  .capdoc-breadcrumbs {
+    align-items: flex-start;
+  }
+
+  .capdoc-entry {
+    grid-template-columns: 1fr;
+  }
+
+  .capdoc-entry > * + * {
+    border-top: 1px solid rgba(0, 229, 160, 0.13);
+    border-left: 0;
+  }
+
+  .capdoc-reference-list a {
+    grid-template-columns: 1fr auto;
+  }
+
+  .capdoc-reference-list a > span:first-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .capdoc-source-grid a,
+  .capdoc-reference-list a,
+  .capdoc-related-grid a {
+    transition: none;
+  }
+
+  .capdoc-source-grid a:hover,
+  .capdoc-source-grid a:focus-visible,
+  .capdoc-reference-list a:hover,
+  .capdoc-reference-list a:focus-visible,
+  .capdoc-related-grid a:hover,
+  .capdoc-related-grid a:focus-visible {
+    transform: none;
+  }
+}

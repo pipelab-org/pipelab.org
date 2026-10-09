@@ -1,0 +1,16 @@
+{{ $dict := site.Data.aarp_claims_dictionary }}
+{{ $entries := $dict.entries | default slice }}
+{{ $emittedVerified := where (where $entries "kind" "verified_claim") "status" "emitted" }}
+{{ $reservedVerified := where (where $entries "kind" "verified_claim") "status" "reserved" }}
+{{ $limitations := where $entries "kind" "does_not_assert" }}
+{{ $risks := where $entries "kind" "overclaim_risk" }}
+
+<div class="claim-dictionary-source">
+  <p><strong>Profile:</strong> <code>{{ $dict.profile }}</code></p>
+  <p><strong>Source:</strong> <code>{{ $dict.schema_version }}</code>. Reserved entries freeze names only; the current verifier does not emit reserved claims.</p>
+</div>
+
+{{ partial "claim-dictionary-table.html" (dict "title" "Emitted Verified Claims" "entries" $emittedVerified) }}
+{{ partial "claim-dictionary-table.html" (dict "title" "Reserved Verified Claims" "entries" $reservedVerified) }}
+{{ partial "claim-dictionary-table.html" (dict "title" "Limitations" "entries" $limitations) }}
+{{ partial "claim-dictionary-table.html" (dict "title" "Overclaim Risks" "entries" $risks) }}

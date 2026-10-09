@@ -1,0 +1,141 @@
+{
+  "schema_version": "pipelock.replay_gallery.v0",
+  "generated_at": "2026-08-05T01:16:25Z",
+  "pipelock_version": "3.3.0",
+  "signer_key": "91dfb23882a8acf28f624985030ca1798a3efbbcee2bb8bdda8f452612eb755a",
+  "completeness_note": "A verified chain proves the included mediated decisions were signed by the mediator and untampered. It does NOT prove session completeness, that no event was missed, that the agent was sandboxed, or that traffic could not bypass Pipelock. The prompts and responses shown are unsigned playback metadata; only the receipt chain of decisions is signed.",
+  "scenarios": [
+    {
+      "id": "allowed-safe-read",
+      "title": "Allowed: a safe read passes",
+      "category": "Allowed by policy",
+      "bench_case_id": "url-benign-api-call-001",
+      "transport": "fetch",
+      "decisive_verdict": "allow",
+      "receipt_count": 2,
+      "packet_dir": "allowed-safe-read",
+      "manifest_path": "allowed-safe-read/manifest.json"
+    },
+    {
+      "id": "secret-exfil-url-blocked",
+      "title": "Blocked: secret exfiltration over a URL",
+      "category": "Secret exfiltration",
+      "bench_case_id": "url-dlp-aws-key-001",
+      "transport": "fetch",
+      "decisive_verdict": "block",
+      "receipt_count": 2,
+      "packet_dir": "secret-exfil-url-blocked",
+      "manifest_path": "secret-exfil-url-blocked/manifest.json"
+    },
+    {
+      "id": "prompt-injection-response-blocked",
+      "title": "Blocked: a hijack hidden in fetched content",
+      "category": "Prompt injection",
+      "bench_case_id": "response-injection-ignore-002",
+      "transport": "fetch",
+      "decisive_verdict": "block",
+      "receipt_count": 2,
+      "packet_dir": "prompt-injection-response-blocked",
+      "manifest_path": "prompt-injection-response-blocked/manifest.json"
+    },
+    {
+      "id": "ssrf-internal-target-blocked",
+      "title": "Blocked: a reach for cloud metadata",
+      "category": "SSRF / internal target",
+      "bench_case_id": "url-ssrf-metadata-009",
+      "transport": "fetch",
+      "decisive_verdict": "block",
+      "receipt_count": 2,
+      "packet_dir": "ssrf-internal-target-blocked",
+      "manifest_path": "ssrf-internal-target-blocked/manifest.json"
+    },
+    {
+      "id": "operation-aware-policy",
+      "title": "Blocked: destructive API mutation",
+      "category": "Operation-aware policy",
+      "bench_case_id": "local-lab-request-policy-graphql-mutation-001",
+      "transport": "forward",
+      "decisive_verdict": "block",
+      "receipt_count": 3,
+      "packet_dir": "operation-aware-policy",
+      "manifest_path": "operation-aware-policy/manifest.json"
+    },
+    {
+      "id": "poisoned-ticket-webhook-exfil",
+      "title": "Blocked: poisoned ticket webhook exfiltration",
+      "category": "Secret exfiltration",
+      "bench_case_id": "local-lab-body-dlp-private-key-001",
+      "transport": "forward",
+      "decisive_verdict": "block",
+      "receipt_count": 2,
+      "packet_dir": "poisoned-ticket-webhook-exfil",
+      "manifest_path": "poisoned-ticket-webhook-exfil/manifest.json"
+    },
+    {
+      "id": "poisoned-readme-key-paste",
+      "title": "Blocked: poisoned README key paste",
+      "category": "Secret exfiltration",
+      "bench_case_id": "local-lab-body-dlp-openai-key-001",
+      "transport": "forward",
+      "decisive_verdict": "block",
+      "receipt_count": 2,
+      "packet_dir": "poisoned-readme-key-paste",
+      "manifest_path": "poisoned-readme-key-paste/manifest.json"
+    },
+    {
+      "id": "hostile-page-session-keys",
+      "title": "Blocked: hostile page session key exfiltration",
+      "category": "Secret exfiltration",
+      "bench_case_id": "local-lab-body-dlp-jwt-session-001",
+      "transport": "forward",
+      "decisive_verdict": "block",
+      "receipt_count": 2,
+      "packet_dir": "hostile-page-session-keys",
+      "manifest_path": "hostile-page-session-keys/manifest.json"
+    },
+    {
+      "id": "amber-warning-observed",
+      "title": "Warned: suspicious payload observed",
+      "category": "Observe before enforcing",
+      "bench_case_id": "local-lab-body-dlp-warn-001",
+      "transport": "forward",
+      "decisive_verdict": "warn",
+      "receipt_count": 2,
+      "packet_dir": "amber-warning-observed",
+      "manifest_path": "amber-warning-observed/manifest.json"
+    },
+    {
+      "id": "websocket-fragmented-secret",
+      "title": "Blocked: a secret split across WebSocket frames",
+      "category": "WebSocket exfiltration",
+      "bench_case_id": "local-lab-websocket-fragmented-dlp-001",
+      "transport": "websocket",
+      "decisive_verdict": "block",
+      "receipt_count": 2,
+      "packet_dir": "websocket-fragmented-secret",
+      "manifest_path": "websocket-fragmented-secret/manifest.json"
+    },
+    {
+      "id": "mcp-poisoned-tool-description",
+      "title": "Blocked: poisoned MCP tool instructions",
+      "category": "MCP tool poisoning",
+      "bench_case_id": "local-lab-mcp-tool-poison-001",
+      "transport": "mcp_stdio",
+      "decisive_verdict": "block",
+      "receipt_count": 2,
+      "packet_dir": "mcp-poisoned-tool-description",
+      "manifest_path": "mcp-poisoned-tool-description/manifest.json"
+    },
+    {
+      "id": "multi-step-policy-chain",
+      "title": "Chain: two safe actions, then a blocked write",
+      "category": "Multi-step evidence",
+      "bench_case_id": "local-lab-multi-step-policy-chain-001",
+      "transport": "forward",
+      "decisive_verdict": "block",
+      "receipt_count": 4,
+      "packet_dir": "multi-step-policy-chain",
+      "manifest_path": "multi-step-policy-chain/manifest.json"
+    }
+  ]
+}

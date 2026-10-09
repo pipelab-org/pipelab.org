@@ -1,0 +1,30 @@
+{
+  "artifact_id": "github-actions:luckyPipewrench/pipelock:37142996092:2",
+  "baseline_sha256": "8e6ed84fef9c62d8e826d20f85c8ff87c4770aca1bb7093b7a516d18eb3538be",
+  "blocked": false,
+  "candidate_sha256": "1cd062c318086fb61e7dd78609f6caa44398d35d9ed3979bda873fac627f583f",
+  "canonical_url": "https://github.com/luckyPipewrench/pipelock/actions/runs/37142996092/attempts/2",
+  "evidence_sha256": {
+    "capability_registry": "ff75d5867ad0a198d9724f1f2a27f774c6ef10ee58277b11833c5e528acfcb7f",
+    "case_index": "cc59c55f2d41571585f1fc8f3ab22855f660a08df5903320b3195084fc94d902",
+    "command": "5669b3d3a113b60feb037a10be06442aad35a7cde2e84f41a2df211ab406b468",
+    "corpus_manifest": "2e8f5c078ec8f0e325a2557d1da3a7ae9f18f7a92b60b1e9786ca2310bbd0b05",
+    "entrypoint_command": "3ad95785c6d3edd6c40ed77d3b2fda26b81d1bded3f879ff8743c91d9271260f",
+    "execution_decision": "5ba7b8aea9705d4f7cd6047e5e22926a5f47f2665ca145f71e365f8538b258dc",
+    "pipelock_release": "ad3287abdb63f7e226c86908d692fbf2c49b607a06fd1176fc6e35c7d18b8c51",
+    "pipelock_version_output": "a762d90f6d1622165b29145c556a4b1f306084a89f6ab954bf63eb72588e665c",
+    "raw_summary": "53e78d59c096b56ecf07c7bc813c71f36f8ba46b0c2b7465d4d865ad2f56e6a2",
+    "receipt_profile": "ad535625266d2f8fcddef24514d3ddc31b858cc9a0e6cf74b6a814c6190f44ce",
+    "release_checksums": "e7263574c1a2bf65a6530d4122e5c5c98817a1756e820c2a28767e190616d0c7",
+    "results": "6a5a66c5b35934312deba3321e2aeca5b091f33a2af488c909b5a2d44bdaed58",
+    "run_bundle": "143d4ff6520a330a95d7883e89e68142c099235b0c5c1edf5413cc7f04825a5d",
+    "run_metadata": "17dee4425171f13737283efc43bd5cc5efe7be6ddecd05ba25fe13b40fe8cacd",
+    "runner_stderr": "c16acc78c66ba4ca121e4c0d2b3782293b21605130d2f0815bc47b6f743be40a",
+    "stats": "c2851b92fce90da719e8686a3208a524fb54d75d8736fbe6d8c7ac5a310bb2a8",
+    "tool_profile": "f5a7417b4891ee7c5070e6309a50eda5e2e59bc7e632010339500dcad1fc185b"
+  },
+  "failures": [],
+  "promotion_status": "under_review",
+  "review_notes": [],
+  "schema_version": 1
+}

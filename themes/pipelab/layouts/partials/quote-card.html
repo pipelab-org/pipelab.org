@@ -1,0 +1,25 @@
+{{- /* Operator quote card. Data row from data/testimonials.yaml.
+       Templated recreation of the original card design: watermark
+       quote mark, large quote, avatar + verified name, PIPELOCK USER
+       stamp. Adding a card = one YAML row. */ -}}
+<a class="hp-quote-card" href="{{ .href }}"
+   data-event="testimonial_click" data-event-placement="{{ .event_placement }}">
+  <span class="hp-quote-watermark" aria-hidden="true">&ldquo;</span>
+  <blockquote class="hp-quote-text">&ldquo;{{ .quote }}&rdquo;</blockquote>
+  <footer class="hp-quote-attr">
+    {{ with .avatar }}
+    <img class="hp-quote-avatar" src="{{ . }}" alt="{{ $.name }}" aria-hidden="true" width="46" height="46" loading="lazy" decoding="async">
+    {{ end }}
+    <span class="hp-quote-who">
+      <span class="hp-quote-name">{{ .name }}
+        <svg class="hp-quote-verified" viewBox="0 0 24 24" width="15" height="15" aria-label="verified Pipelock user"><path fill="#00e5a0" d="M12 1.5l2.44 1.78 2.97-.48 1.1 2.8 2.8 1.1-.48 2.97L22.5 12l-1.67 2.33.48 2.97-2.8 1.1-1.1 2.8-2.97-.48L12 22.5l-2.44-1.78-2.97.48-1.1-2.8-2.8-1.1.48-2.97L1.5 12l1.67-2.33-.48-2.97 2.8-1.1 1.1-2.8 2.97.48z"/><path fill="#09090b" d="M10.6 15.4l-3-3 1.4-1.4 1.6 1.6 4.4-4.4 1.4 1.4z"/></svg>
+      </span>
+      <span class="hp-quote-role">{{ .role }}</span>
+      {{ with .tools }}<span class="hp-quote-tools">{{ . }}</span>{{ end }}
+    </span>
+    <span class="hp-quote-stamp" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#00e5a0" stroke-width="1.6"><rect x="5" y="10.5" width="14" height="9" rx="2"/><path d="M8 10.5V7.75a4 4 0 018 0v2.75"/><circle cx="12" cy="15" r="1.1" fill="#00e5a0" stroke="none"/></svg>
+      <span>Pipelock user</span>
+    </span>
+  </footer>
+</a>
