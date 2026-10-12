@@ -61,6 +61,12 @@ EXPECTED_CALLERS += (EXPECTED_CALLERS[0].replace(
     "      github.event.comment.user.id == 142104046 &&",
 ).replace(
     "author_association == 'OWNER'", "author_association == 'MEMBER'"),)
+# A rerun keeps the original comment but takes github.triggering_actor from
+# whoever starts it, which only a login check covers. GitHub numbers the first
+# attempt 1 (github.run_attempt), so the next caller admits only that attempt.
+EXPECTED_CALLERS += (EXPECTED_CALLERS[-1].replace(
+    "github.actor_id == '142104046' &&",
+    "github.actor_id == '142104046' &&\n      github.run_attempt == '1' &&"),)
 EXPECTED_CONTRACTS = (r"""name: Review caller contract
 
 on:
@@ -247,6 +253,8 @@ class ApprovedShapeTest(unittest.TestCase):
                               "github.event.comment.user.login"):
                     self.assertIn(f"{check} == 'luckyPipewrench' &&", caller)
                 self.assertRegex(caller, r"author_association == '(OWNER|MEMBER)' &&")
+                if "run_attempt" in caller:
+                    self.assertIn("github.run_attempt == '1' &&", caller)
                 if "'MEMBER'" in caller:
                     self.assertIn("github.actor_id == '142104046' &&", caller)
                     self.assertIn("github.event.comment.user.id == 142104046 &&", caller)
@@ -268,6 +276,28 @@ class ApprovedShapeTest(unittest.TestCase):
                 with self.subTest(mutation=mutation[300:380]):
                     self.assertNotEqual(mutation, member)
                     path.write_text(mutation, encoding="utf-8")
+                    with self.assertRaises(ValueError):
+                        validate_caller(path)
+
+    def test_first_attempt_caller_rejects_reruns_and_missing_check(self):
+        caller = EXPECTED_CALLERS[-1].replace("REVIEWER_SHA", APPROVED_REVIEWER_SHAS[0])
+        self.assertIn("github.run_attempt == '1' &&", caller)
+        with tempfile.TemporaryDirectory() as tmp:
+            path = pathlib.Path(tmp) / "workflow.yaml"
+            path.write_text(caller, encoding="utf-8")
+            validate_caller(path)
+            for mutation in [
+                caller.replace("run_attempt == '1'", "run_attempt == '2'"),
+                caller.replace("run_attempt == '1'", "run_attempt != ''"),
+                caller.replace("      github.run_attempt == '1' &&\n", ""),
+            ]:
+                with self.subTest(mutation=mutation[300:400]):
+                    self.assertNotEqual(mutation, caller)
+                    path.write_text(mutation, encoding="utf-8")
+                    if "run_attempt" not in mutation:
+                        # The earlier approved shape stays valid until contract.
+                        validate_caller(path)
+                        continue
                     with self.assertRaises(ValueError):
                         validate_caller(path)
 
