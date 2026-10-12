@@ -42,6 +42,14 @@ Replace the placeholder with the token from your license email:
 pipelock license install "<your-token>"
 ```
 
+The command takes the token as an argument, so typing it in directly leaves it in your shell history, and other accounts on the machine can see it in the process list while the command runs. To keep it out of history in bash, read it into a variable first and clear the variable afterwards:
+
+```bash
+read -rs PIPELOCK_TOKEN
+pipelock license install "$PIPELOCK_TOKEN"
+unset PIPELOCK_TOKEN
+```
+
 The command writes the token to a file and prints a section headed "Add to your pipelock config". Copy that exact `license_file` line into the configuration your Pipelock process uses.
 
 The printed line is not quoted. If the path contains spaces, `:`, `#`, quotes, backslashes or other punctuation, wrap the value in single quotes, for example `license_file: '/opt/my license: v2/license.token'`. On a single line, YAML reads everything inside single quotes literally, including backslashes. If the path itself contains a single quote, write it twice: `'/opt/it''s/license.token'`. Quoting does not preserve line breaks, so when choosing a `--path` destination, use one without line breaks in any directory or file name.
