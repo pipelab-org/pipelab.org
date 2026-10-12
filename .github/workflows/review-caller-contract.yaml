@@ -43,7 +43,7 @@ jobs:
       - name: Check out trusted default-branch caller validator
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          repository: luckyPipewrench/pipelab.org
+          repository: ${{ github.repository }}
           ref: ${{ github.sha }}
           path: trusted-validator
           persist-credentials: false

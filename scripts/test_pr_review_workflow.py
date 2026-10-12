@@ -47,6 +47,11 @@ jobs:
       review_token: ${{ secrets.GITHUB_TOKEN }}
       openai_api_key: ${{ secrets.OPENAI_API_KEY }}
 """,)
+# The repository moved to an organization, where GitHub reports the owner's
+# own comments as MEMBER rather than OWNER. The three login checks still pin
+# the commenter and actors to one account.
+EXPECTED_CALLERS += (EXPECTED_CALLERS[0].replace(
+    "author_association == 'OWNER'", "author_association == 'MEMBER'"),)
 EXPECTED_CONTRACTS = (r"""name: Review caller contract
 
 on:
@@ -161,6 +166,9 @@ jobs:
           scripts.pr_review_test.WorkflowPackagingTest
           scripts.pr_review_test.FailureDirectionTest.test_review_job_timeout_exceeds_the_wall_clock_with_finalization_margin
 """,)
+# The trusted validator comes from this repository, not the archived original.
+EXPECTED_CONTRACTS += (EXPECTED_CONTRACTS[0].replace(
+    "repository: luckyPipewrench/pipelab.org", "repository: ${{ github.repository }}"),)
 
 def read_workflow(path):
     """Read bounded UTF-8 data without following any path-component symlink."""
@@ -220,6 +228,38 @@ class ReviewCallerTest(unittest.TestCase):
 
     def test_installed_contract(self):
         validate_contract(WORKFLOW.with_name("review-caller-contract.yaml"))
+
+
+class ApprovedShapeTest(unittest.TestCase):
+    def test_every_approved_caller_pins_one_account(self):
+        for caller in EXPECTED_CALLERS:
+            with self.subTest(caller=caller[:40]):
+                for check in ("github.actor", "github.triggering_actor",
+                              "github.event.comment.user.login"):
+                    self.assertIn(f"{check} == 'luckyPipewrench' &&", caller)
+                self.assertRegex(caller, r"author_association == '(OWNER|MEMBER)' &&")
+
+    def test_member_caller_still_rejects_other_accounts_and_associations(self):
+        member = EXPECTED_CALLERS[-1].replace("REVIEWER_SHA", APPROVED_REVIEWER_SHAS[0])
+        with tempfile.TemporaryDirectory() as tmp:
+            path = pathlib.Path(tmp) / "workflow.yaml"
+            path.write_text(member, encoding="utf-8")
+            validate_caller(path)
+            for mutation in [
+                member.replace("'MEMBER'", "'COLLABORATOR'"),
+                member.replace("== 'MEMBER' &&", "!= '' &&"),
+                member.replace("user.login == 'luckyPipewrench'", "user.login != ''"),
+                member.replace("github.actor == 'luckyPipewrench' &&\n", ""),
+            ]:
+                with self.subTest(mutation=mutation[300:380]):
+                    self.assertNotEqual(mutation, member)
+                    path.write_text(mutation, encoding="utf-8")
+                    with self.assertRaises(ValueError):
+                        validate_caller(path)
+
+    def test_contract_validator_checkout_is_this_repository(self):
+        self.assertIn("repository: ${{ github.repository }}\n          ref: ${{ github.sha }}",
+                      EXPECTED_CONTRACTS[-1])
 
 
 class WorkflowInputTest(unittest.TestCase):
