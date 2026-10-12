@@ -184,6 +184,10 @@ jobs:
 # The trusted validator comes from this repository, not the archived original.
 EXPECTED_CONTRACTS += (EXPECTED_CONTRACTS[0].replace(
     "repository: luckyPipewrench/pipelab.org", "repository: ${{ github.repository }}"),)
+# Contract step: the live caller and contract use the newest shapes, so the
+# owner-only, rerun-permitting and archived-checkout shapes are no longer approved.
+EXPECTED_CALLERS = EXPECTED_CALLERS[-1:]
+EXPECTED_CONTRACTS = EXPECTED_CONTRACTS[-1:]
 
 def read_workflow(path):
     """Read bounded UTF-8 data without following any path-component symlink."""
@@ -294,12 +298,23 @@ class ApprovedShapeTest(unittest.TestCase):
                 with self.subTest(mutation=mutation[300:400]):
                     self.assertNotEqual(mutation, caller)
                     path.write_text(mutation, encoding="utf-8")
-                    if "run_attempt" not in mutation:
-                        # The earlier approved shape stays valid until contract.
-                        validate_caller(path)
-                        continue
                     with self.assertRaises(ValueError):
                         validate_caller(path)
+
+    def test_only_the_current_shapes_are_approved(self):
+        self.assertEqual(len(EXPECTED_CALLERS), 1)
+        self.assertEqual(len(EXPECTED_CONTRACTS), 1)
+        caller = EXPECTED_CALLERS[0]
+        self.assertIn("author_association == 'MEMBER' &&", caller)
+        self.assertIn("github.run_attempt == '1' &&", caller)
+        self.assertNotIn("'OWNER'", caller)
+        self.assertNotIn("repository: luckyPipewrench/pipelab.org", EXPECTED_CONTRACTS[0])
+        owner = caller.replace("author_association == 'MEMBER'", "author_association == 'OWNER'")
+        with tempfile.TemporaryDirectory() as tmp:
+            path = pathlib.Path(tmp) / "workflow.yaml"
+            path.write_text(owner.replace("REVIEWER_SHA", APPROVED_REVIEWER_SHAS[0]), encoding="utf-8")
+            with self.assertRaises(ValueError):
+                validate_caller(path)
 
     def test_contract_validator_checkout_is_this_repository(self):
         self.assertIn("repository: ${{ github.repository }}\n          ref: ${{ github.sha }}",
