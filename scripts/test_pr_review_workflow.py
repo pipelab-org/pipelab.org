@@ -50,7 +50,16 @@ jobs:
 # The repository moved to an organization, where GitHub reports the owner's
 # own comments as MEMBER rather than OWNER. The three login checks still pin
 # the commenter and actors to one account.
+# Logins can be released and reclaimed, so the organization caller also pins
+# the commenter and actor to the account's immutable numeric ID.
 EXPECTED_CALLERS += (EXPECTED_CALLERS[0].replace(
+    "github.actor == 'luckyPipewrench' &&",
+    "github.actor == 'luckyPipewrench' &&\n      github.actor_id == '142104046' &&",
+).replace(
+    "github.event.comment.user.login == 'luckyPipewrench' &&",
+    "github.event.comment.user.login == 'luckyPipewrench' &&\n"
+    "      github.event.comment.user.id == 142104046 &&",
+).replace(
     "author_association == 'OWNER'", "author_association == 'MEMBER'"),)
 EXPECTED_CONTRACTS = (r"""name: Review caller contract
 
@@ -238,6 +247,9 @@ class ApprovedShapeTest(unittest.TestCase):
                               "github.event.comment.user.login"):
                     self.assertIn(f"{check} == 'luckyPipewrench' &&", caller)
                 self.assertRegex(caller, r"author_association == '(OWNER|MEMBER)' &&")
+                if "'MEMBER'" in caller:
+                    self.assertIn("github.actor_id == '142104046' &&", caller)
+                    self.assertIn("github.event.comment.user.id == 142104046 &&", caller)
 
     def test_member_caller_still_rejects_other_accounts_and_associations(self):
         member = EXPECTED_CALLERS[-1].replace("REVIEWER_SHA", APPROVED_REVIEWER_SHAS[0])
@@ -250,6 +262,8 @@ class ApprovedShapeTest(unittest.TestCase):
                 member.replace("== 'MEMBER' &&", "!= '' &&"),
                 member.replace("user.login == 'luckyPipewrench'", "user.login != ''"),
                 member.replace("github.actor == 'luckyPipewrench' &&\n", ""),
+                member.replace("user.id == 142104046", "user.id == 142104047"),
+                member.replace("github.actor_id == '142104046' &&\n      ", ""),
             ]:
                 with self.subTest(mutation=mutation[300:380]):
                     self.assertNotEqual(mutation, member)
