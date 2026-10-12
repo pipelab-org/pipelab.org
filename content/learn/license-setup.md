@@ -44,6 +44,8 @@ pipelock license install "<your-token>"
 
 The command writes the token to a file and prints a section headed "Add to your pipelock config". Copy that exact `license_file` line into the configuration your Pipelock process uses.
 
+The printed line is not quoted. If the path contains `: ` or ` #`, wrap the value in double quotes, for example `license_file: "/opt/my license: v2/license.token"`, so YAML reads it as one path.
+
 Use the printed path. Do not substitute `~/.config/pipelock/license.token` in YAML: the configuration loader treats a literal `~` as part of a relative path.
 
 For a different destination, choose an absolute path with `--path` and use the configuration line printed by that command. The account running Pipelock must be able to read the file.
