@@ -56,7 +56,7 @@ If your license email includes an intermediate certificate, save its complete JS
 license_intermediate_file: /absolute/path/to/license-intermediate.json
 ```
 
-Replace that example with the file you saved. Keep the certificate and token in separate files.
+Replace that example with the file you saved. Keep the certificate and token in separate files. The same quoting rules as `license_file` apply: wrap a path with spaces or punctuation in single quotes, and keep line breaks out of it.
 
 For deployments already using `PIPELOCK_LICENSE_KEY`, put the token in the environment used by the actual process or service. A nonempty environment value overrides `license_file` and inline `license_key`. Installing a file does not replace that environment value. Configure the intermediate certificate in the YAML as described above.
 
