@@ -1,7 +1,7 @@
 ---
 title: "Pipelock v3.7: Parallel Receipts and Filesystem Grants"
 linkTitle: "Pipelock v3.7: Receipts and Containment"
-date: 2026-10-13
+date: 2026-10-14
 author: "Josh Waldrep"
 blog_cat: releases
 summary: "Parallel signed receipt chains, filesystem grants, verified local MCP services, and an explicit proof that a receipt chain ended."
