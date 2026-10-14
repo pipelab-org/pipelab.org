@@ -166,3 +166,12 @@ test("site audit still requires the current release in an unclassified demo", t 
   assert.equal(issues.length, 1);
   assert.match(issues[0], /missing current release version v3\.7\.0/);
 });
+
+test("site audit rejects a classified demo that no longer states its recorded version", t => {
+  const bytes = Buffer.from("<p>Pipelock sample</p>\n");
+  const root = demoRoot(t, { bytes });
+  writeFileSync(join(root, HISTORICAL_ARTIFACTS_FILE), JSON.stringify({ artifacts: [entry({ sha256: createHash("sha256").update(bytes).digest("hex") })] }));
+  const issues = auditDemoVersions(root, "3.7.0", [ARTIFACT]);
+  assert.equal(issues.length, 1);
+  assert.match(issues[0], /does not state its recorded version v3\.6\.0/);
+});
