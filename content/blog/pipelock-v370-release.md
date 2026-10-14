@@ -12,7 +12,7 @@ tags: ["pipelock", "receipts", "containment", "mcp-security"]
 
 A signed receipt chain can be intact without proving the writer finished. Pipelock v3.7 makes that distinction visible: an open chain reports `VALID PREFIX, END UNPROVEN` and exits 3. The release also adds parallel signed receipt chains, filesystem grants for Linux containment, and checks that a local MCP endpoint belongs to the program you registered.
 
-The [upgrade guide](/learn/pipelock-v370-upgrade/) covers the operator actions. Read why [a valid receipt chain can still be cut short](/blog/a-valid-receipt-chain-can-still-be-cut-short/) and why [localhost doesn't identify a program](/blog/localhost-is-a-place-not-a-program/) for the reasoning behind those checks. The [full changelog](https://github.com/luckyPipewrench/pipelock/blob/main/CHANGELOG.md) holds the compatibility details.
+The [upgrade guide](/learn/pipelock-v370-upgrade/) covers the operator actions. Read why [a valid receipt chain can still be cut short](/blog/a-valid-receipt-chain-can-still-be-cut-short/) and why [localhost doesn't identify a program](/blog/localhost-is-a-place-not-a-program/) for the reasoning behind those checks. The [full changelog](https://github.com/luckyPipewrench/pipelock/blob/v3.7.0/CHANGELOG.md) holds the compatibility details.
 
 ## Parallel recording with a complete-group check
 
@@ -22,7 +22,7 @@ The published TypeScript and Rust verifiers at 0.6.5 check whole groups. Python 
 
 Required receipts make covered effects wait for every configured receipt family's durable record. With required receipts and multiple chains, one sync failure stops the whole group and process. Denials keep best-effort receipt emission. Signed recovery seals attest a discontinuity; they preserve damaged history as damaged.
 
-Recording has limits worth reading before raising throughput. Receipt content scanning checks whole secrets before signing, uses a bounded fragment search, and excludes process-proven generated IDs. Native AEL streams have a 256 MiB verifier ceiling the writer doesn't enforce. Measure your own traffic and restart before a run reaches it. The [parallel-chain guide](/learn/parallel-receipt-chains/) explains these boundaries and the complete-group verification path.
+Recording has limits worth reading before raising throughput. Receipt content scanning checks whole secrets before signing, uses a bounded fragment search, and excludes process-proven generated IDs. Native AEL streams have a 256 MiB verifier ceiling the writer doesn't enforce. Measure your own traffic and restart before a run reaches it. Closing the receipt group at shutdown also takes time, so managed units, the Helm chart, generated output and the examples now give a recording proxy 10 minutes to stop. A run killed before its close finishes verifies as `GROUP_INCOMPLETE`. The [parallel-chain guide](/learn/parallel-receipt-chains/) explains these boundaries and the complete-group verification path.
 
 ## Filesystem grants and socket isolation
 
