@@ -11,7 +11,8 @@ import {
 } from "../scripts/historical-artifacts.mjs";
 
 const ARTIFACT = "static/assess/demo-assessment/index.html";
-const ELIGIBLE = new Set([ARTIFACT, "content/pipelock.md", "static/llms.txt"]);
+// Mirrors the production current-claim list, including unsigned static summaries.
+const ELIGIBLE = new Set([ARTIFACT, "content/pipelock.md", "static/llms.txt", "static/llms-full.txt"]);
 const BYTES = Buffer.from("<p>Pipelock v3.6.0</p>\n");
 const SHA = createHash("sha256").update(BYTES).digest("hex");
 
@@ -84,6 +85,7 @@ test("a classified artifact that never states its recorded version fails", t => 
 
 for (const path of [
   "content/pipelock.md",
+  "static/llms.txt",
   "static/llms-full.txt",
   "static/gauntlet/evidence/latest-verified.json",
   "static/assess/../../content/pipelock.md",

@@ -19,7 +19,7 @@ lastmod: 2026-08-08
 - [Progressive Enforcement](/learn/progressive-enforcement/)
 - [Proof](/proof/)
 - [Assess](/assess/)
-- [Demo assessment](/assess/demo-assessment/)
+- [Demo assessment](/assess/demo-assessment/) (sample generated with Pipelock 3.6.0)
 - [Agent Egress Bench results](/gauntlet/)
 - [Compare](/compare/)
 - [VS Code integration](/learn/vscode-integration/)

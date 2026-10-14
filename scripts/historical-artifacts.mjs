@@ -10,6 +10,15 @@ import { readFileSync } from "node:fs";
 
 export const HISTORICAL_ARTIFACTS_FILE = "data/historical_artifacts.json";
 
+// Only signed, generated Assess samples can carry a historical classification.
+// Unsigned current summaries such as static/llms.txt stay current claims even
+// though they also live under static/.
+export const HISTORICAL_ELIGIBLE_PATHS = new Set([
+  "static/assess/demo-assessment/index.html",
+  "static/assess/demo-egress-report/index.html",
+  "static/assess/demo-summary/index.html",
+]);
+
 const ENTRY_KEYS = new Set(["path", "pipelock_version", "sha256", "reason", "classified", "approved_by"]);
 const SEMVER = /^[0-9]+\.[0-9]+\.[0-9]+$/;
 const DATE = /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/;
@@ -54,7 +63,7 @@ export function loadHistoricalArtifacts(root, eligiblePaths) {
       continue;
     }
     const { path, pipelock_version: version, sha256, reason, classified, approved_by: approvedBy } = entry;
-    if (typeof path !== "string" || !eligiblePaths.has(path) || !path.startsWith("static/")) {
+    if (typeof path !== "string" || !eligiblePaths.has(path) || !HISTORICAL_ELIGIBLE_PATHS.has(path)) {
       findings.push(`${where} path ${JSON.stringify(path)} is not an eligible signed static artifact on the current-claim list`);
       continue;
     }
@@ -73,6 +82,10 @@ export function loadHistoricalArtifacts(root, eligiblePaths) {
     entries.set(path, { version, sha256 });
   }
   return { entries, findings };
+}
+
+export function sha256Hex(bytes) {
+  return createHash("sha256").update(bytes).digest("hex");
 }
 
 export function auditHistoricalArtifact(file, bytes, claimsByLine, entry, declared) {

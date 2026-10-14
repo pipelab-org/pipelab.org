@@ -13,7 +13,7 @@ type: proof
 
 - [Agent Egress Bench](/agent-egress-bench/): open corpus and public methodology for scanner validation.
 - [Pipelock Rules](/pipelock-rules/): Ed25519-signed YAML bundles. See [Pipelock community detection rules](/learn/community-rules/) for the install flow and trust model.
-- [Pipelock Assess](/assess/): signed compliance reports, including a [demo report](/assess/demo-assessment/).
+- [Pipelock Assess](/assess/): signed compliance reports, including a [demo report](/assess/demo-assessment/) generated with Pipelock 3.6.0.
 - [Agent Egress Bench results](/gauntlet/results/): public run history.
 - [Playground challenge](/playground-challenge/): bypass rules, non-bypasses, and signed-result verification for the live demo.
 - [Security assurance case](https://github.com/luckyPipewrench/pipelock/blob/main/docs/security-assurance.md): threat model and documented limitations.
