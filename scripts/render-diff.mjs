@@ -40,6 +40,19 @@ export function skipContentCompare(logical) {
   return /(^|\/)js\/[^/]+\.min\.js$/.test(logical);
 }
 
+// Matches only the tag Hugo itself injects: content "Hugo" or "Hugo X.Y.Z".
+const HUGO_GENERATOR_TAG =
+  /<meta\s+name=(?:"|')?generator(?:"|')?\s+content=(["'])Hugo(?: \d+\.\d+\.\d+(?:-[0-9A-Za-z.]+)?)?\1\s*\/?>/gi;
+
+export function stripHugoGeneratorTag(html) {
+  // Leave script bodies untouched so a string that looks like the tag still
+  // counts as a real difference.
+  return html
+    .split(/(<script\b[\s\S]*?<\/script>)/i)
+    .map((part, i) => (i % 2 === 1 ? part : part.replace(HUGO_GENERATOR_TAG, "")))
+    .join("");
+}
+
 export function stripChromaColorSpans(html) {
   const normalizeCode = (source) => {
     let s = source.replace(/;-webkit-text-size-adjust:none/g, "");
@@ -106,7 +119,7 @@ export function normalizeForCompare(logical, text) {
       // Hugo 0.168.0 moved its injected generator tag to the end of <head>
       // (release note: "transform/metainject: Inject Hugo generator tag last
       // in <head>"). Same tag, different position.
-      s = s.replace(/<meta\s+name=(?:"|')?generator(?:"|')?\s+content=(?:"|')Hugo[^"']*(?:"|')\s*\/?>/gi, "");
+      s = stripHugoGeneratorTag(s);
     }
     if (ext === ".xml") {
       // RSS descriptions do not run the page HTML render hook, so table

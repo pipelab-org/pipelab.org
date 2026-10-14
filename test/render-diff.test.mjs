@@ -14,6 +14,7 @@ import {
   runRenderDiff,
   skipContentCompare,
   stripChromaColorSpans,
+  stripHugoGeneratorTag,
 } from "../scripts/render-diff.mjs";
 
 const pinnedVersion = readFileSync(new URL("../.hugo-version", import.meta.url), "utf8").trim();
@@ -296,4 +297,20 @@ test("normalizeForCompare ignores the position of Hugo's injected generator tag"
   assert.notEqual(normalizeForCompare("index.html", pinned), normalizeForCompare("index.html", changed));
   const author = `<meta name=generator content="SiteBuilder">`;
   assert.ok(normalizeForCompare("index.html", author).includes("SiteBuilder"));
+});
+
+test("stripHugoGeneratorTag strips only Hugo's own tag and never script content", () => {
+  assert.equal(stripHugoGeneratorTag(`<head><meta name=generator content="Hugo"></head>`), "<head></head>");
+  assert.equal(stripHugoGeneratorTag(`<head><meta name=generator content="Hugo 0.168.0"></head>`), "<head></head>");
+  const lookalike = `<meta name=generator content="HugoCustom1">`;
+  assert.equal(stripHugoGeneratorTag(lookalike), lookalike);
+  const inScript = (v) =>
+    `<html><head><meta name=generator content="Hugo"></head><body><script>x='a"<meta name=generator content="HugoCustom${v}">"b';</script></body></html>`;
+  assert.ok(stripHugoGeneratorTag(inScript("1")).includes(`content="HugoCustom1"`));
+  const exactInScript = `<script>x='<meta name=generator content="Hugo">';</script>`;
+  assert.equal(stripHugoGeneratorTag(exactInScript), exactInScript);
+  assert.notEqual(
+    normalizeForCompare("index.html", inScript("1")),
+    normalizeForCompare("index.html", inScript("2")),
+  );
 });
