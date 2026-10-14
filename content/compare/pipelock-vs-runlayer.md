@@ -105,7 +105,7 @@ Runlayer describes a platform fee based on deployment size, with no per-seat cha
 
 **Open, readable rules.** Every Pipelock pattern is in the public repository. Runlayer's ToolGuard docs describe custom-trained classifiers, and their detection rules aren't published on the pages checked.
 
-**Evidence.** With a recorder directory and signing key configured, Pipelock can emit signed receipts for mediated decisions that the shipped verifier checks offline against your public key. Emission is best-effort unless you turn on `require_receipts`.
+**Evidence.** With a recorder directory and signing key configured, Pipelock can emit signed receipts for mediated decisions that the shipped verifier checks offline against your public key. Emission is best-effort by default. Turning on `require_receipts` blocks an allowed action when its receipt can't be written; receipts for blocked actions stay best-effort.
 
 **Published pricing.** The free core and the paid tiers are on the [pricing page](/pricing/). Runlayer's [deployment docs](https://docs.runlayer.com/deployment/overview) say to ask its account team for commercial terms.
 

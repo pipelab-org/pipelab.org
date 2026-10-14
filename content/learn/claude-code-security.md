@@ -19,7 +19,7 @@ howto_steps:
   - name: Wrap MCP servers
     text: Run each MCP server through pipelock mcp proxy so server responses are scanned for prompt injection and tool poisoning before they reach the context window.
   - name: Contain direct egress
-    text: On Linux, use pipelock contain install so the agent account can't reach the network except through the proxy. Then run pipelock verify-install with your config for synthetic scanner checks and pipelock contain verify to check the host containment boundary.
+    text: On Linux, use sudo pipelock contain install so the agent account can't reach the network except through the proxy. Then run pipelock verify-install with your config for synthetic scanner checks and sudo pipelock contain verify to check the host containment boundary.
 faq:
   - q: "Is this the same as Anthropic's Claude Code security feature?"
     a: "No. Anthropic ships a built-in security review that scans your code for vulnerabilities before you commit. This guide covers runtime hardening: stopping the agent from leaking credentials, following injected instructions, or reaching internal services while it runs. The two are complementary. One reviews the code you write, the other governs what the agent does with shell access, API keys, and MCP servers."
@@ -34,7 +34,7 @@ faq:
   - q: "Can Pipelock catch every exfiltration attempt?"
     a: "No, and any tool that claims otherwise is lying. Pipelock covers traffic that goes through it. It scans 65 DLP patterns, entropy, and injection across visible URLs, headers, bodies, MCP arguments, and responses. Known gaps are channels it does not mediate, semantically novel injection, very slow exfiltration, and parser differentials in deeply nested structures. Blocking direct egress that bypasses the proxy is deployment guidance, enforced by containment, not by the binary alone."
   - q: "How do I verify the controls actually work?"
-    a: "Run 'pipelock verify-install --config' with the path to your config. It starts a temporary proxy and runs 15 synthetic checks, covering fetch-path DLP, CONNECT blocklist enforcement, MCP input and injection scanning, tool policy, and WebSocket frame scanning, plus direct-egress probes that only apply inside a container or pod. A pass shows the scanner works with that config. It doesn't prove Claude uses your running proxy. On a managed Linux install, 'pipelock contain verify' checks the host containment boundary. 'pipelock preflight' separately scans committed Claude Code config for five classes of poisoned settings."
+    a: "Run 'pipelock verify-install --config' with the path to your config. It starts a temporary proxy and runs 15 synthetic checks, covering fetch-path DLP, CONNECT blocklist enforcement, MCP input and injection scanning, tool policy, and WebSocket frame scanning, plus direct-egress probes that only apply inside a container or pod. A pass shows the scanner works with that config. It doesn't prove Claude uses your running proxy. On a managed Linux install, 'sudo pipelock contain verify' checks the host containment boundary. 'pipelock preflight' separately scans committed Claude Code config for five classes of poisoned settings."
   - q: "Does securing Claude Code slow it down?"
     a: "Scanning runs inline on the request path, so there is a per-request cost, but the pipeline exits early on clean input and the heavy normalization passes only run when a cheap pass already flagged something. The bigger operational cost is tuning false positives, which is why Pipelock ships an observe-first mode that logs would-be blocks before you enforce. See the progressive enforcement guide."
 ---
@@ -118,7 +118,7 @@ Containment closes the last hole:
 
 ```bash
 sudo pipelock contain install
-pipelock contain verify
+sudo pipelock contain verify
 ```
 
 This is the difference between policy and enforcement. Hooks and the proxy only help if traffic goes through them. Host containment installs the agent under a separate account and uses kernel network controls to force that account through the proxy. Without it, "use the proxy" is a request a child process can ignore. With it, there is no direct egress path for the contained agent account. Containment is deployment-enforced, not a property of the binary on its own, so the [enterprise deployment notes](/enterprise/) matter here.
@@ -136,7 +136,7 @@ If you also run Claude Code's native sandbox, know where it steps aside. Command
 - Keep agent secrets in the agent environment, never in the proxy.
 - Scan committed `.claude/` config with `pipelock preflight` in CI before a poisoned hook lands.
 - Start in observe-first mode, review the would-be blocks, then enforce. See [progressive enforcement](/learn/progressive-enforcement/).
-- Run `pipelock verify-install --config` against your config, and `pipelock contain verify` on managed Linux hosts, after every change.
+- Run `pipelock verify-install --config` against your config, and `sudo pipelock contain verify` on managed Linux hosts, after every change.
 
 ## Test your controls
 
@@ -148,7 +148,7 @@ pipelock verify-install --config ./pipelock.yaml --no-color
 
 Without `--config`, it checks built-in test defaults instead of your file. It starts a temporary proxy, so a pass doesn't prove that Claude uses your running proxy.
 
-For a managed Linux installation created by `pipelock contain install`, run `pipelock contain verify` to check that host containment boundary. Containers and pods need their own boundary evidence. Read each reported result and investigate failed checks before proceeding. Skipped, unknown, and not-applicable checks don't establish protection. None of these checks prove that every Claude tool or MCP server uses the protected path.
+For a managed Linux installation created by `sudo pipelock contain install`, run `sudo pipelock contain verify` to check that host containment boundary. Containers and pods need their own boundary evidence. Read each reported result and investigate failed checks before proceeding. Skipped, unknown, and not-applicable checks don't establish protection. None of these checks prove that every Claude tool or MCP server uses the protected path.
 
 To test an actual integration, use a disposable directory and synthetic fixtures. Capture an allowed control and the expected blocked case through the same configured path, and confirm the scanner's recorded reason as well as the command result. A local file write alone doesn't test MCP response scanning, and a comment in a script doesn't test request-body scanning.
 
