@@ -5,7 +5,7 @@ seoTitle: "Agent Firewall: How It Works and What It Blocks"
 subtitle: "A proxy or MCP wrapper between your agent and the systems it reaches. Scans mediated traffic. Blocks the bad stuff."
 description: "An agent firewall inspects AI agent HTTP, WebSocket, and MCP traffic, including wrapped stdio servers, to block leaks and injection."
 layout: "agent-firewall"
-lastmod: 2026-08-31
+lastmod: 2026-10-14
 cta_copy: "Install Pipelock in front of your first agent."
 cta_primary_label: "Install Pipelock"
 cta_primary_href: "/install/"
@@ -129,13 +129,13 @@ A Camp 2 agent firewall sits in front of one or more MCP servers and decides whi
 **Examples in the wild.**
 
 - **Docker MCP Gateway.** Container-native, isolation per server. See [Pipelock vs Docker MCP Gateway](/compare/pipelock-vs-docker-mcp-gateway/).
-- **Runlayer.** Managed MCP control plane. See [Pipelock vs Runlayer](/compare/pipelock-vs-runlayer/).
+- **Runlayer.** AI control plane for MCP governance, Runlayer-hosted or self-hosted, with documented checks on tool definitions, arguments, and outputs. See [Pipelock vs Runlayer](/compare/pipelock-vs-runlayer/).
 - **agentgateway.** Open source agent and MCP gateway focused on routing and policy.
 - **TrueFoundry, Operant AI, Obot, Lasso, MintMCP.** A growing slate of MCP-focused gateway products. Capabilities and content inspection depth vary widely. Verify against current public docs before assuming any feature.
 
 **Strengths.** Solves access control for MCP environments where multiple agents share many tool servers. Centralizes auth so each server does not implement it independently. Good fit for organizations that have standardized on MCP. Some gateways offer audit logs that satisfy compliance requirements.
 
-**Limits.** Most Camp 2 gateways do not deeply inspect tool arguments or responses. They check that an agent is allowed to call a tool, not that the response is safe to feed back into the model's context. They typically only cover MCP, leaving HTTP and WebSocket egress unmanaged. They do not stop a permitted tool from returning a prompt injection payload, and they do not detect rug-pulls. A Camp 2 gateway in front of a [shadow MCP](/learn/shadow-mcp/) server is still a path to compromise. For [MCP authorization](/learn/mcp-authorization/) without content inspection, a gateway is the right tool. For full MCP threat coverage, pair it with a Camp 3 layer. The [MCP gateway guide](/learn/mcp-gateway/) goes deeper.
+**Limits.** Gateway coverage depends on the product and configuration. A gateway built only for routing and access checks that an agent may call a tool, not that the response is safe to feed back into the model's context. Others go further: Runlayer's ToolGuard documentation describes checks on tool definitions, arguments, and outputs, including prompt-injection detection. Check each deployment's enabled scanners and actions before relying on that coverage. A governed MCP path doesn't by itself establish protection for HTTP or WebSocket traffic outside that path. A Camp 2 gateway in front of a [shadow MCP](/learn/shadow-mcp/) server is still a path to compromise. For [MCP authorization](/learn/mcp-authorization/) without content inspection, a gateway is the right tool. For full MCP threat coverage, pair it with a Camp 3 layer. The [MCP gateway guide](/learn/mcp-gateway/) goes deeper.
 
 ## Camp 3: Content inspection and runtime defense
 
@@ -154,7 +154,7 @@ A Camp 3 agent firewall scans the actual bytes of every request and response, re
 
 Capabilities differ. Some are pre-deploy scanners only. Some are runtime. Some focus on cloud SaaS DLP and have not extended to MCP. Use "not documented in public docs" as your default for any feature you cannot verify on the vendor's current site.
 
-**Strengths.** Catches the threats other camps cannot. A credential leak inside an approved API call gets blocked. A prompt injection payload in a fetched web page gets stripped before the model sees it. A poisoned tool description gets flagged on registration. A rug-pulled description gets caught mid-session. SSRF attempts get blocked regardless of destination. Camp 3 is the only camp that meaningfully addresses [MCP tool poisoning](/learn/mcp-tool-poisoning/) and [prompt injection](/learn/llm-prompt-injection/) in production traffic.
+**Strengths.** Catches content threats the other camps aren't built for. A credential leak inside an approved API call gets blocked. A prompt injection payload in a fetched web page gets stripped before the model sees it. A poisoned tool description gets flagged on registration. A rug-pulled description gets caught mid-session. SSRF attempts get blocked regardless of destination. Content inspection is this camp's primary job, so Camp 3 is where to look first for [MCP tool poisoning](/learn/mcp-tool-poisoning/) and [prompt injection](/learn/llm-prompt-injection/) coverage in production traffic; some Camp 2 gateways document overlapping checks on MCP traffic.
 
 **Limits.** Higher configuration cost. Pattern-based detection has inherent ceilings on novel or obfuscated payloads. False positives need tuning per environment. Inspection adds latency on hot paths. Camp 3 requires the same network isolation discipline as Camp 1: if the agent can bypass the proxy, the inspection layer is bypassed too. An honest deployment combines Camp 3 with Camp 1's allowlist discipline rather than relying on one camp alone.
 
@@ -279,7 +279,7 @@ To see what your agent traffic looks like before enforcing, run `pipelock audit 
 **Comparisons:**
 
 - [Pipelock vs Docker MCP Gateway](/compare/pipelock-vs-docker-mcp-gateway/): Camp 3 vs Camp 2 in MCP land
-- [Pipelock vs Runlayer](/compare/pipelock-vs-runlayer/): self-hosted proxy vs managed control plane
+- [Pipelock vs Runlayer](/compare/pipelock-vs-runlayer/): traffic proxy vs a control plane for MCP governance and tool scanning
 - [Pipelock vs iron-proxy](/compare/pipelock-vs-iron-proxy/): inspection vs allowlist
 - [Pipelock vs Backslash](/compare/pipelock-vs-backslash/), [vs LlamaFirewall](/compare/pipelock-vs-llamafirewall/), [vs NemoClaw](/compare/pipelock-vs-nemoclaw/), [vs DefenseClaw](/compare/pipelock-vs-defenseclaw/), [vs Cloudflare AI Gateway](/compare/pipelock-vs-cloudflare-ai-gateway/), [vs Prisma AIRS](/compare/pipelock-vs-prisma-airs/)
 - [Pipelock vs Attested Intelligence](/compare/pipelock-vs-attested-intelligence/) and [Pipelock vs agent evidence tools](/compare/pipelock-vs-agent-evidence-tools/): the evidence axis, who holds the key, and what verifies offline
