@@ -133,7 +133,7 @@ Link: [github.com/docker/mcp-gateway](https://github.com/docker/mcp-gateway).
 
 ### 7. Runlayer
 
-MCP control plane. Raised a reported $11M. Hosts MCP servers, manages access control across teams, and scans tool definitions, inputs, and outputs with its [ToolGuard](https://docs.runlayer.com/runlayer-toolguard) checks. Its [deployment docs](https://docs.runlayer.com/deployment/overview) (checked 2026-10-14) offer a Runlayer-hosted deployment or self-hosting on AWS ECS with Terraform or on Kubernetes. Aimed at orgs that want a registry and central management for MCP.
+MCP control plane. Hosts MCP servers, manages access control across teams, and scans tool definitions, inputs, and outputs with its [ToolGuard](https://docs.runlayer.com/runlayer-toolguard) checks. Its [deployment docs](https://docs.runlayer.com/deployment/overview) (checked 2026-10-14) offer a Runlayer-hosted deployment or self-hosting on AWS ECS with Terraform or on Kubernetes. Aimed at orgs that want a registry and central management for MCP.
 
 **Strengths**
 - The Runlayer-hosted option lets teams skip running and patching the platform themselves.

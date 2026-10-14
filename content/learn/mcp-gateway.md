@@ -156,7 +156,7 @@ A high-level read of the space at a single point in time. Where a vendor does no
 | agentgateway | Yes | Yes | Not documented in public docs | Yes | Yes |
 | Lasso open source gateway | Partial | Not documented in public docs | Yes | Not documented in public docs | Yes |
 | Obot | Yes | Partial | Not documented in public docs | Not documented in public docs | Yes |
-| Runlayer | Yes | Yes | Yes (ToolGuard checks on tool definitions, inputs, and outputs) | Ingests Claude Code OTLP logs; gateway trace export not documented | Yes (AWS ECS with Terraform, or Kubernetes) |
+| Runlayer | Yes | Yes | Yes (ToolGuard checks on tool definitions, inputs, and outputs) | [Ingests Claude Code OTLP logs](https://docs.runlayer.com/claude-code-otlp-monitoring); its deployment, ToolGuard and OTLP pages don't describe gateway trace export (checked 2026-10-14) | Yes (AWS ECS with Terraform, or Kubernetes) |
 | TrueFoundry MCP Gateway | Yes | Yes | Not documented in public docs | Yes | Yes |
 | Operant AI | Yes | Yes | Partial | Yes | Not documented in public docs |
 | MintMCP | Yes | Yes | Not documented in public docs | Not documented in public docs | Not documented in public docs |
