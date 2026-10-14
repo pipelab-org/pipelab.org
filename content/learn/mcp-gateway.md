@@ -4,7 +4,7 @@ linkTitle: "MCP Gateway: Open Source Security Comparison"
 subtitle: "What an MCP gateway does, the open-source vs commercial split, MCP gateway vs MCP proxy, and how to evaluate them."
 description: "MCP gateway guide comparing open source and commercial options, routing, auth, content inspection, proxy differences, and security controls."
 date: 2026-04-11
-lastmod: 2026-08-08
+lastmod: 2026-10-14
 faq:
   - q: "What is an MCP gateway?"
     a: "An MCP gateway sits between AI agents and MCP (Model Context Protocol) servers, centralizing routing, authentication, access control, and policy. Some gateways also scan tool calls and responses for security threats like tool poisoning, credential leaks, and prompt injection. The term covers a range of products with different capabilities."
@@ -134,7 +134,7 @@ For a product-by-product view of the open source side of the category, including
 
 ## Commercial MCP gateway options
 
-**[Runlayer](https://www.runlayer.com/).** Cloud-hosted MCP gateway with threat detection and fine-grained permissions. SaaS only. Positions itself as a security-first control plane with policy, audit, and anomaly detection built in. Good for teams that want a managed option and are comfortable with a cloud data path.
+**[Runlayer](https://www.runlayer.com/).** AI control plane with MCP access governance, fine-grained permissions, and audit logs. Its [deployment docs](https://docs.runlayer.com/deployment/overview) (checked 2026-10-14) offer a Runlayer-hosted single-tenant deployment or self-hosting on AWS ECS with Terraform or on Kubernetes. Its [ToolGuard docs](https://docs.runlayer.com/runlayer-toolguard) describe configurable checks on tool definitions, tool inputs, and tool outputs for prompt injection, credentials, and PII. Good for teams that want MCP governance and gateway-side scanning in one product, run by Runlayer or inside their own cloud.
 
 **[TrueFoundry MCP Gateway](https://www.truefoundry.com/mcp-gateway).** Part of TrueFoundry's broader AI platform. Covers routing, auth, quota, and observability with ML platform integration. Good for teams already running TrueFoundry who want MCP governance in the same control plane.
 
@@ -156,7 +156,7 @@ A high-level read of the space at a single point in time. Where a vendor does no
 | agentgateway | Yes | Yes | Not documented in public docs | Yes | Yes |
 | Lasso open source gateway | Partial | Not documented in public docs | Yes | Not documented in public docs | Yes |
 | Obot | Yes | Partial | Not documented in public docs | Not documented in public docs | Yes |
-| Runlayer | Yes | Yes | Partial | Not documented in public docs | No (SaaS) |
+| Runlayer | Yes | Yes | Yes (ToolGuard checks on tool definitions, inputs, and outputs) | Ingests Claude Code OTLP logs; gateway trace export not documented | Yes (AWS ECS with Terraform, or Kubernetes) |
 | TrueFoundry MCP Gateway | Yes | Yes | Not documented in public docs | Yes | Yes |
 | Operant AI | Yes | Yes | Partial | Yes | Not documented in public docs |
 | MintMCP | Yes | Yes | Not documented in public docs | Not documented in public docs | Not documented in public docs |
