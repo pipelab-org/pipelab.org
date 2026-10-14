@@ -3,6 +3,9 @@ languageCode = "en-US"
 title = "PipeLab"
 theme = "pipelab"
 ignoreFiles = ['\.devto\.md$', '\.dzone\.(md|html)$']
+# Hugo 0.168 moved its injected generator meta tag to the end of <head>, so the
+# same page renders differently across Hugo versions. Nothing reads the tag.
+disableHugoGeneratorInject = true
 
 [params]
   description = "Pipelock is an open-source agent firewall for MCP and AI agent egress. It mediates MCP, HTTP, and WebSocket traffic and can emit signed evidence for mediated actions when receipt or flight-recorder signing is configured."

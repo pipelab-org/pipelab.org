@@ -2,7 +2,7 @@
 title: "Best AI Agent Security Tools 2026: 24 Options by Boundary"
 linkTitle: "Best AI Agent Security Tools 2026"
 date: 2026-04-12
-lastmod: 2026-04-29
+lastmod: 2026-10-14
 author: "Josh Waldrep"
 summary: "24 AI agent security options mapped to the six boundaries: model gateway, MCP gateway, identity, platform governance, runtime containment, and network egress."
 description: "Compare AI agent security tools for 2026 by boundary: model gateway, MCP gateway, identity, platform governance, containment, and egress."
@@ -133,17 +133,17 @@ Link: [github.com/docker/mcp-gateway](https://github.com/docker/mcp-gateway).
 
 ### 7. Runlayer
 
-Cloud MCP control plane. Raised a reported $11M. Hosts MCP servers, manages access control across teams, and provides usage analytics. Aimed at orgs that want a registry and central management rather than running MCP infrastructure themselves.
+MCP control plane. Hosts MCP servers, manages access control across teams, and scans tool definitions, inputs, and outputs with its [ToolGuard](https://docs.runlayer.com/runlayer-toolguard) checks. Its [deployment docs](https://docs.runlayer.com/deployment/overview) (checked 2026-10-14) offer a Runlayer-hosted deployment or self-hosting on AWS ECS with Terraform or on Kubernetes. Aimed at orgs that want a registry and central management for MCP.
 
 **Strengths**
-- Fully hosted, so teams skip the infra work of running and patching MCP servers.
+- The Runlayer-hosted option lets teams skip running and patching the platform themselves.
 - Central access control and analytics give a clean story for audit and spend.
 
 **Trade-offs**
-- Hosted model means MCP traffic goes through a third party, which some regulated shops will not accept.
+- The hosted option puts MCP traffic through a deployment Runlayer operates. Shops that won't accept that can self-host, and then they're the ones running and patching it.
 - Hosted MCP catalog is only as useful as the servers it offers for your use case.
 
-**Best for:** teams that want someone else to run MCP infrastructure and would rather pay than patch.
+**Best for:** teams that want central MCP governance and a choice between paying Runlayer to run it or running it in their own cloud.
 
 Link: [runlayer.com](https://www.runlayer.com/).
 

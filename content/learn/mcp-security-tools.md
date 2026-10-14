@@ -4,7 +4,7 @@ linkTitle: "MCP Security Tools"
 subtitle: "The tools that protect MCP connections, compared."
 description: "MCP security tools help you scan servers, inspect traffic, block tool poisoning, and control access. Compare the main options and their trade-offs."
 date: 2026-04-11
-lastmod: 2026-08-08
+lastmod: 2026-10-14
 faq:
   - q: "What are the main categories of MCP security tools?"
     a: "MCP security tools fall into three categories: pre-deploy scanners (check MCP servers before you connect them), runtime proxies (inspect tool calls and responses while the agent runs), and MCP gateways (route and control access across multiple MCP servers). Scanners find problems before launch. Proxies catch problems at runtime. Gateways manage routing and access policy."
@@ -77,7 +77,7 @@ Gateways manage routing, access control, and policy for MCP connections. Some in
 
 ### Runlayer
 
-[Runlayer](https://www.runlayer.com/) is a cloud-hosted MCP gateway with threat detection, fine-grained permissions, and usage analytics. It sits between agents and MCP servers in the cloud, applying access policies and scanning for threats. SaaS model, not self-hosted.
+[Runlayer](https://www.runlayer.com/) is an AI control plane with MCP access governance, fine-grained permissions, and audit logs. It sits between agents and MCP servers and applies access policies. Its [ToolGuard docs](https://docs.runlayer.com/runlayer-toolguard) describe scanners that check tool definitions when a connector is registered, and tool inputs and outputs at call time, for prompt injection, credentials, and PII. Its [deployment docs](https://docs.runlayer.com/deployment/overview) (checked 2026-10-14) describe a Runlayer-hosted single-tenant deployment or self-hosting on AWS ECS with Terraform or on Kubernetes.
 
 ### agentgateway (Linux Foundation)
 
