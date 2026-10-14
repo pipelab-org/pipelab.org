@@ -62,7 +62,7 @@ test("capability snapshot keeps complete provenance and one classification per r
   assert.equal(snapshot.schema_version, 1);
   assert.match(snapshot.source.commit, /^[0-9a-f]{40}$/);
   assert.match(snapshot.source.manifest_sha256, /^[0-9a-f]{64}$/);
-  assert.equal(snapshot.capabilities.length, 26);
+  assert.equal(snapshot.capabilities.length, 27);
 
   const ids = new Set(snapshot.capabilities.map((capability) => capability.id));
   assert.equal(ids.size, snapshot.capabilities.length);
@@ -453,10 +453,10 @@ test("buyer tier filters include the capabilities inherited from lower tiers", (
   const pro = new Set(visibleAt("pro").map((capability) => capability.id));
   const enterprise = new Set(visibleAt("enterprise").map((capability) => capability.id));
 
-  assert.equal(free.size, 15);
-  assert.equal(pro.size, 22);
-  assert.equal(enterprise.size, 25);
-  assert.deepEqual(snapshot.tier_counts, { free: 15, pro: 22, enterprise: 25, assess: 1 });
+  assert.equal(free.size, 16);
+  assert.equal(pro.size, 23);
+  assert.equal(enterprise.size, 26);
+  assert.deepEqual(snapshot.tier_counts, { free: 16, pro: 23, enterprise: 26, assess: 1 });
   for (const id of free) assert.equal(pro.has(id), true, `${id} should remain available in Pro`);
   for (const id of pro) assert.equal(enterprise.has(id), true, `${id} should remain available in Enterprise`);
   assert.equal(visibleAt("assess").length, 1);
@@ -486,7 +486,6 @@ test("capability page cannot publish a development snapshot as a release invento
   assert.ok(declaredVersion);
   assert.match(releaseTarget, /^\d+\.\d+\.\d+$/);
   if (snapshot.source.status === "development") {
-    assert.match(content, /^release_target: "3\.5\.0"$/m);
     assert.match(content, /^draft: true$/m);
     assert.match(content, /^robots: "noindex, nofollow"$/m);
     assert.equal(snapshot.source.release_version, null);

@@ -19,15 +19,16 @@ categories:
 
 featured:
   - check-the-work
+  - pipelock-v370-release
+  - a-valid-receipt-chain-can-still-be-cut-short
+  - localhost-is-a-place-not-a-program
   - pipelock-v360-release
-  - pipelock-v350-release
-  - pipelock-v340-release
   - pipelock-v330-release
 
 release:
-  version: v3.6.0
-  summary: "Current Pipelock release. See the v3.6.0 release on GitHub for the changelog."
-  notes_url: https://github.com/luckyPipewrench/pipelock/releases
+  version: v3.7.0
+  summary: "Parallel signed receipt chains, filesystem grants, and verified local MCP services."
+  notes_url: /blog/pipelock-v370-release/
 
 subscribe:
   - label: dev.to mirror

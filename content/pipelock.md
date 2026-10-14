@@ -3,7 +3,7 @@ title: "Pipelock: Open-Source Agent Firewall"
 linkTitle: "Pipelock: Open-Source Agent Firewall"
 subtitle: "Pipelock scans mediated HTTP, MCP, and WebSocket traffic for secret leaks, prompt injection, and tool poisoning, then emits signed action receipts you can verify offline."
 description: "Pipelock: open-source agent firewall that blocks secret leaks and SSRF, detects prompt injection, and emits signed receipts you verify offline."
-lastmod: 2026-08-31
+lastmod: 2026-10-14
 og_image: "https://pipelab.org/images/og/og-product.png"
 disable_cta: true
 type: pipelock
@@ -29,6 +29,8 @@ faq:
   - q: "What's the performance impact?"
     a: "The current end-to-end performance benchmark shows sub-millisecond MCP stdio overhead and low-millisecond HTTP and tool-chain overhead on localhost. See the Pipelock performance guide for the full transport table, cold-start numbers, and reproduce command: https://pipelab.org/learn/performance/"
 ---
+
+<p>New in v3.7: <a href="/learn/parallel-receipt-chains/">parallel signed receipts</a>, <a href="/learn/pipelock-contain-guide/">filesystem grants for containment</a>, <a href="/learn/pipelock-exec/">cooperative command launch</a>, <a href="/learn/verified-local-mcp-services/">verified local MCP services</a>, and <a href="/learn/destination-grants/">exact destination grants</a>. Read the <a href="/blog/pipelock-v370-release/">release notes</a> and <a href="/learn/pipelock-v370-upgrade/">upgrade actions</a>.</p>
 
 <section class="pipelock-boundary" id="overview" data-fx="reveal" aria-labelledby="pipelock-boundary-title">
   <div class="pipelock-boundary-copy">
@@ -161,7 +163,7 @@ faq:
       <div class="pipelock-control-body">
         <p>Decision records, hash-chained logs, signed assessments, and machine-readable reports keep enforcement evidence attached to the run.</p>
         <ul class="pipelock-control-tags"><li>Signed receipts</li><li>Flight recorder</li><li>Assess</li><li>HTML, JSON, SARIF</li></ul>
-        <details class="pipelock-control-detail"><summary>Open evidence controls</summary><div><p><strong>Flight recorder.</strong> Scanner decisions, policy actions, and session events are hash chained. Optional Ed25519 checkpoints can sign the chain. Each Pipelock process writes its own receipt chain, and a restart is recorded as a signed link. HTTP responses carry an <code>X-Pipelock-Receipt</code> header naming the receipt after it is recorded. That needs a configured receipt emitter, and allow coverage depends on <code>flight_recorder.require_receipts</code>.</p><p><strong>Assess.</strong> Pipelock combines simulation, config scoring, install verification, and discovery into signed HTML and JSON evidence bundles.</p><p><strong>CI.</strong> The current GitHub Action is <code>luckyPipewrench/pipelock@v3.6.0</code>. It can scan a diff and fail the job when it finds a blocking issue.</p><p><strong>Session records.</strong> Versioned snapshots capture policy state, tool inventory, verdict summaries, and behavioral fingerprints.</p></div></details>
+        <details class="pipelock-control-detail"><summary>Open evidence controls</summary><div><p><strong>Flight recorder.</strong> Scanner decisions, policy actions, and session events are hash chained. Optional Ed25519 checkpoints can sign the chain. A process can use parallel receipt chains bound by signed group lifecycle records. Verify the whole group; one valid shard does not prove completeness. A recovery seal attests a discontinuity and preserves the damaged history's failure. HTTP responses carry an <code>X-Pipelock-Receipt</code> header naming the receipt after it is recorded. That needs a configured receipt emitter, and allow coverage depends on <code>flight_recorder.require_receipts</code>.</p><p><strong>Assess.</strong> Pipelock combines simulation, config scoring, install verification, and discovery into signed HTML and JSON evidence bundles.</p><p><strong>CI.</strong> The current GitHub Action is <code>luckyPipewrench/pipelock@v3.7.0</code>. It can scan a diff and fail the job when it finds a blocking issue.</p><p><strong>Upgrade.</strong> Read the <a href="/learn/pipelock-v370-upgrade/">v3.7 upgrade guide</a> before changing receipt automation or containment. <strong>Session records.</strong> Versioned snapshots capture policy state, tool inventory, verdict summaries, and behavioral fingerprints.</p></div></details>
       </div>
     </article>
   </div>
@@ -172,7 +174,7 @@ faq:
     <div>
       <p class="pipelock-body-kicker">Scanner pipeline</p>
       <h2 id="pipelock-pipeline-title">The order is part of the control.</h2>
-      <p class="pipelock-scan-version"><span>v3.6.0</span><strong>Named checks. Fixed sequence.</strong><a href="https://github.com/luckyPipewrench/pipelock/blob/v3.6.0/docs/security-assurance.md#ordered-url-scanner-pipeline">Read the tagged pipeline</a></p>
+      <p class="pipelock-scan-version"><span>v3.7.0</span><strong>Named checks. Fixed sequence.</strong><a href="https://github.com/luckyPipewrench/pipelock/blob/v3.7.0/docs/security-assurance.md#ordered-url-scanner-pipeline">Read the tagged pipeline</a></p>
     </div>
     <p>For mediated target URLs, length and parsing happen first. Destination policy and credential checks run before the first DNS lookup; usage limits and a final context check close the path.</p>
   </header>

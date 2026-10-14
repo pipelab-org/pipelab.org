@@ -56,6 +56,12 @@ When a benchmark run is recorded, the measured figures are published here: the b
 
 No measured snapshot has been recorded here yet.
 
+## v3.7 evidence and launch limits
+
+[Cooperative command launch](/learn/pipelock-exec/) sets proxy and CA environment variables, which a command can ignore. Operating-system enforcement still needs containment, sandboxing or network policy. Containment filesystem enforcement is off for existing configs that omit the new mode. Enforce mode retains user-namespace remount, same-user process, socket and operator-written-unit limits.
+
+[Parallel receipt chains](/learn/parallel-receipt-chains/) need complete-group verification. An open prefix isn't a complete run, and a recovery seal doesn't repair damaged evidence. Native AEL streams have a 256 MiB verifier ceiling the writer doesn't cap. Receipt content scanning checks whole values but uses bounded fragment reassembly and excludes process-proven generated IDs. Review the [full receipt content boundary](https://github.com/luckyPipewrench/pipelock/blob/main/docs/guides/receipt-verification.md#receipt-content-boundary).
+
 ## Where to go next
 
 - [What Pipelock claims and does not claim](/learn/non-bypass-doctrine/) for the doctrine behind this register

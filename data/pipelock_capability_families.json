@@ -22,8 +22,8 @@
       "number": "03",
       "eyebrow": "Close the bypass",
       "title": "Process containment",
-      "description": "Put an agent behind the mediated path with host containment or run one command inside Pipelock's process sandbox.",
-      "capabilities": ["agent-containment", "single-agent-sandbox"]
+      "description": "Use host containment or a process sandbox for isolation, or steer cooperative commands through a running proxy.",
+      "capabilities": ["agent-containment", "single-agent-sandbox", "cooperative-command-launch"]
     },
     {
       "id": "receipts-and-evidence",

@@ -14,7 +14,7 @@ disableHugoGeneratorInject = true
   twitter = "https://x.com/pipelockhq"
   linkedin = "https://www.linkedin.com/company/pipelab-org"
   discord = "https://discord.com/invite/badNfhGKTc"
-pipelock_version = "3.6.0"
+pipelock_version = "3.7.0"
   # Founding Pro seats claimed. Update this integer when a Founding Pro
   # customer signs. Source: business ops. Cap is founding_cap (50).
   founding_claimed = 2

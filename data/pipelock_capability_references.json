@@ -27,17 +27,23 @@
     }
   },
   "capabilities": {
+    "cooperative-command-launch": [
+      { "label": "Launch a cooperative command", "path": "/learn/pipelock-exec/", "kind": "site" },
+      { "label": "Exec command reference", "path": "docs/cli/exec.md", "kind": "source" }
+    ],
     "network-mediation": [
       { "label": "Secure an agent deployment", "path": "/learn/secure-ai-agent-deployment/", "kind": "site" },
       { "label": "Transport modes", "path": "docs/guides/transport-modes.md", "kind": "source" }
     ],
     "mcp-proxy-scanning": [
       { "label": "MCP proxy guide", "path": "/learn/mcp-proxy/", "kind": "site" },
-      { "label": "MCP integrity controls", "path": "docs/cli/mcp-integrity.md", "kind": "source" }
+      { "label": "MCP integrity controls", "path": "docs/cli/mcp-integrity.md", "kind": "source" },
+      { "label": "Verified local MCP services", "path": "/learn/verified-local-mcp-services/", "kind": "site" }
     ],
     "signed-action-receipts": [
       { "label": "Agent action receipts", "path": "/learn/agent-action-receipts/", "kind": "site" },
-      { "label": "Flight recorder guide", "path": "docs/guides/flight-recorder.md", "kind": "source" }
+      { "label": "Flight recorder guide", "path": "docs/guides/flight-recorder.md", "kind": "source" },
+      { "label": "Parallel receipt chains", "path": "/learn/parallel-receipt-chains/", "kind": "site" }
     ],
     "agent-containment": [
       { "label": "Linux containment walkthrough", "path": "/blog/three-uid-agent-containment-linux/", "kind": "site" },

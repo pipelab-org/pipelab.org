@@ -24,6 +24,7 @@ const GROUPS = new Map(Object.entries({
   "browser-shield": "boundary",
   "rule-bundles": "boundary",
   "agent-containment": "enforcement",
+  "cooperative-command-launch": "enforcement",
   "single-agent-sandbox": "enforcement",
   "emergency-kill-switch": "enforcement",
   "adaptive-enforcement": "enforcement",

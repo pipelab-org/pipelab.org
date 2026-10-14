@@ -97,4 +97,4 @@ pipelock pi remove
 
 Restart Pi to apply it. Re-running install recovers a prepared install only when Pi's proxy still matches the recorded target or prior value. The command refuses to overwrite a changed proxy value or an interrupted removal. Inspect the settings and the state file before resolving another interrupted condition by hand.
 
-See also: [Continue.dev MCP Security](/learn/continue/) · [Contain an AI Agent on Linux](/learn/pipelock-contain-guide/) · [Pipelock v3.6 Upgrade Guide](/learn/pipelock-v360-upgrade/) · [Pi integration guide](https://github.com/luckyPipewrench/pipelock/blob/main/docs/guides/pi.md)
+See also: [Continue.dev MCP Security](/learn/continue/) · [Contain an AI Agent on Linux](/learn/pipelock-contain-guide/) · [Pipelock v3.7 Upgrade Guide](/learn/pipelock-v370-upgrade/) · [Pi integration guide](https://github.com/luckyPipewrench/pipelock/blob/main/docs/guides/pi.md)
