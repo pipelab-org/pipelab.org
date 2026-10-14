@@ -5,7 +5,7 @@ seoTitle: "Agent Firewall vs Agent Authorization Gateway"
 subtitle: "Authorization gateways decide who may call which tool with which credential. An agent firewall inspects what crosses the wire once the call is allowed."
 description: "Agent firewall vs authorization gateway: Arcade, Auth0, Cerbos, and Okta decide who may act. An agent firewall inspects what the allowed call carries."
 date: 2026-09-01
-lastmod: 2026-09-01
+lastmod: 2026-10-14
 reviewed: "September 2026"
 compare_cat: "concept"
 compare:
@@ -113,5 +113,5 @@ The gateway issues the permission, and in the identity products the credential. 
 - [What is an agent firewall?](/agent-firewall/): definition and evaluation checklist
 - [Pipelock vs agentgateway](/compare/pipelock-vs-agentgateway/): a proxy with CEL authorization built in
 - [Pipelock vs AWS AgentCore Gateway](/compare/pipelock-vs-aws-agentcore-gateway/): OAuth on both sides of a managed gateway
-- [Pipelock vs Runlayer](/compare/pipelock-vs-runlayer/): identity-based access as a managed control plane
+- [Pipelock vs Runlayer](/compare/pipelock-vs-runlayer/): identity-based access in a control plane you can run hosted or self-hosted
 - [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)

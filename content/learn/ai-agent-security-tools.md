@@ -4,6 +4,7 @@ linkTitle: "Agent Security Tools"
 subtitle: "What each tool category catches and what still gets through."
 description: "AI agent security tools range from static scanners to runtime firewalls. Compare what each layer catches and pick the right stack for your agents."
 date: 2026-04-11
+lastmod: 2026-10-14
 faq:
   - q: "What types of AI agent security tools exist?"
     a: "AI agent security tools fall into five categories: static scanners (check MCP servers before deployment), runtime firewalls and proxies (inspect traffic during execution), gateways (route and control access to tools), inference guardrails (classify prompts and completions), and governance platforms (discover and manage agents at enterprise scale). Most production deployments need tools from at least two categories."
@@ -75,12 +76,12 @@ Gateways focus on routing, discovery, and access control for MCP servers. They d
 
 **What they handle:** Tool discovery (agents find available servers through the gateway), access control (per-agent or per-team permissions), connection management (transport bridging between stdio and HTTP), and routing (multiple MCP servers behind one endpoint).
 
-**What they miss:** Content-level threats. A gateway that routes traffic to an MCP server doesn't inspect whether the tool arguments contain leaked credentials or whether the response contains injection. Access control says "this agent can use this tool." Content inspection says "this specific tool call is safe."
+**What they miss:** Content-level threats, unless the gateway adds its own scanners. A gateway that only routes traffic to an MCP server doesn't inspect whether the tool arguments contain leaked credentials or whether the response contains injection. Access control says "this agent can use this tool." Content inspection says "this specific tool call is safe."
 
 **Examples:**
 
 - **[Docker MCP Gateway](https://github.com/docker/mcp-gateway):** Manages containerized MCP servers. Provides tool-level access control and transport bridging. Agents connect to the gateway, which routes to the appropriate container. Focuses on isolation and management rather than content scanning.
-- **[Runlayer](https://www.runlayer.com/):** Cloud-hosted MCP gateway with hosted MCP servers, access control, and usage analytics. Provides a registry of available servers and manages connections.
+- **[Runlayer](https://www.runlayer.com/):** AI control plane with access control, a registry of MCP servers, and hosting for custom ones. Unlike a routing-only gateway, its [ToolGuard](https://docs.runlayer.com/runlayer-toolguard) scanners also check tool definitions, inputs, and outputs. Runs as a Runlayer-hosted deployment or [self-hosted](https://docs.runlayer.com/deployment/overview) on AWS ECS with Terraform or on Kubernetes (docs checked 2026-10-14).
 - **[agentgateway](https://github.com/agentgateway/agentgateway) (Solo.io/Linux Foundation):** Open-source gateway for A2A (agent-to-agent) and MCP traffic. Focuses on routing, authentication, and observability across multiple agent protocols.
 
 Gateways and firewalls are complementary. The gateway controls who can talk to what. The firewall controls what's allowed in the conversation. Large deployments often run both.
