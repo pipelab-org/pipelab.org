@@ -9,7 +9,7 @@ import { parse as parseToml } from "smol-toml";
 import { parse as parseYaml } from "yaml";
 
 import { isBlockedExternalLink } from "./external-link-policy.mjs";
-import { HISTORICAL_ELIGIBLE_PATHS, loadHistoricalArtifacts, sha256Hex } from "./historical-artifacts.mjs";
+import { auditDemoVersions } from "./historical-artifacts.mjs";
 import { probeHugoVersion, readPinnedVersion } from "./hugo-pin.mjs";
 
 const repoRoot = process.cwd();
@@ -1252,25 +1252,7 @@ if (currentVersion) {
     "static/assess/demo-assessment/index.html",
   ];
 
-  // A demo with a reviewed historical classification must keep its pinned bytes
-  // and state its recorded version; every other demo must state the current one.
-  const historical = loadHistoricalArtifacts(repoRoot, HISTORICAL_ELIGIBLE_PATHS);
-  issues.push(...historical.findings);
-  for (const relativePath of demoFiles) {
-    const bytes = readFileSync(path.join(repoRoot, relativePath));
-    const source = bytes.toString("utf8");
-    const entry = historical.entries.get(relativePath);
-    if (entry) {
-      if (sha256Hex(bytes) !== entry.sha256) {
-        issues.push(`${relativePath}: classified historical demo bytes changed; regenerate it for v${currentVersion} or update its reviewed classification`);
-      }
-      if (!source.includes(`v${entry.version}`)) {
-        issues.push(`${relativePath}: classified historical demo does not state its recorded version v${entry.version}`);
-      }
-    } else if (!source.includes(versionNeedle)) {
-      issues.push(`${relativePath}: missing current release version ${versionNeedle}`);
-    }
-  }
+  issues.push(...auditDemoVersions(repoRoot, currentVersion, demoFiles));
 
   if (!pipelockPage.includes(`luckyPipewrench/pipelock@${versionNeedle}`)) {
     issues.push(`content/pipelock.md: missing GitHub Action version ${versionNeedle}`);
