@@ -102,6 +102,12 @@ export function normalizeForCompare(logical, text) {
   let s = normalizeDocument(text);
   if (ext === ".html" || ext === ".xml" || ext === ".svg" || ext === ".md") {
     s = stripChromaColorSpans(s);
+    if (ext === ".html") {
+      // Hugo 0.168.0 moved its injected generator tag to the end of <head>
+      // (release note: "transform/metainject: Inject Hugo generator tag last
+      // in <head>"). Same tag, different position.
+      s = s.replace(/<meta\s+name=(?:"|')?generator(?:"|')?\s+content=(?:"|')Hugo[^"']*(?:"|')\s*\/?>/gi, "");
+    }
     if (ext === ".xml") {
       // RSS descriptions do not run the page HTML render hook, so table
       // attributes such as data-fx differ across Hugo versions. Title

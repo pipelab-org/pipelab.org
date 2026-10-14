@@ -287,3 +287,13 @@ test("compareTrees ignores CSS minify that is the same after canonicalization", 
   );
   assert.deepEqual(compareTrees(pinned, local), []);
 });
+
+test("normalizeForCompare ignores the position of Hugo's injected generator tag", () => {
+  const pinned = `<!doctype html><html lang="en"><head><meta name=generator content="Hugo 0.147.7"><meta charset="utf-8"><title>PipeLab</title></head><body>x</body></html>`;
+  const latest = `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>PipeLab</title><meta name=generator content="Hugo 0.168.0"></head><body>x</body></html>`;
+  assert.equal(normalizeForCompare("index.html", pinned), normalizeForCompare("index.html", latest));
+  const changed = latest.replace("<title>PipeLab</title>", "<title>Other</title>");
+  assert.notEqual(normalizeForCompare("index.html", pinned), normalizeForCompare("index.html", changed));
+  const author = `<meta name=generator content="SiteBuilder">`;
+  assert.ok(normalizeForCompare("index.html", author).includes("SiteBuilder"));
+});
