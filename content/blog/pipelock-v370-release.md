@@ -40,6 +40,10 @@ Expiring credential-request acknowledgments bind a reviewed finding to the compl
 
 [Exact destination grants](/learn/destination-grants/) authorize one TCP host and port while keeping content scanning and protected-address checks. Grants remain local fleet policy. They don't add raw TCP proxying or UDP support, and CONNECT without interception still carries encrypted application content.
 
+## Benchmark
+
+On Agent Egress Bench v1.2.0, Pipelock 3.7.0 blocks 187 of 191 attack cases (97.9%) with 3 false positives across 77 allowed cases. That's one more attack blocked than 3.6.0 on the same corpus. It reads lower than the 98.4% published for 3.6.0 because bench v1.2.0 fixed a fixture that used to score one real miss as a block, and added an SVG response pair. On the earlier v1.1.0 corpus, 3.7.0 matches 3.6.0 case for case at 98.4%. The [Gauntlet results](/gauntlet/) have the per-case detail.
+
 ## Browser, protocol and operator changes
 
 Browser Shield and media policy follow the browser-visible effective content type. Origin-issued links, query values and object IDs get scoped entropy relief only within the issuing origin and session; other checks still run. Forward, intercepted and reverse HTTP proxies strip Range and cache-validator headers and refuse incomplete `206` and `304` responses.
