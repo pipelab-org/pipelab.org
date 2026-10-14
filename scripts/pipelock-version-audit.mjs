@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { auditProductFacts } from "./product-facts-audit.mjs";
 import { auditReleaseData } from "./release-data-audit.mjs";
+import { auditHistoricalArtifact, loadHistoricalArtifacts } from "./historical-artifacts.mjs";
 
 // This is intentionally a current-claim guard, not a release-history rewrite.
 // It checks the tracked source surfaces that publish the current Pipelock
@@ -42,17 +43,31 @@ if (!declared) {
   process.exit(1);
 }
 
-const findings = [...auditProductFacts(), ...auditReleaseData(".", declared)];
+const historical = loadHistoricalArtifacts(".", currentClaimPaths);
+const findings = [...auditProductFacts(), ...auditReleaseData(".", declared), ...historical.findings];
+for (const path of historical.entries.keys()) {
+  if (!files.includes(path)) {
+    findings.push(`${path}: classified historical artifact is not tracked; remove its classification`);
+  }
+}
 for (const file of files) {
   if (!isCurrentClaimFile(file) || !textSource.test(file)) {
     continue;
   }
 
-  let source;
+  let bytes;
   try {
-    source = readFileSync(file, "utf8");
+    bytes = readFileSync(file);
   } catch (error) {
     findings.push(`${file}: unable to read tracked current-version source (${error.message}); refusing to skip version checks`);
+    continue;
+  }
+  const source = bytes.toString("utf8");
+
+  const entry = historical.entries.get(file);
+  if (entry) {
+    const claimsByLine = source.split("\n").map((line, index) => [index + 1, versionsInCurrentClaim(file, line)]);
+    findings.push(...auditHistoricalArtifact(file, bytes, claimsByLine, entry, declared));
     continue;
   }
 

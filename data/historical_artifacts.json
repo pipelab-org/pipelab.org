@@ -1,0 +1,28 @@
+{
+  "artifacts": [
+    {
+      "path": "static/assess/demo-assessment/index.html",
+      "pipelock_version": "3.6.0",
+      "sha256": "9e03035780cab8d045c684e9919e8fcd1000af469144d7c075acbe08bd51d8f2",
+      "reason": "Signed synthetic Pipelock Assess demo produced with Pipelock 3.6.0. Bytes and signature are preserved as generated; it states its own version. Regenerate it with the current release and remove this entry to retire the classification.",
+      "classified": "2026-10-14",
+      "approved_by": "Josh, 2026-10-14"
+    },
+    {
+      "path": "static/assess/demo-egress-report/index.html",
+      "pipelock_version": "3.6.0",
+      "sha256": "92f5fd62e155c66b3f6462bf90e67ce9efc4a89091e4615414b150b069f660f5",
+      "reason": "Signed synthetic Pipelock Assess demo produced with Pipelock 3.6.0. Bytes and signature are preserved as generated; it states its own version. Regenerate it with the current release and remove this entry to retire the classification.",
+      "classified": "2026-10-14",
+      "approved_by": "Josh, 2026-10-14"
+    },
+    {
+      "path": "static/assess/demo-summary/index.html",
+      "pipelock_version": "3.6.0",
+      "sha256": "9090822a39f4a64c0a5552f26634455dbb76982f218675abfdaf20ff66bfc512",
+      "reason": "Signed synthetic Pipelock Assess demo produced with Pipelock 3.6.0. Bytes and signature are preserved as generated; it states its own version. Regenerate it with the current release and remove this entry to retire the classification.",
+      "classified": "2026-10-14",
+      "approved_by": "Josh, 2026-10-14"
+    }
+  ]
+}
