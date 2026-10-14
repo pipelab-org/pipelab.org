@@ -25,6 +25,8 @@ Required receipts make covered effects wait for every configured receipt family'
 
 Native evidence streams have a 256 MiB verifier ceiling that the writer doesn't enforce. Keep each run below it using a schedule measured for your traffic. An over-ceiling multi-chain history refuses restart; single-chain restart leaves the old run unverifiable.
 
+Give a recording proxy time to stop. Closing the receipt group at shutdown can take longer than the systemd (90 s), Kubernetes (30 s) and Compose (10 s) defaults on a small CPU allocation with a long history, so the managed systemd unit, the Helm chart, generated Kubernetes and Compose output and the examples now set 10 minutes. Upgrading from an earlier release runs the old binary's `contain upgrade`, which doesn't add the setting, so run `sudo pipelock contain install` with the new binary afterwards. Hand-written manifests need their own setting. A run stopped before its close finishes verifies as `GROUP_INCOMPLETE`. See the [stop budget](https://github.com/luckyPipewrench/pipelock/blob/v3.7.0/docs/guides/flight-recorder.md#stop-budget) notes.
+
 ## Reinstall containment and restart agents
 
 Run `sudo pipelock contain install` with the new binary, then restart existing agent services and sessions. A binary swap doesn't change their live mounts. `contain doctor` detects stale managed setup; `contain verify` checks the live boundary.
