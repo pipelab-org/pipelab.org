@@ -15,19 +15,19 @@ response_patterns: 34
 # Published GitHub releases observed on 2026-10-14; excludes the untagged target.
 releases: 50
 # Committed Agent Egress Bench snapshot. Deliberately updated by PR, never by a
-# build-time network fetch. The pin tracks the v1.2.0 release commit.
+# build-time network fetch. The pin tracks the v0.1.1 release commit.
 # Provenance is the bench_source_commit and
 # bench_verified_date fields below, measured with `make stats` in the bench
 # repository. Do not restate the commit or date in this comment: the previous
 # wording named an older snapshot than the fields did and contradicted them.
 bench_source_repository: "https://github.com/luckyPipewrench/agent-egress-bench"
-bench_source_commit: "451a5db634a5d7b9c2e965307f3f16bd79747fed"
-bench_verified_date: "2026-10-14"
-bench_cases: 270
+bench_source_commit: "79a51f084fc4f4cd5254e4ec15a273c556c280d5"
+bench_verified_date: "2026-10-02"
+bench_cases: 268
 # Current logical-case split. Use bench_adversarial_cases anywhere copy says
 # "adversarial" or "attack".
-bench_adversarial_cases: 192
-bench_fp_cases: 77
+bench_adversarial_cases: 191
+bench_fp_cases: 76
 bench_warn_cases: 1
 chain_patterns: 10
 # Added 2026-04-27 to back the /proof/ page numbers strip.
