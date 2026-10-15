@@ -31,3 +31,14 @@ test("allows current Agent Egress Bench paths", () => {
     assert.equal(isBlockedExternalLink(url), false, url);
   }
 });
+
+test("retired benchmark paths stay blocked under both GitHub owners", () => {
+  for (const owner of ["luckyPipewrench", "pipelab-org", "PiPeLaB-OrG"]) {
+    for (const retired of ["docs/methodology.md", "schemas/receipt-scoring-profile.schema.json"]) {
+      for (const suffix of ["", "#scoring", "?ref=docs"]) {
+        assert.equal(isBlockedExternalLink(`https://github.com/${owner}/agent-egress-bench/blob/main/${retired}${suffix}`), true);
+      }
+    }
+    assert.equal(isBlockedExternalLink(`https://github.com/${owner}/agent-egress-bench/blob/main/docs/gauntlet.md`), false);
+  }
+});

@@ -3,7 +3,7 @@
 
   var SHA256_RE = /^[0-9a-f]{64}$/;
   var RAW_BASE = "/gauntlet/evidence";
-  var RUNS_URL = "https://api.github.com/repos/luckyPipewrench/pipelock/actions/workflows/continuous-gauntlet.yaml/runs?branch=main&per_page=1";
+  var RUNS_URL = "https://api.github.com/repos/pipelab-org/pipelock/actions/workflows/continuous-gauntlet.yaml/runs?branch=main&per_page=1";
   var RECORD_BASE = "/gauntlet/evidence/results/pipelock/";
   var MAX_RUN_AGE_MS = 48 * 60 * 60 * 1000;
   var MAX_RESULTS_BYTES = 2 * 1024 * 1024;
@@ -49,9 +49,23 @@
     return value;
   }
 
+  function runUrlParts(value) {
+    if (typeof value !== "string") return null;
+    var parts = /^https:\/\/github\.com\/([^/]+)\/(agent-egress-bench|pipelock)\/actions\/runs\/([1-9][0-9]*)(?:\/attempts\/([1-9][0-9]*))?$/.exec(value);
+    return parts && ["luckypipewrench", "pipelab-org"].includes(parts[1].toLowerCase()) ? parts : null;
+  }
+
   function validRunUrl(value) {
-    return typeof value === "string" &&
-      /^https:\/\/github\.com\/luckyPipewrench\/(?:agent-egress-bench|pipelock)\/actions\/runs\/[1-9][0-9]*(?:\/attempts\/[1-9][0-9]*)?$/.test(value);
+    return Boolean(runUrlParts(value));
+  }
+
+  function validRecordOrigin(record) {
+    var artifact = /^github-actions:([^/:]+)\/(agent-egress-bench|pipelock):([1-9][0-9]*)(?::([1-9][0-9]*))?$/.exec(record.artifact_id || "");
+    var runUrl = runUrlParts(record.canonical_url);
+    return Boolean(artifact && runUrl &&
+      artifact[1].toLowerCase() === runUrl[1].toLowerCase() &&
+      artifact[2] === runUrl[2] && artifact[3] === runUrl[3] &&
+      (runUrl[4] === undefined || artifact[4] === runUrl[4]));
   }
 
   function validatePointer(pointer) {
@@ -347,6 +361,9 @@
         throw new Error("verified checkpoint disagrees on " + field);
       }
     });
+    if (!validRecordOrigin(record)) {
+      throw new Error("verified checkpoint record origin is invalid");
+    }
     // The provenance candidate omits per_category. The manifest already binds
     // raw-summary.json, so the browser can hash-check that file and use it for
     // the category table without a schema bump. A missing, torn, or disagreeing

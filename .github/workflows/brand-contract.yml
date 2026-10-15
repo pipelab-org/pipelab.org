@@ -71,15 +71,15 @@ jobs:
         run: python3 scripts/render_pipelab_brand.py --check
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:
-          repository: luckyPipewrench/pipelock
+          repository: pipelab-org/pipelock
           path: _portfolio/pipelock
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:
-          repository: luckyPipewrench/pipelock-rules
+          repository: pipelab-org/pipelock-rules
           path: _portfolio/pipelock-rules
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:
-          repository: luckyPipewrench/agent-egress-bench
+          repository: pipelab-org/agent-egress-bench
           path: _portfolio/agent-egress-bench
       - name: Verify shared tokens and card wording
         run: >-

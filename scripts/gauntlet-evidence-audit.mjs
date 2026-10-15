@@ -5,7 +5,8 @@ import { lstat, readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const destinationRepository = "luckyPipewrench/pipelab.org";
+const destinationRepository = "pipelab-org/pipelab.org";
+const historicalDestinationRepository = "luckypipewrench/pipelab.org";
 const recordV3RequiredFiles = [
   "continuous-gauntlet-pipelock.json",
   "destination-baseline.json",
@@ -90,16 +91,20 @@ function safeRecordPath(pointerPath, expectedSuffix) {
 }
 
 export function validateRecordOrigin(manifest, candidate) {
-  const artifact = /^github-actions:luckyPipewrench\/(agent-egress-bench|pipelock):(\d+)(?::([1-9]\d*))?$/.exec(
+  const artifact = /^github-actions:([^/:]+)\/(agent-egress-bench|pipelock):(\d+)(?::([1-9]\d*))?$/.exec(
     manifest.artifact_id || "",
   );
-  const baseUrl = artifact &&
-    `https://github.com/luckyPipewrench/${artifact[1]}/actions/runs/${artifact[2]}`;
-  const validUrls = artifact?.[3] ? [baseUrl, `${baseUrl}/attempts/${artifact[3]}`] : [baseUrl];
-  if (!artifact || !validUrls.includes(manifest.canonical_url)) {
+  const runUrl = /^https:\/\/github\.com\/([^/]+)\/(agent-egress-bench|pipelock)\/actions\/runs\/(\d+)(?:\/attempts\/([1-9]\d*))?$/.exec(
+    manifest.canonical_url || "",
+  );
+  if (!artifact || !runUrl ||
+      !["luckypipewrench", "pipelab-org"].includes(artifact[1].toLowerCase()) ||
+      artifact[1].toLowerCase() !== runUrl[1].toLowerCase() ||
+      artifact[2] !== runUrl[2] || artifact[3] !== runUrl[3] ||
+      (runUrl[4] !== undefined && artifact[4] !== runUrl[4])) {
     fail(`record origin is invalid for ${candidate}`);
   }
-  return artifact[1];
+  return artifact[2];
 }
 
 function parseTimestamp(value, candidate) {
@@ -132,7 +137,9 @@ export async function auditEvidence(repoRoot = process.cwd()) {
     const expectedPath = relativeDestination(entry.source_path);
     const expectedUrl = `https://pipelab.org/${expectedPath.slice("static/".length)}`;
     if (!isObject(entry.planned_destination) ||
-        entry.planned_destination.repository !== destinationRepository ||
+        ![destinationRepository, historicalDestinationRepository].includes(
+          String(entry.planned_destination.repository).toLowerCase(),
+        ) ||
         entry.planned_destination.path !== expectedPath ||
         entry.planned_destination.url !== expectedUrl) {
       fail(`destination contract drifted for ${entry.source_path}`);
