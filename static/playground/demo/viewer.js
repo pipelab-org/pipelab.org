@@ -323,7 +323,7 @@ function applyBeat() {
   $("beatDesc").textContent = DATA.beats[b] || "";
   // proof
   if (b === TOTAL) runChecks(); else { clearChecks(); state.checks = 0; renderChecks(); }
-  $("proofProgress").textContent = state.verified ? (DATA.checks.length + " / " + DATA.checks.length + " verified") : (state.checks + " / " + DATA.checks.length);
+  $("proofProgress").textContent = state.verified ? (state.verifiedChecks + " checks · verified in your browser") : (state.checks + " / " + DATA.checks.length);
   updateChatInput();
   trackVisibleReplayBlocks(b);
   scrollActive();
@@ -402,7 +402,7 @@ function renderChecks() {
   const items = document.querySelectorAll(".check");
   items.forEach((c, i) => { const on = i < state.checks; c.classList.toggle("on", on); c.querySelector(".check-mark").textContent = on ? "✓" : "·"; });
   $("stamp").classList.toggle("on", state.verified);
-  $("proofProgress").textContent = state.verified ? (DATA.checks.length + " / " + DATA.checks.length + " verified") : (state.checks + " / " + DATA.checks.length);
+  $("proofProgress").textContent = state.verified ? (state.verifiedChecks + " checks · verified in your browser") : (state.checks + " / " + DATA.checks.length);
 }
 
 function runChecks() {
@@ -613,6 +613,7 @@ var replayVerifyGeneration = 0;
 
 function clearReplayVerificationIndicators() {
   state.verified = false;
+  state.verifiedChecks = 0;
   // viewer-live.js provides the shared reset for both modes, even without a backend.
   if (typeof window.pipelockClearVerificationIndicators === "function") window.pipelockClearVerificationIndicators();
 }
@@ -690,6 +691,8 @@ async function runReplayBrowserVerify() {
     if (out && out.valid) {
       var n = (out.checks || []).length;
       state.verified = true;
+      // Keep the verifier's own count; the scripted check list is narration only.
+      state.verifiedChecks = n;
       setReplayVerifyBtn("ok", "Verified ✓");
       renderReplayVerifySuccess(out, n);
       pgTrackSafe("playground_verify_result", { valid: true, checks: n });

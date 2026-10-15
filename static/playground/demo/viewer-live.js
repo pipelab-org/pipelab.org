@@ -1162,6 +1162,9 @@
         pgTrackSafe("playground_verify_result", { valid: true, checks: n });
       } else {
         clearVerificationIndicators();
+        // The seal status described the broker's own check; a failed browser
+        // re-check must not leave "verified" showing.
+        setStatus("LIVE · browser check failed");
         setVerifyBtn("fail", "Verification failed");
         setVerifyResult("fail", "Verification FAILED: " + ((out && out.error) || "bundle did not verify against the published key"));
         pgTrackSafe("playground_verify_result", { valid: false, checks: (out && out.checks && out.checks.length) || 0 });
@@ -1169,6 +1172,7 @@
     } catch (e) {
       if (!current()) return;
       clearVerificationIndicators();
+      setStatus("LIVE · browser check failed");
       setVerifyBtn("fail", "Verify in your browser");
       setVerifyResult("fail", "Could not verify: " + (e && e.message ? e.message : "unknown error") + ". You can still download the kit and verify offline.");
       pgTrackSafe("playground_verify_result", { valid: false });

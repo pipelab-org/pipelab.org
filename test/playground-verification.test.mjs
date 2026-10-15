@@ -132,3 +132,21 @@ for (const outcome of ['success', 'error']) {
     assert.equal(h.node('replayBrowserVerify').classList.contains('ok'), true);
   });
 }
+
+test('replay: animation after a real pass keeps the verifier count', async () => {
+  const h = harness('replay'); await h.run();
+  vm.runInContext('runChecks()', h.context); h.flushTimers();
+  assert.match(h.node('proofProgress').textContent, /checks · verified in your browser/);
+  assert.doesNotMatch(h.node('proofProgress').textContent, / \/ \d+ verified/);
+});
+
+for (const failure of ['INVALID', 'download error']) {
+  test(`live: ${failure} after success removes "verified" from the status line`, async () => {
+    const h = harness('live'); h.node('statusLabel').textContent = 'LIVE · verified';
+    await h.run();
+    if (failure === 'INVALID') h.setResult({ valid: false, error: 'INVALID' });
+    else h.context.fetch = async () => { throw new Error('download failed'); };
+    await h.run();
+    assert.doesNotMatch(h.node('statusLabel').textContent, /verified/);
+  });
+}
