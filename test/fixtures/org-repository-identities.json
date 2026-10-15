@@ -136,6 +136,21 @@
       "name": "missing-attempt",
       "artifact_id": "github-actions:pipelab-org/pipelock:42",
       "canonical_url": "https://github.com/pipelab-org/pipelock/actions/runs/42/attempts/2"
+    },
+    {
+      "name": "run-zero",
+      "artifact_id": "github-actions:pipelab-org/pipelock:0",
+      "canonical_url": "https://github.com/pipelab-org/pipelock/actions/runs/0"
+    },
+    {
+      "name": "leading-zero-run",
+      "artifact_id": "github-actions:pipelab-org/pipelock:042",
+      "canonical_url": "https://github.com/pipelab-org/pipelock/actions/runs/042"
+    },
+    {
+      "name": "leading-zero-attempt",
+      "artifact_id": "github-actions:pipelab-org/pipelock:42:02",
+      "canonical_url": "https://github.com/pipelab-org/pipelock/actions/runs/42/attempts/02"
     }
   ]
 }

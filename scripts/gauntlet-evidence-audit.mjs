@@ -91,10 +91,10 @@ function safeRecordPath(pointerPath, expectedSuffix) {
 }
 
 export function validateRecordOrigin(manifest, candidate) {
-  const artifact = /^github-actions:([^/:]+)\/(agent-egress-bench|pipelock):(\d+)(?::([1-9]\d*))?$/.exec(
+  const artifact = /^github-actions:([^/:]+)\/(agent-egress-bench|pipelock):([1-9][0-9]*)(?::([1-9][0-9]*))?$/.exec(
     manifest.artifact_id || "",
   );
-  const runUrl = /^https:\/\/github\.com\/([^/]+)\/(agent-egress-bench|pipelock)\/actions\/runs\/(\d+)(?:\/attempts\/([1-9]\d*))?$/.exec(
+  const runUrl = /^https:\/\/github\.com\/([^/]+)\/(agent-egress-bench|pipelock)\/actions\/runs\/([1-9][0-9]*)(?:\/attempts\/([1-9][0-9]*))?$/.exec(
     manifest.canonical_url || "",
   );
   if (!artifact || !runUrl ||
