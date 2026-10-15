@@ -1157,6 +1157,8 @@
         if (pp) pp.textContent = n + " checks · verified in your browser";
         // Live mode hides the replay stamp, so light the live "verified" row green.
         lsSet("lsVerified", "VERIFY OK · in your browser", true);
+        // Replace any earlier "browser check failed" with this attempt's pass.
+        setStatus("LIVE · verified in your browser");
         setVerifyBtn("ok", "Verified ✓");
         renderVerifySuccess(out, n);
         pgTrackSafe("playground_verify_result", { valid: true, checks: n });

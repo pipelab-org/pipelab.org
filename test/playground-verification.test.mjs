@@ -134,10 +134,20 @@ for (const outcome of ['success', 'error']) {
 }
 
 test('replay: animation after a real pass keeps the verifier count', async () => {
-  const h = harness('replay'); await h.run();
+  const h = harness('replay');
+  // Three verifier checks against a two-item scripted list, so the two counts differ.
+  h.setResult({ valid: true, checks: [{ name: 'a', pass: true }, { name: 'b', pass: true }, { name: 'c', pass: true }] });
+  await h.run();
   vm.runInContext('runChecks()', h.context); h.flushTimers();
-  assert.match(h.node('proofProgress').textContent, /checks · verified in your browser/);
-  assert.doesNotMatch(h.node('proofProgress').textContent, / \/ \d+ verified/);
+  assert.equal(h.node('proofProgress').textContent, '3 checks · verified in your browser');
+});
+
+test('live: a pass after a failed re-check clears the failure status', async () => {
+  const h = harness('live');
+  h.setResult({ valid: false, error: 'INVALID' }); await h.run();
+  assert.match(h.node('statusLabel').textContent, /browser check failed/);
+  h.setResult(h.valid); await h.run();
+  assert.doesNotMatch(h.node('statusLabel').textContent, /failed/);
 });
 
 for (const failure of ['INVALID', 'download error']) {
