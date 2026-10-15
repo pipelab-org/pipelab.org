@@ -930,23 +930,27 @@
   // checks ran against (and look it up). Display only.
   const PUBLISHED_KEY_FP = "99f16ec9…36221a2c";
 
+  // Success belongs only to the current browser verification attempt.
+  function clearVerificationIndicators() {
+    const stamp = $("stamp"); if (stamp) stamp.classList.remove("on");
+    const progress = $("proofProgress"); if (progress) progress.textContent = "";
+    lsSet("lsVerified", "·", false);
+    for (const prefix of ["browserVerify", "replayBrowserVerify"]) {
+      const btn = $(prefix);
+      if (btn) { btn.classList.remove("verifying", "ok", "fail"); btn.disabled = false; }
+      const label = $(prefix + "Label"); if (label) label.textContent = "Verify in your browser";
+      const result = $(prefix + "Result");
+      if (result) { result.hidden = true; result.className = "vs-verify-result"; result.textContent = ""; }
+    }
+  }
+  window.pipelockClearVerificationIndicators = clearVerificationIndicators;
+
   function resetBrowserVerifyState() {
     verifyGeneration++;
     verifyInFlight = false;
+    clearVerificationIndicators();
     const btn = $("browserVerify");
-    if (btn) {
-      btn.hidden = true;
-      btn.disabled = false;
-      btn.classList.remove("verifying", "ok", "fail");
-    }
-    const lbl = $("browserVerifyLabel");
-    if (lbl) lbl.textContent = "Verify in your browser";
-    const res = $("browserVerifyResult");
-    if (res) {
-      res.hidden = true;
-      res.className = "vs-verify-result";
-      res.textContent = "";
-    }
+    if (btn) btn.hidden = true;
   }
 
   async function responseBytesWithLimit(resp, maxBytes, label) {
@@ -1116,17 +1120,17 @@
   // Fetch the raw signed bundle the page already points its download at, and
   // re-verify it in-browser. Lights the stamp only on a real pass.
   async function runBrowserVerify() {
-    if (verifyInFlight) return;
+    if (verifyInFlight || document.body.dataset.mode !== "live") return;
+    clearVerificationIndicators();
     if (!token) {
-      const stamp = $("stamp");
-      if (stamp) stamp.classList.remove("on");
       setVerifyBtn("fail", "Verify in your browser");
       setVerifyResult("fail", "No signed bundle is available yet. Run a live action first, then verify it.");
       pgTrackSafe("playground_verify_result", { valid: false });
       return;
     }
     const verifyToken = token;
-    const generation = verifyGeneration;
+    const generation = ++verifyGeneration;
+    const current = () => token === verifyToken && verifyGeneration === generation && document.body.dataset.mode === "live";
     verifyInFlight = true;
     setVerifyBtn("verifying", "Verifying…");
     // Surface the real phases so it reads as genuine work, not a button that just
@@ -1134,17 +1138,17 @@
     setVerifyResult("", "Loading the verifier (WebAssembly) into your browser…");
     try {
       await loadPipelockVerifier();
-      if (token !== verifyToken || verifyGeneration !== generation) return;
+      if (!current()) return;
       setVerifyResult("", "Fetching the signed bundle…");
       const r = await fetch(API.bundle + "?token=" + encodeURIComponent(verifyToken) + "&format=raw", { cache: "no-store", redirect: "error" });
       if (!r.ok) throw new Error("bundle fetch failed (" + r.status + ")");
       const ct = (r.headers.get("content-type") || "").toLowerCase();
       if (ct.includes("text/html") || ct.includes("application/json")) throw new Error("bundle response was not a signed bundle");
       const bytes = new Uint8Array(await responseBytesWithLimit(r, MAX_VERIFY_BUNDLE_BYTES, "signed bundle"));
-      if (token !== verifyToken || verifyGeneration !== generation) return;
+      if (!current()) return;
       setVerifyResult("", "Checking signatures against the published key " + PUBLISHED_KEY_FP + "…");
       const out = window.pipelockVerifyBundle(bytes);
-      if (token !== verifyToken || verifyGeneration !== generation) return;
+      if (!current()) return;
       const stamp = $("stamp");
       if (out && out.valid) {
         if (stamp) stamp.classList.add("on");
@@ -1157,17 +1161,19 @@
         renderVerifySuccess(out, n);
         pgTrackSafe("playground_verify_result", { valid: true, checks: n });
       } else {
-        if (stamp) stamp.classList.remove("on");
+        clearVerificationIndicators();
         setVerifyBtn("fail", "Verification failed");
         setVerifyResult("fail", "Verification FAILED: " + ((out && out.error) || "bundle did not verify against the published key"));
         pgTrackSafe("playground_verify_result", { valid: false, checks: (out && out.checks && out.checks.length) || 0 });
       }
     } catch (e) {
+      if (!current()) return;
+      clearVerificationIndicators();
       setVerifyBtn("fail", "Verify in your browser");
       setVerifyResult("fail", "Could not verify: " + (e && e.message ? e.message : "unknown error") + ". You can still download the kit and verify offline.");
       pgTrackSafe("playground_verify_result", { valid: false });
     } finally {
-      if (token === verifyToken && verifyGeneration === generation) verifyInFlight = false;
+      if (current()) verifyInFlight = false;
     }
   }
 

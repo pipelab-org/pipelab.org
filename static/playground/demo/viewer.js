@@ -322,7 +322,7 @@ function applyBeat() {
   $("beatNum").textContent = b; $("beatTotal").textContent = TOTAL;
   $("beatDesc").textContent = DATA.beats[b] || "";
   // proof
-  if (b === TOTAL) runChecks(); else { clearChecks(); state.checks = 0; state.verified = false; renderChecks(); }
+  if (b === TOTAL) runChecks(); else { clearChecks(); state.checks = 0; renderChecks(); }
   $("proofProgress").textContent = state.verified ? (DATA.checks.length + " / " + DATA.checks.length + " verified") : (state.checks + " / " + DATA.checks.length);
   updateChatInput();
   trackVisibleReplayBlocks(b);
@@ -406,10 +406,9 @@ function renderChecks() {
 }
 
 function runChecks() {
-  clearChecks(); state.checks = 0; state.verified = false; renderChecks();
+  clearChecks(); state.checks = 0; renderChecks();
   let pt = 320;
   for (let c = 1; c <= DATA.checks.length; c++) { checkTimers.push(setTimeout(() => { state.checks = c; renderChecks(); }, pt)); pt += 150; }
-  checkTimers.push(setTimeout(() => { state.verified = true; renderChecks(); }, pt + 360));
 }
 
 /* ---------------- controls ---------------- */
@@ -423,13 +422,15 @@ function play() { if (state.mode === "live") return; if (state.beat >= TOTAL) { 
 function pause() { clearPlay(); setPlaying(false); }
 function togglePlay() { if (state.mode === "live") return; state.playing ? pause() : play(); }
 function step(d) { if (state.mode === "live") return; pause(); goTo(state.beat + d); setPlaying(false); }
-function restart() { if (state.mode === "live") return; clearPlay(); clearChecks(); state.beat = 0; state.expanded = false; goTo(0); setPlaying(true); loop(); }
+function restart() { if (state.mode === "live") return; resetReplayBrowserVerify(); clearPlay(); clearChecks(); state.beat = 0; state.expanded = false; goTo(0); setPlaying(true); loop(); }
 // First-run autostart, deferred so the run never advances behind the intro modal.
 // Live has no beats to play. Called either by the init timer (modal already seen) or
 // by closeIntro() when the visitor dismisses a first-visit modal.
 function beginAutoplay() { if (state.mode === "live") return; setPlaying(true); loop(); }
 
 function setMode(m) {
+  clearChecks();
+  resetReplayBrowserVerify();
   state.mode = m; document.body.dataset.mode = m;
   try { localStorage.setItem("pl_mode", m); } catch (e) {}
   $("tabLive").setAttribute("aria-pressed", String(m === "live"));
@@ -608,6 +609,19 @@ function hideReplayCta() {
    replay-bundle.tar.gz against the published key. createElement/textContent
    only, never innerHTML - mirrors renderVerifySuccess in the Live path. */
 var replayVerifyInFlight = false;
+var replayVerifyGeneration = 0;
+
+function clearReplayVerificationIndicators() {
+  state.verified = false;
+  // viewer-live.js provides the shared reset for both modes, even without a backend.
+  if (typeof window.pipelockClearVerificationIndicators === "function") window.pipelockClearVerificationIndicators();
+}
+
+function resetReplayBrowserVerify() {
+  replayVerifyGeneration++;
+  replayVerifyInFlight = false;
+  clearReplayVerificationIndicators();
+}
 
 function setReplayVerifyBtn(state, label) {
   var btn = $("replayBrowserVerify");
@@ -656,7 +670,11 @@ function renderReplayVerifySuccess(out, n) {
 }
 
 async function runReplayBrowserVerify() {
-  if (replayVerifyInFlight) return;
+  if (replayVerifyInFlight || state.mode !== "replay") return;
+  clearChecks();
+  clearReplayVerificationIndicators();
+  var generation = ++replayVerifyGeneration;
+  var current = () => state.mode === "replay" && replayVerifyGeneration === generation;
   if (typeof window.pipelockVerifyStaticBundle !== "function") {
     setReplayVerifyBtn("fail", "Verify in your browser");
     setReplayVerifyResult("fail", "Verifier not available. Try reloading the page.");
@@ -668,8 +686,10 @@ async function runReplayBrowserVerify() {
   setReplayVerifyResult("", "Loading the verifier (WebAssembly) into your browser…");
   try {
     var out = await window.pipelockVerifyStaticBundle(REPLAY_BUNDLE_URL);
+    if (!current()) return;
     if (out && out.valid) {
       var n = (out.checks || []).length;
+      state.verified = true;
       setReplayVerifyBtn("ok", "Verified ✓");
       renderReplayVerifySuccess(out, n);
       pgTrackSafe("playground_verify_result", { valid: true, checks: n });
@@ -677,16 +697,19 @@ async function runReplayBrowserVerify() {
       var stamp = $("stamp"); if (stamp) stamp.classList.add("on");
       var pp = $("proofProgress"); if (pp) pp.textContent = n + " checks · verified in your browser";
     } else {
+      clearReplayVerificationIndicators();
       setReplayVerifyBtn("fail", "Verification failed");
       setReplayVerifyResult("fail", "Verification FAILED: " + ((out && out.error) || "bundle did not verify against the published key"));
       pgTrackSafe("playground_verify_result", { valid: false, checks: (out && out.checks && out.checks.length) || 0 });
     }
   } catch (e) {
+    if (!current()) return;
+    clearReplayVerificationIndicators();
     setReplayVerifyBtn("fail", "Verify in your browser");
     setReplayVerifyResult("fail", "Could not verify: " + (e && e.message ? e.message : "unknown error") + ". You can still download the bundle and verify offline.");
     pgTrackSafe("playground_verify_result", { valid: false });
   } finally {
-    replayVerifyInFlight = false;
+    if (current()) replayVerifyInFlight = false;
   }
 }
 
