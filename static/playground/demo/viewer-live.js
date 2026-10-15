@@ -11,6 +11,8 @@
   // Same-origin: the live binary serves this viewer next to its own API, so
   // relative paths work on the contained demo host. On the marketing site the
   // health probe below 404s and the Live tab stays "coming soon".
+  // The contained demo host. A replay-only copy of this viewer links here.
+  const LIVE_ORIGIN = "https://playground.pipelab.org";
   const API = {
     session: "/api/live/session",
     stream: "/api/live/stream",
@@ -697,10 +699,14 @@
     }
   }
 
-  // Public API consumed by viewer.js. enabled is set by the health probe below;
-  // viewer.js only opens the Live tab when it is true.
+  // Public API consumed by viewer.js. enabled, reason and elsewhere are set by
+  // the health probe below; viewer.js only opens the Live tab when enabled is true.
   window.PipelockLive = {
     enabled: false,
+    // Shown if Live is clicked before the probe settles.
+    reason: "checking",
+    elsewhere: false,
+    liveURL: LIVE_ORIGIN + "/",
     start() {
       stop();
       clearColumns();
@@ -767,7 +773,8 @@
 
   // Is a live backend actually reachable from where this viewer is served? On
   // the contained demo host the probe succeeds and the Live tab activates; on the
-  // marketing site it 404s and the tab stays "coming soon" (fail-closed).
+  // marketing site it 404s and the tab points to the live host instead (fail-closed:
+  // this copy never opens a session it cannot connect).
   function probeLive() {
     const soon = $("tabSoon");
     let done = false;
@@ -775,11 +782,20 @@
     const settle = (ok, reason, code) => {
       if (done) return; done = true;
       window.PipelockLive.enabled = ok;
+      window.PipelockLive.reason = ok ? "" : reason;
+      // No reason means no live backend answered here at all, which is the
+      // replay-only copy on the marketing site. Live chat runs on its own host,
+      // so the tab links there rather than reading as unreleased.
+      window.PipelockLive.elsewhere = !ok && !reason && location.origin !== LIVE_ORIGIN;
       if (soon) {
         soon.hidden = ok;
-        // When the backend responds but is unavailable, show WHY instead of a
-        // blank "soon" label. This uses the broker health fields directly.
-        if (!ok && reason) soon.textContent = reason;
+        // When the backend responds but is unavailable, show WHY. This uses the
+        // broker health fields directly.
+        soon.textContent = ok ? "" : (reason || "↗");
+      }
+      const tab = $("tabLive");
+      if (tab && window.PipelockLive.elsewhere) {
+        tab.title = "Live chat runs at playground.pipelab.org. Opens in a new tab.";
       }
       // Report the DISABLED case. Without this the most important signal has a
       // hole: when Live is switched off here the visitor never POSTs a session,

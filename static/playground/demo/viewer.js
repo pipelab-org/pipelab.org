@@ -463,13 +463,14 @@ function rebuildReplay() {
   goTo(0);
 }
 
-// The live demo runs on a separate contained host. When this page is served
-// anywhere that host is not reachable (the marketing site, a local replay),
-// PipelockLive.enabled stays false and the Live tab says so instead of opening
-// a session that can never connect.
+// The live demo runs on a separate contained host. When that host answers but
+// is unavailable (paused, daily capacity reached), PipelockLive.enabled stays
+// false and the Live tab says why instead of opening a session that can never
+// connect. Copies with no live backend at all link to the live host instead.
 function liveOffline() {
   const label = $("statusLabel"); const prev = label.textContent;
-  label.textContent = "LIVE CHAT · coming soon";
+  const reason = (window.PipelockLive && window.PipelockLive.reason) || "unavailable";
+  label.textContent = "LIVE CHAT · " + reason;
   const tab = $("tabLive"); tab.classList.add("soon-flash");
   setTimeout(() => { label.textContent = prev; tab.classList.remove("soon-flash"); }, 1800);
 }
@@ -727,8 +728,12 @@ async function main() {
   $("btnRestart").addEventListener("click", restart);
   $("tabLive").addEventListener("click", () => {
     pgTrackSafe("playground_mode_selected", { mode: "live" });
-    if (window.PipelockLive && window.PipelockLive.enabled) setMode("live");
-    else liveOffline();
+    const live = window.PipelockLive;
+    if (live && live.enabled) setMode("live");
+    else if (live && live.elsewhere) {
+      pgTrackSafe("playground_popout_clicked", { placement: "replay-viewer-live-tab" });
+      window.open(live.liveURL, "_blank", "noopener");
+    } else liveOffline();
   });
   $("tabReplay").addEventListener("click", () => { pgTrackSafe("playground_mode_selected", { mode: "replay" }); setMode("replay"); });
   $("btnCopyCmd").addEventListener("click", () => copyText($("verifyCmd").textContent, "btnCopyCmd", "copied"));
