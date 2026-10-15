@@ -845,3 +845,30 @@ test("verified listing rows carry a reconstructing full-corpus fraction and omit
   assert.equal(mismatchedRow.full_containment_numerator, undefined);
   assert.equal(mismatchedRow.full_containment_denominator, undefined);
 });
+
+const orgIdentities = JSON.parse(await readFile(
+  new URL("./fixtures/org-repository-identities.json", import.meta.url), "utf8",
+));
+for (const origin of orgIdentities.accepted) {
+  test(`browser accepts repository identity ${origin.artifact_id} at ${origin.canonical_url}`, async () => {
+    const api = await loadApi();
+    const current = await fixture({ record: {
+      artifact_id: origin.artifact_id, canonical_url: origin.canonical_url,
+    } });
+    const loaded = await api.loadLatestVerified(current.fetchImpl, webcrypto, RAW_BASE);
+    assert.equal(loaded.record.artifact_id, origin.artifact_id);
+    assert.equal(loaded.record.canonical_url, origin.canonical_url);
+  });
+}
+for (const origin of orgIdentities.rejected) {
+  test(`browser rejects repository identity ${origin.name}`, async () => {
+    const api = await loadApi();
+    const current = await fixture({ record: {
+      artifact_id: origin.artifact_id, canonical_url: origin.canonical_url,
+    } });
+    await assert.rejects(
+      api.loadLatestVerified(current.fetchImpl, webcrypto, RAW_BASE),
+      /canonical_url is invalid|record origin is invalid/,
+    );
+  });
+}

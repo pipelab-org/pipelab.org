@@ -7,8 +7,8 @@
 export const blockedExternalLinkPatterns = [
   /github\.com\/proximity-mcp\/proximity\/?(?:[?#]|$)/i,
   /snyk\.io\/platform\/agent-security\/?(?:[?#]|$)/i,
-  /github\.com\/luckyPipewrench\/agent-egress-bench\/blob\/main\/docs\/methodology\.md(?:[?#]|$)/i,
-  /github\.com\/luckyPipewrench\/agent-egress-bench\/blob\/main\/schemas\/receipt-scoring-profile\.schema\.json(?:[?#]|$)/i,
+  /github\.com\/(?:luckyPipewrench|pipelab-org)\/agent-egress-bench\/blob\/main\/docs\/methodology\.md(?:[?#]|$)/i,
+  /github\.com\/(?:luckyPipewrench|pipelab-org)\/agent-egress-bench\/blob\/main\/schemas\/receipt-scoring-profile\.schema\.json(?:[?#]|$)/i,
 ];
 
 export function isBlockedExternalLink(url) {

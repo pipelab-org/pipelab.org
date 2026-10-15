@@ -11,7 +11,7 @@ import { promisify } from "node:util";
 const execFile = promisify(execFileCallback);
 const SCRIPT = fileURLToPath(new URL("../scripts/sync-gauntlet-evidence.mjs", import.meta.url));
 
-async function fixture() {
+async function fixture(remote = "https://github.com/luckyPipewrench/agent-egress-bench.git") {
   const root = await mkdtemp(path.join(os.tmpdir(), "gauntlet-evidence-sync-"));
   const source = path.join(root, "source");
   const destination = path.join(root, "destination");
@@ -28,8 +28,7 @@ async function fixture() {
   await execFile("git", ["-C", source, "commit", "-qm", "fixture"]);
   const sourceCommit = (await execFile("git", ["-C", source, "rev-parse", "HEAD"])).stdout.trim();
   await execFile("git", [
-    "-C", source, "remote", "add", "origin",
-    "https://github.com/luckyPipewrench/agent-egress-bench.git",
+    "-C", source, "remote", "add", "origin", remote,
   ]);
   await execFile("git", ["-C", source, "update-ref", "refs/remotes/origin/main", sourceCommit]);
   const inventory = {
@@ -114,3 +113,37 @@ test("rejects a symlink in the destination path", async () => {
     await rm(current.root, { recursive: true, force: true });
   }
 });
+
+for (const remote of [
+  "https://github.com/pipelab-org/agent-egress-bench.git",
+  "git@github.com:pipelab-org/agent-egress-bench.git",
+]) {
+  test(`accepts the moved benchmark origin ${remote}`, async () => {
+    const current = await fixture(remote);
+    try {
+      await runSync(current);
+      const copied = await readFile(path.join(
+        current.destination,
+        "static/gauntlet/evidence/latest-verified.json",
+      ));
+      assert.deepEqual(copied, current.bytes);
+    } finally {
+      await rm(current.root, { recursive: true, force: true });
+    }
+  });
+}
+
+for (const remote of [
+  "https://github.com/someone-else/agent-egress-bench.git",
+  "https://github.com/pipelab-org-evil/agent-egress-bench.git",
+  "https://gitlab.com/pipelab-org/agent-egress-bench.git",
+]) {
+  test(`rejects a benchmark origin outside the two owners: ${remote}`, async () => {
+    const current = await fixture(remote);
+    try {
+      await assert.rejects(runSync(current), /not the canonical benchmark repository/);
+    } finally {
+      await rm(current.root, { recursive: true, force: true });
+    }
+  });
+}

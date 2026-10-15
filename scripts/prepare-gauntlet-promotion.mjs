@@ -10,22 +10,29 @@ import { promisify } from "node:util";
 import { auditEvidence } from "./gauntlet-evidence-audit.mjs";
 
 const execFile = promisify(execFileCallback);
-const canonicalRemote = new Set([
-  "git@github.com:luckyPipewrench/pipelab.org.git",
-  "ssh://git@github.com/luckyPipewrench/pipelab.org.git",
-  "https://github.com/luckyPipewrench/pipelab.org",
-  "https://github.com/luckyPipewrench/pipelab.org.git",
-]);
+const canonicalRemote = new Set(["pipelab-org", "luckypipewrench"].flatMap((owner) => [
+  `git@github.com:${owner}/pipelab.org.git`,
+  `ssh://git@github.com/${owner}/pipelab.org.git`,
+  `https://github.com/${owner}/pipelab.org`,
+  `https://github.com/${owner}/pipelab.org.git`,
+]));
+
+export function validateSiteRemote(remote) {
+  if (typeof remote !== "string" || !canonicalRemote.has(remote.toLowerCase())) {
+    fail("site checkout origin is not canonical");
+  }
+}
+
 const exactContract = {
   artifact_name_prefix: "pipelock-gauntlet-candidate-attempt-",
-  artifact_prefix: "github-actions:luckyPipewrench/pipelock:",
-  benchmark_repository: "luckyPipewrench/agent-egress-bench",
+  artifact_prefix: "github-actions:pipelab-org/pipelock:",
+  benchmark_repository: "pipelab-org/agent-egress-bench",
   schema_version: 1,
   source_branch: "main",
-  source_repository: "luckyPipewrench/pipelock",
+  source_repository: "pipelab-org/pipelock",
   source_acceptance_baseline: "benchmark/gauntlet-baseline.json",
   source_workflow: ".github/workflows/continuous-gauntlet.yaml",
-  url_prefix: "https://github.com/luckyPipewrench/pipelock/actions/runs/",
+  url_prefix: "https://github.com/pipelab-org/pipelock/actions/runs/",
 };
 
 function fail(message) {
@@ -103,9 +110,7 @@ export function validateComparison(comparison, sourceSha) {
 }
 
 async function verifySiteWorktree(repoRoot) {
-  if (!canonicalRemote.has(await git(repoRoot, "remote", "get-url", "origin"))) {
-    fail("site checkout origin is not canonical");
-  }
+  validateSiteRemote(await git(repoRoot, "remote", "get-url", "origin"));
   await run("git", ["-C", repoRoot, "fetch", "origin", "main"]);
   if (await git(repoRoot, "branch", "--show-current") === "main") fail("use a fresh feature branch");
   if (await git(repoRoot, "status", "--porcelain")) fail("site worktree must start clean");

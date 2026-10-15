@@ -41,12 +41,15 @@ async function main() {
     fail("source inventory has no entries");
   }
   const remote = (await execFile("git", ["-C", sourceRoot, "remote", "get-url", "origin"])).stdout.trim();
-  if (![
-    "git@github.com:luckyPipewrench/agent-egress-bench.git",
-    "ssh://git@github.com/luckyPipewrench/agent-egress-bench.git",
-    "https://github.com/luckyPipewrench/agent-egress-bench",
-    "https://github.com/luckyPipewrench/agent-egress-bench.git",
-  ].includes(remote)) {
+  // The benchmark moved from luckyPipewrench to pipelab-org; a clone may keep
+  // either origin, and GitHub redirects the old name to the same repository.
+  const canonicalRemotes = ["luckyPipewrench", "pipelab-org"].flatMap((owner) => [
+    `git@github.com:${owner}/agent-egress-bench.git`,
+    `ssh://git@github.com/${owner}/agent-egress-bench.git`,
+    `https://github.com/${owner}/agent-egress-bench`,
+    `https://github.com/${owner}/agent-egress-bench.git`,
+  ]);
+  if (!canonicalRemotes.includes(remote)) {
     fail("source checkout origin is not the canonical benchmark repository");
   }
   try {

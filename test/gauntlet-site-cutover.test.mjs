@@ -18,7 +18,7 @@ test("Gauntlet readers use the site evidence store and Pipelock workflow", async
   ]);
 
   assert.match(script, /var RAW_BASE = "\/gauntlet\/evidence";/);
-  assert.match(script, /api\.github\.com\/repos\/luckyPipewrench\/pipelock\/actions\/workflows\/continuous-gauntlet\.yaml/);
+  assert.match(script, /api\.github\.com\/repos\/pipelab-org\/pipelock\/actions\/workflows\/continuous-gauntlet\.yaml/);
   assert.doesNotMatch(script, /raw\.githubusercontent\.com/);
   assert.match(layout, /luckyPipewrench\/pipelock\/actions\/workflows\/continuous-gauntlet\.yaml/);
   assert.doesNotMatch(layout, /agent-egress-bench\/actions\/workflows\/continuous-gauntlet\.yaml/);

@@ -23,7 +23,7 @@ jobs:
         run: node scripts/resolve-capability-source.mjs >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:
-          repository: luckyPipewrench/pipelock
+          repository: pipelab-org/pipelock
           ref: ${{ steps.capability-source.outputs.checkout_ref }}
           path: .capability-source
           persist-credentials: false

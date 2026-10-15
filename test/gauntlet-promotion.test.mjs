@@ -15,6 +15,7 @@ import {
   validateCandidateMethod,
   validateContract,
   validateSourceRun,
+  validateSiteRemote,
   porcelainPaths,
   workflowBenchmarkPin,
 } from "../scripts/prepare-gauntlet-promotion.mjs";
@@ -324,4 +325,110 @@ test("promotion command prepares files but cannot publish them", async () => {
   // Reject the write verbs as quoted arguments too.
   assert.doesNotMatch(source, /"(commit|push)"/);
   assert.doesNotMatch(source, /"pr"\s*,\s*"(create|merge|comment|edit|review)"|"release"\s*,\s*"create"|"--method"/);
+});
+
+const orgIdentities = JSON.parse(await readFile(
+  new URL("./fixtures/org-repository-identities.json", import.meta.url), "utf8",
+));
+
+test("promotion uses the canonical org contract and API identity", async () => {
+  const current = await contract();
+  assert.equal(current.source_repository, "pipelab-org/pipelock");
+  assert.equal(current.benchmark_repository, "pipelab-org/agent-egress-bench");
+  assert.equal(current.artifact_prefix, "github-actions:pipelab-org/pipelock:");
+  assert.equal(current.url_prefix, "https://github.com/pipelab-org/pipelock/actions/runs/");
+  assert.doesNotThrow(() => validateSourceRun(sourceRun(current, {
+    repository: { full_name: "pipelab-org/pipelock" },
+  }), current, 42));
+  for (const full_name of ["unknown-owner/pipelock", "luckyPipewrench/pipelock", "pipelab-org/other"]) {
+    assert.throws(() => validateSourceRun(sourceRun(current, {
+      repository: { full_name },
+    }), current, 42), /not a successful/);
+  }
+});
+
+test("site remotes accept exactly the org and historical owner", () => {
+  for (const owner of ["pipelab-org", "luckyPipewrench", "PiPeLaB-OrG", "LuCkYpIpEwReNcH"]) {
+    for (const remote of [
+      `git@github.com:${owner}/pipelab.org.git`,
+      `ssh://git@github.com/${owner}/pipelab.org.git`,
+      `https://github.com/${owner}/pipelab.org`,
+      `https://github.com/${owner}/pipelab.org.git`,
+    ]) assert.doesNotThrow(() => validateSiteRemote(remote));
+  }
+  for (const remote of [
+    "https://github.com/unknown-owner/pipelab.org.git",
+    "https://github.com/pipelab-org/other.git",
+    "https://github.com/pipelab-org/pipelab.org.git/extra",
+    "https://github.com.evil.example/pipelab-org/pipelab.org.git",
+  ]) assert.throws(() => validateSiteRemote(remote), /origin is not canonical/);
+});
+
+for (const origin of orgIdentities.accepted) {
+  test(`audit accepts repository identity ${origin.artifact_id} at ${origin.canonical_url}`, () => {
+    assert.equal(validateRecordOrigin(origin, "fixture"), origin.repository);
+  });
+}
+for (const origin of orgIdentities.rejected) {
+  test(`audit rejects repository identity ${origin.name}`, () => {
+    assert.throws(() => validateRecordOrigin(origin, "fixture"), /record origin is invalid/);
+  });
+}
+
+test("audit accepts an appended org record without rewriting historical evidence", async () => {
+  const root = await evidenceFixture();
+  try {
+    const evidence = path.join(root, "static", "gauntlet", "evidence");
+    const pointerPath = path.join(evidence, "latest-verified.json");
+    const previous = JSON.parse(await readFile(pointerPath, "utf8"));
+    const previousRoot = path.join(evidence, "results", "pipelock", previous.candidate_sha256);
+    const origin = orgIdentities.accepted.find(value => value.artifact_id === "github-actions:pipelab-org/pipelock:42:2");
+    const record = JSON.parse(await readFile(path.join(previousRoot, "continuous-gauntlet-pipelock.json"), "utf8"));
+    const identity = {
+      artifact_id: origin.artifact_id,
+      canonical_url: origin.canonical_url,
+      generated_at: new Date(Date.parse(previous.generated_at) + 1000).toISOString(),
+    };
+    const bytes = JSON.stringify({ ...record, ...identity }, null, 2) + "\n";
+    const candidate = createHash("sha256").update(bytes).digest("hex");
+    const nextRoot = path.join(evidence, "results", "pipelock", candidate);
+    await cp(previousRoot, nextRoot, { recursive: true });
+    await writeFile(path.join(nextRoot, "continuous-gauntlet-pipelock.json"), bytes);
+    const manifest = JSON.parse(await readFile(path.join(nextRoot, "record-manifest.json"), "utf8"));
+    Object.assign(manifest, identity, {
+      candidate_sha256: candidate,
+      previous_candidate_sha256: previous.candidate_sha256,
+      previous_record_manifest_sha256: previous.record_manifest_sha256,
+    });
+    manifest.files["continuous-gauntlet-pipelock.json"] = candidate;
+    const manifestBytes = JSON.stringify(manifest, null, 2) + "\n";
+    await writeFile(path.join(nextRoot, "record-manifest.json"), manifestBytes);
+    await writeFile(pointerPath, JSON.stringify({
+      ...previous, ...identity,
+      candidate_sha256: candidate,
+      record_manifest_sha256: createHash("sha256").update(manifestBytes).digest("hex"),
+      record_path: `./results/pipelock/${candidate}/continuous-gauntlet-pipelock.json`,
+      record_manifest_path: `./results/pipelock/${candidate}/record-manifest.json`,
+    }, null, 2) + "\n");
+    await auditEvidence(root);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("audit destination identity accepts both owners and rejects unknown repositories", async () => {
+  const root = await evidenceFixture();
+  try {
+    const target = path.join(root, "static", "gauntlet", "evidence", "inventory.json");
+    const inventory = JSON.parse(await readFile(target, "utf8"));
+    for (const repository of ["pipelab-org/pipelab.org", "PiPeLaB-OrG/pipelab.org", "LuCkYpIpEwReNcH/pipelab.org", "unknown-owner/pipelab.org", "pipelab-org/other"]) {
+      for (const entry of inventory.entries) entry.planned_destination.repository = repository;
+      await writeFile(target, JSON.stringify(inventory) + "\n");
+      if (repository === "unknown-owner/pipelab.org" || repository === "pipelab-org/other") {
+        await assert.rejects(auditEvidence(root), /destination contract drifted/);
+      } else await auditEvidence(root);
+    }
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });

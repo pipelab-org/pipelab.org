@@ -472,7 +472,7 @@ test("capability controls expose their counts and remain below the sticky site h
 
 test("capability page cannot publish a development snapshot as a release inventory", () => {
   assert.ok(auditWorkflow.indexOf("- run: npm ci") < auditWorkflow.indexOf("Resolve authoritative capability source"));
-  assert.match(auditWorkflow, /repository: luckyPipewrench\/pipelock/);
+  assert.match(auditWorkflow, /repository: pipelab-org\/pipelock/);
   assert.match(auditWorkflow, /ref: \$\{\{ steps\.capability-source\.outputs\.checkout_ref \}\}/);
   assert.doesNotMatch(auditWorkflow, /ref: \$\{\{ steps\.capability-source\.outputs\.commit \}\}/);
   assert.match(auditWorkflow, /fetch-depth: 0/);
