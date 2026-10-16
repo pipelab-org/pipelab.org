@@ -227,3 +227,23 @@ test('both views display the same published key fingerprint', () => {
   assert.match(live[1], /^[0-9a-f]{8}…[0-9a-f]{8}$/);
   assert.equal(replay[1], live[1]);
 });
+
+test('live: a pending re-check clears the earlier success status', async () => {
+  const h = harness('live'); await h.run();
+  assert.match(h.node('statusLabel').textContent, /verified/);
+  let finish;
+  h.context.window.liveTest.ready(new Promise((resolve) => { finish = resolve; }));
+  const pending = h.run();
+  noSuccess(h);
+  assert.doesNotMatch(h.node('statusLabel').textContent, /verified/);
+  finish(); await pending;
+  assert.match(h.node('statusLabel').textContent, /verified in your browser/);
+});
+
+test('live: a re-check with no session clears the earlier success status', async () => {
+  const h = harness('live'); await h.run();
+  h.context.window.liveTest.session(null); await h.run();
+  noSuccess(h);
+  assert.doesNotMatch(h.node('statusLabel').textContent, /verified/);
+  assert.match(h.node('browserVerifyResult').textContent, /No signed bundle/);
+});

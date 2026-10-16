@@ -1148,6 +1148,7 @@
   async function runBrowserVerify() {
     if (verifyInFlight || document.body.dataset.mode !== "live") return;
     clearVerificationIndicators();
+    setStatus(token ? "LIVE · checking in your browser" : "LIVE · browser check unavailable");
     if (!token) {
       setVerifyBtn("fail", "Verify in your browser");
       setVerifyResult("fail", "No signed bundle is available yet. Run a live action first, then verify it.");
