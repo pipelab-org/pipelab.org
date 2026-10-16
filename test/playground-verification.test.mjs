@@ -217,3 +217,13 @@ test('probe: a healthy live API enables the Live tab', async () => {
   assert.equal(live.enabled, true);
   assert.equal(soon.hidden, true);
 });
+
+// The live and replay views each show the published key fingerprint visitors
+// compare against; a drift between the two copies would show two different keys.
+test('both views display the same published key fingerprint', () => {
+  const live = source('viewer-live.js').match(/const PUBLISHED_KEY_FP = "([^"]+)";/);
+  const replay = source('viewer.js').match(/var REPLAY_PUBLISHED_KEY_FP = "([^"]+)";/);
+  assert.ok(live && replay, 'both fingerprint constants must be present');
+  assert.match(live[1], /^[0-9a-f]{8}…[0-9a-f]{8}$/);
+  assert.equal(replay[1], live[1]);
+});
