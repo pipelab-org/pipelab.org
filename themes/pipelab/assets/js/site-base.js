@@ -386,6 +386,15 @@
     });
   });
 
+  // Playground page: reload the embedded demo in place, so a visitor whose
+  // embed failed to load stays on this page instead of leaving for its host.
+  document.addEventListener('click', function (event) {
+    var source = event.target;
+    if (!source || !source.closest || !source.closest('[data-demo-reload]')) return;
+    var frame = document.querySelector('.playground-demo-frame');
+    if (frame) frame.src = frame.getAttribute('src');
+  });
+
   // Shared conversion-event dispatcher. Fires a named event to GA4 (gtag)
   // and PostHog when a user clicks anything with data-event="name".
   //
