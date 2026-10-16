@@ -834,7 +834,10 @@
           // of our own making, so absent/unknown must stay enabled.
           settle(false, "temporarily unavailable", "provider_unavailable");
         } else {
-          settle(!!(j && j.ok), "", "no_health");
+          // A health endpoint that answers 200 without a usable body is a broken
+          // backend on this host, not a replay-only copy; only a 404 means that.
+          if (j && j.ok) settle(true, "", "ok");
+          else settle(false, "unavailable", "health_invalid");
         }
       })
       .catch(() => { clearTimeout(t); settle(false, "unavailable", "probe_error"); });

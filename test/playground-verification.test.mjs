@@ -200,6 +200,9 @@ for (const [name, respond, opts] of [
   ['a 5xx', jsonResponse(503, null), {}],
   ['a network error', async () => { throw new Error('offline'); }, {}],
   ['a timeout', () => new Promise(() => {}), { timeout: true }],
+  ['a 200 with a null body', jsonResponse(200, null), {}],
+  ['a 200 with a false body', jsonResponse(200, false), {}],
+  ['a 200 with a zero body', jsonResponse(200, 0), {}],
 ]) {
   test(`probe: ${name} reads as unavailable, never as live elsewhere`, async () => {
     const { live, soon } = await settleProbe(respond, opts);
