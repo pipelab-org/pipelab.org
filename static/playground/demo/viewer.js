@@ -468,6 +468,7 @@ function rebuildReplay() {
 // false and the Live tab says why instead of opening a session that can never
 // connect. Copies with no live backend at all link to the live host instead.
 function liveOffline() {
+  if (state.mode === "live" && typeof window.pipelockClearVerificationIndicators === "function") window.pipelockClearVerificationIndicators();
   const label = $("statusLabel"); const prev = label.textContent;
   const reason = (window.PipelockLive && window.PipelockLive.reason) || "unavailable";
   const temporary = "LIVE CHAT · " + reason;
@@ -476,7 +477,7 @@ function liveOffline() {
   setTimeout(() => {
     // A later verification, reset or mode change owns the status now.
     if (label.textContent === temporary) {
-      label.textContent = prev === "LIVE · verified in your browser" && !$("stamp").classList.contains("on") ? "LIVE · streaming" : prev;
+      label.textContent = prev;
     }
     tab.classList.remove("soon-flash");
   }, 1800);

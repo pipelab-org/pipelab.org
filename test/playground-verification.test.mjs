@@ -375,6 +375,12 @@ test('live: an unavailable-tab timer cannot restore a retired verified status', 
   vm.runInContext('liveOffline()', h.context);
   h.setResult({ valid: false, error: 'INVALID' }); await h.run();
   h.flushTimers(); noSuccess(h);
+  assert.match(h.node('statusLabel').textContent, /browser check failed/);
+});
+test('live: an unavailable-tab notice retires every prior success surface', async () => {
+  const h = harness('live'); await h.run();
+  vm.runInContext('liveOffline()', h.context); noSuccess(h);
+  h.context.window.liveTest.reset(); h.flushTimers(); noSuccess(h);
   assert.doesNotMatch(h.node('statusLabel').textContent, /verified in your browser/);
 });
 for (const mode of ['live', 'replay']) {
