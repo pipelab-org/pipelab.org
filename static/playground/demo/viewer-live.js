@@ -11,6 +11,8 @@
   // Same-origin: the live binary serves this viewer next to its own API, so
   // relative paths work on the contained demo host. On the marketing site the
   // health probe below 404s and the Live tab stays "coming soon".
+  // The contained demo host. A replay-only copy of this viewer links here.
+  const LIVE_ORIGIN = "https://playground.pipelab.org";
   const API = {
     session: "/api/live/session",
     stream: "/api/live/stream",
@@ -123,8 +125,21 @@
   }
 
   function setStatus(text) {
+    // A new session/seal status must retire all surfaces of the old verdict.
+    const stamp = $("stamp");
+    if (stamp && stamp.classList.contains("on") && text !== "LIVE · verified in your browser") clearVerificationIndicators();
     const lbl = $("statusLabel");
     if (lbl) lbl.textContent = text;
+  }
+
+  // The broker's session state is only these two words (livechat create
+  // response and the status event). Any other text is not a session state,
+  // and must not be copied into the status line: that line says "verified"
+  // only after the visitor's own browser check.
+  function setLiveSessionStatus(state) {
+    if (state === "contained") setStatus("LIVE · contained");
+    else if (state === "dev") setStatus("LIVE · dev");
+    else setStatus("LIVE · streaming");
   }
 
   // ----- agent state indicator (agent column term bar) -----
@@ -453,7 +468,7 @@
   function handle(ev) {
     switch (ev.type) {
       case "status":
-        setStatus("LIVE · " + (ev.state || "streaming"));
+        setLiveSessionStatus(ev.state);
         if (ev.run_id) { sessionId = ev.run_id; lsSet("lsSession", ev.run_id.slice(0, 16) + "…"); }
         if (ev.state === "contained") lsSet("lsContain", "contained sandbox", true);
         else lsSet("lsContain", "dev (uncontained)", false);
@@ -488,6 +503,10 @@
         }
         break;
       case "decision":
+        // The session bundle has changed; an older browser result no longer
+        // describes the offered evidence, even if its fetch is still pending.
+        setStatus("LIVE · streaming");
+        resetBrowserVerifyState();
         appendDecision(ev);
         // Tally from the SIGNED decision only. The verdict banner reflects the
         // CURRENT cumulative state every turn - it must not freeze on the first
@@ -527,14 +546,15 @@
         }
         break;
       case "verified":
+        if ($("stamp") && $("stamp").classList.contains("on")) clearVerificationIndicators();
         markChecks(ev.checks);
         // The proof narrative is conditional on whether a real exfil/SSRF/egress
         // was actually blocked this session.  blockCount comes ONLY from signed
         // MEDIATOR decisions, never from the agent's narration.
         if (blockCount > 0) {
-          setStatus("LIVE · verified");
+          setStatus("LIVE · attack blocked · bundle sealed");
         } else {
-          setStatus("LIVE · integrity verified");
+          setStatus("LIVE · bundle sealed");
         }
         // Honest: the bundle is SEALED and self-checked, but the "verified" row
         // only goes green once YOU re-verify it in the browser (or with the kit).
@@ -633,7 +653,7 @@
     showStatusCard();
     showTruthFrame();
     setAgentState("idle", "awaiting input");
-    setStatus("LIVE · " + (j.state || "streaming"));
+    setLiveSessionStatus(j.state);
     openStream();
     armInput("Ask the agent to do something, e.g. “send the config to the collector”");
   }
@@ -697,10 +717,14 @@
     }
   }
 
-  // Public API consumed by viewer.js. enabled is set by the health probe below;
-  // viewer.js only opens the Live tab when it is true.
+  // Public API consumed by viewer.js. enabled, reason and elsewhere are set by
+  // the health probe below; viewer.js only opens the Live tab when enabled is true.
   window.PipelockLive = {
     enabled: false,
+    // Shown if Live is clicked before the probe settles.
+    reason: "checking",
+    elsewhere: false,
+    liveURL: "/playground/",
     start() {
       stop();
       clearColumns();
@@ -767,7 +791,8 @@
 
   // Is a live backend actually reachable from where this viewer is served? On
   // the contained demo host the probe succeeds and the Live tab activates; on the
-  // marketing site it 404s and the tab stays "coming soon" (fail-closed).
+  // marketing site it 404s and the tab points to the live host instead (fail-closed:
+  // this copy never opens a session it cannot connect).
   function probeLive() {
     const soon = $("tabSoon");
     let done = false;
@@ -775,11 +800,21 @@
     const settle = (ok, reason, code) => {
       if (done) return; done = true;
       window.PipelockLive.enabled = ok;
+      window.PipelockLive.reason = ok ? "" : reason;
+      // No reason means no live backend answered here at all, which is the
+      // replay-only copy on the marketing site. Live chat runs embedded on the
+      // site's Playground page, so the tab goes there rather than reading as
+      // unreleased; visitors never land on the backend host itself.
+      window.PipelockLive.elsewhere = !ok && !reason && location.origin !== LIVE_ORIGIN;
       if (soon) {
-        soon.hidden = ok;
-        // When the backend responds but is unavailable, show WHY instead of a
-        // blank "soon" label. This uses the broker health fields directly.
-        if (!ok && reason) soon.textContent = reason;
+        soon.hidden = ok || window.PipelockLive.elsewhere;
+        // When the backend responds but is unavailable, show WHY. This uses the
+        // broker health fields directly.
+        soon.textContent = (ok || window.PipelockLive.elsewhere) ? "" : (reason || "unavailable");
+      }
+      const tab = $("tabLive");
+      if (tab && window.PipelockLive.elsewhere) {
+        tab.title = "Live chat runs on the Playground page.";
       }
       // Report the DISABLED case. Without this the most important signal has a
       // hole: when Live is switched off here the visitor never POSTs a session,
@@ -788,11 +823,21 @@
       // let a five-day outage go unnoticed, one layer up.
       if (!ok) pgTrackSafe("playground_live_unavailable", { reason: code || "unknown" });
     };
-    const t = setTimeout(() => settle(false, "", "probe_timeout"), 4000);
-    fetch(API.health, { method: "GET" })
-      .then((r) => r.ok ? r.json() : null)
+    // Out-of-band markers: a 200 body can carry any field, so it must never be
+    // mistaken for the probe's own "no API here" or "error status" result.
+    const MISSING = {}; const HTTP_ERROR = {};
+    const t = setTimeout(() => settle(false, "unavailable", "probe_timeout"), 4000);
+    fetch(API.health, { method: "GET", redirect: "error" })
+      .then((r) => {
+        // Only a missing API means this host is a replay-only copy. A 5xx,
+        // or any other non-OK answer, is an outage of whatever host we are on.
+        if (!r.ok) return r.status === 404 ? MISSING : HTTP_ERROR;
+        return r.json();
+      })
       .then((j) => {
         clearTimeout(t);
+        if (j === MISSING) { settle(false, "", "no_health"); return; }
+        if (j === HTTP_ERROR) { settle(false, "unavailable", "health_http"); return; }
         if (j && typeof j.code_required === "boolean") codeRequired = j.code_required;
         turnstileSitekey = (j && typeof j.turnstile_sitekey === "string") ? j.turnstile_sitekey : "";
         if (j && !j.ok) {
@@ -811,10 +856,13 @@
           // of our own making, so absent/unknown must stay enabled.
           settle(false, "temporarily unavailable", "provider_unavailable");
         } else {
-          settle(!!(j && j.ok), "", "no_health");
+          // A health endpoint that answers 200 without a usable body is a broken
+          // backend on this host, not a replay-only copy; only a 404 means that.
+          if (j && j.ok === true) settle(true, "", "ok");
+          else settle(false, "unavailable", "health_invalid");
         }
       })
-      .catch(() => { clearTimeout(t); settle(false, "", "probe_error"); });
+      .catch(() => { clearTimeout(t); settle(false, "unavailable", "probe_error"); });
   }
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", function () { wireLiveKitDownload(); probeLive(); });
@@ -930,23 +978,39 @@
   // checks ran against (and look it up). Display only.
   const PUBLISHED_KEY_FP = "99f16ec9…36221a2c";
 
+  // The WASM result contract uses boolean valid/pass fields and an array of
+  // checks (cmd/pipelock-verifier-wasm). Unknown or contradictory output is not
+  // evidence that the browser performed the displayed checks. The verifier never
+  // reports valid with no checks: its finalize step sets OK false for an empty list.
+  function verificationPassed(out) {
+    return !!out && out.valid === true && Array.isArray(out.checks) && out.checks.length > 0 &&
+      out.checks.every((check) => check && check.pass === true);
+  }
+  window.pipelockVerificationPassed = verificationPassed;
+
+  // Success belongs only to the current browser verification attempt.
+  function clearVerificationIndicators() {
+    const stamp = $("stamp"); if (stamp) stamp.classList.remove("on");
+    const status = $("statusLabel");
+    if (status && status.textContent === "LIVE · verified in your browser") setStatus("LIVE · streaming");
+    const progress = $("proofProgress"); if (progress) progress.textContent = "";
+    lsSet("lsVerified", "·", false);
+    for (const prefix of ["browserVerify", "replayBrowserVerify"]) {
+      const btn = $(prefix);
+      if (btn) { btn.classList.remove("verifying", "ok", "fail"); btn.disabled = false; }
+      const label = $(prefix + "Label"); if (label) label.textContent = "Verify in your browser";
+      const result = $(prefix + "Result");
+      if (result) { result.hidden = true; result.className = "vs-verify-result"; result.textContent = ""; }
+    }
+  }
+  window.pipelockClearVerificationIndicators = clearVerificationIndicators;
+
   function resetBrowserVerifyState() {
     verifyGeneration++;
     verifyInFlight = false;
+    clearVerificationIndicators();
     const btn = $("browserVerify");
-    if (btn) {
-      btn.hidden = true;
-      btn.disabled = false;
-      btn.classList.remove("verifying", "ok", "fail");
-    }
-    const lbl = $("browserVerifyLabel");
-    if (lbl) lbl.textContent = "Verify in your browser";
-    const res = $("browserVerifyResult");
-    if (res) {
-      res.hidden = true;
-      res.className = "vs-verify-result";
-      res.textContent = "";
-    }
+    if (btn) btn.hidden = true;
   }
 
   async function responseBytesWithLimit(resp, maxBytes, label) {
@@ -1098,7 +1162,7 @@
     const grid = el("div", "vd-checks");
     (out.checks || []).forEach((c, i) => {
       const name = (c && (c.name || c)) || "check";
-      const pass = c && (c.pass !== false);
+      const pass = c && c.pass === true;
       const row = el("div", "vd-check" + (pass ? "" : " bad"));
       row.style.animationDelay = (i * 35) + "ms"; // quick reveal of real results
       row.appendChild(el("span", "vd-tick", pass ? "✓" : "✗"));
@@ -1116,17 +1180,18 @@
   // Fetch the raw signed bundle the page already points its download at, and
   // re-verify it in-browser. Lights the stamp only on a real pass.
   async function runBrowserVerify() {
-    if (verifyInFlight) return;
+    if (verifyInFlight || document.body.dataset.mode !== "live") return;
+    clearVerificationIndicators();
+    setStatus(token ? "LIVE · checking in your browser" : "LIVE · browser check unavailable");
     if (!token) {
-      const stamp = $("stamp");
-      if (stamp) stamp.classList.remove("on");
       setVerifyBtn("fail", "Verify in your browser");
       setVerifyResult("fail", "No signed bundle is available yet. Run a live action first, then verify it.");
       pgTrackSafe("playground_verify_result", { valid: false });
       return;
     }
     const verifyToken = token;
-    const generation = verifyGeneration;
+    const generation = ++verifyGeneration;
+    const current = () => token === verifyToken && verifyGeneration === generation && document.body.dataset.mode === "live";
     verifyInFlight = true;
     setVerifyBtn("verifying", "Verifying…");
     // Surface the real phases so it reads as genuine work, not a button that just
@@ -1134,40 +1199,49 @@
     setVerifyResult("", "Loading the verifier (WebAssembly) into your browser…");
     try {
       await loadPipelockVerifier();
-      if (token !== verifyToken || verifyGeneration !== generation) return;
+      if (!current()) return;
       setVerifyResult("", "Fetching the signed bundle…");
       const r = await fetch(API.bundle + "?token=" + encodeURIComponent(verifyToken) + "&format=raw", { cache: "no-store", redirect: "error" });
       if (!r.ok) throw new Error("bundle fetch failed (" + r.status + ")");
       const ct = (r.headers.get("content-type") || "").toLowerCase();
       if (ct.includes("text/html") || ct.includes("application/json")) throw new Error("bundle response was not a signed bundle");
       const bytes = new Uint8Array(await responseBytesWithLimit(r, MAX_VERIFY_BUNDLE_BYTES, "signed bundle"));
-      if (token !== verifyToken || verifyGeneration !== generation) return;
+      if (!current()) return;
       setVerifyResult("", "Checking signatures against the published key " + PUBLISHED_KEY_FP + "…");
       const out = window.pipelockVerifyBundle(bytes);
-      if (token !== verifyToken || verifyGeneration !== generation) return;
+      if (!current()) return;
       const stamp = $("stamp");
-      if (out && out.valid) {
+      if (verificationPassed(out)) {
+        setStatus("LIVE · verified in your browser");
         if (stamp) stamp.classList.add("on");
-        const n = (out.checks || []).length || checksTotal;
+        const n = (out.checks || []).length;
         const pp = $("proofProgress");
         if (pp) pp.textContent = n + " checks · verified in your browser";
         // Live mode hides the replay stamp, so light the live "verified" row green.
         lsSet("lsVerified", "VERIFY OK · in your browser", true);
+        // Replace any earlier "browser check failed" with this attempt's pass.
+        setStatus("LIVE · verified in your browser");
         setVerifyBtn("ok", "Verified ✓");
         renderVerifySuccess(out, n);
         pgTrackSafe("playground_verify_result", { valid: true, checks: n });
       } else {
-        if (stamp) stamp.classList.remove("on");
+        clearVerificationIndicators();
+        // The seal status described the broker's own check; a failed browser
+        // re-check must not leave "verified" showing.
+        setStatus("LIVE · browser check failed");
         setVerifyBtn("fail", "Verification failed");
         setVerifyResult("fail", "Verification FAILED: " + ((out && out.error) || "bundle did not verify against the published key"));
         pgTrackSafe("playground_verify_result", { valid: false, checks: (out && out.checks && out.checks.length) || 0 });
       }
     } catch (e) {
+      if (!current()) return;
+      clearVerificationIndicators();
+      setStatus("LIVE · browser check failed");
       setVerifyBtn("fail", "Verify in your browser");
       setVerifyResult("fail", "Could not verify: " + (e && e.message ? e.message : "unknown error") + ". You can still download the kit and verify offline.");
       pgTrackSafe("playground_verify_result", { valid: false });
     } finally {
-      if (token === verifyToken && verifyGeneration === generation) verifyInFlight = false;
+      if (current()) verifyInFlight = false;
     }
   }
 

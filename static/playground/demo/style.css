@@ -195,8 +195,8 @@ body[data-mode="live"] .status-dot { background: var(--accent); box-shadow: none
 .check-name { font-family: var(--mono); font-size: 11.5px; line-height: 1.35; color: var(--t3); transition: color .3s ease; }
 .check.on .check-mark { color: var(--accent); } .check.on .check-name { color: var(--t1); }
 .stamp-wrap { display: flex; justify-content: center; margin: 18px 0 16px; min-height: 54px; align-items: center; }
-.stamp { opacity: 0; transform: rotate(-7deg); transition: opacity .3s ease; }
-.stamp.on { opacity: 1; animation: stampIn .6s cubic-bezier(.2,1.25,.3,1); }
+.stamp { visibility: hidden; opacity: 0; transform: rotate(-7deg); transition: opacity .3s ease; }
+.stamp.on { visibility: visible; opacity: 1; animation: stampIn .6s cubic-bezier(.2,1.25,.3,1); }
 .stamp .inner { display: inline-flex; align-items: center; gap: 7px; border: 2px solid var(--accent); color: var(--accent); border-radius: 9px; padding: 8px 18px; font-family: var(--mono); font-weight: 800; font-size: 23px; letter-spacing: 0.04em; box-shadow: 0 0 22px rgba(0,229,160,0.32), inset 0 0 16px rgba(0,229,160,0.10); text-shadow: 0 0 16px rgba(0,229,160,0.5); }
 .verify-self { padding-top: 15px; border-top: 1px dashed rgba(255,255,255,0.1); }
 .vs-title { font-family: var(--mono); font-size: 11px; font-weight: 700; letter-spacing: 0.06em; color: var(--t0); text-transform: uppercase; margin-bottom: 11px; }

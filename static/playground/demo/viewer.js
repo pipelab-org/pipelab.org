@@ -322,8 +322,8 @@ function applyBeat() {
   $("beatNum").textContent = b; $("beatTotal").textContent = TOTAL;
   $("beatDesc").textContent = DATA.beats[b] || "";
   // proof
-  if (b === TOTAL) runChecks(); else { clearChecks(); state.checks = 0; state.verified = false; renderChecks(); }
-  $("proofProgress").textContent = state.verified ? (DATA.checks.length + " / " + DATA.checks.length + " verified") : (state.checks + " / " + DATA.checks.length);
+  if (b === TOTAL) runChecks(); else { clearChecks(); state.checks = 0; renderChecks(); }
+  $("proofProgress").textContent = state.verified ? (state.verifiedChecks + " checks · verified in your browser") : (state.checks + " / " + DATA.checks.length);
   updateChatInput();
   trackVisibleReplayBlocks(b);
   scrollActive();
@@ -402,14 +402,13 @@ function renderChecks() {
   const items = document.querySelectorAll(".check");
   items.forEach((c, i) => { const on = i < state.checks; c.classList.toggle("on", on); c.querySelector(".check-mark").textContent = on ? "✓" : "·"; });
   $("stamp").classList.toggle("on", state.verified);
-  $("proofProgress").textContent = state.verified ? (DATA.checks.length + " / " + DATA.checks.length + " verified") : (state.checks + " / " + DATA.checks.length);
+  $("proofProgress").textContent = state.verified ? (state.verifiedChecks + " checks · verified in your browser") : (state.checks + " / " + DATA.checks.length);
 }
 
 function runChecks() {
-  clearChecks(); state.checks = 0; state.verified = false; renderChecks();
+  clearChecks(); state.checks = 0; renderChecks();
   let pt = 320;
   for (let c = 1; c <= DATA.checks.length; c++) { checkTimers.push(setTimeout(() => { state.checks = c; renderChecks(); }, pt)); pt += 150; }
-  checkTimers.push(setTimeout(() => { state.verified = true; renderChecks(); }, pt + 360));
 }
 
 /* ---------------- controls ---------------- */
@@ -423,13 +422,15 @@ function play() { if (state.mode === "live") return; if (state.beat >= TOTAL) { 
 function pause() { clearPlay(); setPlaying(false); }
 function togglePlay() { if (state.mode === "live") return; state.playing ? pause() : play(); }
 function step(d) { if (state.mode === "live") return; pause(); goTo(state.beat + d); setPlaying(false); }
-function restart() { if (state.mode === "live") return; clearPlay(); clearChecks(); state.beat = 0; state.expanded = false; goTo(0); setPlaying(true); loop(); }
+function restart() { if (state.mode === "live") return; resetReplayBrowserVerify(); clearPlay(); clearChecks(); state.beat = 0; state.expanded = false; goTo(0); setPlaying(true); loop(); }
 // First-run autostart, deferred so the run never advances behind the intro modal.
 // Live has no beats to play. Called either by the init timer (modal already seen) or
 // by closeIntro() when the visitor dismisses a first-visit modal.
 function beginAutoplay() { if (state.mode === "live") return; setPlaying(true); loop(); }
 
 function setMode(m) {
+  clearChecks();
+  resetReplayBrowserVerify();
   state.mode = m; document.body.dataset.mode = m;
   try { localStorage.setItem("pl_mode", m); } catch (e) {}
   $("tabLive").setAttribute("aria-pressed", String(m === "live"));
@@ -462,15 +463,24 @@ function rebuildReplay() {
   goTo(0);
 }
 
-// The live demo runs on a separate contained host. When this page is served
-// anywhere that host is not reachable (the marketing site, a local replay),
-// PipelockLive.enabled stays false and the Live tab says so instead of opening
-// a session that can never connect.
+// The live demo runs on a separate contained host. When that host answers but
+// is unavailable (paused, daily capacity reached), PipelockLive.enabled stays
+// false and the Live tab says why instead of opening a session that can never
+// connect. Copies with no live backend at all link to the live host instead.
 function liveOffline() {
+  if (state.mode === "live" && typeof window.pipelockClearVerificationIndicators === "function") window.pipelockClearVerificationIndicators();
   const label = $("statusLabel"); const prev = label.textContent;
-  label.textContent = "LIVE CHAT · coming soon";
+  const reason = (window.PipelockLive && window.PipelockLive.reason) || "unavailable";
+  const temporary = "LIVE CHAT · " + reason;
+  label.textContent = temporary;
   const tab = $("tabLive"); tab.classList.add("soon-flash");
-  setTimeout(() => { label.textContent = prev; tab.classList.remove("soon-flash"); }, 1800);
+  setTimeout(() => {
+    // A later verification, reset or mode change owns the status now.
+    if (label.textContent === temporary) {
+      label.textContent = prev;
+    }
+    tab.classList.remove("soon-flash");
+  }, 1800);
 }
 
 function copyText(text, btnId, doneLabel) {
@@ -608,6 +618,20 @@ function hideReplayCta() {
    replay-bundle.tar.gz against the published key. createElement/textContent
    only, never innerHTML - mirrors renderVerifySuccess in the Live path. */
 var replayVerifyInFlight = false;
+var replayVerifyGeneration = 0;
+
+function clearReplayVerificationIndicators() {
+  state.verified = false;
+  state.verifiedChecks = 0;
+  // viewer-live.js provides the shared reset for both modes, even without a backend.
+  if (typeof window.pipelockClearVerificationIndicators === "function") window.pipelockClearVerificationIndicators();
+}
+
+function resetReplayBrowserVerify() {
+  replayVerifyGeneration++;
+  replayVerifyInFlight = false;
+  clearReplayVerificationIndicators();
+}
 
 function setReplayVerifyBtn(state, label) {
   var btn = $("replayBrowserVerify");
@@ -640,7 +664,7 @@ function renderReplayVerifySuccess(out, n) {
   for (var i = 0; i < checks.length; i++) {
     var c = checks[i];
     var name = (c && (c.name || c)) || "check";
-    var pass = c && (c.pass !== false);
+    var pass = c && c.pass === true;
     var row = el("div", "vd-check" + (pass ? "" : " bad"));
     row.style.animationDelay = (i * 35) + "ms";
     row.appendChild(el("span", "vd-tick", pass ? "✓" : "✗"));
@@ -656,7 +680,11 @@ function renderReplayVerifySuccess(out, n) {
 }
 
 async function runReplayBrowserVerify() {
-  if (replayVerifyInFlight) return;
+  if (replayVerifyInFlight || state.mode !== "replay") return;
+  clearChecks();
+  clearReplayVerificationIndicators();
+  var generation = ++replayVerifyGeneration;
+  var current = () => state.mode === "replay" && replayVerifyGeneration === generation;
   if (typeof window.pipelockVerifyStaticBundle !== "function") {
     setReplayVerifyBtn("fail", "Verify in your browser");
     setReplayVerifyResult("fail", "Verifier not available. Try reloading the page.");
@@ -668,8 +696,12 @@ async function runReplayBrowserVerify() {
   setReplayVerifyResult("", "Loading the verifier (WebAssembly) into your browser…");
   try {
     var out = await window.pipelockVerifyStaticBundle(REPLAY_BUNDLE_URL);
-    if (out && out.valid) {
+    if (!current()) return;
+    if (typeof window.pipelockVerificationPassed === "function" && window.pipelockVerificationPassed(out)) {
       var n = (out.checks || []).length;
+      state.verified = true;
+      // Keep the verifier's own count; the scripted check list is narration only.
+      state.verifiedChecks = n;
       setReplayVerifyBtn("ok", "Verified ✓");
       renderReplayVerifySuccess(out, n);
       pgTrackSafe("playground_verify_result", { valid: true, checks: n });
@@ -677,17 +709,31 @@ async function runReplayBrowserVerify() {
       var stamp = $("stamp"); if (stamp) stamp.classList.add("on");
       var pp = $("proofProgress"); if (pp) pp.textContent = n + " checks · verified in your browser";
     } else {
+      clearReplayVerificationIndicators();
       setReplayVerifyBtn("fail", "Verification failed");
       setReplayVerifyResult("fail", "Verification FAILED: " + ((out && out.error) || "bundle did not verify against the published key"));
       pgTrackSafe("playground_verify_result", { valid: false, checks: (out && out.checks && out.checks.length) || 0 });
     }
   } catch (e) {
+    if (!current()) return;
+    clearReplayVerificationIndicators();
     setReplayVerifyBtn("fail", "Verify in your browser");
     setReplayVerifyResult("fail", "Could not verify: " + (e && e.message ? e.message : "unknown error") + ". You can still download the bundle and verify offline.");
     pgTrackSafe("playground_verify_result", { valid: false });
   } finally {
-    replayVerifyInFlight = false;
+    if (current()) replayVerifyInFlight = false;
   }
+}
+
+function openLiveTab() {
+  pgTrackSafe("playground_mode_selected", { mode: "live" });
+  const live = window.PipelockLive;
+  if (live && live.enabled) setMode("live");
+  // No analytics here: an "elsewhere" copy has no live backend, so its
+  // counts-only transport is disabled and the broker would never see the click.
+  // Same tab, top frame: this copy may sit in an iframe on another page.
+  else if (live && live.elsewhere) window.open(live.liveURL, "_top");
+  else liveOffline();
 }
 
 async function main() {
@@ -699,11 +745,7 @@ async function main() {
   $("btnNext").addEventListener("click", () => step(1));
   $("btnPlay").addEventListener("click", togglePlay);
   $("btnRestart").addEventListener("click", restart);
-  $("tabLive").addEventListener("click", () => {
-    pgTrackSafe("playground_mode_selected", { mode: "live" });
-    if (window.PipelockLive && window.PipelockLive.enabled) setMode("live");
-    else liveOffline();
-  });
+  $("tabLive").addEventListener("click", openLiveTab);
   $("tabReplay").addEventListener("click", () => { pgTrackSafe("playground_mode_selected", { mode: "replay" }); setMode("replay"); });
   $("btnCopyCmd").addEventListener("click", () => copyText($("verifyCmd").textContent, "btnCopyCmd", "copied"));
   var kp = $("kitPrimary");
