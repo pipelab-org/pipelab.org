@@ -79,7 +79,7 @@ Add `--dry-run` first to print the planned steps without changing anything. Each
 
 Before touching the host, install runs `pipelock check` from the binary it is about to install against the config it is about to install. If that binary can parse the config but can't enforce it, for example named `agents.<profile>` entries on a build without agent profiles, install refuses before it replaces anything.
 
-Hosts installed before v3.6.0 need `sudo pipelock contain install` with the v3.6 binary to move into the private network namespace. `contain upgrade` does not do that migration. See the [v3.6 upgrade guide](/learn/pipelock-v360-upgrade/).
+After updating to v3.7.0, run `sudo pipelock contain install` with the new binary to refresh managed units and wrappers, then restart existing agent services and sessions. A binary swap alone doesn't update the mounts of a running agent. See the [v3.7 upgrade guide](/learn/pipelock-v370-upgrade/); the [v3.6 upgrade guide](/learn/pipelock-v360-upgrade/) retains the earlier private-network-namespace migration.
 
 ## Register a tool
 
