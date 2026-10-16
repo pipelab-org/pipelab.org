@@ -23,9 +23,9 @@ jobs:
       (github.event.comment.body == '/review' ||
        github.event.comment.body == '/review deep')
     # Keep both pins equal until the nested source identity is verified live.
-    uses: luckyPipewrench/pipelock/.github/workflows/pr-review-reusable.yaml@3e8534e0dd621c62879238cc01d56f7e58e9d096
+    uses: pipelab-org/pipelock/.github/workflows/pr-review-reusable.yaml@4edcf46d02011c2aa1e305aff69d4d7100aae0ca
     with:
-      reviewer_sha: 3e8534e0dd621c62879238cc01d56f7e58e9d096
+      reviewer_sha: 4edcf46d02011c2aa1e305aff69d4d7100aae0ca
       pr_number: ${{ github.event.issue.number }}
       review_mode: >-
         ${{ github.event.comment.body == '/review deep' && 'deep' ||
