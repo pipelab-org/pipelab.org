@@ -13,7 +13,7 @@ import { verifyCapabilityReferences } from "./capability-references.mjs";
 
 const SEMVER = /^\d+\.\d+\.\d+$/;
 const COMMIT = /^[0-9a-f]{40}$/;
-const PIPELOCK_REPOSITORY = "https://github.com/luckyPipewrench/pipelock";
+const PIPELOCK_REPOSITORY = "https://github.com/pipelab-org/pipelock";
 const CONTENT_DIRECTORY = fileURLToPath(new URL("../content", import.meta.url));
 
 function parseCapabilityFrontMatter(content) {

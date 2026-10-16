@@ -38,5 +38,5 @@ Use the agreed signing identity in both commands if it differs from `pipelock-as
 - [Enterprise](/enterprise/)
 - [Agent Egress Bench results](/gauntlet/)
 - [Compare](/compare/)
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)
 - [Get an Assess license (Polar)](https://buy.polar.sh/polar_cl_xiD0xkZuLFvPG0nTYpezAnar0vU6MWd3qbWdj4XcB9D)

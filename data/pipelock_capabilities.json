@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "source": {
-    "repository": "https://github.com/luckyPipewrench/pipelock",
+    "repository": "https://github.com/pipelab-org/pipelock",
     "ref": "v3.7.0",
     "commit": "47c14c59b14f835f53971d22941b556f44f2baa0",
     "manifest_sha256": "2c060722c5ba55a08fb5ea8ba4259be156af02a271c2ef3c21dbdf189e2084db",

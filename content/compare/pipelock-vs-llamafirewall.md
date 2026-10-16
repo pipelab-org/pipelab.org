@@ -108,4 +108,4 @@ Those failures are independent of each other, which is the argument for running 
 - [Agent firewall vs guardrails](/compare/agent-firewall-vs-guardrails/): the category-level version of this comparison
 - [Pipelock vs Lakera Guard](/compare/pipelock-vs-lakera-guard/): a commercial classifier at the same boundary
 - [MCP security](/learn/mcp-security/): tool poisoning and rug-pulls
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

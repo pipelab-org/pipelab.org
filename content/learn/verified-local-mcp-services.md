@@ -31,4 +31,4 @@ Configure `acknowledgment_key` using the documented private-file or environment 
 
 For a registered local service, the `verified-local-session` binding can survive its changing port and bearer token while retaining kernel verification. This doesn't disable other tool, input, response or taint checks.
 
-Read the [registry and acknowledgment configuration](https://github.com/luckyPipewrench/pipelock/blob/main/docs/configuration.md#registered-local-mcp-services-mcp_identities) and the [MCP proxy guide](/learn/mcp-proxy/), then apply the [v3.7 upgrade checks](/learn/pipelock-v370-upgrade/).
+Read the [registry and acknowledgment configuration](https://github.com/pipelab-org/pipelock/blob/main/docs/configuration.md#registered-local-mcp-services-mcp_identities) and the [MCP proxy guide](/learn/mcp-proxy/), then apply the [v3.7 upgrade checks](/learn/pipelock-v370-upgrade/).

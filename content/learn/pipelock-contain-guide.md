@@ -36,7 +36,7 @@ tags:
   - operator
   - evidence
 ---
-`pipelock contain` runs an AI agent on your Linux host in a way the agent can't quietly leave. The agent gets its own network with no route off the machine, and the only ways out are the Pipelock proxy and services you name. This guide walks the whole lifecycle in the order you'd run it. The full flag reference is in the [`contain` CLI doc](https://github.com/luckyPipewrench/pipelock/blob/main/docs/contain-cli.md).
+`pipelock contain` runs an AI agent on your Linux host in a way the agent can't quietly leave. The agent gets its own network with no route off the machine, and the only ways out are the Pipelock proxy and services you name. This guide walks the whole lifecycle in the order you'd run it. The full flag reference is in the [`contain` CLI doc](https://github.com/pipelab-org/pipelock/blob/main/docs/contain-cli.md).
 
 ## v3.7 filesystem grants and socket isolation
 
@@ -44,7 +44,7 @@ tags:
 
 Managed launches also hide host `/run` and `/dev/shm` and verify the runtime mount evidence. Reinstall containment with the new binary and restart running services and sessions to adopt it. A binary swap alone doesn't update their mounts. Operator-written units are left unchanged.
 
-A process able to create a user namespace can remount, same-user `/proc` remains visible, and private `/tmp` is shared with the namespace anchor and its forwarders. Socket access retains the documented boundary. The grant list alone doesn't prove filesystem isolation; verify the live launch. Read the [v3.7 upgrade guide](/learn/pipelock-v370-upgrade/) and [host containment reference](https://github.com/luckyPipewrench/pipelock/blob/main/docs/contain-cli.md).
+A process able to create a user namespace can remount, same-user `/proc` remains visible, and private `/tmp` is shared with the namespace anchor and its forwarders. Socket access retains the documented boundary. The grant list alone doesn't prove filesystem isolation; verify the live launch. Read the [v3.7 upgrade guide](/learn/pipelock-v370-upgrade/) and [host containment reference](https://github.com/pipelab-org/pipelock/blob/main/docs/contain-cli.md).
 
 ## What containment is
 

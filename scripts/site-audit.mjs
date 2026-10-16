@@ -719,7 +719,7 @@ try {
 if (typeof scannerDocVersion !== "string" || !scannerDocVersion) {
   issues.push("pipelock page: cannot resolve pipelock_version to check the scanner order source link");
 } else {
-  const scannerDocHref = `href="https://github.com/luckyPipewrench/pipelock/blob/v${scannerDocVersion}/docs/security-assurance.md#ordered-url-scanner-pipeline"`;
+  const scannerDocHref = `href="https://github.com/pipelab-org/pipelock/blob/v${scannerDocVersion}/docs/security-assurance.md#ordered-url-scanner-pipeline"`;
   if (!pipelockContentSource.includes(scannerDocHref)) {
     issues.push("pipelock page: scanner order claim must link to its tagged source document");
   }
@@ -1254,7 +1254,7 @@ if (currentVersion) {
 
   issues.push(...auditDemoVersions(repoRoot, currentVersion, demoFiles));
 
-  if (!pipelockPage.includes(`luckyPipewrench/pipelock@${versionNeedle}`)) {
+  if (!pipelockPage.includes(`pipelab-org/pipelock@${versionNeedle}`)) {
     issues.push(`content/pipelock.md: missing GitHub Action version ${versionNeedle}`);
   }
 

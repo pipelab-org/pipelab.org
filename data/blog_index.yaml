@@ -35,5 +35,5 @@ subscribe:
     url: https://dev.to/luckypipewrench
     external: true
   - label: GitHub
-    url: https://github.com/luckyPipewrench/pipelock
+    url: https://github.com/pipelab-org/pipelock
     external: true

@@ -12,7 +12,7 @@ tags: ["pipelock", "receipts", "containment", "mcp-security"]
 
 A signed receipt chain can be intact without proving the writer finished. Pipelock v3.7 makes that distinction visible: an open chain reports `VALID PREFIX, END UNPROVEN` and exits 3. The release also adds parallel signed receipt chains, filesystem grants for Linux containment, and checks that a local MCP endpoint belongs to the program you registered.
 
-The [upgrade guide](/learn/pipelock-v370-upgrade/) covers the operator actions. Read why [a valid receipt chain can still be cut short](/blog/a-valid-receipt-chain-can-still-be-cut-short/) and why [localhost doesn't identify a program](/blog/localhost-is-a-place-not-a-program/) for the reasoning behind those checks. The [full changelog](https://github.com/luckyPipewrench/pipelock/blob/v3.7.0/CHANGELOG.md) holds the compatibility details.
+The [upgrade guide](/learn/pipelock-v370-upgrade/) covers the operator actions. Read why [a valid receipt chain can still be cut short](/blog/a-valid-receipt-chain-can-still-be-cut-short/) and why [localhost doesn't identify a program](/blog/localhost-is-a-place-not-a-program/) for the reasoning behind those checks. The [full changelog](https://github.com/pipelab-org/pipelock/blob/v3.7.0/CHANGELOG.md) holds the compatibility details.
 
 ## Parallel recording with a complete-group check
 

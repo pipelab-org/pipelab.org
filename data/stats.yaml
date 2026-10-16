@@ -5,7 +5,7 @@ stars: 928
 direct_deps: 26
 # Product metrics are a dated snapshot from Pipelock main. GitHub stars are
 # refreshed client-side; the committed stars value above is only a fallback.
-product_source_repository: "https://github.com/luckyPipewrench/pipelock"
+product_source_repository: "https://github.com/pipelab-org/pipelock"
 product_source_commit: "47c14c59b14f835f53971d22941b556f44f2baa0"
 product_verified_date: "2026-10-14"
 dlp_patterns: 65

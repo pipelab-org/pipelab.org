@@ -9,7 +9,7 @@ level: intermediate
 
 `pipelock exec` checks a running proxy and starts a command with shared proxy and certificate-authority settings. It checks health, forwarding and the kill switch before launch. This free command is useful for clients that honor proxy environment variables.
 
-Commands can ignore those settings. For operating-system enforcement, use [host containment](/learn/pipelock-contain-guide/), [sandboxing](https://github.com/luckyPipewrench/pipelock/blob/main/docs/guides/sandbox.md), or network policy.
+Commands can ignore those settings. For operating-system enforcement, use [host containment](/learn/pipelock-contain-guide/), [sandboxing](https://github.com/pipelab-org/pipelock/blob/main/docs/guides/sandbox.md), or network policy.
 
 ## Start the proxy, then launch the client
 
@@ -21,7 +21,7 @@ pipelock exec --config pipelock.yaml -- curl https://api.vendor.example/
 
 The URL is a placeholder for an endpoint your policy permits. Pipelock refuses launch if its proxy checks fail. This command doesn't install or start a proxy for you.
 
-For HTTPS body inspection, configure TLS interception and provide the trusted CA according to the [exec command reference](https://github.com/luckyPipewrench/pipelock/blob/main/docs/cli/exec.md). Without interception, CONNECT application traffic remains encrypted and can't be body-scanned.
+For HTTPS body inspection, configure TLS interception and provide the trusted CA according to the [exec command reference](https://github.com/pipelab-org/pipelock/blob/main/docs/cli/exec.md). Without interception, CONNECT application traffic remains encrypted and can't be body-scanned.
 
 ## Understand what the environment changes
 

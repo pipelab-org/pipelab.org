@@ -30,4 +30,4 @@ Grants apply to fetch, forward HTTP, CONNECT and WebSocket destinations through 
 
 Fleet updates preserve local grants. Strict mode and required security contracts refuse expanded trust on reload; balanced and audit modes warn. Removing a grant prevents new admission but doesn't terminate established tunnels or WebSocket sessions.
 
-Read the [exact destination contract](https://github.com/luckyPipewrench/pipelock/blob/main/docs/configuration.md#exact-destination-grants), [secure deployment guide](/learn/secure-ai-agent-deployment/), and [v3.7 upgrade actions](/learn/pipelock-v370-upgrade/) before applying a grant.
+Read the [exact destination contract](https://github.com/pipelab-org/pipelock/blob/main/docs/configuration.md#exact-destination-grants), [secure deployment guide](/learn/secure-ai-agent-deployment/), and [v3.7 upgrade actions](/learn/pipelock-v370-upgrade/) before applying a grant.

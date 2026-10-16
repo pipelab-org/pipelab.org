@@ -7,7 +7,7 @@ learn_cat: operator
 level: intermediate
 ---
 
-Upgrade the binary before loading the new configuration fields. Then check receipt automation, reinstall containment, and test clients that depend on partial HTTP responses. The [v3.7 release notes](/blog/pipelock-v370-release/) describe the changes; the [source upgrade guide](https://github.com/luckyPipewrench/pipelock/blob/v3.7.0/docs/guides/upgrading-to-3.7.md) holds the full compatibility contract.
+Upgrade the binary before loading the new configuration fields. Then check receipt automation, reinstall containment, and test clients that depend on partial HTTP responses. The [v3.7 release notes](/blog/pipelock-v370-release/) describe the changes; the [source upgrade guide](https://github.com/pipelab-org/pipelock/blob/v3.7.0/docs/guides/upgrading-to-3.7.md) holds the full compatibility contract.
 
 ## Prove the end of a receipt chain
 
@@ -21,11 +21,11 @@ Clean reports use schema version 2 and expose end-proof status. Dispatch consume
 
 `flight_recorder.receipt_chains` defaults to 1 and accepts 1 through 32. Changing it requires a restart. Reload retains the old count with a warning. Keep the complete directory and use a group-capable verifier when the count exceeds 1. Automatic multi-chain anchoring isn't supported. Changing a multi-chain signing key closes the group and requires supervised restart.
 
-Required receipts make covered effects wait for every configured receipt family's durable record. With required receipts and multiple chains, a sync failure stops the group and process. Denials still have best-effort receipt emission. Review the [receipt content boundary](https://github.com/luckyPipewrench/pipelock/blob/v3.7.0/docs/guides/receipt-verification.md#receipt-content-boundary): whole secrets remain scanned before signing, while fragment reassembly has a bounded search and process-proven generated IDs are excluded.
+Required receipts make covered effects wait for every configured receipt family's durable record. With required receipts and multiple chains, a sync failure stops the group and process. Denials still have best-effort receipt emission. Review the [receipt content boundary](https://github.com/pipelab-org/pipelock/blob/v3.7.0/docs/guides/receipt-verification.md#receipt-content-boundary): whole secrets remain scanned before signing, while fragment reassembly has a bounded search and process-proven generated IDs are excluded.
 
 Native evidence streams have a 256 MiB verifier ceiling that the writer doesn't enforce. Keep each run below it using a schedule measured for your traffic. An over-ceiling multi-chain history refuses restart; single-chain restart leaves the old run unverifiable.
 
-Give a recording proxy time to stop. Closing the receipt group at shutdown can take longer than the systemd (90 s), Kubernetes (30 s) and Compose (10 s) defaults on a small CPU allocation with a long history, so the managed systemd unit, the Helm chart, generated Kubernetes and Compose output and the examples now set 10 minutes. Upgrading from an earlier release runs the old binary's `contain upgrade`, which doesn't add the setting, so run `sudo pipelock contain install` with the new binary afterwards. Hand-written manifests need their own setting. A run stopped before its close finishes verifies as `GROUP_INCOMPLETE`. See the [stop budget](https://github.com/luckyPipewrench/pipelock/blob/v3.7.0/docs/guides/flight-recorder.md#stop-budget) notes.
+Give a recording proxy time to stop. Closing the receipt group can outlast the systemd (90 s), Kubernetes (30 s) and Compose (10 s) defaults on a small CPU allocation with a long history. The managed systemd unit, Helm chart, generated Kubernetes and Compose output, and examples now set 10 minutes. Upgrading from an earlier release runs the old binary's `contain upgrade`, which doesn't add the setting, so run `sudo pipelock contain install` with the new binary afterwards. Hand-written manifests need their own setting. A run stopped before its close finishes verifies as `GROUP_INCOMPLETE`. See the [stop budget](https://github.com/pipelab-org/pipelock/blob/v3.7.0/docs/guides/flight-recorder.md#stop-budget) notes.
 
 ## Reinstall containment and restart agents
 
@@ -33,7 +33,7 @@ Run `sudo pipelock contain install` with the new binary, then restart existing a
 
 New installs set `containment.filesystem.mode: enforce`. Existing configs that omit it stay off. Enforce mode hides other homes and signing material, mounts unexpired workspace grants, and refuses launch unless its canary succeeds. The [containment guide](/learn/pipelock-contain-guide/) explains the remaining user-namespace, same-user process, socket, and operator-written-unit limits.
 
-Linux sandbox socket isolation depends on Landlock support. On amd64 below ABI 9, the fallback denies Unix socket creation, datagram pairs and receive-message calls, so some multiprocessing and Node IPC fail. Strict ARM64 below ABI 9 refuses. Consult the [sandbox guide](https://github.com/luckyPipewrench/pipelock/blob/v3.7.0/docs/guides/sandbox.md) before upgrading these workloads. Explicit child overrides for code-loading variables such as `PYTHONHOME`, `NODE_PATH`, and `CLASSPATH` now refuse.
+Linux sandbox socket isolation depends on Landlock support. On amd64 below ABI 9, the fallback denies Unix socket creation, datagram pairs and receive-message calls, so some multiprocessing and Node IPC fail. Strict ARM64 below ABI 9 refuses. Consult the [sandbox guide](https://github.com/pipelab-org/pipelock/blob/v3.7.0/docs/guides/sandbox.md) before upgrading these workloads. Explicit child overrides for code-loading variables such as `PYTHONHOME`, `NODE_PATH`, and `CLASSPATH` now refuse.
 
 ## Check policy and clients
 

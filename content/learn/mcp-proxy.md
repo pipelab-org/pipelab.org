@@ -236,7 +236,7 @@ For the detailed comparison see [Pipelock vs Docker MCP Gateway](/compare/pipelo
 
 ```bash
 # Linux/macOS
-curl -L https://github.com/luckyPipewrench/pipelock/releases/latest/download/pipelock_linux_amd64 -o pipelock
+curl -L https://github.com/pipelab-org/pipelock/releases/latest/download/pipelock_linux_amd64 -o pipelock
 chmod +x pipelock
 sudo mv pipelock /usr/local/bin/
 
@@ -299,4 +299,4 @@ This runs Pipelock's built-in posture check, lists each MCP server you have conf
 - [MCP Scanner Comparison](/blog/mcp-scanner-comparison-2026/): Cisco vs Snyk vs Pipelock
 - [Pipelock Product Page](/pipelock/): the full agent firewall
 - [What is an Agent Firewall?](/agent-firewall/): architecture overview
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

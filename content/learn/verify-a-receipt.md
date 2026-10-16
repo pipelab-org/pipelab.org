@@ -53,9 +53,9 @@ and chain verification surface. The standalone verifiers use `0` valid, `1` inva
 | Binary | Source | What it covers |
 | --- | --- | --- |
 | `pipelock verify-receipt` | Built into the main Pipelock binary | Single receipt JSON, a flight recorder JSONL file, or a recorder session directory via `--chain`; `--whole-recorder` widens the check to the whole recorder |
-| `pipelock-verifier` (Go) | [`cmd/pipelock-verifier`](https://github.com/luckyPipewrench/pipelock/tree/main/cmd/pipelock-verifier), shipped as its own GoReleaser archive | Subcommands `receipt`, `chain`, `audit-packet`. No proxy, no scanner, no network surface. |
-| `pipelock-verifier-ts` | [`sdk/verifiers/ts`](https://github.com/luckyPipewrench/pipelock/tree/main/sdk/verifiers/ts) | Node/Bun port via `@noble/ed25519` and `ajv` |
-| `pipelock-verifier-rs` | [`sdk/verifiers/rust`](https://github.com/luckyPipewrench/pipelock/tree/main/sdk/verifiers/rust) | Rust port with embedded schema |
+| `pipelock-verifier` (Go) | [`cmd/pipelock-verifier`](https://github.com/pipelab-org/pipelock/tree/main/cmd/pipelock-verifier), shipped as its own GoReleaser archive | Subcommands `receipt`, `chain`, `audit-packet`. No proxy, no scanner, no network surface. |
+| `pipelock-verifier-ts` | [`sdk/verifiers/ts`](https://github.com/pipelab-org/pipelock/tree/main/sdk/verifiers/ts) | Node/Bun port via `@noble/ed25519` and `ajv` |
+| `pipelock-verifier-rs` | [`sdk/verifiers/rust`](https://github.com/pipelab-org/pipelock/tree/main/sdk/verifiers/rust) | Rust port with embedded schema |
 | `pipelock-verify` | [`pipelock-verify-python`](https://github.com/luckyPipewrench/pipelock-verify-python) | Python port for receipt chains and Python audit scripts |
 
 Core Go invocations:
