@@ -369,3 +369,18 @@ for (const reset of ['reset', 'stop', 'resetCard']) {
     noSuccess(h); assert.doesNotMatch(h.node('statusLabel').textContent, /verified in your browser/);
   });
 }
+
+test('live: an unavailable-tab timer cannot restore a retired verified status', async () => {
+  const h = harness('live'); await h.run();
+  vm.runInContext('liveOffline()', h.context);
+  h.setResult({ valid: false, error: 'INVALID' }); await h.run();
+  h.flushTimers(); noSuccess(h);
+  assert.doesNotMatch(h.node('statusLabel').textContent, /verified in your browser/);
+});
+for (const mode of ['live', 'replay']) {
+  for (const out of [null, { valid: 'false', checks: [] }, { valid: 1, checks: [] }, { valid: true }, { valid: true, checks: [{ name: 'signature' }] }, { valid: true, checks: [{ name: 'signature', pass: false }] }]) {
+    test(`${mode}: malformed or contradictory verifier result cannot report success (${JSON.stringify(out)})`, async () => {
+      const h = harness(mode); h.setResult(out); await h.run(); noSuccess(h);
+    });
+  }
+}

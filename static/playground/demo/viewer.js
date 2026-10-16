@@ -470,9 +470,16 @@ function rebuildReplay() {
 function liveOffline() {
   const label = $("statusLabel"); const prev = label.textContent;
   const reason = (window.PipelockLive && window.PipelockLive.reason) || "unavailable";
-  label.textContent = "LIVE CHAT · " + reason;
+  const temporary = "LIVE CHAT · " + reason;
+  label.textContent = temporary;
   const tab = $("tabLive"); tab.classList.add("soon-flash");
-  setTimeout(() => { label.textContent = prev; tab.classList.remove("soon-flash"); }, 1800);
+  setTimeout(() => {
+    // A later verification, reset or mode change owns the status now.
+    if (label.textContent === temporary) {
+      label.textContent = prev === "LIVE · verified in your browser" && !$("stamp").classList.contains("on") ? "LIVE · streaming" : prev;
+    }
+    tab.classList.remove("soon-flash");
+  }, 1800);
 }
 
 function copyText(text, btnId, doneLabel) {
@@ -656,7 +663,7 @@ function renderReplayVerifySuccess(out, n) {
   for (var i = 0; i < checks.length; i++) {
     var c = checks[i];
     var name = (c && (c.name || c)) || "check";
-    var pass = c && (c.pass !== false);
+    var pass = c && c.pass === true;
     var row = el("div", "vd-check" + (pass ? "" : " bad"));
     row.style.animationDelay = (i * 35) + "ms";
     row.appendChild(el("span", "vd-tick", pass ? "✓" : "✗"));
@@ -689,7 +696,7 @@ async function runReplayBrowserVerify() {
   try {
     var out = await window.pipelockVerifyStaticBundle(REPLAY_BUNDLE_URL);
     if (!current()) return;
-    if (out && out.valid) {
+    if (typeof window.pipelockVerificationPassed === "function" && window.pipelockVerificationPassed(out)) {
       var n = (out.checks || []).length;
       state.verified = true;
       // Keep the verifier's own count; the scripted check list is narration only.

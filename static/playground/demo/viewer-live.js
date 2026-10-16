@@ -977,6 +977,15 @@
   // checks ran against (and look it up). Display only.
   const PUBLISHED_KEY_FP = "99f16ec9…36221a2c";
 
+  // The WASM result contract uses boolean valid/pass fields and an array of
+  // checks (cmd/pipelock-verifier-wasm). Unknown or contradictory output is not
+  // evidence that the browser performed the displayed checks.
+  function verificationPassed(out) {
+    return !!out && out.valid === true && Array.isArray(out.checks) &&
+      out.checks.every((check) => check && check.pass === true);
+  }
+  window.pipelockVerificationPassed = verificationPassed;
+
   // Success belongs only to the current browser verification attempt.
   function clearVerificationIndicators() {
     const stamp = $("stamp"); if (stamp) stamp.classList.remove("on");
@@ -1151,7 +1160,7 @@
     const grid = el("div", "vd-checks");
     (out.checks || []).forEach((c, i) => {
       const name = (c && (c.name || c)) || "check";
-      const pass = c && (c.pass !== false);
+      const pass = c && c.pass === true;
       const row = el("div", "vd-check" + (pass ? "" : " bad"));
       row.style.animationDelay = (i * 35) + "ms"; // quick reveal of real results
       row.appendChild(el("span", "vd-tick", pass ? "✓" : "✗"));
@@ -1200,7 +1209,7 @@
       const out = window.pipelockVerifyBundle(bytes);
       if (!current()) return;
       const stamp = $("stamp");
-      if (out && out.valid) {
+      if (verificationPassed(out)) {
         setStatus("LIVE · verified in your browser");
         if (stamp) stamp.classList.add("on");
         const n = (out.checks || []).length;
