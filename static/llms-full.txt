@@ -178,13 +178,14 @@ Neither emission path can block agent traffic. Emission failures are visible via
 
 ## Installation
 
-### Go install (from source)
+### Pinned source build (Community)
 
 ```
-go install github.com/luckyPipewrench/pipelock/cmd/pipelock@latest
+git clone --branch v3.7.0 --depth 1 https://github.com/pipelab-org/pipelock.git
+make -C pipelock install
 ```
 
-Building from source requires Go 1.26 or newer. The CI matrix tests against Go 1.26 and Go 1.27.
+Building from source requires Go 1.26 or newer, Git, and Make. Start in a directory without a pipelock subdirectory. Source builds are Community-only; use a release binary for paid features. The CI matrix tests against Go 1.26 and Go 1.27.
 
 ### Container image
 

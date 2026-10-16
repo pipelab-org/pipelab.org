@@ -16,7 +16,7 @@
         <li><span class="inst-fact-dot" aria-hidden="true"></span> Signed releases with checksums and provenance</li>
         <li><span class="inst-fact-dot" aria-hidden="true"></span> Fail-closed defaults on mediated paths</li>
       </ul>
-      <p class="inst-provenance">Current release: <a href="https://github.com/luckyPipewrench/pipelock/releases/latest" rel="noopener">v{{ $version }}</a></p>
+      <p class="inst-provenance">Current release: <a href="https://github.com/pipelab-org/pipelock/releases/tag/v{{ $version }}" rel="noopener">v{{ $version }}</a></p>
     </div>
 
     <div class="inst-panel fx-exhibit" id="inst-panel-root" data-fx="scan">
@@ -24,7 +24,7 @@
         {{ range $i, $m := $methods }}
         <button class="inst-tab{{ if eq $i 0 }} is-active{{ end }}" type="button" id="inst-tab-{{ $m.id }}"
                 role="tab" tabindex="{{ if eq $i 0 }}0{{ else }}-1{{ end }}" aria-selected="{{ if eq $i 0 }}true{{ else }}false{{ end }}" aria-controls="inst-panel"
-                data-inst-id="{{ $m.id }}" data-inst-label="{{ $m.short_label }}" data-inst-cmd="{{ $m.command }}"
+                data-inst-id="{{ $m.id }}" data-inst-label="{{ $m.short_label }}" data-inst-cmd="{{ $m.command }}" data-inst-note="{{ $m.note }}"
                 data-event="install_tab_click" data-event-value="{{ $m.id }}" data-event-placement="install-hero">{{ partial (printf "brands/%s.svg" $m.id) . }} {{ $m.short_label }}</button>
         {{ end }}
         <button class="inst-tab" type="button" id="inst-tab-binary"
@@ -40,9 +40,10 @@
         <button type="button" class="inst-term-body" id="inst-term-cmdrow" data-cmd-copy aria-label="Copy the install command" data-event="install_copy" data-event-placement="install-hero"><span class="prompt">$ </span><span class="cmd-text" id="inst-cmd">{{ $first.command }}</span></button>
         <div class="inst-term-body inst-term-binary" id="inst-term-binary" hidden>
           <p>Signed Linux, macOS, and Windows releases include checksums and provenance.</p>
-          <a class="inst-binary-link" href="https://github.com/luckyPipewrench/pipelock/releases/latest" rel="noopener"
+          <a class="inst-binary-link" href="https://github.com/pipelab-org/pipelock/releases/tag/v{{ $version }}" rel="noopener"
              data-event="install_releases_click" data-event-placement="install-hero">Download v{{ $version }} &rarr;</a>
         </div>
+        <div class="inst-term-body" id="inst-method-note"><p>{{ $first.note }}</p></div>
         <div class="inst-term-foot">
           <span class="inst-term-check" aria-hidden="true">&#10003;</span> then <code>pipelock --version</code> confirms the build
         </div>
@@ -105,6 +106,7 @@
       var cmdRow = document.getElementById('inst-term-cmdrow');
       var cmdEl = document.getElementById('inst-cmd');
       var binaryEl = document.getElementById('inst-term-binary');
+      var noteEl = document.getElementById('inst-method-note');
       var titleEl = document.getElementById('inst-term-title');
       var panelEl = document.getElementById('inst-panel');
       function activate(tab) {
@@ -118,6 +120,11 @@
         cmdRow.hidden = isBinary;
         binaryEl.hidden = !isBinary;
         if (!isBinary && cmdEl) cmdEl.textContent = tab.getAttribute('data-inst-cmd') || '';
+        if (noteEl) {
+          var note = tab.getAttribute('data-inst-note') || '';
+          noteEl.hidden = isBinary || !note;
+          noteEl.querySelector('p').textContent = note;
+        }
         if (titleEl) titleEl.textContent = 'install · ' + (tab.getAttribute('data-inst-label') || '').toLowerCase();
         if (panelEl) panelEl.setAttribute('aria-labelledby', tab.id);
       }

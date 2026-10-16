@@ -240,7 +240,7 @@ curl -L https://github.com/pipelab-org/pipelock/releases/latest/download/pipeloc
 chmod +x pipelock
 sudo mv pipelock /usr/local/bin/
 
-# Or go install
+# Or build the pinned release from source
 {{< install-cmd go >}}
 ```
 

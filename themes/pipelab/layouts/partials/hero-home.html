@@ -73,6 +73,7 @@
             <button type="button" class="hp-term-row" data-cmd-copy aria-label="Copy: pipelock mcp proxy" data-event="hero_copy_mcp" data-event-placement="hero-terminal"><span class="prompt">$ </span><span class="cmd-text">pipelock mcp proxy -- ./mcp-server</span><span class="comment">   # wrap a stdio MCP server</span></button>
             <button type="button" class="hp-term-row" data-cmd-copy aria-label="Copy: pipelock verify-receipt" data-event="hero_copy_verify" data-event-placement="hero-terminal"><span class="prompt">$ </span><span class="cmd-text">pipelock verify-receipt receipt.json --key signer.pub</span><span class="comment">   # verify offline</span></button>
           </div>
+          <p class="hp-hero-foot">{{ (index (partial "install/methods.html" (dict "only" (slice "go"))) 0).note }}</p>
         </div>
       </div>
 

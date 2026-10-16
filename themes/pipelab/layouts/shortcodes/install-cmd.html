@@ -13,4 +13,5 @@
   {{- errorf "install-cmd: needs a method id, e.g. {{< install-cmd go >}} (in %s)" .Page.File.Path -}}
 {{- end -}}
 {{- $method := index (partial "install/methods.html" (dict "only" (slice $id))) 0 -}}
+{{- with $method.note }}{{ printf "# %s\n" . }}{{ end -}}
 {{- $method.command -}}

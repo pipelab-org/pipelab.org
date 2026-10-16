@@ -33,7 +33,9 @@
      blocks these replaced. */}}
 {{- $groups := slice -}}
 {{- range $methods -}}
-  {{- $groups = $groups | append (printf "# %s\n%s" .label .command) -}}
+  {{- $note := "" -}}
+  {{- with .note }}{{ $note = printf "# %s\n" . }}{{ end -}}
+  {{- $groups = $groups | append (printf "# %s\n%s%s" .label $note .command) -}}
 {{- end -}}
 
 {{- highlight (delimit $groups "\n\n") "bash" "" -}}

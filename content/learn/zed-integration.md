@@ -7,7 +7,7 @@ date: 2026-05-15
 lastmod: 2026-05-15
 howto_steps:
   - name: Install Pipelock
-    text: Install the pipelock CLI with go install or Homebrew so the Zed integration commands are available.
+    text: Install the pipelock CLI from a pinned source build or Homebrew; see /install/ for prerequisites so the Zed integration commands are available.
   - name: Wrap the Zed context_servers
     text: Run pipelock zed install to rewrite every context_server in Zed's settings.json through pipelock mcp proxy.
   - name: Restart Zed
@@ -18,7 +18,7 @@ faq:
   - q: "What does Pipelock's Zed integration do?"
     a: "Pipelock wraps every entry under context_servers in Zed's settings.json so that the spawned command is pipelock instead of the original MCP server. Every tool call, tool response, tool description, and tool-list payload is scanned bidirectionally for credential leaks (full default DLP pattern set), prompt injection (6-pass normalization), and tool poisoning. The original command, args, and env are stashed in a _pipelock metadata block for clean removal."
   - q: "How do I install Pipelock for Zed?"
-    a: "Run 'pipelock zed install' after installing the pipelock binary via Go (go install github.com/luckyPipewrench/pipelock/cmd/pipelock@latest) or Homebrew (brew install luckyPipewrench/tap/pipelock). Default discovery scans every standard Zed settings.json path (project-local, native stable, native Preview, Flatpak stable, Flatpak Preview). Each file that exists is wrapped independently with its own .bak backup. Restart Zed to activate."
+    a: "Run 'pipelock zed install' after installing the pipelock binary from a pinned source build or Homebrew as documented at https://pipelab.org/install/. Default discovery scans every standard Zed settings.json path (project-local, native stable, native Preview, Flatpak stable, Flatpak Preview). Each file that exists is wrapped independently with its own .bak backup. Restart Zed to activate."
   - q: "Does Pipelock support Flatpak-installed Zed?"
     a: "Yes. Default discovery includes ~/.var/app/dev.zed.Zed/config/zed/settings.json for Flatpak stable and ~/.var/app/dev.zed.Zed.Preview/config/zed-preview/settings.json for Flatpak Preview. Both are wrapped automatically alongside any native install on the same machine."
   - q: "Does Pipelock redact secrets in Zed MCP tool arguments?"

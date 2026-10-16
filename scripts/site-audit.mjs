@@ -8,6 +8,7 @@ import path from "node:path";
 import { parse as parseToml } from "smol-toml";
 import { parse as parseYaml } from "yaml";
 
+import { auditInstallContract } from "./install-contract.mjs";
 import { isBlockedExternalLink } from "./external-link-policy.mjs";
 import { auditDemoVersions } from "./historical-artifacts.mjs";
 import { probeHugoVersion, readPinnedVersion } from "./hugo-pin.mjs";
@@ -934,157 +935,14 @@ for (const file of contentFiles) {
   }
 }
 
-// Install-path integrity. Install commands live in ONE place, data/install.yaml,
-// and every Hugo-rendered surface pulls them from there through the install-cmd,
-// install-block and install-terminal shortcodes. Three things are enforced here,
-// because every other check in this file is structural and would pass regardless
-// of which install path a reader meets first.
-//
-// 1. The shared source lists Go before Homebrew. That single ordering decision now
-//    governs every rendered surface at once.
-// 2. No page hand-writes an install command in its body. A hand-written command is
-//    a sixteenth copy waiting to drift, which is exactly how the guides ended up
-//    disagreeing with the product page.
-// 3. Surfaces that CANNOT use the shared source still get the old ordering check:
-//    front matter, because Hugo does not expand shortcodes there, and
-//    static/llms-full.txt, which is served raw and never passes through Hugo.
-//
-// Dated blog posts are excluded throughout. They are the record of a past release
-// rather than current install guidance. Version-pinned upgrade guides use
-// `brew upgrade` rather than the install command, so they never match.
-const brewInstallCmd = "brew install luckyPipewrench/tap/pipelock";
-const goInstallCmd = "go install github.com/luckyPipewrench/pipelock/cmd/pipelock";
-const dockerInstallTemplateCmd = "docker pull ghcr.io/luckypipewrench/pipelock:VERSION";
-const goInstallFullCmd = `${goInstallCmd}@latest`;
-const hardWrittenInstallPatterns = [
-  {
-    label: "go install",
-    pattern: /\bgo\s+install\s+(?:\\\s*)?github\.com\/luckypipewrench\/pipelock(?:\/cmd\/pipelock)?(?:@[^\s`"'<)]+)?/gi,
-    expected: goInstallFullCmd,
-  },
-  {
-    label: "Homebrew install",
-    pattern: /\bbrew\s+install\s+(?:\\\s*)?luckypipewrench\/tap\/pipelock\b/gi,
-    expected: brewInstallCmd,
-  },
-];
-const blogDir = path.join(repoRoot, "content", "blog") + path.sep;
-
-// 1. The shared source is the one place ordering is decided.
-const installDataPath = path.join(repoRoot, "data", "install.yaml");
-if (!existsSync(installDataPath)) {
-  issues.push("data/install.yaml: missing; install commands must come from the shared source");
-} else {
-  const installData = readFileSync(installDataPath, "utf8");
-  const goAt = installData.indexOf(goInstallCmd);
-  const brewAt = installData.indexOf(brewInstallCmd);
-
-  if (goAt === -1) {
-    issues.push("data/install.yaml: no go install command; Go must be a published install method");
-  }
-
-  if (brewAt !== -1 && goAt !== -1 && goAt > brewAt) {
-    issues.push("data/install.yaml: Homebrew is listed before Go; Go leads because it is the broadest path we publish");
-  }
-
-  if (!installData.includes(dockerInstallTemplateCmd)) {
-    issues.push("data/install.yaml: Docker install command must use the VERSION placeholder so rendered pages publish the configured release tag");
-  }
-}
-
-// 2. No page hand-writes an install command in its body.
-for (const file of contentFiles) {
-  if (file.startsWith(blogDir)) {
-    continue;
-  }
-
-  const body = stripFrontMatter(readFileSync(file, "utf8"));
-  const match = firstInstallCommandMatch(body);
-  if (match) {
-    issues.push(`${path.relative(repoRoot, file)}: hand-written ${match.label} command in the page body; render it from data/install.yaml with {{< install-cmd go >}} or {{< install-block >}}`);
-  }
-}
-
-// Template-owned pages can also publish install guidance. Keep those on the
-// same shared source; otherwise a bespoke page can drift while content pages
-// stay clean.
-const templateFiles = walk(path.join(repoRoot, "themes", "pipelab", "layouts"))
-  .filter((file) => /\.(html|xml|md)$/.test(file));
-for (const file of templateFiles) {
-  if (file.includes(`${path.sep}partials${path.sep}install${path.sep}`) || file.includes(`${path.sep}shortcodes${path.sep}install-`)) {
-    continue;
-  }
-
-  const source = readFileSync(file, "utf8");
-  const match = firstInstallCommandMatch(source);
-  if (match) {
-    issues.push(`${path.relative(repoRoot, file)}: hand-written ${match.label} command in a template; render it from data/install.yaml through the install partial or shortcode`);
-  }
-}
-
-// 3. Surfaces that cannot use the shared source keep the ordering check. Front
-// matter is checked per line because a single FAQ answer names both methods, and
-// that text also feeds the FAQ structured data.
-const literalOrderFiles = [
-  ...contentFiles.filter((file) => !file.startsWith(blogDir)),
-  path.join(repoRoot, "static", "llms.txt"),
-  path.join(repoRoot, "static", "llms-full.txt"),
-];
-
-for (const file of literalOrderFiles) {
-  if (!existsSync(file)) {
-    continue;
-  }
-
-  const source = readFileSync(file, "utf8");
-  if (file.endsWith(".md")) {
-    const frontMatter = getFrontMatter(source);
-    for (const match of installCommandMatches(frontMatter)) {
-      if (normalizeShellCommand(match.text) !== match.expected) {
-        issues.push(`${path.relative(repoRoot, file)}: frontmatter hard-writes ${match.label} as "${match.text}"; keep FAQ/install prose aligned with data/install.yaml`);
-      }
-    }
-  }
-
-  if (!source.includes(brewInstallCmd)) {
-    continue;
-  }
-
-  const label = path.relative(repoRoot, file);
-  const isMarkdown = file.endsWith(".md");
-
-  for (const line of source.split("\n")) {
-    if (!line.includes(brewInstallCmd) || !line.includes(goInstallCmd)) {
-      continue;
-    }
-
-    if (line.indexOf(goInstallCmd) > line.indexOf(brewInstallCmd)) {
-      issues.push(`${label}: install prose names the Homebrew tap before go install; name go install first`);
-    }
-  }
-
-  if (isMarkdown) {
-    continue;
-  }
-
-  // Raw published files such as static/llms-full.txt: compare within each
-  // top-level section so an unrelated earlier mention of go install cannot mask a
-  // later install section that leads with the tap.
-  for (const section of sourceSections(source)) {
-    const brewAt = section.text.indexOf(brewInstallCmd);
-    if (brewAt === -1) {
-      continue;
-    }
-
-    const sectionLabel = section.label === "document body" ? "" : ` in section "${section.label}"`;
-    const goAt = section.text.indexOf(goInstallCmd);
-    if (goAt === -1) {
-      issues.push(`${label}: shows the Homebrew tap with no go install command${sectionLabel}; lead with go install`);
-    } else if (goAt > brewAt) {
-      issues.push(`${label}: Homebrew tap appears before go install${sectionLabel}; lead with go install and demote Homebrew`);
-    }
-  }
-}
+// Shared source-build instructions follow the released README. Historical posts
+// retain their original bodies behind an explicit installation correction.
+issues.push(...auditInstallContract({
+  repoRoot,
+  contentFiles,
+  templateFiles: walk(path.join(repoRoot, "themes", "pipelab", "layouts")).filter(file => /\.(html|xml|md)$/.test(file)),
+  version: parseToml(readFileSync(path.join(repoRoot, "hugo.toml"), "utf8"))?.params?.pipelock_version,
+}));
 
 const contentPageByRoute = new Map();
 const inboundContentLinks = new Map();
@@ -1829,80 +1687,6 @@ function stripFrontMatter(source) {
 function getFrontMatter(source) {
   const result = source.match(/^---\n([\s\S]*?)\n---\n?/);
   return result ? result[1] : "";
-}
-
-function firstInstallCommandMatch(source) {
-  return installCommandMatches(source)[0] || null;
-}
-
-function installCommandMatches(source) {
-  const matches = [];
-  for (const { label, pattern, expected } of hardWrittenInstallPatterns) {
-    pattern.lastIndex = 0;
-    for (const match of source.matchAll(pattern)) {
-      matches.push({ label, expected, text: normalizeShellCommand(match[0]), index: match.index ?? 0 });
-    }
-  }
-
-  return matches.sort((a, b) => a.index - b.index);
-}
-
-function normalizeShellCommand(command) {
-  return command
-    .replace(/\\\s*/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function sourceSections(source) {
-  const body = stripFrontMatter(source);
-  const sections = [];
-  let label = "document body";
-  let lines = [];
-  let inFence = false;
-
-  for (const line of body.split("\n")) {
-    if (/^```/.test(line)) {
-      lines.push(line);
-      inFence = !inFence;
-      continue;
-    }
-
-    // Only h1 and h2 open a new section. h3 deliberately does not: llms-full.txt
-    // publishes each install method as an h3 under one Installation heading, so
-    // treating h3 as a boundary would report every method subsection as missing
-    // the others. Headings are ignored inside fenced code so that a `# Homebrew`
-    // comment in a bash block is not mistaken for one.
-    const heading = inFence
-      ? null
-      : line.match(/^(#{1,2})\s+(.+)$/) || line.match(/^\s*<h2\b[^>]*>([\s\S]*?)<\/h2>\s*$/i);
-    if (heading) {
-      if (lines.length > 0) {
-        sections.push({ label, text: lines.join("\n") });
-      }
-
-      // The markdown pattern puts the text in group 2 (group 1 is the # marks);
-      // the HTML pattern has only group 1. Hence the fallback rather than a
-      // fixed index.
-      label = normalizeHeading(heading[2] || heading[1] || "document body");
-      lines = [line];
-      continue;
-    }
-
-    lines.push(line);
-  }
-
-  sections.push({ label, text: lines.join("\n") });
-  return sections;
-}
-
-function normalizeHeading(value) {
-  const cleaned = decodeHtml(value)
-    .replace(/<[^>]+>/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-
-  return cleaned || "document body";
 }
 
 function extractContentLinks(source) {

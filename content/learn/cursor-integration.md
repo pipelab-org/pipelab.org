@@ -7,7 +7,7 @@ date: 2026-03-04
 lastmod: 2026-05-10
 howto_steps:
   - name: Install Pipelock
-    text: Install the pipelock CLI with go install or Homebrew so the Cursor integration commands are available.
+    text: Install the pipelock CLI from a pinned source build or Homebrew; see /install/ for prerequisites so the Cursor integration commands are available.
   - name: Register the Cursor hooks
     text: Run pipelock cursor install to write the hook configuration into Cursor's settings.
   - name: Restart Cursor
@@ -18,7 +18,7 @@ faq:
   - q: "What does Pipelock's Cursor integration do?"
     a: "Pipelock registers hooks with Cursor IDE that intercept shell commands, MCP tool calls, and file reads before they execute. Each action is scanned for credential leaks (65 DLP credential patterns), prompt injection, reverse shells, and dangerous operations like rm -rf or git force push. Blocked actions show a clear explanation in Cursor's UI."
   - q: "How do I install Pipelock for Cursor?"
-    a: "Run 'pipelock cursor install' after installing the pipelock binary via Go (go install github.com/luckyPipewrench/pipelock/cmd/pipelock@latest) or Homebrew (brew install luckyPipewrench/tap/pipelock). The install command writes hooks.json in your Cursor config directory. Restart Cursor to activate."
+    a: "Run 'pipelock cursor install' after installing the pipelock binary from a pinned source build or Homebrew as documented at https://pipelab.org/install/. The install command writes hooks.json in your Cursor config directory. Restart Cursor to activate."
   - q: "Does Pipelock work with Cursor's free plan?"
     a: "Pipelock's Cursor integration is a local CLI and adds no Pipelock subscription requirement. Plan-level availability of Cursor's hooks API is published by Cursor; check `cursor.com/docs/hooks` for the current details before relying on it."
   - q: "Does Pipelock redact secrets in Cursor's MCP tool arguments?"

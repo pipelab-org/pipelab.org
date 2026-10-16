@@ -6,8 +6,7 @@
 # command into a page; scripts/site-audit.mjs fails the build if you do.
 #
 # ORDER MATTERS. The order of `methods` is the published order, and the first
-# entry is what a reader meets first. Go leads because it is the broadest path
-# we publish; the Homebrew tap is macOS and Linux only and must stay last.
+# entry is what a reader meets first. The pinned source build leads; the Homebrew tap is macOS and Linux only and must stay last.
 # scripts/site-audit.mjs enforces that Go precedes Homebrew here.
 #
 # VERSION in a command is substituted with site.Params.pipelock_version at build
@@ -19,9 +18,12 @@
 
 methods:
   - id: go
-    label: Go
-    short_label: Go
-    command: go install github.com/luckyPipewrench/pipelock/cmd/pipelock@latest
+    label: Source (Go)
+    short_label: Source (Go)
+    note: "Requires Go 1.26+, Git, and Make. Start in a directory without a pipelock subdirectory. Community build only; use a release binary for paid features."
+    command: |-
+      git clone --branch vVERSION --depth 1 https://github.com/pipelab-org/pipelock.git
+      make -C pipelock install
 
   - id: docker
     label: Docker
