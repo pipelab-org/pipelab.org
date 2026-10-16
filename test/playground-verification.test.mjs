@@ -336,10 +336,11 @@ test('probe: a redirect cannot borrow another origin health', async () => {
 
 for (const mode of ['live', 'replay']) {
   test(`${mode}: the reported count comes only from browser checks`, async () => {
-    const h = harness(mode); h.setResult({ valid: true, checks: [] });
+    // Three browser checks against one server-sealed name, so the two counts differ.
+    const h = harness(mode); h.setResult({ valid: true, checks: [{ name: 'a', pass: true }, { name: 'b', pass: true }, { name: 'c', pass: true }] });
     if (mode === 'live') h.context.window.liveTest.handle({ type: 'verified', checks: ['server-only'] });
     await h.run();
-    assert.match(h.node('proofProgress').textContent, /^0 checks/);
+    assert.match(h.node('proofProgress').textContent, /^3 checks/);
   });
 }
 test('live: new evidence retires an earlier browser result', async () => {
@@ -384,7 +385,9 @@ test('live: an unavailable-tab notice retires every prior success surface', asyn
   assert.doesNotMatch(h.node('statusLabel').textContent, /verified in your browser/);
 });
 for (const mode of ['live', 'replay']) {
-  for (const out of [null, { valid: 'false', checks: [] }, { valid: 1, checks: [] }, { valid: true }, { valid: true, checks: [{ name: 'signature' }] }, { valid: true, checks: [{ name: 'signature', pass: false }] }]) {
+  // The Go verifier never reports valid with no checks: finalize sets OK=false
+  // for an empty check list (internal/playground/verify.go).
+  for (const out of [null, { valid: 'false', checks: [] }, { valid: 1, checks: [] }, { valid: true }, { valid: true, checks: [] }, { valid: true, checks: [{ name: 'signature' }] }, { valid: true, checks: [{ name: 'signature', pass: false }] }]) {
     test(`${mode}: malformed or contradictory verifier result cannot report success (${JSON.stringify(out)})`, async () => {
       const h = harness(mode); h.setResult(out); await h.run(); noSuccess(h);
     });

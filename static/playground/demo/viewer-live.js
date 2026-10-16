@@ -979,9 +979,10 @@
 
   // The WASM result contract uses boolean valid/pass fields and an array of
   // checks (cmd/pipelock-verifier-wasm). Unknown or contradictory output is not
-  // evidence that the browser performed the displayed checks.
+  // evidence that the browser performed the displayed checks. The verifier never
+  // reports valid with no checks: its finalize step sets OK false for an empty list.
   function verificationPassed(out) {
-    return !!out && out.valid === true && Array.isArray(out.checks) &&
+    return !!out && out.valid === true && Array.isArray(out.checks) && out.checks.length > 0 &&
       out.checks.every((check) => check && check.pass === true);
   }
   window.pipelockVerificationPassed = verificationPassed;
