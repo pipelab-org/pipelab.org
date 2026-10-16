@@ -125,6 +125,9 @@
   }
 
   function setStatus(text) {
+    // A new session/seal status must retire all surfaces of the old verdict.
+    const stamp = $("stamp");
+    if (stamp && stamp.classList.contains("on") && text !== "LIVE · verified in your browser") clearVerificationIndicators();
     const lbl = $("statusLabel");
     if (lbl) lbl.textContent = text;
   }
@@ -500,6 +503,10 @@
         }
         break;
       case "decision":
+        // The session bundle has changed; an older browser result no longer
+        // describes the offered evidence, even if its fetch is still pending.
+        setStatus("LIVE · streaming");
+        resetBrowserVerifyState();
         appendDecision(ev);
         // Tally from the SIGNED decision only. The verdict banner reflects the
         // CURRENT cumulative state every turn - it must not freeze on the first
@@ -539,6 +546,7 @@
         }
         break;
       case "verified":
+        if ($("stamp") && $("stamp").classList.contains("on")) clearVerificationIndicators();
         markChecks(ev.checks);
         // The proof narrative is conditional on whether a real exfil/SSRF/egress
         // was actually blocked this session.  blockCount comes ONLY from signed
@@ -805,7 +813,7 @@
       }
       const tab = $("tabLive");
       if (tab && window.PipelockLive.elsewhere) {
-        tab.title = "Live chat runs at playground.pipelab.org. Opens in a new tab.";
+        tab.title = "Live chat runs at " + new URL(LIVE_ORIGIN).host + ". Opens in a new tab.";
       }
       // Report the DISABLED case. Without this the most important signal has a
       // hole: when Live is switched off here the visitor never POSTs a session,
@@ -818,7 +826,7 @@
     // mistaken for the probe's own "no API here" or "error status" result.
     const MISSING = {}; const HTTP_ERROR = {};
     const t = setTimeout(() => settle(false, "unavailable", "probe_timeout"), 4000);
-    fetch(API.health, { method: "GET" })
+    fetch(API.health, { method: "GET", redirect: "error" })
       .then((r) => {
         // Only a missing API means this host is a replay-only copy. A 5xx,
         // or any other non-OK answer, is an outage of whatever host we are on.
@@ -972,6 +980,8 @@
   // Success belongs only to the current browser verification attempt.
   function clearVerificationIndicators() {
     const stamp = $("stamp"); if (stamp) stamp.classList.remove("on");
+    const status = $("statusLabel");
+    if (status && status.textContent === "LIVE · verified in your browser") setStatus("LIVE · streaming");
     const progress = $("proofProgress"); if (progress) progress.textContent = "";
     lsSet("lsVerified", "·", false);
     for (const prefix of ["browserVerify", "replayBrowserVerify"]) {
@@ -1191,8 +1201,9 @@
       if (!current()) return;
       const stamp = $("stamp");
       if (out && out.valid) {
+        setStatus("LIVE · verified in your browser");
         if (stamp) stamp.classList.add("on");
-        const n = (out.checks || []).length || checksTotal;
+        const n = (out.checks || []).length;
         const pp = $("proofProgress");
         if (pp) pp.textContent = n + " checks · verified in your browser";
         // Live mode hides the replay stamp, so light the live "verified" row green.

@@ -310,3 +310,43 @@ for (const blocks of [0, 1]) {
     assert.match(h.node('statusLabel').textContent, /verified in your browser/);
   });
 }
+
+// A status change retires the earlier verdict on every shared surface.
+for (const event of [{ type: 'status', state: 'contained' }, { type: 'status', state: 'unknown' }, { type: 'verified', checks: ['signature'] }, { type: 'done' }]) {
+  test(`live: ${event.type}/${event.state || ''} after success retires every success indicator`, async () => {
+    const h = harness('live'); await h.run();
+    h.context.window.liveTest.handle(event);
+    noSuccess(h);
+    assert.doesNotMatch(h.node('statusLabel').textContent, /verified in your browser/);
+  });
+}
+test('the dormant stamp is hidden from the accessibility tree', () => {
+  assert.match(source('style.css'), /\.stamp\s*\{[^}]*visibility:\s*hidden/);
+  assert.match(source('style.css'), /\.stamp\.on\s*\{[^}]*visibility:\s*visible/);
+});
+test('probe: a redirect cannot borrow another origin health', async () => {
+  const { live, soon } = await settleProbe(async (_url, options) => {
+    if (options.redirect === 'error') throw new TypeError('redirect refused');
+    return { ok: true, status: 200, json: async () => ({ ok: true }) };
+  });
+  assert.equal(live.enabled, false);
+  assert.equal(live.elsewhere, false);
+  assert.equal(soon.textContent, 'unavailable');
+});
+
+for (const mode of ['live', 'replay']) {
+  test(`${mode}: the reported count comes only from browser checks`, async () => {
+    const h = harness(mode); h.setResult({ valid: true, checks: [] });
+    if (mode === 'live') h.context.window.liveTest.handle({ type: 'verified', checks: ['server-only'] });
+    await h.run();
+    assert.match(h.node('proofProgress').textContent, /^0 checks/);
+  });
+}
+test('live: new evidence retires an earlier browser result', async () => {
+  const h = harness('live'); await h.run();
+  // Stop before unrelated decision rendering, but retain its real event handler.
+  h.context.navigator = { platform: 'Linux', userAgent: '' };
+  h.context.window.liveTest.handle({ type: 'decision', verdict: 'UNKNOWN', envelope: {} });
+  noSuccess(h);
+  assert.doesNotMatch(h.node('statusLabel').textContent, /verified in your browser/);
+});
