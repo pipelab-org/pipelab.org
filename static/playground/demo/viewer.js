@@ -738,10 +738,10 @@ async function main() {
     pgTrackSafe("playground_mode_selected", { mode: "live" });
     const live = window.PipelockLive;
     if (live && live.enabled) setMode("live");
-    else if (live && live.elsewhere) {
-      pgTrackSafe("playground_popout_clicked", { placement: "replay-viewer-live-tab" });
-      window.open(live.liveURL, "_blank", "noopener");
-    } else liveOffline();
+    // No analytics here: an "elsewhere" copy has no live backend, so its
+    // counts-only transport is disabled and the broker would never see the click.
+    else if (live && live.elsewhere) window.open(live.liveURL, "_blank", "noopener");
+    else liveOffline();
   });
   $("tabReplay").addEventListener("click", () => { pgTrackSafe("playground_mode_selected", { mode: "replay" }); setMode("replay"); });
   $("btnCopyCmd").addEventListener("click", () => copyText($("verifyCmd").textContent, "btnCopyCmd", "copied"));
