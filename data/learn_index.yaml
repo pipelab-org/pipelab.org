@@ -45,6 +45,6 @@ start_here:
 # if this block is missing.
 release:
   version: "v3.7.0"
-  date: 2026-10-13
+  date: 2026-10-14
   summary: "Parallel receipts, filesystem grants, local MCP identity, and upgrade actions"
-  notes_url: /learn/pipelock-v370-upgrade/
+  notes_url: /blog/pipelock-v370-release/
