@@ -724,7 +724,7 @@
     // Shown if Live is clicked before the probe settles.
     reason: "checking",
     elsewhere: false,
-    liveURL: LIVE_ORIGIN + "/",
+    liveURL: "/playground/",
     start() {
       stop();
       clearColumns();
@@ -802,18 +802,19 @@
       window.PipelockLive.enabled = ok;
       window.PipelockLive.reason = ok ? "" : reason;
       // No reason means no live backend answered here at all, which is the
-      // replay-only copy on the marketing site. Live chat runs on its own host,
-      // so the tab links there rather than reading as unreleased.
+      // replay-only copy on the marketing site. Live chat runs embedded on the
+      // site's Playground page, so the tab goes there rather than reading as
+      // unreleased; visitors never land on the backend host itself.
       window.PipelockLive.elsewhere = !ok && !reason && location.origin !== LIVE_ORIGIN;
       if (soon) {
-        soon.hidden = ok;
+        soon.hidden = ok || window.PipelockLive.elsewhere;
         // When the backend responds but is unavailable, show WHY. This uses the
         // broker health fields directly.
-        soon.textContent = ok ? "" : (window.PipelockLive.elsewhere ? "↗" : (reason || "unavailable"));
+        soon.textContent = (ok || window.PipelockLive.elsewhere) ? "" : (reason || "unavailable");
       }
       const tab = $("tabLive");
       if (tab && window.PipelockLive.elsewhere) {
-        tab.title = "Live chat runs at " + new URL(LIVE_ORIGIN).host + ". Opens in a new tab.";
+        tab.title = "Live chat runs on the Playground page.";
       }
       // Report the DISABLED case. Without this the most important signal has a
       // hole: when Live is switched off here the visitor never POSTs a session,

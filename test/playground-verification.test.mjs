@@ -191,11 +191,13 @@ async function settleProbe(respond, { timeout = false } = {}) {
 
 const jsonResponse = (status, body) => async () => ({ ok: status >= 200 && status < 300, status, json: async () => body });
 
-test('probe: a missing live API on a replay-only copy links to the live host', async () => {
+test('probe: a missing live API on a replay-only copy points Live at the Playground page', async () => {
   const { live, soon } = await settleProbe(jsonResponse(404, null));
   assert.equal(live.enabled, false);
   assert.equal(live.elsewhere, true);
-  assert.equal(soon.textContent, '↗');
+  assert.equal(live.liveURL, '/playground/');
+  assert.equal(soon.hidden, true);
+  assert.equal(soon.textContent, '');
 });
 
 for (const [name, respond, opts] of [
@@ -393,3 +395,15 @@ for (const mode of ['live', 'replay']) {
     });
   }
 }
+
+// A replay-only copy has no live backend; Live runs embedded on the Playground
+// page, so the tab must go there in the same tab and never open the backend host.
+test('replay-only copy: the Live tab opens the Playground page in the same tab', () => {
+  const h = harness('replay');
+  const opened = [];
+  h.context.window.open = (...args) => { opened.push(args); };
+  Object.assign(h.context.window.PipelockLive, { enabled: false, elsewhere: true, liveURL: '/playground/' });
+  vm.runInContext('openLiveTab()', h.context);
+  assert.deepEqual(opened, [['/playground/', '_top']]);
+  assert.equal(h.context.document.body.dataset.mode, 'replay');
+});

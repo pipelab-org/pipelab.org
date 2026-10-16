@@ -725,6 +725,17 @@ async function runReplayBrowserVerify() {
   }
 }
 
+function openLiveTab() {
+  pgTrackSafe("playground_mode_selected", { mode: "live" });
+  const live = window.PipelockLive;
+  if (live && live.enabled) setMode("live");
+  // No analytics here: an "elsewhere" copy has no live backend, so its
+  // counts-only transport is disabled and the broker would never see the click.
+  // Same tab, top frame: this copy may sit in an iframe on another page.
+  else if (live && live.elsewhere) window.open(live.liveURL, "_top");
+  else liveOffline();
+}
+
 async function main() {
   DATA = await (await fetch("bundle.json", { cache: "no-store" })).json();
   TOTAL = DATA.totalBeats || TOTAL;
@@ -734,15 +745,7 @@ async function main() {
   $("btnNext").addEventListener("click", () => step(1));
   $("btnPlay").addEventListener("click", togglePlay);
   $("btnRestart").addEventListener("click", restart);
-  $("tabLive").addEventListener("click", () => {
-    pgTrackSafe("playground_mode_selected", { mode: "live" });
-    const live = window.PipelockLive;
-    if (live && live.enabled) setMode("live");
-    // No analytics here: an "elsewhere" copy has no live backend, so its
-    // counts-only transport is disabled and the broker would never see the click.
-    else if (live && live.elsewhere) window.open(live.liveURL, "_blank", "noopener");
-    else liveOffline();
-  });
+  $("tabLive").addEventListener("click", openLiveTab);
   $("tabReplay").addEventListener("click", () => { pgTrackSafe("playground_mode_selected", { mode: "replay" }); setMode("replay"); });
   $("btnCopyCmd").addEventListener("click", () => copyText($("verifyCmd").textContent, "btnCopyCmd", "copied"));
   var kp = $("kitPrimary");
