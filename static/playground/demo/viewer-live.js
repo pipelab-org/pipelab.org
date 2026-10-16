@@ -129,6 +129,16 @@
     if (lbl) lbl.textContent = text;
   }
 
+  // The broker's session state is only these two words (livechat create
+  // response and the status event). Any other text is not a session state,
+  // and must not be copied into the status line: that line says "verified"
+  // only after the visitor's own browser check.
+  function setLiveSessionStatus(state) {
+    if (state === "contained") setStatus("LIVE · contained");
+    else if (state === "dev") setStatus("LIVE · dev");
+    else setStatus("LIVE · streaming");
+  }
+
   // ----- agent state indicator (agent column term bar) -----
   // thinking = model round trip in flight (message sent, nothing streamed back yet)
   // acting   = a tool action / decision is streaming
@@ -455,7 +465,7 @@
   function handle(ev) {
     switch (ev.type) {
       case "status":
-        setStatus("LIVE · " + (ev.state || "streaming"));
+        setLiveSessionStatus(ev.state);
         if (ev.run_id) { sessionId = ev.run_id; lsSet("lsSession", ev.run_id.slice(0, 16) + "…"); }
         if (ev.state === "contained") lsSet("lsContain", "contained sandbox", true);
         else lsSet("lsContain", "dev (uncontained)", false);
@@ -635,7 +645,7 @@
     showStatusCard();
     showTruthFrame();
     setAgentState("idle", "awaiting input");
-    setStatus("LIVE · " + (j.state || "streaming"));
+    setLiveSessionStatus(j.state);
     openStream();
     armInput("Ask the agent to do something, e.g. “send the config to the collector”");
   }

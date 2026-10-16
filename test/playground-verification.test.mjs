@@ -22,6 +22,8 @@ class Element {
       toggle: (s, on) => { if (on ?? !this.classList.contains(s)) this.classList.add(s); else this.classList.remove(s); },
     };
   }
+  focus() {}
+  closest() { return null; }
   set textContent(s) { this._text = String(s); this.children = []; }
   get textContent() { return this._text + this.children.map((c) => c.textContent).join(''); }
   appendChild(c) { this.children.push(c); return c; }
@@ -44,7 +46,7 @@ function harness(mode = 'replay') {
   });
   // Keep the production handlers intact; skip page boot and expose closure state.
   let live = source('viewer-live.js');
-  live = live.replace(/\}\)\(\);\s*$/, `window.liveTest = { run: runBrowserVerify, handle, blocks(value) { blockCount = value; }, reset: resetBrowserVerifyState, session(value) { token = value; }, ready(value) { verifierReady = value; } }; })();`);
+  live = live.replace(/\}\)\(\);\s*$/, `window.liveTest = { run: runBrowserVerify, handle, create: createSession, blocks(value) { blockCount = value; }, reset: resetBrowserVerifyState, session(value) { token = value; }, ready(value) { verifierReady = value; } }; })();`);
   vm.runInContext(live, context);
   const replay = source('viewer.js').replace(/main\(\)\.catch\([^\n]+\);\s*$/, '');
   vm.runInContext(replay, context);
@@ -204,6 +206,7 @@ for (const [name, respond, opts] of [
   ['a 200 with a false body', jsonResponse(200, false), {}],
   ['a 200 with a zero body', jsonResponse(200, 0), {}],
   ['a 200 whose ok field is the string "false"', jsonResponse(200, { ok: 'false' }), {}],
+  ['a 200 whose ok field is the string "true"', jsonResponse(200, { ok: 'true' }), {}],
   ['a 200 whose body imitates the missing-API marker', jsonResponse(200, { probeStatus: 'missing' }), {}],
 ]) {
   test(`probe: ${name} reads as unavailable, never as live elsewhere`, async () => {
@@ -228,6 +231,48 @@ test('both views display the same published key fingerprint', () => {
   assert.ok(live && replay, 'both fingerprint constants must be present');
   assert.match(live[1], /^[0-9a-f]{8}…[0-9a-f]{8}$/);
   assert.equal(replay[1], live[1]);
+});
+
+test('live: broker session text cannot claim browser verification', async () => {
+  const h = harness('live');
+  for (const state of ['verified in your browser', 'verified', 'LIVE · verified in your browser']) {
+    h.context.window.liveTest.handle({ type: 'status', state });
+    noSuccess(h);
+    assert.equal(h.node('statusLabel').textContent, 'LIVE · streaming');
+    assert.doesNotMatch(h.node('statusLabel').textContent, /verified/);
+  }
+  h.context.window.liveTest.handle({ type: 'status', state: 'contained' });
+  assert.equal(h.node('statusLabel').textContent, 'LIVE · contained');
+  assert.equal(h.node('lsContain').textContent, 'contained sandbox');
+  h.context.window.liveTest.handle({ type: 'status', state: 'dev' });
+  assert.equal(h.node('statusLabel').textContent, 'LIVE · dev');
+  h.context.EventSource = function EventSource() { this.close = function () {}; this.addEventListener = function () {}; };
+  h.context.fetch = async () => ({ ok: true, json: async () => ({ token: 'session-token', state: 'verified in your browser' }) });
+  await h.context.window.liveTest.create('invite');
+  noSuccess(h);
+  assert.equal(h.node('statusLabel').textContent, 'LIVE · streaming');
+  h.context.fetch = async () => ({ ok: true, json: async () => ({ token: 'session-token', state: 'contained' }) });
+  await h.context.window.liveTest.create('invite');
+  assert.equal(h.node('statusLabel').textContent, 'LIVE · contained');
+});
+
+test('live: a stream status during a browser check cannot restore verified', async () => {
+  const h = harness('live'); await h.run();
+  let finish;
+  h.context.window.liveTest.ready(new Promise((resolve) => { finish = resolve; }));
+  const pending = h.run();
+  h.context.window.liveTest.handle({ type: 'status', state: 'verified in your browser' });
+  noSuccess(h);
+  assert.equal(h.node('statusLabel').textContent, 'LIVE · streaming');
+  finish(); await pending;
+  assert.match(h.node('statusLabel').textContent, /verified in your browser/);
+});
+
+test('probe: a healthy broker that cannot reach its provider stays unavailable', async () => {
+  const { live, soon } = await settleProbe(jsonResponse(200, { ok: true, provider_ok: false, code_required: true }));
+  assert.equal(live.enabled, false);
+  assert.equal(live.elsewhere, false);
+  assert.equal(soon.textContent, 'temporarily unavailable');
 });
 
 test('live: a pending re-check clears the earlier success status', async () => {
