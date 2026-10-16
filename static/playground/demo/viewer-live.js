@@ -791,7 +791,7 @@
         soon.hidden = ok;
         // When the backend responds but is unavailable, show WHY. This uses the
         // broker health fields directly.
-        soon.textContent = ok ? "" : (reason || "↗");
+        soon.textContent = ok ? "" : (window.PipelockLive.elsewhere ? "↗" : (reason || "unavailable"));
       }
       const tab = $("tabLive");
       if (tab && window.PipelockLive.elsewhere) {
@@ -804,11 +804,18 @@
       // let a five-day outage go unnoticed, one layer up.
       if (!ok) pgTrackSafe("playground_live_unavailable", { reason: code || "unknown" });
     };
-    const t = setTimeout(() => settle(false, "", "probe_timeout"), 4000);
+    const t = setTimeout(() => settle(false, "unavailable", "probe_timeout"), 4000);
     fetch(API.health, { method: "GET" })
-      .then((r) => r.ok ? r.json() : null)
+      .then((r) => {
+        // Only a missing API means this host is a replay-only copy. A 5xx,
+        // or any other non-OK answer, is an outage of whatever host we are on.
+        if (!r.ok) return { probeStatus: r.status === 404 ? "missing" : "http" };
+        return r.json();
+      })
       .then((j) => {
         clearTimeout(t);
+        if (j && j.probeStatus === "missing") { settle(false, "", "no_health"); return; }
+        if (j && j.probeStatus === "http") { settle(false, "unavailable", "health_http"); return; }
         if (j && typeof j.code_required === "boolean") codeRequired = j.code_required;
         turnstileSitekey = (j && typeof j.turnstile_sitekey === "string") ? j.turnstile_sitekey : "";
         if (j && !j.ok) {
@@ -830,7 +837,7 @@
           settle(!!(j && j.ok), "", "no_health");
         }
       })
-      .catch(() => { clearTimeout(t); settle(false, "", "probe_error"); });
+      .catch(() => { clearTimeout(t); settle(false, "unavailable", "probe_error"); });
   }
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", function () { wireLiveKitDownload(); probeLive(); });

@@ -160,3 +160,57 @@ for (const failure of ['INVALID', 'download error']) {
     assert.doesNotMatch(h.node('statusLabel').textContent, /verified/);
   });
 }
+
+// The Live tab probe decides between "this copy is replay-only, live runs on its
+// own host" and "the live backend here is down". Only a missing API (404) means
+// replay-only; an error, timeout or 5xx is an outage and must say so.
+function probeHarness(respond) {
+  const nodes = new Map(); const timers = [];
+  const node = (id) => { if (!nodes.has(id)) nodes.set(id, new Element()); return nodes.get(id); };
+  const context = vm.createContext({
+    document: { readyState: 'loading', getElementById: node, createElement: () => new Element(), querySelectorAll: () => [], addEventListener() {}, body: new Element() },
+    window: {}, localStorage: { setItem() {}, getItem() { return null; } }, location: { origin: 'https://pipelab.org' },
+    setTimeout: (fn) => { timers.push(fn); return timers.length; }, clearTimeout: (id) => { timers[id - 1] = null; },
+    fetch: respond, Uint8Array, TextEncoder, URL, console,
+  });
+  let live = source('viewer-live.js');
+  live = live.replace(/\}\)\(\);\s*$/, 'window.liveTest = { probe: probeLive }; })();');
+  vm.runInContext(live, context);
+  return { node, context, timers };
+}
+
+async function settleProbe(respond, { timeout = false } = {}) {
+  const h = probeHarness(respond);
+  h.context.window.liveTest.probe();
+  if (timeout) { for (const fn of h.timers) if (fn) fn(); }
+  for (let i = 0; i < 10; i++) await new Promise((r) => setImmediate(r));
+  return { live: h.context.window.PipelockLive, soon: h.node('tabSoon') };
+}
+
+const jsonResponse = (status, body) => async () => ({ ok: status >= 200 && status < 300, status, json: async () => body });
+
+test('probe: a missing live API on a replay-only copy links to the live host', async () => {
+  const { live, soon } = await settleProbe(jsonResponse(404, null));
+  assert.equal(live.enabled, false);
+  assert.equal(live.elsewhere, true);
+  assert.equal(soon.textContent, '↗');
+});
+
+for (const [name, respond, opts] of [
+  ['a 5xx', jsonResponse(503, null), {}],
+  ['a network error', async () => { throw new Error('offline'); }, {}],
+  ['a timeout', () => new Promise(() => {}), { timeout: true }],
+]) {
+  test(`probe: ${name} reads as unavailable, never as live elsewhere`, async () => {
+    const { live, soon } = await settleProbe(respond, opts);
+    assert.equal(live.enabled, false);
+    assert.equal(live.elsewhere, false);
+    assert.equal(soon.textContent, 'unavailable');
+  });
+}
+
+test('probe: a healthy live API enables the Live tab', async () => {
+  const { live, soon } = await settleProbe(jsonResponse(200, { ok: true, code_required: true, turnstile_sitekey: '' }));
+  assert.equal(live.enabled, true);
+  assert.equal(soon.hidden, true);
+});
