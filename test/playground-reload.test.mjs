@@ -7,6 +7,9 @@ const source = readFileSync(new URL("../themes/pipelab/assets/js/site-base.js", 
 const template = readFileSync(new URL("../themes/pipelab/layouts/playground/list.html", import.meta.url), "utf8");
 const buttonTag = template.match(/<button\b[^>]*\bdata-demo-reload\b[^>]*>/)?.[0];
 const attributes = new Map(Array.from((buttonTag || "").matchAll(/([\w-]+)="([^"]*)"/g), (match) => [match[1], match[2]]));
+const iframeTag = template.match(/<iframe\b[^>]*>/)?.[0] || "";
+const iframeClasses = (iframeTag.match(/\bclass="([^"]*)"/)?.[1] || "").split(/\s+/);
+const templateHasDemoFrame = iframeClasses.includes("playground-demo-frame") && /\bsrc="[^"]+"/.test(iframeTag);
 
 function setup({ hasFrame = true } = {}) {
   const listeners = [];
@@ -24,7 +27,7 @@ function setup({ hasFrame = true } = {}) {
     window,
     document: {
       getElementById: () => null,
-      querySelector: (selector) => selector === ".playground-demo-frame" && hasFrame ? frame : null,
+      querySelector: (selector) => selector === ".playground-demo-frame" && hasFrame && templateHasDemoFrame ? frame : null,
       addEventListener: (name, callback, capture) => {
         if (name === "click") listeners.push({ callback, capture: capture === true });
       },
@@ -50,6 +53,10 @@ test("fallback is a reload button without an outbound link or inline handler", (
   assert.equal(attributes.get("data-event-placement"), "embedded-demo");
   assert.doesNotMatch(buttonTag, /\b(?:href|target|onclick)=/i);
   assert.doesNotMatch(template, /<a\b[^>]*href=["']https:\/\/playground\.pipelab\.org/i);
+});
+
+test("the template iframe carries the class the reload handler queries, with a src to reload", () => {
+  assert.ok(templateHasDemoFrame, `expected an iframe with class "playground-demo-frame" and a src, got: ${iframeTag}`);
 });
 
 test("each activation reassigns the original iframe URL, including its query", () => {
