@@ -1467,4 +1467,4 @@
    (it scrolls internally for longer live sessions). */
 .playground-demo-frame { height: clamp(640px, 86vh, 1000px); }
 .pg-demo-popout { text-align: center; font-size: 13px; color: #64748b; margin: 12px 0 0; }
-.pg-demo-popout a { color: #00e5a0; }
+.pg-demo-reload { background: none; border: 0; padding: 0; font: inherit; color: #00e5a0; cursor: pointer; text-decoration: underline; }
