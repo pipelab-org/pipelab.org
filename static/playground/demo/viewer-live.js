@@ -804,18 +804,21 @@
       // let a five-day outage go unnoticed, one layer up.
       if (!ok) pgTrackSafe("playground_live_unavailable", { reason: code || "unknown" });
     };
+    // Out-of-band markers: a 200 body can carry any field, so it must never be
+    // mistaken for the probe's own "no API here" or "error status" result.
+    const MISSING = {}; const HTTP_ERROR = {};
     const t = setTimeout(() => settle(false, "unavailable", "probe_timeout"), 4000);
     fetch(API.health, { method: "GET" })
       .then((r) => {
         // Only a missing API means this host is a replay-only copy. A 5xx,
         // or any other non-OK answer, is an outage of whatever host we are on.
-        if (!r.ok) return { probeStatus: r.status === 404 ? "missing" : "http" };
+        if (!r.ok) return r.status === 404 ? MISSING : HTTP_ERROR;
         return r.json();
       })
       .then((j) => {
         clearTimeout(t);
-        if (j && j.probeStatus === "missing") { settle(false, "", "no_health"); return; }
-        if (j && j.probeStatus === "http") { settle(false, "unavailable", "health_http"); return; }
+        if (j === MISSING) { settle(false, "", "no_health"); return; }
+        if (j === HTTP_ERROR) { settle(false, "unavailable", "health_http"); return; }
         if (j && typeof j.code_required === "boolean") codeRequired = j.code_required;
         turnstileSitekey = (j && typeof j.turnstile_sitekey === "string") ? j.turnstile_sitekey : "";
         if (j && !j.ok) {
@@ -836,7 +839,7 @@
         } else {
           // A health endpoint that answers 200 without a usable body is a broken
           // backend on this host, not a replay-only copy; only a 404 means that.
-          if (j && j.ok) settle(true, "", "ok");
+          if (j && j.ok === true) settle(true, "", "ok");
           else settle(false, "unavailable", "health_invalid");
         }
       })

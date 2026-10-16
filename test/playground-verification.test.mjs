@@ -203,6 +203,8 @@ for (const [name, respond, opts] of [
   ['a 200 with a null body', jsonResponse(200, null), {}],
   ['a 200 with a false body', jsonResponse(200, false), {}],
   ['a 200 with a zero body', jsonResponse(200, 0), {}],
+  ['a 200 whose ok field is the string "false"', jsonResponse(200, { ok: 'false' }), {}],
+  ['a 200 whose body imitates the missing-API marker', jsonResponse(200, { probeStatus: 'missing' }), {}],
 ]) {
   test(`probe: ${name} reads as unavailable, never as live elsewhere`, async () => {
     const { live, soon } = await settleProbe(respond, opts);
