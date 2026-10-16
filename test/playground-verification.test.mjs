@@ -326,7 +326,7 @@ test('the dormant stamp is hidden from the accessibility tree', () => {
 });
 test('probe: a redirect cannot borrow another origin health', async () => {
   const { live, soon } = await settleProbe(async (_url, options) => {
-    if (options.redirect === 'error') throw new TypeError('redirect refused');
+    if (options && options.redirect === 'error') throw new TypeError('redirect refused');
     return { ok: true, status: 200, json: async () => ({ ok: true }) };
   });
   assert.equal(live.enabled, false);
