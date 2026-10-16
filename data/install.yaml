@@ -7,14 +7,15 @@
 #
 # ORDER MATTERS. The order of `methods` is the published order, and the first
 # entry is what a reader meets first. The pinned source build leads; the Homebrew tap is macOS and Linux only and must stay last.
-# scripts/site-audit.mjs enforces that Go precedes Homebrew here.
+# scripts/install-contract.mjs (run by scripts/site-audit.mjs) enforces the
+# exact commands, the source-build note, and that the source build precedes Homebrew.
 #
 # VERSION in a command is substituted with site.Params.pipelock_version at build
 # time, so a release version bump does not need an edit here.
 #
 # The one surface this does NOT reach is static/llms-full.txt, which is served
-# raw and never passes through Hugo. Its ordering is covered by the same audit
-# check instead.
+# raw and never passes through Hugo. It hard-codes the release tag, so a version
+# bump needs a matching edit there; the same audit fails until it matches.
 
 methods:
   - id: go
