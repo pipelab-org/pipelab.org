@@ -1,6 +1,14 @@
 {
   "artifacts": [
     {
+      "path": "static/gauntlet/evidence/latest-verified.json",
+      "pipelock_version": "3.6.0",
+      "sha256": "839f65e7bb48d47ef348e59bdc702a385c620fb12ce973fceb90517236837f35",
+      "reason": "Latest reviewed Gauntlet measurement was produced with Pipelock 3.6.0. Preserve the pointer and its measured version; retire this classification when a new result is reviewed and promoted.",
+      "classified": "2026-10-16",
+      "approved_by": "Pull request review; effective on merge"
+    },
+    {
       "path": "static/assess/demo-assessment/index.html",
       "pipelock_version": "3.6.0",
       "sha256": "9e03035780cab8d045c684e9919e8fcd1000af469144d7c075acbe08bd51d8f2",

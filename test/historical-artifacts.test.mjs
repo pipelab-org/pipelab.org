@@ -6,6 +6,7 @@ import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import {
   HISTORICAL_ARTIFACTS_FILE,
+  HISTORICAL_GAUNTLET_POINTER,
   auditDemoVersions,
   auditHistoricalArtifact,
   loadHistoricalArtifacts,
@@ -13,7 +14,7 @@ import {
 
 const ARTIFACT = "static/assess/demo-assessment/index.html";
 // Mirrors the production current-claim list, including unsigned static summaries.
-const ELIGIBLE = new Set([ARTIFACT, "content/pipelock.md", "static/llms.txt", "static/llms-full.txt"]);
+const ELIGIBLE = new Set([ARTIFACT, HISTORICAL_GAUNTLET_POINTER, "content/pipelock.md", "static/llms.txt", "static/llms-full.txt"]);
 const BYTES = Buffer.from("<p>Pipelock v3.6.0</p>\n");
 const SHA = createHash("sha256").update(BYTES).digest("hex");
 
@@ -88,7 +89,7 @@ for (const path of [
   "content/pipelock.md",
   "static/llms.txt",
   "static/llms-full.txt",
-  "static/gauntlet/evidence/latest-verified.json",
+  "static/gauntlet/evidence/results/record.json",
   "static/assess/../../content/pipelock.md",
   "static/assess/not-on-the-list/index.html",
 ]) {
@@ -96,7 +97,7 @@ for (const path of [
     const { entries, findings } = load(t, { artifacts: [entry({ path })] });
     assert.equal(entries.size, 0);
     assert.equal(findings.length, 1);
-    assert.match(findings[0], /not an eligible signed static artifact/);
+    assert.match(findings[0], /not an eligible historical artifact/);
   });
 }
 
@@ -128,15 +129,27 @@ test("a duplicate path is rejected rather than merged", t => {
   assert.match(findings[0], /duplicates/);
 });
 
-test("the repository classification pins the committed demo bytes", () => {
+test("the repository classification pins the committed historical artifact bytes", () => {
   const document = JSON.parse(readFileSync(HISTORICAL_ARTIFACTS_FILE, "utf8"));
-  assert.equal(document.artifacts.length, 3);
+  assert.equal(document.artifacts.length, 4);
   for (const artifact of document.artifacts) {
-    assert.match(artifact.path, /^static\/assess\/demo-(assessment|egress-report|summary)\/index\.html$/);
+    if (artifact.path === HISTORICAL_GAUNTLET_POINTER) {
+      const pointer = JSON.parse(readFileSync(artifact.path, "utf8"));
+      assert.equal(pointer.tool_version, artifact.pipelock_version);
+    } else {
+      assert.match(artifact.path, /^static\/assess\/demo-(assessment|egress-report|summary)\/index\.html$/);
+    }
     const actual = createHash("sha256").update(readFileSync(artifact.path)).digest("hex");
     assert.equal(actual, artifact.sha256, artifact.path);
     assert.equal(artifact.pipelock_version, "3.6.0");
   }
+});
+
+test("the result listing labels the historical measurement separately from the site release", () => {
+  const template = readFileSync("themes/pipelab/layouts/gauntlet/results.html", "utf8");
+  assert.match(template, /eq \.path "static\/gauntlet\/evidence\/latest-verified\.json"/);
+  assert.match(template, /Historical measurement: Pipelock v\{\{ \.pipelock_version \}\}/);
+  assert.match(template, /This result does not measure Pipelock v\{\{ site.Params.pipelock_version \}\}/);
 });
 
 function demoRoot(t, { classify = true, bytes = BYTES } = {}) {

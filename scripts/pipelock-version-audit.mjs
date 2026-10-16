@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { auditProductFacts } from "./product-facts-audit.mjs";
 import { auditReleaseData } from "./release-data-audit.mjs";
-import { auditHistoricalArtifact, loadHistoricalArtifacts } from "./historical-artifacts.mjs";
+import { auditHistoricalArtifact, HISTORICAL_GAUNTLET_POINTER, loadHistoricalArtifacts } from "./historical-artifacts.mjs";
 
 // This is intentionally a current-claim guard, not a release-history rewrite.
 // It checks the tracked source surfaces that publish the current Pipelock
@@ -19,6 +19,7 @@ const currentClaimPaths = new Set([
   "static/assess/demo-assessment/index.html",
   "static/assess/demo-egress-report/index.html",
   "static/assess/demo-summary/index.html",
+  HISTORICAL_GAUNTLET_POINTER,
 ]);
 const textSource = /\.(?:html|md|toml|txt|ya?ml)$/i;
 
@@ -44,7 +45,7 @@ if (!declared) {
 }
 
 const historical = loadHistoricalArtifacts(".", currentClaimPaths);
-const findings = [...auditProductFacts(), ...auditReleaseData(".", declared), ...historical.findings];
+const findings = [...auditProductFacts(), ...auditReleaseData(".", declared, historical)];
 for (const path of historical.entries.keys()) {
   if (!files.includes(path)) {
     findings.push(`${path}: classified historical artifact is not tracked; remove its classification`);

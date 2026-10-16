@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 
-// A historical artifact is a signed, generated file that keeps the Pipelock
+// A historical artifact is a generated file that keeps the Pipelock
 // version it was produced with. Classifying one is an exact, reviewed
 // exception, not a path exemption: the entry pins the file's bytes, the version
 // it states must be older than the declared release, and every version claim
@@ -10,13 +10,15 @@ import { readFileSync } from "node:fs";
 
 export const HISTORICAL_ARTIFACTS_FILE = "data/historical_artifacts.json";
 
-// Only signed, generated Assess samples can carry a historical classification.
-// Unsigned current summaries such as static/llms.txt stay current claims even
-// though they also live under static/.
+// Eligible artifacts are signed Assess samples and the exact digest-checked
+// Gauntlet pointer. The evidence audit separately verifies the pointer's record
+// and promotion history. Current product summaries remain current claims.
+export const HISTORICAL_GAUNTLET_POINTER = "static/gauntlet/evidence/latest-verified.json";
 export const HISTORICAL_ELIGIBLE_PATHS = new Set([
   "static/assess/demo-assessment/index.html",
   "static/assess/demo-egress-report/index.html",
   "static/assess/demo-summary/index.html",
+  HISTORICAL_GAUNTLET_POINTER,
 ]);
 
 const ENTRY_KEYS = new Set(["path", "pipelock_version", "sha256", "reason", "classified", "approved_by"]);
@@ -64,7 +66,7 @@ export function loadHistoricalArtifacts(root, eligiblePaths) {
     }
     const { path, pipelock_version: version, sha256, reason, classified, approved_by: approvedBy } = entry;
     if (typeof path !== "string" || !eligiblePaths.has(path) || !HISTORICAL_ELIGIBLE_PATHS.has(path)) {
-      findings.push(`${where} path ${JSON.stringify(path)} is not an eligible signed static artifact on the current-claim list`);
+      findings.push(`${where} path ${JSON.stringify(path)} is not an eligible historical artifact on the audited-path list`);
       continue;
     }
     if (entries.has(path)) {
