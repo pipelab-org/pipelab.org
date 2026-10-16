@@ -13,7 +13,7 @@ WORKFLOW = pathlib.Path(__file__).resolve().parents[1] / ".github/workflows/pr-r
 MAX_WORKFLOW_BYTES = 65536
 # Upgrade trusted approvals in three stages: expand, migrate, then contract.
 # Both bootstrap and trusted validation must pass each stage before merging.
-APPROVED_REVIEWER_SHAS = ("3e8534e0dd621c62879238cc01d56f7e58e9d096",)
+APPROVED_REVIEWER_SHAS = ("3e8534e0dd621c62879238cc01d56f7e58e9d096", "4edcf46d02011c2aa1e305aff69d4d7100aae0ca")
 EXPECTED_CALLERS = ("""name: AI PR Review
 
 on:
@@ -188,6 +188,13 @@ EXPECTED_CONTRACTS += (EXPECTED_CONTRACTS[0].replace(
 # owner-only, rerun-permitting and archived-checkout shapes are no longer approved.
 EXPECTED_CALLERS = EXPECTED_CALLERS[-1:]
 EXPECTED_CONTRACTS = EXPECTED_CONTRACTS[-1:]
+# After the move into pipelab-org: approve the caller that loads the reviewer from
+# pipelab-org/pipelock, because GitHub does not follow repository redirects for
+# reusable workflows. The caller switches to it in a following change.
+EXPECTED_CALLERS += (EXPECTED_CALLERS[0].replace(
+    "luckyPipewrench/pipelock/.github/workflows/pr-review-reusable.yaml@",
+    "pipelab-org/pipelock/.github/workflows/pr-review-reusable.yaml@",
+),)
 
 def read_workflow(path):
     """Read bounded UTF-8 data without following any path-component symlink."""
@@ -302,7 +309,7 @@ class ApprovedShapeTest(unittest.TestCase):
                         validate_caller(path)
 
     def test_only_the_current_shapes_are_approved(self):
-        self.assertEqual(len(EXPECTED_CALLERS), 1)
+        self.assertEqual(len(EXPECTED_CALLERS), 2)
         self.assertEqual(len(EXPECTED_CONTRACTS), 1)
         caller = EXPECTED_CALLERS[0]
         self.assertIn("author_association == 'MEMBER' &&", caller)
