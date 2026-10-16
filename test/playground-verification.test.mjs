@@ -350,3 +350,22 @@ test('live: new evidence retires an earlier browser result', async () => {
   noSuccess(h);
   assert.doesNotMatch(h.node('statusLabel').textContent, /verified in your browser/);
 });
+
+test('live: a decision discards a pending result for older evidence', async () => {
+  const h = harness('live'); let finish;
+  h.context.navigator = { platform: 'Linux', userAgent: '' };
+  h.context.window.liveTest.ready(new Promise((resolve) => { finish = resolve; }));
+  const pending = h.run();
+  h.context.window.liveTest.handle({ type: 'decision', verdict: 'UNKNOWN', envelope: {} });
+  finish(); await pending; noSuccess(h);
+  assert.doesNotMatch(h.node('statusLabel').textContent, /verified in your browser/);
+  h.context.window.liveTest.ready(Promise.resolve()); await h.run();
+  assert.equal(h.node('stamp').classList.contains('on'), true);
+});
+for (const reset of ['reset', 'stop', 'resetCard']) {
+  test(`live: ${reset} retires the success status as well as its indicators`, async () => {
+    const h = harness('live'); await h.run();
+    if (reset === 'reset') h.context.window.liveTest.reset(); else h.context.window.PipelockLive[reset]();
+    noSuccess(h); assert.doesNotMatch(h.node('statusLabel').textContent, /verified in your browser/);
+  });
+}
