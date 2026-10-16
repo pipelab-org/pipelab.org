@@ -13,8 +13,8 @@ WORKFLOW = pathlib.Path(__file__).resolve().parents[1] / ".github/workflows/pr-r
 MAX_WORKFLOW_BYTES = 65536
 # Upgrade trusted approvals in three stages: expand, migrate, then contract.
 # Both bootstrap and trusted validation must pass each stage before merging.
-APPROVED_REVIEWER_SHAS = ("3e8534e0dd621c62879238cc01d56f7e58e9d096", "4edcf46d02011c2aa1e305aff69d4d7100aae0ca")
-EXPECTED_CALLERS = ("""name: AI PR Review
+APPROVED_REVIEWER_SHAS = ("4edcf46d02011c2aa1e305aff69d4d7100aae0ca",)
+EXPECTED_CALLERS = (r"""name: AI PR Review
 
 on:
   issue_comment:
@@ -29,14 +29,17 @@ jobs:
   review:
     if: >-
       github.actor == 'luckyPipewrench' &&
+      github.actor_id == '142104046' &&
+      github.run_attempt == '1' &&
       github.triggering_actor == 'luckyPipewrench' &&
       github.event.comment.user.login == 'luckyPipewrench' &&
-      github.event.comment.author_association == 'OWNER' &&
+      github.event.comment.user.id == 142104046 &&
+      github.event.comment.author_association == 'MEMBER' &&
       github.event.issue.pull_request &&
       (github.event.comment.body == '/review' ||
        github.event.comment.body == '/review deep')
     # Keep both pins equal until the nested source identity is verified live.
-    uses: luckyPipewrench/pipelock/.github/workflows/pr-review-reusable.yaml@REVIEWER_SHA
+    uses: pipelab-org/pipelock/.github/workflows/pr-review-reusable.yaml@REVIEWER_SHA
     with:
       reviewer_sha: REVIEWER_SHA
       pr_number: ${{ github.event.issue.number }}
@@ -47,26 +50,6 @@ jobs:
       review_token: ${{ secrets.GITHUB_TOKEN }}
       openai_api_key: ${{ secrets.OPENAI_API_KEY }}
 """,)
-# The repository moved to an organization, where GitHub reports the owner's
-# own comments as MEMBER rather than OWNER. The three login checks still pin
-# the commenter and actors to one account.
-# Logins can be released and reclaimed, so the organization caller also pins
-# the commenter and actor to the account's immutable numeric ID.
-EXPECTED_CALLERS += (EXPECTED_CALLERS[0].replace(
-    "github.actor == 'luckyPipewrench' &&",
-    "github.actor == 'luckyPipewrench' &&\n      github.actor_id == '142104046' &&",
-).replace(
-    "github.event.comment.user.login == 'luckyPipewrench' &&",
-    "github.event.comment.user.login == 'luckyPipewrench' &&\n"
-    "      github.event.comment.user.id == 142104046 &&",
-).replace(
-    "author_association == 'OWNER'", "author_association == 'MEMBER'"),)
-# A rerun keeps the original comment but takes github.triggering_actor from
-# whoever starts it, which only a login check covers. GitHub numbers the first
-# attempt 1 (github.run_attempt), so the next caller admits only that attempt.
-EXPECTED_CALLERS += (EXPECTED_CALLERS[-1].replace(
-    "github.actor_id == '142104046' &&",
-    "github.actor_id == '142104046' &&\n      github.run_attempt == '1' &&"),)
 EXPECTED_CONTRACTS = (r"""name: Review caller contract
 
 on:
@@ -112,7 +95,7 @@ jobs:
       - name: Check out trusted default-branch caller validator
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          repository: luckyPipewrench/pipelab.org
+          repository: ${{ github.repository }}
           ref: ${{ github.sha }}
           path: trusted-validator
           persist-credentials: false
@@ -181,20 +164,7 @@ jobs:
           scripts.pr_review_test.WorkflowPackagingTest
           scripts.pr_review_test.FailureDirectionTest.test_review_job_timeout_exceeds_the_wall_clock_with_finalization_margin
 """,)
-# The trusted validator comes from this repository, not the archived original.
-EXPECTED_CONTRACTS += (EXPECTED_CONTRACTS[0].replace(
-    "repository: luckyPipewrench/pipelab.org", "repository: ${{ github.repository }}"),)
-# Contract step: the live caller and contract use the newest shapes, so the
-# owner-only, rerun-permitting and archived-checkout shapes are no longer approved.
-EXPECTED_CALLERS = EXPECTED_CALLERS[-1:]
-EXPECTED_CONTRACTS = EXPECTED_CONTRACTS[-1:]
-# After the move into pipelab-org: approve the caller that loads the reviewer from
-# pipelab-org/pipelock, because GitHub does not follow repository redirects for
-# reusable workflows. The caller switches to it in a following change.
-EXPECTED_CALLERS += (EXPECTED_CALLERS[0].replace(
-    "luckyPipewrench/pipelock/.github/workflows/pr-review-reusable.yaml@",
-    "pipelab-org/pipelock/.github/workflows/pr-review-reusable.yaml@",
-),)
+
 
 def read_workflow(path):
     """Read bounded UTF-8 data without following any path-component symlink."""
@@ -255,6 +225,20 @@ class ReviewCallerTest(unittest.TestCase):
     def test_installed_contract(self):
         validate_contract(WORKFLOW.with_name("review-caller-contract.yaml"))
 
+    def test_only_the_organization_caller_and_reviewer_are_approved(self):
+        self.assertEqual(APPROVED_REVIEWER_SHAS, ("4edcf46d02011c2aa1e305aff69d4d7100aae0ca",))
+        self.assertEqual(len(EXPECTED_CALLERS), 1)
+        self.assertEqual(len(EXPECTED_CONTRACTS), 1)
+        for required in [
+            "uses: pipelab-org/pipelock/.github/workflows/pr-review-reusable.yaml@REVIEWER_SHA",
+            "github.actor_id == '142104046'",
+            "github.event.comment.user.id == 142104046",
+            "github.run_attempt == '1'",
+            "author_association == 'MEMBER'",
+        ]:
+            self.assertIn(required, EXPECTED_CALLERS[0])
+        self.assertNotIn("luckyPipewrench/pipelock/", EXPECTED_CALLERS[0])
+
 
 class ApprovedShapeTest(unittest.TestCase):
     def test_every_approved_caller_pins_one_account(self):
@@ -309,7 +293,7 @@ class ApprovedShapeTest(unittest.TestCase):
                         validate_caller(path)
 
     def test_only_the_current_shapes_are_approved(self):
-        self.assertEqual(len(EXPECTED_CALLERS), 2)
+        self.assertEqual(len(EXPECTED_CALLERS), 1)
         self.assertEqual(len(EXPECTED_CONTRACTS), 1)
         caller = EXPECTED_CALLERS[0]
         self.assertIn("author_association == 'MEMBER' &&", caller)
@@ -395,6 +379,12 @@ class WorkflowInputTest(unittest.TestCase):
                     caller.replace(APPROVED_REVIEWER_SHAS[0], "a" * 40, 1),
                     caller.replace(APPROVED_REVIEWER_SHAS[0], "a" * 40),
                     caller.replace(APPROVED_REVIEWER_SHAS[0], "a" * 39),
+                    caller.replace(APPROVED_REVIEWER_SHAS[0], "3e8534e0dd621c62879238cc01d56f7e58e9d096"),
+                    caller.replace("pipelab-org/pipelock/", "luckyPipewrench/pipelock/"),
+                    caller.replace("github.actor_id == '142104046'", "github.actor_id == '0'"),
+                    caller.replace("github.event.comment.user.id == 142104046", "github.event.comment.user.id == 0"),
+                    caller.replace("github.run_attempt == '1'", "github.run_attempt == '2'"),
+                    caller.replace("author_association == 'MEMBER'", "author_association == 'OWNER'"),
                 ]),
                 (contract, validate_contract, [
                     contract.replace("contents: read", "contents: write"),
