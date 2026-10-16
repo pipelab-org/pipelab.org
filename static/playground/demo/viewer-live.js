@@ -534,9 +534,9 @@
         // was actually blocked this session.  blockCount comes ONLY from signed
         // MEDIATOR decisions, never from the agent's narration.
         if (blockCount > 0) {
-          setStatus("LIVE · verified");
+          setStatus("LIVE · attack blocked · bundle sealed");
         } else {
-          setStatus("LIVE · integrity verified");
+          setStatus("LIVE · bundle sealed");
         }
         // Honest: the bundle is SEALED and self-checked, but the "verified" row
         // only goes green once YOU re-verify it in the browser (or with the kit).

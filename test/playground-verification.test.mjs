@@ -44,7 +44,7 @@ function harness(mode = 'replay') {
   });
   // Keep the production handlers intact; skip page boot and expose closure state.
   let live = source('viewer-live.js');
-  live = live.replace(/\}\)\(\);\s*$/, `window.liveTest = { run: runBrowserVerify, reset: resetBrowserVerifyState, session(value) { token = value; }, ready(value) { verifierReady = value; } }; })();`);
+  live = live.replace(/\}\)\(\);\s*$/, `window.liveTest = { run: runBrowserVerify, handle, blocks(value) { blockCount = value; }, reset: resetBrowserVerifyState, session(value) { token = value; }, ready(value) { verifierReady = value; } }; })();`);
   vm.runInContext(live, context);
   const replay = source('viewer.js').replace(/main\(\)\.catch\([^\n]+\);\s*$/, '');
   vm.runInContext(replay, context);
@@ -247,3 +247,19 @@ test('live: a re-check with no session clears the earlier success status', async
   assert.doesNotMatch(h.node('statusLabel').textContent, /verified/);
   assert.match(h.node('browserVerifyResult').textContent, /No signed bundle/);
 });
+
+for (const blocks of [0, 1]) {
+  test(`live: broker sealing during a browser check never restores a verified status (${blocks} blocks)`, async () => {
+    const h = harness('live'); await h.run();
+    let finish;
+    h.context.window.liveTest.ready(new Promise((resolve) => { finish = resolve; }));
+    const pending = h.run();
+    h.context.window.liveTest.blocks(blocks);
+    h.context.window.liveTest.handle({ type: 'verified', checks: ['signature', 'binding'] });
+    noSuccess(h);
+    assert.doesNotMatch(h.node('statusLabel').textContent, /verified/);
+    assert.match(h.node('statusLabel').textContent, /bundle sealed/);
+    finish(); await pending;
+    assert.match(h.node('statusLabel').textContent, /verified in your browser/);
+  });
+}
