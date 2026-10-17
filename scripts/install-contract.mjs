@@ -81,6 +81,9 @@ function sections(source, examples = false) {
   // Section 2.2: a tab advances to the next multiple of four, so up to three
   // spaces before a tab are still four columns of indentation.
   const indented = line => /^(?: {4}| {0,3}\t)/.test(line);
+  // Section 2.1: only spaces and tabs make a line blank; other Unicode
+  // whitespace (NBSP, form feed, U+3000) is ordinary paragraph text.
+  const blank = line => /^[ \t]*$/.test(line);
   let previous = "";
   for (const [index, line] of lines.entries()) {
     // CommonMark 0.31.2 section 4.5 (fenced code blocks).
@@ -90,12 +93,12 @@ function sections(source, examples = false) {
         if (examples) { result.push(current); current = ""; }
         fence = { character: marker[1][0], length: marker[1].length };
       } else if (fence && marker[1][0] === fence.character
-        && marker[1].length >= fence.length && /^\s*$/.test(marker[2])) {
+        && marker[1].length >= fence.length && blank(marker[2])) {
         fence = null;
         if (examples) { result.push(current); current = ""; continue; }
       }
     }
-    if (examples && !fence && /^\s*$/.test(line)) {
+    if (examples && !fence && blank(line)) {
       // Section 4.4: an indented code chunk continues across blank lines.
       const next = lines.slice(index + 1).find(candidate => /\S/.test(candidate));
       if (!(indented(previous) && next !== undefined && indented(next))) {
@@ -105,7 +108,8 @@ function sections(source, examples = false) {
     } else if (/\S/.test(line)) {
       previous = line;
     }
-    if (!fence && (/^ {0,3}#{1,2}\s+/.test(line) || /^\s*<h2\b/i.test(line))) {
+    // Section 4.2: the # sequence may be followed by the end of the line.
+    if (!fence && (/^ {0,3}#{1,2}(?:\s|$)/.test(line) || /^\s*<h2\b/i.test(line))) {
       result.push(current);
       current = "";
     }

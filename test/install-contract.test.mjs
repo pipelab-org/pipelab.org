@@ -266,6 +266,38 @@ test("indented ATX headings keep raw installation sections independent", () => {
   assert.deepEqual(auditRawInstallSource(`## Earlier\n${clone}\n${build}\n    ## Code comment\n${brew}\n`, "3.7.0"), []);
 });
 
+// CommonMark 0.31.2 section 4.2: the opening # sequence may be followed by the
+// end of the line, so a bare "#" or "##" is an empty heading that ends a section.
+test("empty ATX headings keep raw installation sections independent", () => {
+  for (const heading of ["#", "##", " #", "  ##", "   ##"]) {
+    const source = `## Earlier\n${clone}\n${build}\n${heading}\n${brew}\n`;
+    assert.match(auditRawInstallSource(source, "3.7.0").join("\n"), /install section must include/, JSON.stringify(heading));
+  }
+});
+
+// Section 2.1: only spaces and tabs make a line blank. A line holding any other
+// whitespace character is paragraph text, so it cannot separate a real install,
+// and a fence closer followed by one (section 4.5) does not close the fence.
+test("non-blank whitespace lines do not separate a real install", t => {
+  const f = fixture(t);
+  const unpinned = "git clone https://github.com/pipelab-org/pipelock.git";
+  for (const character of [" ", "\f", "\v", " ", "　"]) {
+    for (const body of [
+      `${unpinned}\n${character}\nmake install\n`,
+      `    ${unpinned}\n${character}\n    make install\n`,
+      `\x60\x60\x60\nexample\n\x60\x60\x60${character}\n${unpinned}\n\nmake install\n`,
+    ]) {
+      writeFileSync(f.guide, body);
+      assert.match(f.audit().join("\n"), /hand-written source/, JSON.stringify(body));
+      assert.ok(auditRawInstallSource(`${raw}\n## Later\n${body}`, "3.7.0").length, JSON.stringify(body));
+    }
+  }
+  for (const blank of ["", " ", "\t", "  \t "]) {
+    writeFileSync(f.guide, `${unpinned}\n${blank}\nmake install\n`);
+    assert.deepEqual(f.audit(), [], JSON.stringify(blank));
+  }
+});
+
 test("CommonMark line endings preserve fences, front matter and exact install pins", t => {
   const f = fixture(t);
   const unpinned = "git clone https://github.com/pipelab-org/pipelock.git";
