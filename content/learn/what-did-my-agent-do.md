@@ -156,7 +156,7 @@ pipelock-verifier receipt path/to/single-receipt.json --key <public-key-hex>
 pipelock-verifier audit-packet path/to/audit-packet-directory/
 ```
 
-The verifier commands return exit code `0` on success and `1` on failure. They slot into CI gates, SIEM ingest pipelines, and procurement-evidence reviews without writing custom code. For a copy-paste walkthrough that runs each command against the public conformance corpus, see [Verify a Pipelock receipt](/learn/verify-a-receipt/).
+The `pipelock-verifier` commands return `0` for valid and `1` for invalid. `chain` returns `3` for an intact chain whose end isn't proven, runtime errors return `2` and usage errors `64`. They slot into CI gates, SIEM ingest pipelines, and procurement-evidence reviews without writing custom code. For a copy-paste walkthrough that runs each command against the public conformance corpus, see [Verify a Pipelock receipt](/learn/verify-a-receipt/).
 
 ## What this evidence supports, and what it does not
 
