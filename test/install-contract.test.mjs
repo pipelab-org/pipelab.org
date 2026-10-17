@@ -218,3 +218,40 @@ test("benchmark clones do not pair with an installation in another Markdown exam
   writeFileSync(f.guide, `\x60\x60\x60bash\ngit clone https://github.com/pipelab-org/pipelock.git\n\ncd pipelock\nmake install\n\x60\x60\x60\n`);
   assert.match(f.audit().join("\n"), /hand-written source/);
 });
+
+test("a leading thematic-break pair does not hide commands from the audit", t => {
+  const f = fixture(t);
+  for (const body of [
+    "---\ngit clone https://github.com/pipelab-org/pipelock.git\nmake install\n---\n",
+    `---\n\nIntro\n\n${oldCommand.replace("luckyPipewrench", "pipelab-org")}\n\n---\n`,
+  ]) {
+    writeFileSync(f.guide, `---\ntitle: Current\n---\n${body}`);
+    assert.match(f.audit().join("\n"), /hand-written/, body);
+    assert.ok(auditRawInstallSource(body, "3.7.0").length, body);
+  }
+});
+
+// CommonMark 0.31.2 section 4.4: blank lines stay inside an indented code chunk,
+// which also covers a fence nested deeper than the top level.
+test("blank lines inside an indented chunk or nested fence do not separate a real install", t => {
+  const f = fixture(t);
+  const unpinned = "git clone https://github.com/pipelab-org/pipelock.git";
+  for (const body of [
+    `    ${unpinned}\n\n    cd pipelock\n    make install\n`,
+    `1. Install:\n\n    \x60\x60\x60bash\n    ${unpinned}\n\n    make install\n    \x60\x60\x60\n`,
+  ]) {
+    writeFileSync(f.guide, body);
+    assert.match(f.audit().join("\n"), /hand-written source/, body);
+    assert.ok(auditRawInstallSource(`${raw}\n${body}`, "3.7.0").length, body);
+  }
+});
+
+test("front matter and templates are not Markdown and keep whole-text pairing", t => {
+  const f = fixture(t);
+  const source = "git clone https://github.com/pipelab-org/pipelock.git\n\ncd pipelock\n\nmake install";
+  writeFileSync(f.template, `<pre><code>${source}</code></pre>`);
+  assert.match(f.audit().join("\n"), /command in a template/);
+  writeFileSync(f.template, "<p>ok</p>");
+  writeFileSync(f.guide, `---\nfaq: |\n  ${source.replaceAll("\n", "\n  ")}\n---\nBody.\n`);
+  assert.match(f.audit().join("\n"), /frontmatter contains source/);
+});

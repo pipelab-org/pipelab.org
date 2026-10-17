@@ -35,9 +35,10 @@ const commandPatterns = [
   { label: "Homebrew install", pattern: /\bbrew\s+install\s+(?:\\\s*)?luckypipewrench\/tap\/pipelock\b/gi },
 ];
 
-function commandMatches(source) {
-  // Pair commands within one fenced block or plain paragraph, not an article.
-  return sections(source, true).flatMap(example => {
+function commandMatches(source, markdown = false) {
+  // Markdown pairs commands within one fenced block or plain paragraph, not an
+  // article. Front matter and templates are not Markdown, so they pair as a whole.
+  return (markdown ? sections(source, true) : [source]).flatMap(example => {
     const matches = commandPatterns.flatMap(({ label, pattern }) => {
       pattern.lastIndex = 0;
       return [...example.matchAll(pattern)].map(match => {
@@ -70,7 +71,12 @@ function sections(source, examples = false) {
   const result = [];
   let current = "";
   let fence = null;
-  for (const line of body(source).split("\n")) {
+  // Callers pass text whose front matter is already removed. Stripping again
+  // would drop a leading thematic-break pair and every command between them.
+  const lines = source.split("\n");
+  const indented = line => /^(?: {4}|\t)\S/.test(line);
+  let previous = "";
+  for (const [index, line] of lines.entries()) {
     // CommonMark 0.31.2 section 4.5 (fenced code blocks).
     const marker = line.match(/^ {0,3}(`{3,}|~{3,})(.*)$/);
     if (marker) {
@@ -84,8 +90,14 @@ function sections(source, examples = false) {
       }
     }
     if (examples && !fence && /^\s*$/.test(line)) {
-      result.push(current);
-      current = "";
+      // Section 4.4: an indented code chunk continues across blank lines.
+      const next = lines.slice(index + 1).find(candidate => /\S/.test(candidate));
+      if (!(indented(previous) && next !== undefined && indented(next))) {
+        result.push(current);
+        current = "";
+      }
+    } else if (/\S/.test(line)) {
+      previous = line;
     }
     if (!fence && (/^#{1,2}\s+/.test(line) || /^\s*<h2\b/i.test(line))) {
       result.push(current);
@@ -126,7 +138,7 @@ export function auditRawInstallSource(source, version) {
   const expected = sourceBuildTemplate.replace("VERSION", version);
   if (commandMatches(source).some(match => match.label === "unsupported go install")) issues.push("unsupported Go-module installation command");
   for (const section of sections(source)) {
-    const matches = commandMatches(section);
+    const matches = commandMatches(section, true);
     const brewAt = section.indexOf(brewInstallCommand);
     const sourceAt = section.indexOf(expected);
     const hasSource = matches.some(match => match.label === "source clone" || match.label === "source build");
@@ -157,7 +169,7 @@ export function auditInstallContract({ repoRoot, contentFiles, templateFiles, ve
       }
     }
     // A frozen body may keep only the commands it was published with.
-    const match = commandMatches(body(source)).find(match => !historicalBody || !historicalBodyCommands.has(match.label));
+    const match = commandMatches(body(source), true).find(match => !historicalBody || !historicalBodyCommands.has(match.label));
     if (match) issues.push(`${label}: hand-written ${match.label} command; use the shared install shortcode`);
     for (const match of commandMatches(frontMatter(source))) {
       if (match.label !== "Homebrew install") issues.push(`${label}: frontmatter contains ${match.label}; link to /install/ for current source-build guidance`);
