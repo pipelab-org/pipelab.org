@@ -194,3 +194,27 @@ test("a frozen historical body keeps only the commands it was published with", t
     assert.match(f.audit().join("\n"), /hand-written source/, added);
   }
 });
+
+
+test("raw source clone comparison includes arguments after the repository URL", () => {
+  assert.deepEqual(auditRawInstallSource(raw, "3.7.0"), []);
+  for (const suffix of [" other-checkout", " --depth 2", " --branch v3.6.0"]) {
+    assert.match(auditRawInstallSource(`${raw}\n${clone}${suffix}\n${build}\n`, "3.7.0").join("\n"), /source clone does not match/, suffix);
+  }
+});
+
+test("benchmark clones do not pair with an installation in another Markdown example", t => {
+  const f = fixture(t);
+  const benchmark = "git clone https://github.com/luckyPipewrench/pipelock\ncd pipelock\nmake bench-egress";
+  for (const source of [
+    `## Reproduce\n\x60\x60\x60bash\n${benchmark}\n\x60\x60\x60\n\nBuild another tool with \x60make install\x60.\n`,
+    `## Reproduce\n\x60\x60\x60bash\n${benchmark}\n\x60\x60\x60\n\x60\x60\x60bash\nmake install\n\x60\x60\x60\n`,
+    `${benchmark}\n\nBuild another tool with \x60make install\x60.\n`,
+  ]) {
+    writeFileSync(f.guide, source);
+    assert.deepEqual(f.audit(), [], source);
+  }
+  // A blank line inside a shell block does not break a real install sequence.
+  writeFileSync(f.guide, `\x60\x60\x60bash\ngit clone https://github.com/pipelab-org/pipelock.git\n\ncd pipelock\nmake install\n\x60\x60\x60\n`);
+  assert.match(f.audit().join("\n"), /hand-written source/);
+});

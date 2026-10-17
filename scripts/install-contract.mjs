@@ -36,19 +36,24 @@ const commandPatterns = [
 ];
 
 function commandMatches(source) {
-  const matches = commandPatterns.flatMap(({ label, pattern }) => {
-    pattern.lastIndex = 0;
-    return [...source.matchAll(pattern)].map(match => ({ label, text: match[0], index: match.index, line: source.slice(match.index).match(/^[^\n`]*/)[0] }));
+  // Pair commands within one fenced block or plain paragraph, not an article.
+  return sections(source, true).flatMap(example => {
+    const matches = commandPatterns.flatMap(({ label, pattern }) => {
+      pattern.lastIndex = 0;
+      return [...example.matchAll(pattern)].map(match => {
+        const line = example.slice(match.index).match(/^[^\n`]*/)[0].trimEnd();
+        return { label, text: label === "source clone" ? line : match[0], index: match.index, line };
+      });
+    });
+    const hasClone = matches.some(match => match.label === "source clone");
+    const hasInstall = matches.some(match => match.label === "source build");
+    return matches.filter(match => {
+      // A pinned tag may follow the URL, so inspect the complete command line.
+      if (match.label === "source clone") return /--branch\s+v/.test(match.line) || hasInstall;
+      if (match.label === "source build") return hasClone || /-C\s+pipelock\b/.test(match.text);
+      return true;
+    }).sort((a, b) => a.index - b.index);
   });
-  const hasClone = matches.some(match => match.label === "source clone");
-  const hasInstall = matches.some(match => match.label === "source build");
-  return matches.filter(match => {
-    // A pinned tag may follow the URL, so look at the rest of the command line.
-    if (match.label === "source clone") return /--branch\s+v/.test(match.line) || hasInstall;
-    if (match.label === "source build") return hasClone || /-C\s+pipelock\b/.test(match.text);
-    return true;
-  })
-    .sort((a, b) => a.index - b.index);
 }
 
 function frontMatter(source) {
@@ -61,7 +66,7 @@ function body(source) {
 
 // H3 method headings share the same Installation section. Ignore shell comments
 // inside fences so an earlier unrelated source mention cannot mask a bad order.
-function sections(source) {
+function sections(source, examples = false) {
   const result = [];
   let current = "";
   let fence = null;
@@ -70,11 +75,17 @@ function sections(source) {
     const marker = line.match(/^ {0,3}(`{3,}|~{3,})(.*)$/);
     if (marker) {
       if (!fence && (marker[1][0] !== "`" || !marker[2].includes("`"))) {
+        if (examples) { result.push(current); current = ""; }
         fence = { character: marker[1][0], length: marker[1].length };
       } else if (fence && marker[1][0] === fence.character
         && marker[1].length >= fence.length && /^\s*$/.test(marker[2])) {
         fence = null;
+        if (examples) { result.push(current); current = ""; continue; }
       }
+    }
+    if (examples && !fence && /^\s*$/.test(line)) {
+      result.push(current);
+      current = "";
     }
     if (!fence && (/^#{1,2}\s+/.test(line) || /^\s*<h2\b/i.test(line))) {
       result.push(current);
