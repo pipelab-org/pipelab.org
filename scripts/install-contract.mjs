@@ -61,6 +61,15 @@ function commandMatches(source, markdown = false) {
   });
 }
 
+// CommonMark 0.31.2 section 4.6, types 6 and 7: block names from the condition-6
+// list, or any other complete tag alone on its line. Both end at a blank line.
+const htmlBlockNames = "address|article|aside|base|basefont|blockquote|body|caption|center|col|colgroup|dd|details|dialog|dir|div|dl|dt|fieldset|figcaption|figure|footer|form|frame|frameset|h[1-6]|head|header|hr|html|iframe|legend|li|link|main|menu|menuitem|nav|noframes|ol|optgroup|option|p|param|search|section|summary|table|tbody|td|tfoot|th|thead|title|tr|track|ul";
+const rawTextTags = "(?!(?:script|style|pre|textarea)(?![A-Za-z0-9-]))";
+const tagName = "[A-Za-z][A-Za-z0-9-]*";
+const tagAttribute = "[ \\t]+[A-Za-z_:][A-Za-z0-9_.:-]*(?:[ \\t]*=[ \\t]*(?:[^ \\t\"'=<>`]+|'[^']*'|\"[^\"]*\"))?";
+const htmlBlockSix = new RegExp(`^ {0,3}</?(?:${htmlBlockNames})(?:[ \\t]|/?>|$)`, "i");
+const htmlBlockSeven = new RegExp(`^ {0,3}(?:<${rawTextTags}${tagName}(?:${tagAttribute})*[ \\t]*/?>|</${rawTextTags}${tagName}[ \\t]*>)[ \\t]*$`, "i");
+
 function frontMatter(source) {
   return source.match(/^---\n([\s\S]*?)\n---\n?/)?.[1] || "";
 }
@@ -85,24 +94,40 @@ function sections(source, examples = false) {
   // Section 2.1: only spaces and tabs make a line blank; other Unicode
   // whitespace (NBSP, form feed, U+3000) is ordinary paragraph text.
   const blank = line => /^[ \t]*$/.test(line);
+  let htmlBlock = false;
   let previous = "";
+  let closed = true;
   for (const [index, line] of lines.entries()) {
-    // Section 4.6 types 1-5 end at a marker, not a blank line. Other HTML
-    // block types use the ordinary blank-line boundary below.
-    if (!fence && !htmlEnd) {
+    // A blank line, ATX heading, closing fence or HTML block end cannot leave a paragraph open.
+    const followsBlock = closed;
+    closed = blank(line) || /^ {0,3}#{1,6}(?:[ \t]|$)/.test(line);
+    // Section 4.6 types 1-5 end at a marker, not a blank line. Types 6 and 7
+    // end at a blank line, and inside them headings and fences are raw text.
+    if (htmlBlock && blank(line)) htmlBlock = false;
+    if (!fence && !htmlEnd && !htmlBlock) {
       htmlEnd = /^ {0,3}<(?:script|pre|style|textarea)(?:[ \t>]|$)/i.test(line) ? /<\/(?:script|pre|style|textarea)>/i
         : /^ {0,3}<!--/.test(line) ? /-->/
           : /^ {0,3}<\?/.test(line) ? /\?>/
-            : /^ {0,3}<![A-Z]/.test(line) ? />/
+            : /^ {0,3}<![A-Za-z]/.test(line) ? />/
               : /^ {0,3}<!\[CDATA\[/.test(line) ? /\]\]>/ : null;
-      if (htmlEnd && examples) { result.push(current); current = ""; }
+      // Type 7 cannot interrupt a paragraph, so it only starts where none can be open.
+      htmlBlock = !htmlEnd && (htmlBlockSix.test(line) || (followsBlock && htmlBlockSeven.test(line)));
+      if ((htmlEnd || htmlBlock) && examples) { result.push(current); current = ""; }
     }
     if (htmlEnd) {
       current += `${line}\n`;
       if (htmlEnd.test(line)) {
         htmlEnd = null;
+        closed = true;
         if (examples) { result.push(current); current = ""; }
       }
+      continue;
+    }
+    if (htmlBlock) {
+      // A rendered h1 or h2 still opens a new section whatever its indentation.
+      if (/^\s*<h[12]\b/i.test(line)) { result.push(current); current = ""; }
+      current += `${line}\n`;
+      previous = line;
       continue;
     }
     // CommonMark 0.31.2 section 4.5 (fenced code blocks).
@@ -114,6 +139,7 @@ function sections(source, examples = false) {
       } else if (fence && marker[1][0] === fence.character
         && marker[1].length >= fence.length && blank(marker[2])) {
         fence = null;
+        closed = true;
         if (examples) { result.push(current); current = ""; continue; }
       }
     }
@@ -129,7 +155,7 @@ function sections(source, examples = false) {
     }
     // Section 4.2: the # sequence may be followed by the end of the line.
     if (!fence && (/^ {0,3}#{1,2}(?:[ \t]|$)/.test(line)
-      || /^ {0,3}(?:=+|-+)[ \t]*$/.test(line) || /^\s*<h2\b/i.test(line))) {
+      || /^ {0,3}(?:=+|-+)[ \t]*$/.test(line))) {
       result.push(current);
       current = "";
     }

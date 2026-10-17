@@ -333,7 +333,7 @@ test("setext headings cannot borrow the pin from an earlier install section", ()
 test("HTML blocks keep install commands together until their own terminator", t => {
   const f = fixture(t);
   const unpinned = "git clone https://github.com/pipelab-org/pipelock.git";
-  for (const [open, close] of [["<pre>", "</pre>"], ["<PRE class='shell'>", "</PRE>"], ["<script>", "</script>"], ["<style>", "</style>"], ["<textarea>", "</textarea>"], ["<!--", "-->"], ["<?instruction", "?>"], ["<!DOCTYPE", ">"], ["<![CDATA[", "]]>"]]) {
+  for (const [open, close] of [["<pre>", "</pre>"], ["<PRE class='shell'>", "</PRE>"], ["<script>", "</script>"], ["<style>", "</style>"], ["<textarea>", "</textarea>"], ["<!--", "-->"], ["<?instruction", "?>"], ["<!DOCTYPE", ">"], ["<!doctype", ">"], ["<![CDATA[", "]]>"]]) {
     const body = `${open}\n${unpinned}\n\n## shell comment\n\nmake install\n${close}\n`;
     writeFileSync(f.guide, body);
     assert.match(f.audit().join("\n"), /hand-written source/, open);
@@ -341,5 +341,53 @@ test("HTML blocks keep install commands together until their own terminator", t 
     // A separate example after a closed block must not pair with its clone.
     writeFileSync(f.guide, `${open}\n${unpinned}\n${close}\n\nBuild another tool with \x60make install\x60.\n`);
     assert.deepEqual(f.audit(), [], open);
+    // The fence marker is raw text inside the block, so it cannot swallow the
+    // heading that follows and let an unpinned section borrow the earlier pin.
+    assert.match(auditRawInstallSource(`${raw}\n${open}\n\x60\x60\x60\n${close}\n\n## Later\n${brew}\n`, "3.7.0").join("\n"), /install section must include/, open);
+  }
+});
+
+// Section 4.6 types 6 and 7 end at a blank line. Until then heading, setext and
+// fence markers are raw text, so they cannot split a real install or hide a
+// later heading. Type 7 cannot interrupt a paragraph; type 6 can.
+test("HTML block types 6 and 7 keep marker lines inside the block until a blank line", t => {
+  const f = fixture(t);
+  const unpinned = "git clone https://github.com/pipelab-org/pipelock.git";
+  for (const open of ["<div>", "</div>", "<DIV class=\"shell\">", "<p>", "<section>", "<h3>", "<custom-tag>", "<custom-tag data-x='y'>", "</custom-tag>", "<br/>"]) {
+    for (const marker of ["---", "===", "# step", "## step", "\x60\x60\x60", "~~~"]) {
+      writeFileSync(f.guide, `${open}\n${unpinned}\n${marker}\nmake install\n`);
+      assert.match(f.audit().join("\n"), /hand-written source/, `${open} ${marker}`);
+      assert.ok(auditRawInstallSource(`${raw}\n## Later\n${open}\n${unpinned}\n${marker}\nmake install\n`, "3.7.0").length, `${open} ${marker}`);
+    }
+    // A blank line ends the block, so the heading after it separates sections again.
+    assert.match(auditRawInstallSource(`${raw}\n${open}\n\x60\x60\x60\n\n## Later\n${brew}\n`, "3.7.0").join("\n"), /install section must include/, open);
+  }
+  writeFileSync(f.guide, `${unpinned}\n<custom-tag>\n---\nmake install\n`);
+  assert.deepEqual(f.audit(), [], "type 7 does not interrupt a paragraph");
+  writeFileSync(f.guide, `${unpinned}\n<div>\n---\nmake install\n`);
+  assert.deepEqual(f.audit(), [], "type 6 interrupts a paragraph");
+  // With a paragraph open the tag line is paragraph text, so the heading below it is real.
+  assert.match(auditRawInstallSource(`${raw}\nintro\n<custom-tag>\n## Later\n${brew}\n`, "3.7.0").join("\n"), /install section must include/);
+  // A heading, closed fence or finished HTML block leaves no paragraph open, so type 7 starts.
+  for (const before of ["### Steps", "\x60\x60\x60\nexample\n\x60\x60\x60", "<!-- note -->"]) {
+    const hidden = `${raw}\n${before}\n<custom-tag>\n\x60\x60\x60\n\n## Later\n${brew}\n`;
+    assert.match(auditRawInstallSource(hidden, "3.7.0").join("\n"), /install section must include/, before);
+  }
+});
+
+// Section 4.6: <h1> and <h2> inside raw HTML still start a section, at any
+// depth within an HTML block; elsewhere four spaces of indentation (code) or a
+// non-space lead character (paragraph text) make the line an ordinary line.
+test("rendered headings delimit raw sections and indented text does not split an install", t => {
+  const f = fixture(t);
+  const unpinned = "git clone https://github.com/pipelab-org/pipelock.git";
+  for (const heading of ["<h1>Later</h1>", "<H2>Later</H2>", "  <h2 id=\"later\">Later</h2>", "<div>\n    <h2>Later</h2>"]) {
+    const source = `## Earlier\n${clone}\n${build}\n\n${heading}\n${brew}\n`;
+    assert.match(auditRawInstallSource(source, "3.7.0").join("\n"), /install section must include/, heading);
+  }
+  for (const body of ["    ", "\t", "  \t"].map(indent => `${indent}${unpinned}\n${indent}<h2>x\n${indent}make install\n`)
+    .concat(["    ", "\t", " "].map(indent => `${unpinned}\n${indent}<h2>x\nmake install\n`))) {
+    writeFileSync(f.guide, body);
+    assert.match(f.audit().join("\n"), /hand-written source/, JSON.stringify(body));
   }
 });
