@@ -105,7 +105,8 @@ function sections(source, examples = false) {
     // end at a blank line, and inside them headings and fences are raw text.
     if (htmlBlock && blank(line)) htmlBlock = false;
     if (!fence && !htmlEnd && !htmlBlock) {
-      htmlEnd = /^ {0,3}<(?:script|pre|style|textarea)(?:[ \t>]|$)/i.test(line) ? /<\/(?:script|pre|style|textarea)>/i
+      // Hugo's Goldmark renderer also opens these raw blocks with a self-closing tag.
+      htmlEnd = /^ {0,3}<(?:script|pre|style|textarea)(?:[ \t/>]|$)/i.test(line) ? /<\/(?:script|pre|style|textarea)>/i
         : /^ {0,3}<!--/.test(line) ? /-->/
           : /^ {0,3}<\?/.test(line) ? /\?>/
             : /^ {0,3}<![A-Za-z]/.test(line) ? />/

@@ -333,11 +333,14 @@ test("setext headings cannot borrow the pin from an earlier install section", ()
 test("HTML blocks keep install commands together until their own terminator", t => {
   const f = fixture(t);
   const unpinned = "git clone https://github.com/pipelab-org/pipelock.git";
-  for (const [open, close] of [["<pre>", "</pre>"], ["<PRE class='shell'>", "</PRE>"], ["<script>", "</script>"], ["<style>", "</style>"], ["<textarea>", "</textarea>"], ["<!--", "-->"], ["<?instruction", "?>"], ["<!DOCTYPE", ">"], ["<!doctype", ">"], ["<![CDATA[", "]]>"]]) {
+  for (const [open, close] of [["<pre>", "</pre>"], ["<pre/>", "</pre>"], ["<PRE class='shell'>", "</PRE>"], ["<script>", "</script>"], ["<script/>", "</script>"], ["<style>", "</style>"], ["<style/>", "</style>"], ["<textarea>", "</textarea>"], ["<textarea/>", "</textarea>"], ["<!--", "-->"], ["<?instruction", "?>"], ["<!DOCTYPE", ">"], ["<!doctype", ">"], ["<![CDATA[", "]]>"]]) {
     const body = `${open}\n${unpinned}\n\n## shell comment\n\nmake install\n${close}\n`;
     writeFileSync(f.guide, body);
     assert.match(f.audit().join("\n"), /hand-written source/, open);
     assert.ok(auditRawInstallSource(`${raw}\n## Later\n${body}`, "3.7.0").length, open);
+    // The terminator ends the example even without a following blank line.
+    writeFileSync(f.guide, `${open}\n${unpinned}\n${close}\nmake install\n`);
+    assert.deepEqual(f.audit(), [], open);
     // A separate example after a closed block must not pair with its clone.
     writeFileSync(f.guide, `${open}\n${unpinned}\n${close}\n\nBuild another tool with \x60make install\x60.\n`);
     assert.deepEqual(f.audit(), [], open);
