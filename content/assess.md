@@ -29,14 +29,14 @@ Use the agreed signing identity in both commands if it differs from `pipelock-as
 
 ## Page links
 
-- [Demo egress report](/assess/demo-egress-report/)
-- [Demo paid assessment](/assess/demo-assessment/)
-- [Signed summary demo](/assess/demo-summary/)
+- [Demo egress report](/assess/demo-egress-report/) (sample generated with Pipelock 3.6.0)
+- [Demo paid assessment](/assess/demo-assessment/) (sample generated with Pipelock 3.6.0)
+- [Signed summary demo](/assess/demo-summary/) (sample generated with Pipelock 3.6.0)
 - [Pipelock](/pipelock/)
 - [Pricing](/pricing/)
 - [Proof](/proof/)
 - [Enterprise](/enterprise/)
 - [Agent Egress Bench results](/gauntlet/)
 - [Compare](/compare/)
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)
 - [Get an Assess license (Polar)](https://buy.polar.sh/polar_cl_xiD0xkZuLFvPG0nTYpezAnar0vU6MWd3qbWdj4XcB9D)

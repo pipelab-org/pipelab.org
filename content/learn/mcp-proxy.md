@@ -30,6 +30,14 @@ If you need the category definition first, read [What Is MCP?](/learn/what-is-mc
 
 This page is the canonical reference for what an MCP proxy is, how it differs from a gateway, what it scans, how it fits next to other MCP security layers, and which implementations exist in 2026.
 
+## v3.7 protocol and identity changes
+
+Successful initialize negotiation supplies later HTTP protocol headers. Empty successful acknowledgments are accepted, and clean eligible upstream `4xx` responses preserve their status and permitted headers. Unsafe, incomplete and `5xx` replies remain sanitized.
+
+Typed MCP JSON rejects noncanonical keys. Malformed JSON, invalid UTF-8 and duplicate keys refuse even with `mcp_input_scanning.on_parse_error: forward`; rejected responses don't update tracking state. Explicit code-loading child environment overrides now refuse too.
+
+For a local server with a changing port or token, [register and inspect its kernel-observed identity](/learn/verified-local-mcp-services/). Reviewed credential-request acknowledgments lift only the exact bound finding; they don't turn off other tool or response checks. Follow the [v3.7 upgrade guide](/learn/pipelock-v370-upgrade/) before using the new fields.
+
 ## What an MCP proxy is
 
 MCP, the Model Context Protocol, is the JSON-RPC-based standard agents use to talk to tool servers. Each MCP server exposes tools, resources, and prompts. The agent lists the tools, calls them by name with JSON arguments, and feeds the responses back into the model's context.
@@ -228,11 +236,11 @@ For the detailed comparison see [Pipelock vs Docker MCP Gateway](/compare/pipelo
 
 ```bash
 # Linux/macOS
-curl -L https://github.com/luckyPipewrench/pipelock/releases/latest/download/pipelock_linux_amd64 -o pipelock
+curl -L https://github.com/pipelab-org/pipelock/releases/latest/download/pipelock_linux_amd64 -o pipelock
 chmod +x pipelock
 sudo mv pipelock /usr/local/bin/
 
-# Or go install
+# Or build the pinned release from source
 {{< install-cmd go >}}
 ```
 
@@ -291,4 +299,4 @@ This runs Pipelock's built-in posture check, lists each MCP server you have conf
 - [MCP Scanner Comparison](/blog/mcp-scanner-comparison-2026/): Cisco vs Snyk vs Pipelock
 - [Pipelock Product Page](/pipelock/): the full agent firewall
 - [What is an Agent Firewall?](/agent-firewall/): architecture overview
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

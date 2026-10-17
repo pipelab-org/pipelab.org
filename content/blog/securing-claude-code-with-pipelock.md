@@ -10,6 +10,9 @@ tags: ["pipelock", "claude-code", "mcp", "ai-security"]
 blog_cat: "opsec"
 ---
 
+> Installation correction (2026-10-16): The `go install` command below doesn't install current Pipelock releases. Use the [current installation guide](/install/) for a release binary or a source build pinned to the release tag. The original post follows unchanged.
+
+
 > **Update (March 2026):** Pipelock now supports one-command Claude Code setup with `pipelock claude setup`. This installs hooks that scan Bash, WebFetch, Write, Edit, and MCP tools automatically. [Start here](/learn/claude-code-hooks/) unless you specifically need manual MCP proxy wrapping. For the full runtime picture, see [Claude Code security](/learn/claude-code-security/).
 
 Claude Code connects to MCP servers, and every one of those server responses flows straight into the agent's context window. If any of those servers return a prompt injection payload buried in otherwise-normal content, the agent processes it without question. Your API keys, tokens, and credentials can leave through an outbound HTTP request before you notice anything happened.

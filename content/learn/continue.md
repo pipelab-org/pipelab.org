@@ -9,7 +9,7 @@ learn_cat: ide
 level: intro
 howto_steps:
   - name: Install Pipelock
-    text: Install the pipelock CLI with go install or Homebrew.
+    text: Install the pipelock CLI from a pinned source build or Homebrew; see /install/ for prerequisites.
   - name: Preview the wrap
     text: Run pipelock continue install --dry-run to print what would change in ~/.continue/config.yaml and ~/.continue/mcpServers/ without writing anything.
   - name: Wrap each MCP server in Continue's config

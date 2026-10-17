@@ -1,10 +1,12 @@
 import { readFileSync } from "node:fs";
+import { auditHistoricalArtifact, HISTORICAL_ELIGIBLE_PATHS, HISTORICAL_GAUNTLET_POINTER, loadHistoricalArtifacts } from "./historical-artifacts.mjs";
 
-export function auditReleaseData(root, version) {
-  const findings = [];
+export function auditReleaseData(root, version, historical = loadHistoricalArtifacts(root, HISTORICAL_ELIGIBLE_PATHS)) {
+  const findings = [...historical.findings];
   const check = (file, read) => {
     try {
-      for (const [label, actual] of read(readFileSync(`${root}/${file}`, "utf8"))) {
+      const bytes = readFileSync(`${root}/${file}`);
+      for (const [label, actual] of read(bytes.toString("utf8"), bytes)) {
         if (actual !== version) findings.push(`${file}: ${label} ${JSON.stringify(actual)} disagrees with declared Pipelock ${version}`);
       }
     } catch (error) {
@@ -33,9 +35,14 @@ export function auditReleaseData(root, version) {
     if (pins.size !== schema.size) throw new Error("require one version and SHA-256 archive pin");
     return [["verifier version", pins.get("PIPELAB_VERIFIER_VERSION")]];
   });
-  check("static/gauntlet/evidence/latest-verified.json", source => {
+  check(HISTORICAL_GAUNTLET_POINTER, (source, bytes) => {
     const pointer = JSON.parse(source);
     if (pointer.status !== "verified" || pointer.tool !== "pipelock") throw new Error("require verified Pipelock evidence");
+    const entry = historical.entries.get(HISTORICAL_GAUNTLET_POINTER);
+    if (entry) {
+      findings.push(...auditHistoricalArtifact(HISTORICAL_GAUNTLET_POINTER, bytes, [[1, [pointer.tool_version]]], entry, version));
+      return [];
+    }
     return [["tool_version", pointer.tool_version]];
   });
   return findings;

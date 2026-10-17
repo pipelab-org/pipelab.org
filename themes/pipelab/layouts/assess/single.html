@@ -109,7 +109,7 @@
           <div class="assess-lane-cta">
             <a class="btn btn-ghost" href="/assess/demo-egress-report/" target="_blank" rel="noopener noreferrer"
                data-event="demo_egress_click" data-event-placement="assess-audit-lane">Open demo report</a>
-            <a class="btn btn-ghost" href="https://github.com/luckyPipewrench/pipelock" target="_blank" rel="noopener noreferrer"
+            <a class="btn btn-ghost" href="https://github.com/pipelab-org/pipelock" target="_blank" rel="noopener noreferrer"
                data-event="github_click" data-event-placement="assess-audit-lane">Source</a>
           </div>
         </article>
@@ -183,7 +183,7 @@
               <span class="assess-demo-ribbon-dot" aria-hidden="true"></span>Security Assessment · Paid
             </p>
             <h4>/assess/demo-assessment/</h4>
-            <p>The full Ed25519-signed evidence bundle. Letter grade, all {{ $stats.simulate_scenarios }} scenario results, all {{ $stats.assess_config_categories }} category scores, mapping into {{ $stats.compliance_frameworks }} frameworks, evidence appendix, signature block.</p>
+            <p>A full Ed25519-signed evidence bundle generated with Pipelock 3.6.0: letter grade, scenario results, category scores, framework mappings, evidence appendix and signature block. Counts reflect that run.</p>
             <span class="assess-demo-open">Open demo →</span>
           </div>
         </a>
@@ -192,7 +192,7 @@
            data-event="demo_summary_click" data-event-placement="assess-demos">
           <div class="assess-demo-thumb assess-demo-thumb-placeholder" aria-hidden="true">
             <div class="assess-demo-thumb-stack">
-              <span class="assess-demo-thumb-tag">Legacy demo · Unsigned</span>
+              <span class="assess-demo-thumb-tag">Sample · Pipelock 3.6.0</span>
               <span class="assess-demo-thumb-glyph">summary.html</span>
               <span class="assess-demo-thumb-note">No screenshot. Open the page.</span>
             </div>
@@ -202,7 +202,7 @@
               <span class="assess-demo-ribbon-dot" aria-hidden="true"></span>Security Assessment · Free
             </p>
             <h4>/assess/demo-summary/</h4>
-            <p>Legacy unsigned summary snapshot: coverage scores, finding totals, and per-server posture. This stored demo is unsigned; current free summaries are signed by default at finalization.</p>
+            <p>A signed free summary generated with Pipelock 3.6.0: coverage scores, finding totals, and per-server posture.</p>
             <span class="assess-demo-open">Open demo →</span>
           </div>
         </a>
@@ -237,8 +237,8 @@
           </ul>
           <div class="assess-tier-cta">
             <a class="btn btn-ghost" href="/assess/demo-summary/" target="_blank" rel="noopener noreferrer"
-               data-event="demo_summary_click" data-event-placement="assess-tier-free">See legacy unsigned demo</a>
-            <a class="btn btn-ghost" href="https://github.com/luckyPipewrench/pipelock" target="_blank" rel="noopener noreferrer"
+               data-event="demo_summary_click" data-event-placement="assess-tier-free">See the signed 3.6.0 sample</a>
+            <a class="btn btn-ghost" href="https://github.com/pipelab-org/pipelock" target="_blank" rel="noopener noreferrer"
                data-event="install_click" data-event-placement="assess-tier-free">Install</a>
           </div>
         </article>
@@ -378,7 +378,7 @@ $ pipelock assess verify my-assessment/</code></pre>
           <div class="assess-cta-actions">
             <a class="btn btn-primary" href="{{ $polarUrl }}" target="_blank" rel="noopener noreferrer"
                data-event="checkout_started" data-event-placement="assess-bottom-cta" data-event-value="assess_annual">Get a license · ${{ $stats.assess_license_usd }}/yr</a>
-            <a class="btn btn-ghost" href="https://github.com/luckyPipewrench/pipelock" target="_blank" rel="noopener noreferrer"
+            <a class="btn btn-ghost" href="https://github.com/pipelab-org/pipelock" target="_blank" rel="noopener noreferrer"
                data-event="github_click" data-event-placement="assess-bottom-cta">View source on GitHub</a>
           </div>
         </div>
@@ -387,7 +387,7 @@ $ pipelock assess verify my-assessment/</code></pre>
             <div class="assess-cta-meta-row"><dt>License</dt><dd>${{ $stats.assess_license_usd }}/yr · per organization</dd></div>
             <div class="assess-cta-meta-row"><dt>Adds</dt><dd>Full findings + remediation + detailed mappings</dd></div>
             <div class="assess-cta-meta-row"><dt>Checkout</dt><dd><a href="{{ $polarUrl }}" target="_blank" rel="noopener noreferrer" data-event="checkout_started" data-event-placement="assess-meta" data-event-value="assess_annual">Polar</a></dd></div>
-            <div class="assess-cta-meta-row"><dt>Source</dt><dd><a href="https://github.com/luckyPipewrench/pipelock" target="_blank" rel="noopener noreferrer">luckyPipewrench/pipelock</a></dd></div>
+            <div class="assess-cta-meta-row"><dt>Source</dt><dd><a href="https://github.com/pipelab-org/pipelock" target="_blank" rel="noopener noreferrer">pipelab-org/pipelock</a></dd></div>
             <div class="assess-cta-meta-row"><dt>Free tier</dt><dd>Always · Apache-2.0 core</dd></div>
           </dl>
         </div>

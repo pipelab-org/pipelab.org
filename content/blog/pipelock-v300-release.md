@@ -17,6 +17,9 @@ faq:
     a: "Two that a real fleet needs. pipelock conductor follower remove decommissions a follower so it leaves fleet status and its later audit evidence, signed with the enrolled key, is rejected. pipelock conductor store backup and store restore capture and recover the control-plane store (enrollments, policy bundles, stream heads, emergency controls), so a lost Conductor is a restore rather than a rebuild. Both are Enterprise and require the fleet license feature."
 ---
 
+> Installation correction (2026-10-16): The `go install` command below doesn't install current Pipelock releases. Use the [current installation guide](/install/) for a release binary or a source build pinned to the release tag. The original post follows unchanged.
+
+
 A major version earns the number by changing defaults, and v3.0 moves them in one direction: toward the safe choice. Every breaking change in this release blocks or tightens. Review the upgrade notes before you roll it out, then upgrade with the knowledge that the new behavior errs on the side of denying.
 
 ## Defaults fail closed

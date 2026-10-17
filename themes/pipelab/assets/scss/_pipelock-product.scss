@@ -1363,8 +1363,11 @@
 
   .prompt { color: var(--text-dim); }
 
+  // The shared source build is a note line plus two commands. Keep its line
+  // breaks so the clone and build do not run together, and still wrap long
+  // lines inside the narrow runbook column.
   .cmd-text {
-    white-space: normal;
+    white-space: pre-wrap;
     overflow-wrap: anywhere;
   }
 }

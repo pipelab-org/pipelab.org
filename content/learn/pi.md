@@ -84,7 +84,7 @@ The installer compares Pi's settings with your config file. It can't prove that 
 1. Confirm the Pi listener appears in Pipelock's startup output.
 2. Restart Pi and check that the `httpProxy` value in `~/.pi/agent/settings.json` (or under `PI_CODING_AGENT_DIR`) is your listener URL.
 
-A second install with the same values reports that Pi already routes through the proxy. An offline walkthrough that never touches your real settings lives in the [pi-integration example](https://github.com/luckyPipewrench/pipelock/tree/main/examples/pi-integration). It uses `PI_CODING_AGENT_DIR` and needs no Gemini key.
+A second install with the same values reports that Pi already routes through the proxy. An offline walkthrough that never touches your real settings lives in the [pi-integration example](https://github.com/pipelab-org/pipelock/tree/main/examples/pi-integration). It uses `PI_CODING_AGENT_DIR` and needs no Gemini key.
 
 ## Remove
 
@@ -97,4 +97,4 @@ pipelock pi remove
 
 Restart Pi to apply it. Re-running install recovers a prepared install only when Pi's proxy still matches the recorded target or prior value. The command refuses to overwrite a changed proxy value or an interrupted removal. Inspect the settings and the state file before resolving another interrupted condition by hand.
 
-See also: [Continue.dev MCP Security](/learn/continue/) · [Contain an AI Agent on Linux](/learn/pipelock-contain-guide/) · [Pipelock v3.6 Upgrade Guide](/learn/pipelock-v360-upgrade/) · [Pi integration guide](https://github.com/luckyPipewrench/pipelock/blob/main/docs/guides/pi.md)
+See also: [Continue.dev MCP Security](/learn/continue/) · [Contain an AI Agent on Linux](/learn/pipelock-contain-guide/) · [Pipelock v3.7 Upgrade Guide](/learn/pipelock-v370-upgrade/) · [Pi integration guide](https://github.com/pipelab-org/pipelock/blob/main/docs/guides/pi.md)

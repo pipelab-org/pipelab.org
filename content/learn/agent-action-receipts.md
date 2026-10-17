@@ -31,7 +31,7 @@ faq:
   - q: "Is the format proprietary to Pipelock?"
     a: "The Pipelock implementation is the current reference, but the format is published as a JSON Schema at pipelab.org/schemas/audit-packet-v0.schema.json, the conformance corpus is public at agent-egress-bench/receipts/v0/conformance/, and verifier implementations exist in Go, TypeScript, Rust, and Python. Receipts are open evidence, not vendor-locked logs. The longer arc is to lift the primitive into existing standards bodies (CoSAI, IETF, OASIS) rather than to keep it as a Pipelock-controlled format."
   - q: "What does a relying party do with the receipt?"
-    a: "Three steps. First, fetch the receipt and the producer's public key out-of-band. Second, run the verifier of your choice (pipelock verify-receipt, pipelock-verifier receipt, pipelock-verifier-ts receipt, pipelock-verifier-rs receipt, or pipelock-verify) with the key pinned. Third, read the exit code. The standalone verifiers use 0 accept, 1 reject, 2 verifier error, 64 usage error; the built-in pipelock verify-receipt uses 0 valid, 1 invalid or refused, 2 usage or configuration error. A relying party with the corpus README in hand can run the verifier on golden, malicious, and edge fixtures to confirm the verifier itself behaves correctly before trusting it on real receipts."
+    a: "Fetch the receipt and the producer's public key out-of-band, then run a verifier with that key pinned. Check the exit contract for that verifier and version. In v3.7.0, the built-in verifier and the standalone Go verifier report exit 3 when chain signatures and linkage are valid but the end is unproven. TypeScript and Rust 0.6.5 do the same. Python 0.4.1 checks receipt signatures and chain linkage but has no end-proof or group verification, so exit 0 can still mean a truncated chain. Use the verify-a-receipt walkthrough for commands, exit codes and conformance fixtures."
 ---
 
 Most agent security tools tell you what the agent did from inside the
@@ -123,8 +123,7 @@ Audit Packet on every CI run.
 
 ## How a third party verifies
 
-Four shipped verifiers expose the same receipt and chain verification
-surface across Go, TypeScript, Rust, and Python:
+Verifiers in Go, TypeScript, Rust, and Python check individual receipts and chain linkage. End-proof and group support differ by language and version:
 
 ```bash
 # Single receipt with the main Pipelock binary
@@ -140,11 +139,7 @@ pipelock-verifier chain evidence.jsonl --key signer.pub
 pipelock-verifier audit-packet ./audit-packet/ --key signer.pub
 ```
 
-The standalone verifiers share one exit-code contract: `0` valid, `1` invalid, `2` runtime
-error, `64` usage error. The built-in `pipelock verify-receipt` command differs: `0` valid, `1` invalid, malformed or refused, and `2` usage or configuration error. The
-[verify-a-receipt walkthrough](/learn/verify-a-receipt/) runs each
-command against the public conformance corpus with copy-paste-ready
-input and expected output.
+The standalone Go verifier v3.7.0 and TypeScript and Rust verifiers 0.6.5 use `0` valid, `1` invalid, `2` runtime error and `64` usage error. Chain verification also uses `3` for `VALID PREFIX, END UNPROVEN`. The built-in `pipelock verify-receipt` v3.7.0 uses `0` valid, `1` invalid, malformed or refused, `2` usage or configuration error, and `3` for an unproven chain end. Python 0.4.1 uses `0` for valid receipt signatures and linkage, `1` for verification failure and `2` for argument errors. It has no end-proof or group verification and can exit `0` when the chain's tail is missing. The [verify-a-receipt walkthrough](/learn/verify-a-receipt/) has commands, conformance fixtures and expected output for each verifier.
 
 ## What receipts replace
 

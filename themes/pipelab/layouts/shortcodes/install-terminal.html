@@ -11,6 +11,9 @@
 <div class="terminal-body" style="text-align: left;">
 {{- range $i, $m := $methods }}
   <div{{ if $i }} style="margin-top: 0.8rem;"{{ end }}><span class="comment"># {{ $m.short_label }}</span></div>
-  <div><span class="prompt">$ </span>{{ $m.command }}</div>
+  {{- range (split $m.command "\n") }}
+  <div><span class="prompt">$ </span>{{ . }}</div>
+  {{- end }}
+  {{- with $m.note }}<p class="comment">{{ . }}</p>{{ end }}
 {{- end }}
 </div>

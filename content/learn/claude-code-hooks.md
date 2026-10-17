@@ -7,7 +7,7 @@ date: 2026-03-15
 lastmod: 2026-05-05
 howto_steps:
   - name: Install Pipelock
-    text: Install the pipelock CLI with go install or Homebrew so the Claude integration commands are available.
+    text: Install the pipelock CLI from a pinned source build or Homebrew; see /install/ for prerequisites so the Claude integration commands are available.
   - name: Register the Claude Code hooks
     text: Run pipelock claude setup to write the hook configuration into Claude Code settings.
   - name: Restart Claude Code
@@ -18,7 +18,7 @@ faq:
   - q: "What does Pipelock's Claude Code integration do?"
     a: "Pipelock registers PreToolUse hooks with Claude Code that intercept Bash commands, WebFetch URLs, Write and Edit file operations, and all MCP tool calls before they execute. Each action is scanned for credential leaks (65 DLP patterns), prompt injection, and dangerous operations. Blocked actions return a clear explanation to both you and the agent."
   - q: "How do I install Pipelock for Claude Code?"
-    a: "Run 'pipelock claude setup' after installing the pipelock binary via Go (go install github.com/luckyPipewrench/pipelock/cmd/pipelock@latest) or Homebrew (brew install luckyPipewrench/tap/pipelock). The setup command writes hooks to ~/.claude/settings.json automatically. Restart Claude Code to activate."
+    a: "Run 'pipelock claude setup' after installing the pipelock binary from a pinned source build or Homebrew as documented at https://pipelab.org/install/. The setup command writes hooks to ~/.claude/settings.json automatically. Restart Claude Code to activate."
   - q: "Can I also wrap MCP servers through Pipelock?"
     a: "Yes. Hooks and MCP proxy wrapping are complementary. Hooks scan tool calls before execution. MCP proxy wrapping scans MCP server responses for prompt injection before they reach Claude Code's context. For maximum coverage, use both."
   - q: "Does Pipelock redact secrets in Claude Code MCP tool arguments?"

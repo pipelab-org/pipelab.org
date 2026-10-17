@@ -23,13 +23,18 @@ const index = YAML.parse(read("data/compare_index.yaml"));
 const categoryKeys = new Set(index.categories.map((category) => category.key));
 
 // Links back to Pipelock's own surfaces need no third-party source. Only the
-// Pipelock organization on GitHub counts as first party, not github.com at large.
+// publisher's GitHub organization and personal namespace count as first party.
 const firstPartyHosts = new Set(["pipelab.org"]);
-const firstPartyPrefixes = ["https://github.com/luckyPipewrench/"];
+const firstPartyPrefixes = ["https://github.com/luckyPipewrench/", "https://github.com/pipelab-org/"];
 function isFirstParty(url) {
   const host = new URL(url).hostname.replace(/^www\./, "");
   return firstPartyHosts.has(host) || firstPartyPrefixes.some((prefix) => url.startsWith(prefix));
 }
+test("first-party links include both publisher namespaces, not arbitrary GitHub repositories", () => {
+  for (const url of ["https://github.com/luckyPipewrench/agent-egress-bench", "https://github.com/pipelab-org/pipelock", "https://pipelab.org/proof/"]) assert.equal(isFirstParty(url), true, url);
+  for (const url of ["https://github.com/other/pipelock", "https://github.com/luckyPipewrench-other/pipelock", "https://github.com/pipelab-org-other/pipelock", "https://github.com.attacker.example/pipelab-org/pipelock"]) assert.equal(isFirstParty(url), false, url);
+});
+
 // Every way a Markdown body can carry an external link: inline, reference
 // definition, autolink, and raw HTML href.
 function externalLinks(body) {
@@ -195,7 +200,7 @@ test("the compare index data names the category, the Pipelock column, and live r
   // come from the Pipelock README, not the inventory, so the column must cite the
   // README at the same tag the inventory is pinned to, and the facts it states
   // must match what that README and the site's own pricing page say.
-  assert.equal(index.pipelock.source_url, `https://github.com/luckyPipewrench/pipelock/blob/${inventory.source.ref}/README.md`, "the Pipelock column must cite the README at the pinned inventory tag");
+  assert.equal(index.pipelock.source_url, `https://github.com/pipelab-org/pipelock/blob/${inventory.source.ref}/README.md`, "the Pipelock column must cite the README at the pinned inventory tag");
   assert.match(index.pipelock.boundary, /outside the agent process/, "boundary must state the mediator sits outside the agent process, as the README's capability separation section does");
   assert.match(index.pipelock.source, /Apache-2\.0/, "source must name the Apache-2.0 core licence");
   assert.match(index.pipelock.source, /ELv2/, "source must name the Enterprise licence");

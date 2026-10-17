@@ -43,12 +43,12 @@
         <p class="hp-stat-l">GitHub Stars</p>
       </div>
       <div class="hp-stat">
-        <p class="hp-stat-v" data-fx="count">{{ $stats.tests }}+</p>
-        <p class="hp-stat-l">Test Cases</p>
+        <p class="hp-stat-v" data-fx="count">{{ $stats.response_patterns }}</p>
+        <p class="hp-stat-l">Response Patterns</p>
       </div>
       <div class="hp-stat">
-        <p class="hp-stat-v" data-fx="count">&gt;{{ $stats.test_coverage_percent }}%</p>
-        <p class="hp-stat-l">Core Coverage</p>
+        <p class="hp-stat-v" data-fx="count">{{ $stats.presets }}</p>
+        <p class="hp-stat-l">Security Presets</p>
       </div>
       <div class="hp-stat">
         <p class="hp-stat-v" data-fx="count">Go</p>
@@ -134,7 +134,9 @@
                     data-event="ide_copy_install" data-event-placement="ide-tabs">copy</button>
           </div>
           <div class="hp-term-body">
-            <div class="hp-term-row"><span class="prompt">$ </span>{{ (index (partial "install/methods.html" (dict "only" (slice "go"))) 0).command }}</div>
+            {{ $sourceInstall := index (partial "install/methods.html" (dict "only" (slice "go"))) 0 }}
+            {{ range (split $sourceInstall.command "\n") }}<div class="hp-term-row"><span class="prompt">$ </span>{{ . }}</div>{{ end }}
+            <p class="comment">{{ $sourceInstall.note }}</p>
             <div style="margin-top: 0.6rem;"><span class="comment"># Wire <span id="hp-ide-name-comment">Claude Code</span> through Pipelock</span></div>
             <div class="hp-term-row"><span class="prompt">$ </span><span id="hp-ide-cmd">pipelock claude setup</span></div>
             <div style="margin-top: 0.6rem;"><span class="out">✓ proxy configured · scanner running</span></div>
@@ -340,7 +342,7 @@
           <span class="hp-proof-body">
             <span class="hp-proof-eyebrow"><span class="num">01</span> Monitor</span>
             <span class="hp-proof-title">Operator console</span>
-            <span class="hp-proof-desc">A read-only console over signed evidence: enforcement decisions, evidence integrity, exemptions, budgets, and fleet posture. Plus {{ $stats.prometheus_metrics }} Prometheus metrics.</span>
+            <span class="hp-proof-desc">A read-only console over signed evidence: enforcement decisions, evidence integrity, exemptions, budgets, and fleet posture. Prometheus metrics expose the monitored state.</span>
             <span class="hp-proof-link">See the console &rarr;</span>
           </span>
         </a>

@@ -25,7 +25,7 @@ faq:
   - q: "Why do verifiers care about signed receipts in 2026?"
     a: "Three converging pressures. EU AI Act Article 12 requires high-risk AI systems to be technically capable of automatic event logging, and Article 26(6) requires deployers to retain those logs for at least six months. DORA Article 17 requires ICT-related incident management evidence for financial entities. Internal procurement, SOC 2 auditors, and incident-response teams increasingly ask: when an agent did something you cannot easily reconstruct, can you prove what it did?"
   - q: "Can I run the verifier myself?"
-    a: "Yes. The Go CLI ships with Pipelock as 'pipelock verify-receipt', and a Python verifier is available on PyPI as 'pipelock-verify' invoked as 'python -m pipelock_verify'. Both verify receipt chains against a pinned public key and expose the same pass/fail contract: exit 0 on success, 1 on verification failure."
+    a: "The built-in CLI ships as 'pipelock verify-receipt'. Python's 'pipelock-verify' package runs as 'python -m pipelock_verify'. Both check receipt signatures and chain linkage against a pinned public key, but their completeness checks differ. Pipelock v3.7.0 reports exit 3 for a valid chain prefix whose end is unproven. Python 0.4.1 has no end-proof or group verification and can exit 0 when the chain's tail is missing. See the verify-a-receipt walkthrough for each version's commands and exit codes."
   - q: "Where do receipts come from in production?"
     a: "Wherever Pipelock is on the agent's path. The MCP proxy emits receipts for tool calls and responses. The forward proxy emits receipts for HTTP egress. The pipelock-agent-egress-action GitHub Action emits receipts inside its kernel-enforced network namespace. The flight recorder writes them to disk as JSONL, hash-chained, ready for any retention-controlled sink: S3 Object Lock, Loki retention policy, SIEM lifecycle, or a SOC 2 control repository."
 ---
@@ -156,7 +156,7 @@ pipelock-verifier receipt path/to/single-receipt.json --key <public-key-hex>
 pipelock-verifier audit-packet path/to/audit-packet-directory/
 ```
 
-The verifier commands return exit code `0` on success and `1` on failure. They slot into CI gates, SIEM ingest pipelines, and procurement-evidence reviews without writing custom code. For a copy-paste walkthrough that runs each command against the public conformance corpus, see [Verify a Pipelock receipt](/learn/verify-a-receipt/).
+In v3.7.0, the `pipelock-verifier` commands return `0` for valid and `1` for invalid. `chain` returns `3` for an intact chain whose end isn't proven, runtime errors return `2` and usage errors `64`. If you use an older binary, upgrade to v3.7.0 before relying on exit `3` to reject an unproven end. They slot into CI gates, SIEM ingest pipelines, and procurement-evidence reviews without writing custom code. For a copy-paste walkthrough that runs each command against the public conformance corpus, see [Verify a Pipelock receipt](/learn/verify-a-receipt/).
 
 ## What this evidence supports, and what it does not
 

@@ -17,6 +17,9 @@ faq:
     a: "Three things drawn from the NSA MCP security guidance: detection of tool parameters that try to extract the model's own context (system prompt, conversation history, tool list), detection of the lethal-trifecta tool-call chain where an untrusted source feeds a sensitive source feeds an external sink, and per-message signing with a replay cache on the MCP path."
 ---
 
+> Installation correction (2026-10-16): The `go install` command below doesn't install current Pipelock releases. Use the [current installation guide](/install/) for a release binary or a source build pinned to the release tag. The original post follows unchanged.
+
+
 Until v2.6, Pipelock made its allow-or-block call mostly on where an agent was going. Host, path, method. That catches a lot. It misses the case where the destination is fine and the operation is not: a GraphQL mutation buried in an allowed POST, one dangerous call inside a JSON batch of ten, a multipart upload to an API you trust for reads.
 
 v2.6 moves the decision down to the operation itself.

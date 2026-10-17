@@ -38,6 +38,12 @@ For most teams the honest answer is: nowhere. The network firewall logged an all
 
 Pipelock closes it at the enforcement point. The proxy already decides allow, warn, or block for every mediated request, response, WebSocket frame, and MCP tool call. Every decision worth a SOC's attention is emitted as a structured event you can route to whatever you already run.
 
+## v3.7 request correlation and interception timing
+
+`emit.correlation_header` copies a bounded, DLP-clean request header into webhook, syslog, CEF, OCSF and OTLP events on HTTP-capable transports. It doesn't enter receipts or local audit logs. Treat it as correlation data supplied by the caller, not proof of caller identity.
+
+The `intercept_http` event records response status and size, total duration, upstream-header wait when reached, and client cancellation. It honors `logging.include_allowed`. These timing records describe mediated TLS-intercepted requests; they don't measure direct traffic. Generated request IDs now use `req-<UUIDv7>`, so update parsers that assumed a counter. Read the [v3.7 upgrade guide](/learn/pipelock-v370-upgrade/).
+
 ## One envelope, three sinks
 
 Webhook (HTTP POST), syslog (RFC 5424), and OTLP (OpenTelemetry HTTP/protobuf) all carry the same JSON envelope, so your parser is written once:

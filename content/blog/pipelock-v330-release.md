@@ -17,6 +17,9 @@ faq:
     a: "No. It is opt-in through a keyring. A follower with no keyring keeps a plaintext queue and says so at startup and in pipelock check, so upgrades do not break. Set a keyring and existing records migrate on startup; after that a missing or invalid key fails closed."
 ---
 
+> Installation correction (2026-10-16): The `go install` command below doesn't install current Pipelock releases. Use the [current installation guide](/install/) for a release binary or a source build pinned to the release tag. The original post follows unchanged.
+
+
 An AI agent that loops, or one an attacker has pointed somewhere it should not go, burns real money. Every tool call is an API call, and API calls have a bill. A per-session cap looks like protection until the agent opens a new session and gets a clean budget, or renames itself and gets a clean budget, or restarts and gets a clean budget. The limit was never the limit.
 
 v3.3 fixes that reset path. Renaming the agent or opening a new session no longer buys a fresh allowance.

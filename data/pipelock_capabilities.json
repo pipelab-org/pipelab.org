@@ -1,17 +1,17 @@
 {
   "schema_version": 1,
   "source": {
-    "repository": "https://github.com/luckyPipewrench/pipelock",
-    "ref": "v3.6.0",
-    "commit": "3e868ac5d5b62d3a2790958542171143af8a0e38",
-    "manifest_sha256": "f62fd126d9b9ca212f1c95941e628fa2b65104131e48024ad02422bc15ffcca1",
-    "release_version": "3.6.0",
+    "repository": "https://github.com/pipelab-org/pipelock",
+    "ref": "v3.7.0",
+    "commit": "47c14c59b14f835f53971d22941b556f44f2baa0",
+    "manifest_sha256": "2c060722c5ba55a08fb5ea8ba4259be156af02a271c2ef3c21dbdf189e2084db",
+    "release_version": "3.7.0",
     "status": "release"
   },
   "tier_counts": {
-    "free": 15,
-    "pro": 22,
-    "enterprise": 25,
+    "free": 16,
+    "pro": 23,
+    "enterprise": 26,
     "assess": 1
   },
   "capabilities": [
@@ -137,7 +137,7 @@
       },
       "availability": {
         "scope": "platform_dependent",
-        "qualifier": "Kernel-enforced containment requires Linux, a private network namespace, nftables, and the managed identities. The recommended unprivileged systemd service emits signed pre-launch posture from a root signer that verifies its own managed namespace and proxy doorway; contain run instead signs a host-side preflight and also emits a post-session workspace statement."
+        "qualifier": "Kernel-enforced containment requires Linux, a private network namespace, nftables, and the managed identities. The recommended unprivileged systemd service emits signed pre-launch posture from a root signer that verifies its own managed namespace, live runtime mounts, and proxy doorway; contain run instead signs a host-side preflight and also emits a post-session workspace statement. Filesystem confinement is a separate containment.filesystem.mode setting. enforce hides the host filesystem with ProtectSystem=strict and ProtectHome=tmpfs and binds the agent home plus unexpired workspace grants. Every managed launch hides host /run and /dev/shm and binds only the namespace identity under /run; systemd may add its own read-only, empty mount-propagation directory at /run/systemd/incoming. Omitted or off otherwise retains host filesystem visibility. A process that can create a user namespace can remount, same-uid /proc stays visible, private /tmp is shared with the network-namespace anchor and its forwarders, and operator-written units are left unchanged."
       }
     },
     {
@@ -169,7 +169,39 @@
       },
       "availability": {
         "scope": "platform_dependent",
-        "qualifier": "Kernel isolation requires Linux user namespaces. Without them, best-effort network isolation only sets HTTP(S)_PROXY; seccomp adds restrictions only on linux/amd64."
+        "qualifier": "Kernel isolation requires Linux user namespaces. Without them, best-effort network isolation only sets HTTP(S)_PROXY; seccomp adds restrictions only on linux/amd64. Unix socket isolation uses Landlock ABI 9 for pathname sockets and ABI 6 for abstract sockets; older linux/amd64 kernels deny Unix socket creation and datagram socketpairs in the workload while retaining connected stream and sequenced-packet pairs and the proxy bridge."
+      }
+    },
+    {
+      "id": "cooperative-command-launch",
+      "group": "enforcement",
+      "name": "Cooperative command launch",
+      "summary": "Checks a running proxy before launching a command with proxy and CA environment settings.",
+      "tier": "Free",
+      "access_tiers": [
+        "free",
+        "pro",
+        "enterprise"
+      ],
+      "operator_entry_point": {
+        "kind": "command",
+        "value": "pipelock exec",
+        "source": {
+          "file": "internal/cli/exec/cmd.go",
+          "symbol": "newCmd"
+        }
+      },
+      "implementation": {
+        "file": "internal/cli/exec/cmd.go",
+        "symbol": "newCmd"
+      },
+      "detail": {
+        "family": "process-containment",
+        "path": "/capabilities/cooperative-command-launch/"
+      },
+      "availability": {
+        "scope": "platform_dependent",
+        "qualifier": "Steers cooperative Unix and Windows clients through a running proxy; programs can ignore environment settings. Use contain or sandbox for operating-system enforcement."
       }
     },
     {
@@ -628,7 +660,7 @@
       "id": "a2a-scanning",
       "group": "boundary",
       "name": "A2A protocol scanning",
-      "summary": "Scans Agent-to-Agent messages and Agent Cards for poisoning, drift, and session smuggling.",
+      "summary": "Scans Agent-to-Agent messages and Agent Cards for injection, credentials, poisoning, and drift.",
       "tier": "Free",
       "access_tiers": [
         "free",

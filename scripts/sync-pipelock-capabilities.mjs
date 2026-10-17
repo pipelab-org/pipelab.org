@@ -24,6 +24,7 @@ const GROUPS = new Map(Object.entries({
   "browser-shield": "boundary",
   "rule-bundles": "boundary",
   "agent-containment": "enforcement",
+  "cooperative-command-launch": "enforcement",
   "single-agent-sandbox": "enforcement",
   "emergency-kill-switch": "enforcement",
   "adaptive-enforcement": "enforcement",
@@ -154,7 +155,7 @@ export function buildSnapshot(manifestBytes, source, families = FAMILY_CONFIG.fa
   return {
     schema_version: 1,
     source: {
-      repository: "https://github.com/luckyPipewrench/pipelock",
+      repository: "https://github.com/pipelab-org/pipelock",
       ref: requiredString(source.ref, "source ref"),
       commit: requiredString(source.commit, "source commit"),
       manifest_sha256: createHash("sha256").update(manifestBytes).digest("hex"),

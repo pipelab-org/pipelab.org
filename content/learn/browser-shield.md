@@ -16,6 +16,14 @@ Browser Shield is a defensive response-rewrite layer. It runs after Pipelock fet
 
 It is opt-in. `browser_shield.enabled` defaults to `false`. The strictness, size limit, and individual rewrite toggles all have safe defaults once enabled.
 
+## v3.7 content types and complete responses
+
+Browser Shield follows the browser's last-valid-value rule for repeated `Content-Type` values. Relaxation requires agreement, and media policy still enforces the effective type derived from leading body bytes. JavaScript remains scanned without rewriting; no OCR or audio transcription is added.
+
+On TLS-intercepted traffic, eligible origin-issued links, query values and new object IDs can return to the issuing origin and session without entropy false blocks. DLP and other checks remain active. Reflection, incomplete sent history, session eviction and restart limit eligibility. XHTML doesn't supply HTML-link evidence.
+
+Forward, intercepted and reverse HTTP paths strip Range and cache-validator request headers and refuse origin `206` and `304` replies as `response_incomplete`. A Browser Shield exemption can't relax that refusal. See the [v3.7 upgrade guide](/learn/pipelock-v370-upgrade/) for client compatibility checks.
+
 ## What gets rewritten
 
 Browser Shield only touches content the pipeline can classify as shieldable:

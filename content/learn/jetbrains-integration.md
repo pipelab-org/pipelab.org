@@ -7,7 +7,7 @@ date: 2026-03-29
 lastmod: 2026-08-08
 howto_steps:
   - name: Install Pipelock
-    text: Install the pipelock CLI with go install or Homebrew so the JetBrains integration commands are available.
+    text: Install the pipelock CLI from a pinned source build or Homebrew; see /install/ for prerequisites so the JetBrains integration commands are available.
   - name: Wrap the Junie MCP servers
     text: Run pipelock jetbrains install to rewrite Junie MCP server entries through pipelock mcp proxy.
   - name: Restart the IDE
@@ -18,7 +18,7 @@ faq:
   - q: "What does Pipelock's JetBrains integration do?"
     a: "Pipelock wraps Junie MCP server configurations in ~/.junie/mcp/mcp.json through its MCP proxy. Every tool call, tool response, and tool description is scanned bidirectionally for credential leaks (65 DLP patterns), prompt injection (34 patterns with 6-pass normalization), and tool poisoning (full-schema inspection). Works with IntelliJ IDEA, PyCharm, WebStorm, GoLand, and any JetBrains IDE that uses Junie."
   - q: "How do I install Pipelock for JetBrains IDEs?"
-    a: "Run 'pipelock jetbrains install' after installing the pipelock binary via Go (go install github.com/luckyPipewrench/pipelock/cmd/pipelock@latest) or Homebrew (brew install luckyPipewrench/tap/pipelock). The command rewrites Junie's mcp.json to route each server through pipelock's MCP proxy. Restart the IDE to activate. Use 'pipelock jetbrains remove' to restore the original configuration from the preserved _pipelock metadata."
+    a: "Run 'pipelock jetbrains install' after installing the pipelock binary from a pinned source build or Homebrew as documented at https://pipelab.org/install/. The command rewrites Junie's mcp.json to route each server through pipelock's MCP proxy. Restart the IDE to activate. Use 'pipelock jetbrains remove' to restore the original configuration from the preserved _pipelock metadata."
   - q: "Does Pipelock emit signed evidence for JetBrains MCP traffic?"
     a: "Yes. As of Pipelock v2.2.0, when receipt signing is configured (flight_recorder.signing_key_path in the pipelock config), every tool call, tool response, and policy decision on the wrapped MCP path emits a chained Ed25519 action receipt. Receipts verify offline against a published Python verifier and a cross-implementation conformance suite. The receipt format is open, documented, and reproducible from another implementation."
   - q: "Does Pipelock redact secrets in Junie MCP tool arguments?"

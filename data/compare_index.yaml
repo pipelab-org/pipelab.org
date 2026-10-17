@@ -14,8 +14,8 @@ pipelock:
   pricing: "Free core; paid Pro and Enterprise tiers"
   deploy: "Single Go binary, self-hosted; container and Helm"
   pricing_url: "/pricing/"
-  source_label: "Pipelock README at v3.6.0"
-  source_url: "https://github.com/luckyPipewrench/pipelock/blob/v3.6.0/README.md"
+  source_label: "Pipelock README at v3.7.0"
+  source_url: "https://github.com/pipelab-org/pipelock/blob/v3.7.0/README.md"
 
 routes:
   - situation: "I need to explain the category to a security team"
@@ -76,5 +76,5 @@ featured:
 
 subscribe:
   - label: GitHub
-    url: https://github.com/luckyPipewrench/pipelock
+    url: https://github.com/pipelab-org/pipelock
     external: true

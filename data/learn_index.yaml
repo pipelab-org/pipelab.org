@@ -44,7 +44,7 @@ start_here:
 # release ships. The Hugo template falls back to .Site.Params.pipelock_version
 # if this block is missing.
 release:
-  version: "v3.6.0"
-  date: 2026-09-29
-  summary: "current Pipelock release; see GitHub releases for the v3.6.0 changelog"
-  notes_url: https://github.com/luckyPipewrench/pipelock/releases
+  version: "v3.7.0"
+  date: 2026-10-14
+  summary: "Parallel receipts, filesystem grants, local MCP identity, and upgrade actions"
+  notes_url: /blog/pipelock-v370-release/

@@ -50,8 +50,8 @@
       {{/* Stat strip — every value pulled from data/stats.yaml */}}
       <div class="about-stats" role="group" aria-label="Pipelock by the numbers">
         <div class="about-stat">
-          <p class="about-stat-value" data-fx="count">{{ $stats.tests }}<span class="about-stat-unit">+</span></p>
-          <p class="about-stat-label">Test cases</p>
+          <p class="about-stat-value" data-fx="count">{{ $stats.response_patterns }}</p>
+          <p class="about-stat-label">Response patterns</p>
         </div>
         <div class="about-stat">
           <p class="about-stat-value" data-fx="count">{{ $stats.releases }}</p>
@@ -139,7 +139,7 @@
           </p>
           <div class="about-ship-meta" aria-label="Pipelock metadata">
             <div class="about-ship-meta-cell"><span class="about-ship-meta-key">License</span><span class="about-ship-meta-value">Apache-2.0 core</span></div>
-            <div class="about-ship-meta-cell"><span class="about-ship-meta-key">Tests</span><span class="about-ship-meta-value about-ship-meta-value-accent">{{ $stats.tests }}+</span></div>
+            <div class="about-ship-meta-cell"><span class="about-ship-meta-key">Response patterns</span><span class="about-ship-meta-value about-ship-meta-value-accent">{{ $stats.response_patterns }}</span></div>
             <div class="about-ship-meta-cell"><span class="about-ship-meta-key">Releases</span><span class="about-ship-meta-value">{{ $stats.releases }}</span></div>
           </div>
         </article>
@@ -251,7 +251,7 @@
            data-event="pricing_click" data-event-placement="about-bottom">Pricing</a>
         <a class="about-pill site-link-pill" href="/learn/"
            data-event="learn_click" data-event-placement="about-bottom">Learn</a>
-        <a class="about-pill site-link-pill" href="https://github.com/luckyPipewrench/pipelock"
+        <a class="about-pill site-link-pill" href="https://github.com/pipelab-org/pipelock"
            target="_blank" rel="noopener noreferrer"
            data-event="github_click" data-event-placement="about-bottom">
           GitHub

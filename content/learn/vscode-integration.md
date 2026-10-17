@@ -7,7 +7,7 @@ date: 2026-03-17
 lastmod: 2026-05-05
 howto_steps:
   - name: Install Pipelock
-    text: Install the pipelock CLI with go install or Homebrew so the VS Code integration commands are available.
+    text: Install the pipelock CLI from a pinned source build or Homebrew; see /install/ for prerequisites so the VS Code integration commands are available.
   - name: Wrap the MCP servers
     text: Run pipelock vscode install to rewrite your MCP configuration through pipelock mcp proxy.
   - name: Restart VS Code
@@ -18,7 +18,7 @@ faq:
   - q: "What does Pipelock's VS Code integration do?"
     a: "Pipelock rewrites your .vscode/mcp.json to route all MCP servers through its scanning proxy. Tool arguments are scanned for credential leaks (65 DLP patterns), tool responses are scanned for prompt injection, and tool descriptions are checked for poisoned instructions. All traffic is scanned bidirectionally before it reaches or leaves the MCP server."
   - q: "How do I install Pipelock for VS Code?"
-    a: "Run 'pipelock vscode install' after installing the pipelock binary via Go (go install github.com/luckyPipewrench/pipelock/cmd/pipelock@latest) or Homebrew (brew install luckyPipewrench/tap/pipelock). The command rewrites .vscode/mcp.json to wrap each MCP server through pipelock's proxy. Restart VS Code to activate."
+    a: "Run 'pipelock vscode install' after installing the pipelock binary from a pinned source build or Homebrew as documented at https://pipelab.org/install/. The command rewrites .vscode/mcp.json to wrap each MCP server through pipelock's proxy. Restart VS Code to activate."
   - q: "How is VS Code integration different from Claude Code or Cursor?"
     a: "Claude Code and Cursor have hooks systems that intercept actions before they execute. VS Code does not have hooks, so Pipelock wraps MCP servers through its MCP proxy instead. The result is the same: all MCP traffic is scanned bidirectionally. VS Code integration covers MCP tool calls; use HTTPS_PROXY for HTTP traffic scanning."
   - q: "Does Pipelock redact secrets in VS Code MCP tool arguments?"

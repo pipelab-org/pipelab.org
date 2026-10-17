@@ -8,6 +8,9 @@ tags: ["ai-security", "data-exfiltration", "mcp", "pipelock"]
 blog_cat: "mcp"
 ---
 
+> Installation correction (2026-10-16): The `go install` command below doesn't install current Pipelock releases. Use the [current installation guide](/install/) for a release binary or a source build pinned to the release tag. The original post follows unchanged.
+
+
 [Snyk just published research](https://snyk.io/blog/openclaw-skills-credential-leaks-research/) revealing a major ClawHub security problem: 283 out of 3,984 skills, roughly 7.1% of the entire registry, contain critical flaws that expose API keys, passwords, and even credit card numbers through the LLM context window.
 
 These aren't malware. They're functional, popular skills that work exactly as designed. The problem is the design itself.

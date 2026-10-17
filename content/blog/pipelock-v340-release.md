@@ -17,6 +17,9 @@ faq:
     a: "Use pipelock contain upgrade. It checks the new binary and managed configuration, updates the integrity pin, and verifies that the running service matches the installed binary."
 ---
 
+> Installation correction (2026-10-16): The `go install` command below doesn't install current Pipelock releases. Use the [current installation guide](/install/) for a release binary or a source build pinned to the release tag. The original post follows unchanged.
+
+
 Trust labels should be able to make policy stricter. They should never turn a block into a warning.
 
 Pipelock v3.4 closes that gap. It also scans reverse-proxy media request bodies that older releases skipped, tightens several credential-detection paths, and gives contained Linux hosts an upgrade command that checks the binary, config, integrity pin, and running service together.

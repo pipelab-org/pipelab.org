@@ -22,6 +22,11 @@
   </div>
 
   <div id="results-landing" class="showpiece-page" style="display:none;">
+    {{ range site.Data.historical_artifacts.artifacts }}
+      {{ if eq .path "static/gauntlet/evidence/latest-verified.json" }}
+        <p id="gauntlet-historical-measurement" class="gr-chapter-sub">Historical measurement: Pipelock v{{ .pipelock_version }}. This result does not measure Pipelock v{{ site.Params.pipelock_version }}.</p>
+      {{ end }}
+    {{ end }}
 
     <!-- The newest published record, shown the way /proof/ shows its evidence:
          the real record on one side with the scan sweeping it, the reading of

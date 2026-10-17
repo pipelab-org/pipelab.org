@@ -36,7 +36,15 @@ tags:
   - operator
   - evidence
 ---
-`pipelock contain` runs an AI agent on your Linux host in a way the agent can't quietly leave. The agent gets its own network with no route off the machine, and the only ways out are the Pipelock proxy and services you name. This guide walks the whole lifecycle in the order you'd run it. The full flag reference is in the [`contain` CLI doc](https://github.com/luckyPipewrench/pipelock/blob/main/docs/contain-cli.md).
+`pipelock contain` runs an AI agent on your Linux host in a way the agent can't quietly leave. The agent gets its own network with no route off the machine, and the only ways out are the Pipelock proxy and services you name. This guide walks the whole lifecycle in the order you'd run it. The full flag reference is in the [`contain` CLI doc](https://github.com/pipelab-org/pipelock/blob/main/docs/contain-cli.md).
+
+## v3.7 filesystem grants and socket isolation
+
+`containment.filesystem.mode: enforce` gives managed launches a restricted filesystem view. It hides other home directories and signing material, binds unexpired workspace grants with their declared access, and refuses launch unless a canary confirms the profile took effect. New installs select `enforce`; existing configs that omit the setting keep filesystem enforcement off.
+
+Managed launches also hide host `/run` and `/dev/shm` and verify the runtime mount evidence. Reinstall containment with the new binary and restart running services and sessions to adopt it. A binary swap alone doesn't update their mounts. Operator-written units are left unchanged.
+
+A process able to create a user namespace can remount, same-user `/proc` remains visible, and private `/tmp` is shared with the namespace anchor and its forwarders. Socket access retains the documented boundary. The grant list alone doesn't prove filesystem isolation; verify the live launch. Read the [v3.7 upgrade guide](/learn/pipelock-v370-upgrade/) and [host containment reference](https://github.com/pipelab-org/pipelock/blob/main/docs/contain-cli.md).
 
 ## What containment is
 
@@ -71,7 +79,7 @@ Add `--dry-run` first to print the planned steps without changing anything. Each
 
 Before touching the host, install runs `pipelock check` from the binary it is about to install against the config it is about to install. If that binary can parse the config but can't enforce it, for example named `agents.<profile>` entries on a build without agent profiles, install refuses before it replaces anything.
 
-Hosts installed before v3.6.0 need `sudo pipelock contain install` with the v3.6 binary to move into the private network namespace. `contain upgrade` does not do that migration. See the [v3.6 upgrade guide](/learn/pipelock-v360-upgrade/).
+After updating to v3.7.0, run `sudo pipelock contain install` with the new binary to refresh managed units and wrappers, then restart existing agent services and sessions. A binary swap alone doesn't update the mounts of a running agent. See the [v3.7 upgrade guide](/learn/pipelock-v370-upgrade/); the [v3.6 upgrade guide](/learn/pipelock-v360-upgrade/) retains the earlier private-network-namespace migration.
 
 ## Register a tool
 
@@ -85,7 +93,7 @@ Use `--target` to pin an explicit absolute path when the tool isn't resolvable f
 
 ## Grant a workspace
 
-The agent can't see your project directories until you grant one. By default the grant is read-only inside the directory and execute-only on its parents.
+Workspace grants declare the project access. Hiding other host paths also requires `containment.filesystem.mode: enforce`; an existing config that omits it keeps that filesystem restriction off. By default the grant is read-only inside the directory and execute-only on its parents.
 
 ```bash
 sudo pipelock contain grant-workspace /home/alice/src/my-project --mode read-write --reason "sprint-42 refactor" --expires 336h
@@ -203,7 +211,7 @@ Both exit 0 when everything passes, 1 on a failure, and 2 when a check was skipp
 
 ```bash
 sudo pipelock contain upgrade
-sudo pipelock contain upgrade --version v3.6.0
+sudo pipelock contain upgrade --version v3.7.0
 ```
 
 Upgrade validates the managed config, downloads and verifies the release through the deployed binary, re-pins the integrity hash, restarts the service and runs `contain verify`. Any failure after the binary is replaced triggers rollback attempts for the binary and its pin. Exit 0 means every probe passed, 1 means it failed, and 2 is a precondition error. After a failure, read any rollback errors and verify the resulting binary and service state.
@@ -227,4 +235,4 @@ Rollback undoes install: wrappers, the sudoers entry, nftables rules, the system
 - **Linux only.** `contain run` doesn't run on other platforms.
 - **A posture capsule grades the boundary as observed by the kernel at attestation time.** It isn't a continuous kernel-enforced guarantee.
 
-Next: [What changed in v3.6](/learn/pipelock-v360-upgrade/).
+Next: [Upgrade to v3.7](/learn/pipelock-v370-upgrade/).

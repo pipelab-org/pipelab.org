@@ -22,6 +22,9 @@ faq:
     a: "No. The evidence viewer is free. Enterprise adds the fleet dashboard and managed operator workflows; the verifier story stays inspectable."
 ---
 
+> Installation correction (2026-10-16): The `go install` command below doesn't install current Pipelock releases. Use the [current installation guide](/install/) for a release binary or a source build pinned to the release tag. The original post follows unchanged.
+
+
 v3.1 is the release where Pipelock stops sounding like a proxy and starts looking like an operator system.
 
 The core job is still the same: put a hard boundary between the agent and the network, scan the actual bytes that cross it, and fail closed when the request is unsafe. The change in v3.1 is the surface around that boundary. When a block happens, an operator can inspect the decision, trace the evidence, and verify the receipt instead of asking the agent what it thinks happened.

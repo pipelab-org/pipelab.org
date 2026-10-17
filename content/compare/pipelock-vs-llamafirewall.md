@@ -58,7 +58,7 @@ They operate at different layers. One watches the wire. The other watches the mo
 | **Works with hosted agents** | Yes, proxy setting or MCP wrapping | Needs pipeline access; no hosted-agent integration documented |
 | **Process sandbox** | Landlock, seccomp, and network namespaces on Linux; sandbox-exec on macOS | No |
 | **Signed receipts** | Yes, Ed25519, verifiable offline | No |
-| **Runtime dependencies** | None; 27 direct build dependencies | Python runtime, PyTorch, model weights |
+| **Runtime dependencies** | None; 26 direct build dependencies | Python runtime, PyTorch, model weights |
 | **License** | Apache-2.0 core; Enterprise under ELv2 | MIT |
 
 ## Where LlamaFirewall is stronger
@@ -108,4 +108,4 @@ Those failures are independent of each other, which is the argument for running 
 - [Agent firewall vs guardrails](/compare/agent-firewall-vs-guardrails/): the category-level version of this comparison
 - [Pipelock vs Lakera Guard](/compare/pipelock-vs-lakera-guard/): a commercial classifier at the same boundary
 - [MCP security](/learn/mcp-security/): tool poisoning and rug-pulls
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

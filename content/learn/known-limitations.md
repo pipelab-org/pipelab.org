@@ -22,7 +22,7 @@ faq:
 
 Pipelock publishes what it cannot catch. A security control that claims full coverage is the one to distrust, and a reviewer needs the boundaries drawn to decide what residual risk is acceptable. This page is the standing register. It tracks the documented gaps and, per release, the false-positive and true-positive picture.
 
-The authoritative engineering source is the [bypass resistance doc](https://github.com/luckyPipewrench/pipelock/blob/main/docs/bypass-resistance.md), which lists the evasion techniques Pipelock handles alongside the ones it does not. This page is the operator-facing summary.
+The authoritative engineering source is the [bypass resistance doc](https://github.com/pipelab-org/pipelock/blob/main/docs/bypass-resistance.md), which lists the evasion techniques Pipelock handles alongside the ones it does not. This page is the operator-facing summary.
 
 ## Out of scope
 
@@ -56,8 +56,14 @@ When a benchmark run is recorded, the measured figures are published here: the b
 
 No measured snapshot has been recorded here yet.
 
+## v3.7 evidence and launch limits
+
+[Cooperative command launch](/learn/pipelock-exec/) sets proxy and CA environment variables, which a command can ignore. Operating-system enforcement still needs containment, sandboxing or network policy. Containment filesystem enforcement is off for existing configs that omit the new mode. Enforce mode retains user-namespace remount, same-user process, socket and operator-written-unit limits.
+
+[Parallel receipt chains](/learn/parallel-receipt-chains/) need complete-group verification. An open prefix isn't a complete run, and a recovery seal doesn't repair damaged evidence. Native AEL streams have a 256 MiB verifier ceiling the writer doesn't cap. Receipt content scanning checks whole values but uses bounded fragment reassembly and excludes process-proven generated IDs. Review the [full receipt content boundary](https://github.com/pipelab-org/pipelock/blob/main/docs/guides/receipt-verification.md#receipt-content-boundary).
+
 ## Where to go next
 
 - [What Pipelock claims and does not claim](/learn/non-bypass-doctrine/) for the doctrine behind this register
 - [Defining the agent security category](/learn/agent-security-model/) for the four functions these gaps map to
-- [Bypass resistance (engineering source)](https://github.com/luckyPipewrench/pipelock/blob/main/docs/bypass-resistance.md) for the technique-by-technique detail
+- [Bypass resistance (engineering source)](https://github.com/pipelab-org/pipelock/blob/main/docs/bypass-resistance.md) for the technique-by-technique detail

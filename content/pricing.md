@@ -60,7 +60,7 @@ faq:
   <div class="pricing-feat-block">
     <p class="pricing-feat-head"><span class="pricing-feat-num">02</span> Enforce</p>
     <ul class="pricing-feat-list">
-      <li>Kill switch with 6 independent sources (fail-closed)</li>
+      <li>Kill switch with {{< stat key="kill_switch_sources" >}} independent sources (fail-closed)</li>
       <li>Adaptive enforcement + human-in-the-loop approvals</li>
       <li>MCP tool policy: warn, block, redirect, defer</li>
       <li>Kernel-enforced egress containment (nftables owner-match)</li>
@@ -89,7 +89,7 @@ faq:
   <p class="pricing-tier-aud"><strong>Preview:</strong> Guard is a Linux HTTP/HTTPS egress-guard preview. It is excluded from the released capability manifest.</p>
 
   <div class="pricing-tier-cta">
-    <a href="https://github.com/luckyPipewrench/pipelock" class="btn btn-ghost" target="_blank" rel="noopener noreferrer">Get Started</a>
+    <a href="https://github.com/pipelab-org/pipelock" class="btn btn-ghost" target="_blank" rel="noopener noreferrer">Get Started</a>
     <p class="pricing-tier-aud"><a href="/pipelock/">See all capabilities &rarr;</a></p>
   </div>
 </article>
