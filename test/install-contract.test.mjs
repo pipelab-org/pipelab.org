@@ -322,6 +322,15 @@ test("CommonMark line endings preserve fences, front matter and exact install pi
 
 // CommonMark 0.31.2 sections 4.3 and 4.6: setext headings delimit sections,
 // while HTML block types 1-5 retain blank lines until their closing marker.
+test("thematic breaks and orphan underlines preserve one install section", () => {
+  for (const marker of ["---", "- - -", "===", "=", "--", "-"]) {
+    for (const gap of ["", "\n"]) {
+      const source = raw.replace("### Homebrew", `${gap}${marker}\n### Homebrew`);
+      assert.deepEqual(auditRawInstallSource(source, "3.7.0"), [], JSON.stringify({ marker, gap }));
+    }
+  }
+});
+
 test("setext headings cannot borrow the pin from an earlier install section", () => {
   for (const underline of ["=", "====", "-", "-----", "   ===  ", "  ---\t"]) {
     const source = `## Earlier\n${clone}\n${build}\n\nLater\n${underline}\n${brew}\n`;

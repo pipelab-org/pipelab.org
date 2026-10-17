@@ -183,7 +183,7 @@ function sections(source, examples = false) {
     // Section 4.3: an underline ends the heading it belongs to. Keeping it in that
     // section stops the next one from starting at an orphan "=" run, which the
     // inner pass would read as paragraph text and so lose the closed block.
-    if (!fence && /^ {0,3}(?:=+|-+)[ \t]*$/.test(line)) {
+    if (!fence && !followsBlock && /^ {0,3}(?:=+|-+)[ \t]*$/.test(line)) {
       result.push(current);
       current = "";
     }
