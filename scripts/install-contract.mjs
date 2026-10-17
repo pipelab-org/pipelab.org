@@ -28,6 +28,10 @@ const historicalInstallPosts = new Set([
 // The Go-module command is covered by the correction check in the audit below.
 const historicalBodyCommands = new Set(["unsupported go install", "Homebrew install"]);
 
+// CommonMark 0.31.2 section 2.1 permits LF, CRLF and CR line endings.
+const normalizeLineEndings = source => source.replace(/\r\n?/g, "\n");
+const readSource = file => normalizeLineEndings(readFileSync(file, "utf8"));
+
 const commandPatterns = [
   { label: "unsupported go install", pattern: /\bgo\s+install\s+(?:\\\s*)?github\.com\/(?:luckypipewrench|pipelab-org)\/pipelock(?:\/cmd\/pipelock)?(?:@[^\s`"'<)]+)?/gi },
   { label: "source clone", pattern: /\bgit\s+clone\b[^\n`]*?github\.com\/(?:luckypipewrench|pipelab-org)\/pipelock[^\s`"\'<>);&|]*/gi },
@@ -101,7 +105,7 @@ function sections(source, examples = false) {
     } else if (/\S/.test(line)) {
       previous = line;
     }
-    if (!fence && (/^#{1,2}\s+/.test(line) || /^\s*<h2\b/i.test(line))) {
+    if (!fence && (/^ {0,3}#{1,2}\s+/.test(line) || /^\s*<h2\b/i.test(line))) {
       result.push(current);
       current = "";
     }
@@ -135,6 +139,7 @@ export function auditInstallData(source) {
 }
 
 export function auditRawInstallSource(source, version) {
+  source = normalizeLineEndings(source);
   const issues = [];
   if (!/^\d+\.\d+\.\d+(?:-[\w.-]+)?$/.test(version || "")) return ["missing or invalid configured release version"];
   const expected = sourceBuildTemplate.replace("VERSION", version);
@@ -157,11 +162,11 @@ export function auditInstallContract({ repoRoot, contentFiles, templateFiles, ve
   const issues = [];
   const dataPath = path.join(repoRoot, "data", "install.yaml");
   if (!existsSync(dataPath)) issues.push("data/install.yaml: missing shared install source");
-  else issues.push(...auditInstallData(readFileSync(dataPath, "utf8")));
+  else issues.push(...auditInstallData(readSource(dataPath)));
 
   const blogDir = path.join(repoRoot, "content", "blog") + path.sep;
   for (const file of contentFiles) {
-    const source = readFileSync(file, "utf8");
+    const source = readSource(file);
     const label = path.relative(repoRoot, file);
     const historicalBody = file.startsWith(blogDir) && historicalInstallPosts.has(path.relative(blogDir, file));
     if (historicalBody) {
@@ -180,14 +185,14 @@ export function auditInstallContract({ repoRoot, contentFiles, templateFiles, ve
 
   for (const file of templateFiles) {
     if (file.includes(`${path.sep}partials${path.sep}install${path.sep}`) || file.includes(`${path.sep}shortcodes${path.sep}install-`)) continue;
-    const match = commandMatches(readFileSync(file, "utf8"))[0];
+    const match = commandMatches(readSource(file))[0];
     if (match) issues.push(`${path.relative(repoRoot, file)}: hand-written ${match.label} command in a template; use the shared install partial`);
   }
 
   for (const file of ["static/llms.txt", "static/llms-full.txt"]) {
     const fullPath = path.join(repoRoot, file);
     if (!existsSync(fullPath)) continue;
-    const source = readFileSync(fullPath, "utf8");
+    const source = readSource(fullPath);
     if (file.endsWith("llms-full.txt") && !source.includes(sourceBuildTemplate.replace("VERSION", version || ""))) {
       issues.push(`${file}: missing current pinned source-build instructions`);
     }

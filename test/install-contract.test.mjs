@@ -257,3 +257,30 @@ test("front matter and templates are not Markdown and keep whole-text pairing", 
   writeFileSync(f.guide, `---\nfaq: |\n  ${source.replaceAll("\n", "\n  ")}\n---\nBody.\n`);
   assert.match(f.audit().join("\n"), /frontmatter contains source/);
 });
+
+test("indented ATX headings keep raw installation sections independent", () => {
+  for (const indent of ["", " ", "  ", "   "]) {
+    const source = `## Earlier\n${clone}\n${build}\n${indent}## Installation\n${brew}\n`;
+    assert.match(auditRawInstallSource(source, "3.7.0").join("\n"), /install section must include/, JSON.stringify(indent));
+  }
+  assert.deepEqual(auditRawInstallSource(`## Earlier\n${clone}\n${build}\n    ## Code comment\n${brew}\n`, "3.7.0"), []);
+});
+
+test("CommonMark line endings preserve fences, front matter and exact install pins", t => {
+  const f = fixture(t);
+  const unpinned = "git clone https://github.com/pipelab-org/pipelock.git";
+  for (const ending of ["\r\n", "\r"]) {
+    const convert = source => source.replaceAll("\n", ending);
+    assert.deepEqual(auditRawInstallSource(convert(raw), "3.7.0"), []);
+    f.write("static/llms-full.txt", convert(raw));
+    writeFileSync(f.guide, convert('---\ntitle: Current\n---\n{{< install-block >}}\n'));
+    writeFileSync(f.article, convert(`${installationCorrection}\n${oldCommand}\n`));
+    assert.deepEqual(f.audit(), []);
+    const fenced = `\x60\x60\x60bash\n${unpinned}\n\ncd pipelock\nmake install\n\x60\x60\x60\n`;
+    writeFileSync(f.guide, convert(fenced));
+    assert.match(f.audit().join("\n"), /hand-written source/);
+    assert.ok(auditRawInstallSource(convert(fenced), "3.7.0").length);
+    writeFileSync(f.guide, convert(`---\nfaq: "${oldCommand}"\n---\nBody.\n`));
+    assert.match(f.audit().join("\n"), /frontmatter contains unsupported go install/);
+  }
+});
