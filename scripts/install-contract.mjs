@@ -28,6 +28,10 @@ const historicalInstallPosts = new Set([
 // The Go-module command is covered by the correction check in the audit below.
 const historicalBodyCommands = new Set(["unsupported go install", "Homebrew install"]);
 
+// CommonMark 0.31.2 section 2.1 permits LF, CRLF and CR line endings.
+const normalizeLineEndings = source => source.replace(/\r\n?/g, "\n");
+const readSource = file => normalizeLineEndings(readFileSync(file, "utf8"));
+
 const commandPatterns = [
   { label: "unsupported go install", pattern: /\bgo\s+install\s+(?:\\\s*)?github\.com\/(?:luckypipewrench|pipelab-org)\/pipelock(?:\/cmd\/pipelock)?(?:@[^\s`"'<)]+)?/gi },
   { label: "source clone", pattern: /\bgit\s+clone\b[^\n`]*?github\.com\/(?:luckypipewrench|pipelab-org)\/pipelock[^\s`"\'<>);&|]*/gi },
@@ -57,6 +61,30 @@ function commandMatches(source, markdown = false) {
   });
 }
 
+// CommonMark 0.31.2 section 4.6, types 6 and 7: block names from the condition-6
+// list, or any other complete tag alone on its line. Both end at a blank line.
+const htmlBlockNames = "address|article|aside|base|basefont|blockquote|body|caption|center|col|colgroup|dd|details|dialog|dir|div|dl|dt|fieldset|figcaption|figure|footer|form|frame|frameset|h[1-6]|head|header|hr|html|iframe|legend|li|link|main|menu|menuitem|nav|noframes|ol|optgroup|option|p|param|search|section|summary|table|tbody|td|tfoot|th|thead|title|tr|track|ul";
+const rawTextTags = "(?!(?:script|style|pre|textarea)(?![A-Za-z0-9-]))";
+const tagName = "[A-Za-z][A-Za-z0-9-]*";
+const tagAttribute = "[ \\t]+[A-Za-z_:][A-Za-z0-9_.:-]*(?:[ \\t]*=[ \\t]*(?:[^ \\t\"'=<>`]+|'[^']*'|\"[^\"]*\"))?";
+const htmlBlockSix = new RegExp(`^ {0,3}</?(?:${htmlBlockNames})(?:[ \\t]|/?>|$)`, "i");
+const htmlBlockSeven = new RegExp(`^ {0,3}(?:<${rawTextTags}${tagName}(?:${tagAttribute})*[ \\t]*/?>|</${rawTextTags}${tagName}[ \\t]*>)[ \\t]*$`, "i");
+// Type 1 opens before a space, tab, ">" or the end of the line; "/>" is the one
+// extra form Hugo's renderer accepts everywhere. A bare "/" does not open a block.
+const htmlBlockOne = /^ {0,3}<(?:script|pre|style|textarea)(?:[ \t>]|\/>|$)/i;
+// Hugo renders content with goldmark, which opens raw HTML blocks on a few shapes
+// the specification does not: a form feed after a type 1 name, "meta" and spaces
+// after "</" for type 6, and a closing tag ending "/>" or naming textarea for type 7.
+// Only example pairing follows it: there a missed block splits a real install, while
+// the outer raw pass has no renderer and keeps the specification so a heading stays a heading.
+const rendererBlockOne = /^ {0,3}<(?:script|pre|style|textarea)\f/i;
+const rendererBlockSix = new RegExp(`^ {0,3}<(?:/ *)?(?:${htmlBlockNames}|meta)(?: |/?>|$)`, "i");
+// Spaces after "</" also make goldmark treat the closing tag as an opening tag with attributes.
+const notRenderedRaw = "(?!(?:script|style|pre)(?![A-Za-z0-9-]))";
+const rendererBlockSeven = new RegExp(`^ {0,3}(?:</ *${notRenderedRaw}${tagName} */?>|</ +${notRenderedRaw}${tagName}(?:${tagAttribute})+ */?>)[ \\t]*$`, "i");
+// Section 4.1: three or more matching -, * or _ characters, spaces and tabs allowed between.
+const thematicBreak = /^ {0,3}(?:(?:\*[ \t]*){3,}|(?:-[ \t]*){3,}|(?:_[ \t]*){3,})$/;
+
 function frontMatter(source) {
   return source.match(/^---\n([\s\S]*?)\n---\n?/)?.[1] || "";
 }
@@ -71,12 +99,58 @@ function sections(source, examples = false) {
   const result = [];
   let current = "";
   let fence = null;
+  let htmlEnd = null;
   // Callers pass text whose front matter is already removed. Stripping again
   // would drop a leading thematic-break pair and every command between them.
   const lines = source.split("\n");
-  const indented = line => /^(?: {4}|\t)\S/.test(line);
+  // Section 2.2: a tab advances to the next multiple of four, so up to three
+  // spaces before a tab are still four columns of indentation.
+  const indented = line => /^(?: {4}| {0,3}\t)/.test(line);
+  // Section 2.1: only spaces and tabs make a line blank; other Unicode
+  // whitespace (NBSP, form feed, U+3000) is ordinary paragraph text.
+  const blank = line => /^[ \t]*$/.test(line);
+  let htmlBlock = false;
   let previous = "";
+  let closed = true;
   for (const [index, line] of lines.entries()) {
+    // A blank line, heading, thematic break, closing fence or HTML block end cannot
+    // leave a paragraph open, and neither can an indented code line that began no
+    // paragraph. A "=" run after a closed block is paragraph text, not an underline,
+    // and so is "--"; a single "-" is an empty list item.
+    const followsBlock = closed;
+    closed = blank(line) || /^ {0,3}#{1,6}(?:[ \t]|$)/.test(line) || thematicBreak.test(line)
+      || (/^ {0,3}(?:=+|-+)[ \t]*$/.test(line) && (!followsBlock || /^ {0,3}-[ \t]*$/.test(line)))
+      || (followsBlock && indented(line));
+    // Section 4.6 types 1-5 end at a marker, not a blank line. Types 6 and 7
+    // end at a blank line, and inside them headings and fences are raw text.
+    if (htmlBlock && blank(line)) htmlBlock = false;
+    if (!fence && !htmlEnd && !htmlBlock) {
+      htmlEnd = htmlBlockOne.test(line) || (examples && rendererBlockOne.test(line)) ? /<\/(?:script|pre|style|textarea)>/i
+        : /^ {0,3}<!--/.test(line) ? /-->/
+          : /^ {0,3}<\?/.test(line) ? /\?>/
+            : /^ {0,3}<![A-Za-z]/.test(line) ? />/
+              : /^ {0,3}<!\[CDATA\[/.test(line) ? /\]\]>/ : null;
+      // Type 7 cannot interrupt a paragraph, so it only starts where none can be open.
+      htmlBlock = !htmlEnd && (htmlBlockSix.test(line) || (followsBlock && htmlBlockSeven.test(line))
+        || (examples && (rendererBlockSix.test(line) || (followsBlock && rendererBlockSeven.test(line)))));
+      if ((htmlEnd || htmlBlock) && examples) { result.push(current); current = ""; }
+    }
+    if (htmlEnd) {
+      current += `${line}\n`;
+      if (htmlEnd.test(line)) {
+        htmlEnd = null;
+        closed = true;
+        if (examples) { result.push(current); current = ""; }
+      }
+      continue;
+    }
+    if (htmlBlock) {
+      // A rendered h1 or h2 still opens a new section whatever its indentation.
+      if (/^\s*<h[12]\b/i.test(line)) { result.push(current); current = ""; }
+      current += `${line}\n`;
+      previous = line;
+      continue;
+    }
     // CommonMark 0.31.2 section 4.5 (fenced code blocks).
     const marker = line.match(/^ {0,3}(`{3,}|~{3,})(.*)$/);
     if (marker) {
@@ -84,12 +158,17 @@ function sections(source, examples = false) {
         if (examples) { result.push(current); current = ""; }
         fence = { character: marker[1][0], length: marker[1].length };
       } else if (fence && marker[1][0] === fence.character
-        && marker[1].length >= fence.length && /^\s*$/.test(marker[2])) {
+        && marker[1].length >= fence.length && blank(marker[2])) {
         fence = null;
+        closed = true;
         if (examples) { result.push(current); current = ""; continue; }
       }
     }
-    if (examples && !fence && /^\s*$/.test(line)) {
+    if (examples && !fence && thematicBreak.test(line)) {
+      // Section 4.1: a thematic break separates rendered article examples.
+      result.push(current);
+      current = "";
+    } else if (examples && !fence && blank(line)) {
       // Section 4.4: an indented code chunk continues across blank lines.
       const next = lines.slice(index + 1).find(candidate => /\S/.test(candidate));
       if (!(indented(previous) && next !== undefined && indented(next))) {
@@ -99,11 +178,19 @@ function sections(source, examples = false) {
     } else if (/\S/.test(line)) {
       previous = line;
     }
-    if (!fence && (/^#{1,2}\s+/.test(line) || /^\s*<h2\b/i.test(line))) {
+    // Section 4.2: the # sequence may be followed by the end of the line.
+    if (!fence && /^ {0,3}#{1,2}(?:[ \t]|$)/.test(line)) {
       result.push(current);
       current = "";
     }
     current += `${line}\n`;
+    // Section 4.3: an underline ends the heading it belongs to. Keeping it in that
+    // section stops the next one from starting at an orphan "=" run, which the
+    // inner pass would read as paragraph text and so lose the closed block.
+    if (!fence && !followsBlock && /^ {0,3}(?:=+|-+)[ \t]*$/.test(line)) {
+      result.push(current);
+      current = "";
+    }
   }
   result.push(current);
   return result;
@@ -133,6 +220,7 @@ export function auditInstallData(source) {
 }
 
 export function auditRawInstallSource(source, version) {
+  source = normalizeLineEndings(source);
   const issues = [];
   if (!/^\d+\.\d+\.\d+(?:-[\w.-]+)?$/.test(version || "")) return ["missing or invalid configured release version"];
   const expected = sourceBuildTemplate.replace("VERSION", version);
@@ -155,11 +243,11 @@ export function auditInstallContract({ repoRoot, contentFiles, templateFiles, ve
   const issues = [];
   const dataPath = path.join(repoRoot, "data", "install.yaml");
   if (!existsSync(dataPath)) issues.push("data/install.yaml: missing shared install source");
-  else issues.push(...auditInstallData(readFileSync(dataPath, "utf8")));
+  else issues.push(...auditInstallData(readSource(dataPath)));
 
   const blogDir = path.join(repoRoot, "content", "blog") + path.sep;
   for (const file of contentFiles) {
-    const source = readFileSync(file, "utf8");
+    const source = readSource(file);
     const label = path.relative(repoRoot, file);
     const historicalBody = file.startsWith(blogDir) && historicalInstallPosts.has(path.relative(blogDir, file));
     if (historicalBody) {
@@ -178,14 +266,14 @@ export function auditInstallContract({ repoRoot, contentFiles, templateFiles, ve
 
   for (const file of templateFiles) {
     if (file.includes(`${path.sep}partials${path.sep}install${path.sep}`) || file.includes(`${path.sep}shortcodes${path.sep}install-`)) continue;
-    const match = commandMatches(readFileSync(file, "utf8"))[0];
+    const match = commandMatches(readSource(file))[0];
     if (match) issues.push(`${path.relative(repoRoot, file)}: hand-written ${match.label} command in a template; use the shared install partial`);
   }
 
   for (const file of ["static/llms.txt", "static/llms-full.txt"]) {
     const fullPath = path.join(repoRoot, file);
     if (!existsSync(fullPath)) continue;
-    const source = readFileSync(fullPath, "utf8");
+    const source = readSource(fullPath);
     if (file.endsWith("llms-full.txt") && !source.includes(sourceBuildTemplate.replace("VERSION", version || ""))) {
       issues.push(`${file}: missing current pinned source-build instructions`);
     }
