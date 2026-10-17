@@ -147,7 +147,8 @@ is misconfigured.
 
 ## Same corpus, three other languages
 
-Each language port exposes the same receipt and chain verification surface.
+Each language port verifies individual receipts and chain linkage. Their
+end-proof and group checks differ, as described above.
 Use the public corpus to confirm whether a verifier agrees with the expected
 verdicts before trusting it on production receipts.
 

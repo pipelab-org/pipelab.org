@@ -165,3 +165,32 @@ test("new blog posts cannot inherit the published installation correction exempt
     assert.match(issues.join("\n"), /hand-written/);
   }
 });
+
+// Coverage that predates the stricter URL match and must survive it: the tag may
+// follow the URL, the host may be spelled differently, and an extra unpinned
+// clone beside the exact pinned build is still a drifted instruction.
+test("tag position, host spelling and extra unpinned clones cannot evade the source audit", t => {
+  for (const stale of [
+    "git clone --depth 1 https://github.com/pipelab-org/pipelock.git --branch v3.6.0",
+    "git clone --branch v3.6.0 http://github.com/pipelab-org/pipelock.git",
+    "git clone --branch v3.6.0 https://www.github.com/pipelab-org/pipelock.git",
+  ]) {
+    assert.ok(auditRawInstallSource(`${raw}\n${stale}\n`, "3.7.0").length, stale);
+    const f = fixture(t);
+    writeFileSync(f.guide, `${stale}\n`);
+    assert.match(f.audit().join("\n"), /hand-written source clone/, stale);
+  }
+  const extra = raw.replace(`${build}\n`, `${build}\ngit clone https://github.com/pipelab-org/pipelock.git\n`);
+  assert.match(auditRawInstallSource(extra, "3.7.0").join("\n"), /source clone does not match/);
+});
+
+test("a frozen historical body keeps only the commands it was published with", t => {
+  const f = fixture(t);
+  const published = `${installationCorrection}\n\nOriginal text.\n${brew}\n${oldCommand}\n`;
+  writeFileSync(f.article, published);
+  assert.deepEqual(f.audit(), []);
+  for (const added of [`${clone.replace("3.7.0", "3.6.0")}\n${build}\n`, "git clone https://github.com/pipelab-org/pipelock.git\nmake install\n"]) {
+    writeFileSync(f.article, published + added);
+    assert.match(f.audit().join("\n"), /hand-written source/, added);
+  }
+});

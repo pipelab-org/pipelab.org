@@ -25,9 +25,12 @@ const historicalInstallPosts = new Set([
   "securing-claude-code-with-pipelock.md", "what-is-an-agent-firewall.md",
 ]);
 
+// The Go-module command is covered by the correction check in the audit below.
+const historicalBodyCommands = new Set(["unsupported go install", "Homebrew install"]);
+
 const commandPatterns = [
   { label: "unsupported go install", pattern: /\bgo\s+install\s+(?:\\\s*)?github\.com\/(?:luckypipewrench|pipelab-org)\/pipelock(?:\/cmd\/pipelock)?(?:@[^\s`"'<)]+)?/gi },
-  { label: "source clone", pattern: /\bgit\s+clone\b[^\n`]*?https:\/\/github\.com\/(?:luckypipewrench|pipelab-org)\/pipelock[^\s`"\'<>);&|]*/gi },
+  { label: "source clone", pattern: /\bgit\s+clone\b[^\n`]*?github\.com\/(?:luckypipewrench|pipelab-org)\/pipelock[^\s`"\'<>);&|]*/gi },
   { label: "source build", pattern: /\bmake\s+(?:-C\s+pipelock\s+)?install\b/gi },
   { label: "Homebrew install", pattern: /\bbrew\s+install\s+(?:\\\s*)?luckypipewrench\/tap\/pipelock\b/gi },
 ];
@@ -35,12 +38,13 @@ const commandPatterns = [
 function commandMatches(source) {
   const matches = commandPatterns.flatMap(({ label, pattern }) => {
     pattern.lastIndex = 0;
-    return [...source.matchAll(pattern)].map(match => ({ label, text: match[0], index: match.index }));
+    return [...source.matchAll(pattern)].map(match => ({ label, text: match[0], index: match.index, line: source.slice(match.index).match(/^[^\n`]*/)[0] }));
   });
   const hasClone = matches.some(match => match.label === "source clone");
   const hasInstall = matches.some(match => match.label === "source build");
   return matches.filter(match => {
-    if (match.label === "source clone") return /--branch\s+v/.test(match.text) || hasInstall;
+    // A pinned tag may follow the URL, so look at the rest of the command line.
+    if (match.label === "source clone") return /--branch\s+v/.test(match.line) || hasInstall;
     if (match.label === "source build") return hasClone || /-C\s+pipelock\b/.test(match.text);
     return true;
   })
@@ -141,7 +145,8 @@ export function auditInstallContract({ repoRoot, contentFiles, templateFiles, ve
         issues.push(`${label}: historical Go-module command needs the installation correction before the unchanged original body`);
       }
     }
-    const match = historicalBody ? null : commandMatches(body(source))[0];
+    // A frozen body may keep only the commands it was published with.
+    const match = commandMatches(body(source)).find(match => !historicalBody || !historicalBodyCommands.has(match.label));
     if (match) issues.push(`${label}: hand-written ${match.label} command; use the shared install shortcode`);
     for (const match of commandMatches(frontMatter(source))) {
       if (match.label !== "Homebrew install") issues.push(`${label}: frontmatter contains ${match.label}; link to /install/ for current source-build guidance`);
