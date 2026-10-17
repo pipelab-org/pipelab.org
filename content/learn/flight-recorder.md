@@ -22,7 +22,7 @@ The flight recorder is Pipelock's AI agent audit log. It writes every scan decis
 
 `flight_recorder.receipt_chains` accepts 1 through 32 and defaults to 1. Each request stays on one chain; signed group lifecycle records bind the shards together. Changing the count requires restart, and a shard verdict doesn't establish group completeness. Use the [parallel receipt guide](/learn/parallel-receipt-chains/) before enabling it.
 
-An intact prefix without an end proof reports `VALID PREFIX, END UNPROVEN` and exits 3. For recorder directories, `pipelock verify-receipt --chain ./recorder --whole-recorder` checks the transcript seal. `--allow-prefix` accepts an intentional open prefix while retaining that label. Signed recovery seals attest discontinuity without making a damaged predecessor valid.
+An intact prefix without an end proof reports `VALID PREFIX, END UNPROVEN` and exits 3. For recorder directories, `pipelock verify-receipt --chain ./recorder --whole-recorder --key trusted-signing.pub` checks the transcript seal. `--allow-prefix` accepts an intentional open prefix while retaining that label. Signed recovery seals attest discontinuity without making a damaged predecessor valid.
 
 Required receipts wait for every configured family's durable record before the covered effect. With required receipts and multiple chains, a disk sync failure stops the group and process. Native evidence streams have a 256 MiB verifier ceiling that the writer doesn't cap. Receipt-content fragment reassembly also has documented search limits. Read the [v3.7 upgrade actions](/learn/pipelock-v370-upgrade/) before changing automation or sustained-load recording.
 

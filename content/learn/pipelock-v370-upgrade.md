@@ -13,7 +13,7 @@ Upgrade the binary before loading the new configuration fields. Then check recei
 
 A valid prefix doesn't prove the writer finished. Chain verification reports `VALID PREFIX, END UNPROVEN` and exits 3 when its end isn't proven. `--allow-prefix` accepts an intentional open-prefix check with exit 0, but keeps the label. Don't use it as a completeness check.
 
-For a recorder directory, use `pipelock verify-receipt --chain ./recorder --whole-recorder` to check the transcript seal. A cleanly stopped recorder containing EvidenceReceipt v2 receipts can still exit 3 in receipt-chain mode because that chain has no end marker. Other verifiers can pin an independently retained expected head or sequence where supported. Signed group closes establish the end for [parallel receipt chains](/learn/parallel-receipt-chains/).
+For a recorder directory, use `pipelock verify-receipt --chain ./recorder --whole-recorder --key trusted-signing.pub` to check the transcript seal. A cleanly stopped recorder containing EvidenceReceipt v2 receipts can still exit 3 in receipt-chain mode because that chain has no end marker. Other verifiers can pin an independently retained expected head or sequence where supported. Signed group closes establish the end for [parallel receipt chains](/learn/parallel-receipt-chains/).
 
 Clean reports use schema version 2 and expose end-proof status. Dispatch consumers by schema version. A recovery seal attests the torn predecessor bytes and successor opening; it preserves the damaged history's failure.
 

@@ -19,7 +19,7 @@ faq:
   - q: "What's the difference between `pipelock verify-receipt` and `pipelock-verifier`?"
     a: "`pipelock verify-receipt` is built into the main Pipelock binary; an operator who already runs Pipelock has it without installing anything else. `pipelock-verifier` is a separate binary with no network surface, no proxy, no scanner, and no config reload. It exists so a CI runner, an auditor's laptop, or a third party can drop in just the verifier without provisioning the full firewall stack. Same verification logic. The standalone verifier adds three subcommands for receipt, chain, and audit-packet, and matches exit codes with the TypeScript and Rust ports."
   - q: "Why are there four verifiers in four languages?"
-    a: "Defense in depth for the verification step itself. If a relying party only trusts implementations written in their own ecosystem's language, the receipt format has to support that. The Go, TypeScript, Rust, and Python implementations expose the same receipt and chain verification surface, so a CI pipeline in Node, a Rust-based auditor tool, a Python compliance script, or the canonical Go binary can check the same public fixtures against the same expected verdicts."
+    a: "Defense in depth for the verification step itself. If a relying party only trusts implementations written in their own ecosystem's language, the receipt format has to support that. All four implementations verify individual receipts and chain linkage. Their completeness checks differ: Python `pipelock-verify` 0.4.1 has no end-proof state or whole-group verification. Use an end-proof-capable verifier when CI needs to establish that a run finished."
   - q: "Where do receipts come from in production?"
     a: "With a configured emitter, Pipelock records signed receipts for covered mediated actions. Allow coverage depends on required-receipt configuration, while denied actions retain best-effort emission. Processes can use one chain or a signed group of parallel chains in the flight recorder directory, and the pipelock-agent-egress-action GitHub Action bundles the chain with policy metadata into an Audit Packet v0 directory containing packet.json, summary.md, evidence.jsonl, and verifier.txt. The Audit Packet is the procurement-evidence artifact; the receipt chain is the underlying signed input."
   - q: "Can a malicious actor with the test key forge receipts that the verifier accepts?"
@@ -40,15 +40,19 @@ test key.
 
 ## v3.7 completeness checks
 
-An intact chain without an end proof reports `VALID PREFIX, END UNPROVEN`. For recorder directories, use `pipelock verify-receipt --chain ./recorder --whole-recorder` to check the transcript seal. Receipt-chain mode can exit 3 even after a clean shutdown if EvidenceReceipt v2 receipts have no chain end marker. Other verifiers support independently retained expected heads or sequences where documented.
+Replace `trusted-signing.pub` in these examples with the public key you independently trust for the recorder signer.
+
+An intact chain without an end proof reports `VALID PREFIX, END UNPROVEN`. For recorder directories, use `pipelock verify-receipt --chain ./recorder --whole-recorder --key trusted-signing.pub` to check the transcript seal. Receipt-chain mode can exit 3 even after a clean shutdown if EvidenceReceipt v2 receipts have no chain end marker. Other verifiers support independently retained expected heads or sequences where documented.
 
 For [parallel receipt chains](/learn/parallel-receipt-chains/), keep the complete directory and use a group-capable verifier. The published TypeScript and Rust packages at 0.6.5 check whole groups; Python `pipelock-verify` 0.4.1 checks individual shards and chains, including their signed group binding, but doesn't verify the group. Signed recovery seals attest a discontinuity and preserve the damaged history's failure. Read the [v3.7 upgrade guide](/learn/pipelock-v370-upgrade/).
 
 ## The verifier commands
 
-The Pipelock verifier is available as the built-in CLI, a standalone Go
-binary, and TypeScript, Rust, and Python ports. They expose the same receipt
-and chain verification surface. The standalone verifiers use `0` valid, `1` invalid, `2` runtime error and `64` usage error. In v3.7 chain mode, an intact prefix without an end proof exits 3. `--allow-prefix` accepts an intentional open prefix with exit 0 while retaining its incomplete-end label. The built-in `pipelock verify-receipt` uses `0` valid, `1` invalid, malformed or refused, and `2` usage or configuration error.
+The Pipelock verifier is available as the built-in CLI, a standalone Go binary, and TypeScript, Rust, and Python ports. Choose the exit contract for the command you run:
+
+- Built-in `pipelock verify-receipt` v3.7.0: `0` valid, `1` invalid, malformed or refused, and `2` usage or configuration error. Chain mode also exits `3` for an intact prefix whose end isn't proven.
+- Standalone Go v3.7.0, TypeScript 0.6.5 and Rust 0.6.5: `0` valid, `1` invalid, `2` runtime error, `64` usage error, and `3` for an intact chain prefix whose end isn't proven. `--allow-prefix` accepts that prefix with exit `0` while retaining its incomplete-end label.
+- Python `pipelock-verify` 0.4.1: `0` for valid receipts or chain linkage, `1` for verification failure, and `2` for argument errors. It has no end-proof state and can exit `0` when a chain's tail is missing. Its success doesn't establish run completeness or whole-group validity.
 
 | Binary | Source | What it covers |
 | --- | --- | --- |
@@ -76,7 +80,7 @@ pipelock-verifier audit-packet ./audit-packet/ --key signer.pub
 
 To check more than the receipts, pass `--whole-recorder` to `pipelock verify-receipt`. It verifies every recorder entry present, its taxonomy, and the `transcript_root` seal written at clean shutdown, and the output says `Mode: whole-recorder` so you can tell which check ran. Add `--require-seal` to fail when any run lacks that seal. It works on a recorder JSONL file or a `--chain` directory, and it can't be combined with `--clean-report` or `--fleet-report`.
 
-A single-chain Pipelock process writes a receipt chain named `<base>.run.<id>`. Parallel mode uses signed group lifecycle records to bind multiple chains. A restart isn't a gap: it's recorded as a signed link file that names the tail of the run it continues. `pipelock verify-receipt --chain ./recorder` verifies every run chain of the base, then checks that each link names the exact tail of the run it continues. `pipelock evidence doctor` follows the same links. Runs that no link continues are listed as unlinked. That's normal for a first run or concurrent runs, and it's also what a deleted link file looks like, so a passing result doesn't prove no run's evidence is missing.
+A single-chain Pipelock process writes a receipt chain named `<base>.run.<id>`. Parallel mode uses signed group lifecycle records to bind multiple chains. A restart isn't a gap: it's recorded as a signed link file that names the tail of the run it continues. `pipelock verify-receipt --chain ./recorder --key trusted-signing.pub` verifies every run chain of the base, then checks that each link names the exact tail of the run it continues. `pipelock evidence doctor` follows the same links. Runs that no link continues are listed as unlinked. That's normal for a first run or concurrent runs, and it's also what a deleted link file looks like, so a passing result doesn't prove no run's evidence is missing.
 
 The receipt and chain commands accept `--key HEX_OR_FILE` to pin a signer key
 for trusted verification. The Go, TypeScript, and Rust CLIs also accept

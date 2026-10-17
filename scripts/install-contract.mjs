@@ -9,18 +9,42 @@ export const brewInstallCommand = "brew install luckyPipewrench/tap/pipelock";
 const dockerTemplate = "docker pull ghcr.io/luckypipewrench/pipelock:VERSION";
 export const installationCorrection = "> Installation correction (2026-10-16): The `go install` command below doesn't install current Pipelock releases. Use the [current installation guide](/install/) for a release binary or a source build pinned to the release tag. The original post follows unchanged.";
 
+// Install-bearing articles published at 0e166a9c keep their frozen bodies.
+// Eight receive the additive correction; the others retain Homebrew commands.
+// New posts use shared installation data; this body exception is exact.
+const historicalInstallPosts = new Set([
+  "claude-mythos-agent-security.md", "cross-request-exfiltration.md",
+  "dns-exfil-ai-agent.md", "every-protocol-your-agent-speaks-scanned.md",
+  "first-ai-agent-espionage-campaign.md", "openclaw-cve-2026-25253.md",
+  "secrets-in-post-bodies.md", "tool-poisoning-mcp-attack-surface.md",
+  "what-happens-when-your-agent-makes-http-request.md",
+  "why-ai-guardrails-arent-enough.md", "your-agent-just-leaked-your-aws-keys.md",
+  "leaky-clawhub-skills.md", "pipelock-v260-release.md",
+  "pipelock-v300-release.md", "pipelock-v310-release.md",
+  "pipelock-v330-release.md", "pipelock-v340-release.md",
+  "securing-claude-code-with-pipelock.md", "what-is-an-agent-firewall.md",
+]);
+
 const commandPatterns = [
   { label: "unsupported go install", pattern: /\bgo\s+install\s+(?:\\\s*)?github\.com\/(?:luckypipewrench|pipelab-org)\/pipelock(?:\/cmd\/pipelock)?(?:@[^\s`"'<)]+)?/gi },
-  { label: "source clone", pattern: /\bgit\s+clone\b(?=[^\n`]*--branch\s+v)[^\n`]*github\.com\/(?:luckypipewrench|pipelab-org)\/pipelock(?:\.git)?/gi },
-  { label: "source build", pattern: /\bmake\s+-C\s+pipelock\s+install\b/gi },
+  { label: "source clone", pattern: /\bgit\s+clone\b[^\n`]*?https:\/\/github\.com\/(?:luckypipewrench|pipelab-org)\/pipelock[^\s`"\'<>);&|]*/gi },
+  { label: "source build", pattern: /\bmake\s+(?:-C\s+pipelock\s+)?install\b/gi },
   { label: "Homebrew install", pattern: /\bbrew\s+install\s+(?:\\\s*)?luckypipewrench\/tap\/pipelock\b/gi },
 ];
 
 function commandMatches(source) {
-  return commandPatterns.flatMap(({ label, pattern }) => {
+  const matches = commandPatterns.flatMap(({ label, pattern }) => {
     pattern.lastIndex = 0;
     return [...source.matchAll(pattern)].map(match => ({ label, text: match[0], index: match.index }));
-  }).sort((a, b) => a.index - b.index);
+  });
+  const hasClone = matches.some(match => match.label === "source clone");
+  const hasInstall = matches.some(match => match.label === "source build");
+  return matches.filter(match => {
+    if (match.label === "source clone") return /--branch\s+v/.test(match.text) || hasInstall;
+    if (match.label === "source build") return hasClone || /-C\s+pipelock\b/.test(match.text);
+    return true;
+  })
+    .sort((a, b) => a.index - b.index);
 }
 
 function frontMatter(source) {
@@ -38,10 +62,15 @@ function sections(source) {
   let current = "";
   let fence = null;
   for (const line of body(source).split("\n")) {
-    const marker = line.match(/^\s*(`{3,}|~{3,})/);
+    // CommonMark 0.31.2 section 4.5 (fenced code blocks).
+    const marker = line.match(/^ {0,3}(`{3,}|~{3,})(.*)$/);
     if (marker) {
-      if (!fence) fence = marker[1][0];
-      else if (marker[1][0] === fence) fence = null;
+      if (!fence && (marker[1][0] !== "`" || !marker[2].includes("`"))) {
+        fence = { character: marker[1][0], length: marker[1].length };
+      } else if (fence && marker[1][0] === fence.character
+        && marker[1].length >= fence.length && /^\s*$/.test(marker[2])) {
+        fence = null;
+      }
     }
     if (!fence && (/^#{1,2}\s+/.test(line) || /^\s*<h2\b/i.test(line))) {
       result.push(current);
@@ -105,14 +134,14 @@ export function auditInstallContract({ repoRoot, contentFiles, templateFiles, ve
   for (const file of contentFiles) {
     const source = readFileSync(file, "utf8");
     const label = path.relative(repoRoot, file);
-    if (file.startsWith(blogDir)) {
+    const historicalBody = file.startsWith(blogDir) && historicalInstallPosts.has(path.relative(blogDir, file));
+    if (historicalBody) {
       const article = body(source);
       if (commandMatches(article).some(match => match.label === "unsupported go install") && !article.trimStart().startsWith(installationCorrection)) {
         issues.push(`${label}: historical Go-module command needs the installation correction before the unchanged original body`);
       }
-      continue;
     }
-    const match = commandMatches(body(source))[0];
+    const match = historicalBody ? null : commandMatches(body(source))[0];
     if (match) issues.push(`${label}: hand-written ${match.label} command; use the shared install shortcode`);
     for (const match of commandMatches(frontMatter(source))) {
       if (match.label !== "Homebrew install") issues.push(`${label}: frontmatter contains ${match.label}; link to /install/ for current source-build guidance`);

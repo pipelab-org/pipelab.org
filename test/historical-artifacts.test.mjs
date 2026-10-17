@@ -171,7 +171,7 @@ test("site audit accepts an unchanged classified demo that states its recorded v
 test("site audit rejects a classified demo whose bytes changed", t => {
   const issues = auditDemoVersions(demoRoot(t, { bytes: Buffer.from("<p>Pipelock v3.6.0 </p>\n") }), "3.7.0", [ARTIFACT]);
   assert.equal(issues.length, 1);
-  assert.match(issues[0], /classified historical demo bytes changed/);
+  assert.match(issues[0], /classified historical artifact bytes changed/);
 });
 
 test("site audit still requires the current release in an unclassified demo", t => {
@@ -186,5 +186,18 @@ test("site audit rejects a classified demo that no longer states its recorded ve
   writeFileSync(join(root, HISTORICAL_ARTIFACTS_FILE), JSON.stringify({ artifacts: [entry({ sha256: createHash("sha256").update(bytes).digest("hex") })] }));
   const issues = auditDemoVersions(root, "3.7.0", [ARTIFACT]);
   assert.equal(issues.length, 1);
-  assert.match(issues[0], /does not state its recorded version v3\.6\.0/);
+  assert.match(issues[0], /never states its recorded version 3\.6\.0/);
+});
+
+test("site audit rejects conflicting claims even when classification pins the bytes", t => {
+  const bytes = Buffer.from("<p>Pipelock v3.6.0</p>\n<p>Pipelock v3.7.0</p>\n");
+  const root = demoRoot(t, { bytes });
+  writeFileSync(join(root, HISTORICAL_ARTIFACTS_FILE), JSON.stringify({ artifacts: [entry({ sha256: createHash("sha256").update(bytes).digest("hex") })] }));
+  assert.match(auditDemoVersions(root, "3.7.0", [ARTIFACT]).join("\n"), /3\.7\.0 disagrees with its historical classification/);
+});
+
+test("site audit rejects historical classifications at or after the site version", t => {
+  for (const version of ["3.6.0", "3.5.0"]) {
+    assert.match(auditDemoVersions(demoRoot(t), version, [ARTIFACT]).join("\n"), /not older than declared/);
+  }
 });

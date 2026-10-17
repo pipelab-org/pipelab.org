@@ -75,7 +75,7 @@ function fixture(t) {
   };
   write("data/install.yaml", stringify(data()));
   write("static/llms-full.txt", raw);
-  const article = write("content/blog/historical.md", `---\ntitle: History\n---\n\n${installationCorrection}\n\nOriginal text.\n\`\`\`bash\n${oldCommand}\n\`\`\`\n`);
+  const article = write("content/blog/pipelock-v340-release.md", `---\ntitle: History\n---\n\n${installationCorrection}\n\nOriginal text.\n\`\`\`bash\n${oldCommand}\n\`\`\`\n`);
   const guide = write("content/learn/current.md", '---\ntitle: Current\n---\n{{< install-block >}}\n');
   const template = write("themes/pipelab/layouts/index.html", '{{ partial "install/methods.html" (dict) }}');
   const audit = () => auditInstallContract({ repoRoot, contentFiles: [article, guide], templateFiles: [template], version: "3.7.0" });
@@ -118,10 +118,50 @@ test("example and benchmark repository clones are not installation commands", t 
   const f = fixture(t);
   writeFileSync(f.guide, "## Reproduce\n```bash\ngit clone https://github.com/luckyPipewrench/pipelock\ncd pipelock\nmake bench-egress\n```\n");
   assert.deepEqual(f.audit(), []);
+  writeFileSync(f.guide, "Build another tool with `make install`.\n");
+  assert.deepEqual(f.audit(), []);
 });
 
 test("deleting the raw install section does not evade its current-release requirement", t => {
   const f = fixture(t);
   f.write("static/llms-full.txt", "# Pipelock\n");
   assert.match(f.audit().join("\n"), /missing current pinned source-build/);
+});
+
+test("raw source clones cannot hide a changed URL behind a valid command", () => {
+  for (const suffix of [".attacker", "/other", "?ref=main", "#main"]) {
+    assert.ok(auditRawInstallSource(`${raw}\n${clone}${suffix}\n${build}\n`, "3.7.0").length, suffix);
+  }
+});
+
+test("unpinned source installs are audited in current guides and raw instructions", t => {
+  const f = fixture(t);
+  for (const owner of ["pipelab-org", "luckyPipewrench"]) {
+    for (const command of ["cd pipelock\nmake install", "make -C pipelock install"]) {
+      const source = `git clone https://github.com/${owner}/pipelock.git\n${command}\n`;
+      writeFileSync(f.guide, source);
+      assert.match(f.audit().join("\n"), /hand-written source/);
+      assert.ok(auditRawInstallSource(source, "3.7.0").length);
+    }
+  }
+});
+
+// CommonMark 0.31.2 section 4.5: closing fences match character, minimum
+// opening length, and trailing whitespace only.
+test("shorter and annotated markers do not close a fenced install section", () => {
+  for (const [open, inner, close] of [["````bash", "```", "````"], ["```bash", "```text", "```"], ["~~~~bash", "~~~", "~~~~"], ["```bash", "~~~", "```"]]) {
+    const source = `## Installation\n${open}\n${clone}\n${build}\n${inner}\n## example shell comment\n${brew}\n${close}\n`;
+    assert.deepEqual(auditRawInstallSource(source, "3.7.0"), [], inner);
+  }
+  assert.ok(auditRawInstallSource(`## Source\n\`\`\`bash\n${clone}\n${build}\n\`\`\`\`\n## Homebrew\n${brew}\n`, "3.7.0").length);
+});
+
+test("new blog posts cannot inherit the published installation correction exemption", t => {
+  const f = fixture(t);
+  const current = f.write("content/blog/current-release.md", `${installationCorrection}\n${oldCommand}\n`);
+  for (const source of [readFileSync(current, "utf8"), `${clone.replace("3.7.0", "3.6.0")}\n${build}\n`]) {
+    writeFileSync(current, source);
+    const issues = auditInstallContract({ repoRoot: f.repoRoot, contentFiles: [current], templateFiles: [], version: "3.7.0" });
+    assert.match(issues.join("\n"), /hand-written/);
+  }
 });
