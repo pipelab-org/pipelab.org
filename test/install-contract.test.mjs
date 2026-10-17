@@ -284,6 +284,8 @@ test("non-blank whitespace lines do not separate a real install", t => {
   for (const character of [" ", "\f", "\v", " ", "　"]) {
     for (const body of [
       `${unpinned}\n${character}\nmake install\n`,
+      `${unpinned}\n#${character}\nmake install\n`,
+      `${unpinned}\n##${character}\nmake install\n`,
       `    ${unpinned}\n${character}\n    make install\n`,
       `\x60\x60\x60\nexample\n\x60\x60\x60${character}\n${unpinned}\n\nmake install\n`,
     ]) {
@@ -305,6 +307,7 @@ test("CommonMark line endings preserve fences, front matter and exact install pi
     const convert = source => source.replaceAll("\n", ending);
     assert.deepEqual(auditRawInstallSource(convert(raw), "3.7.0"), []);
     f.write("static/llms-full.txt", convert(raw));
+    f.write("data/install.yaml", convert(stringify(data())));
     writeFileSync(f.guide, convert('---\ntitle: Current\n---\n{{< install-block >}}\n'));
     writeFileSync(f.article, convert(`${installationCorrection}\n${oldCommand}\n`));
     assert.deepEqual(f.audit(), []);
@@ -314,5 +317,29 @@ test("CommonMark line endings preserve fences, front matter and exact install pi
     assert.ok(auditRawInstallSource(convert(fenced), "3.7.0").length);
     writeFileSync(f.guide, convert(`---\nfaq: "${oldCommand}"\n---\nBody.\n`));
     assert.match(f.audit().join("\n"), /frontmatter contains unsupported go install/);
+  }
+});
+
+// CommonMark 0.31.2 sections 4.3 and 4.6: setext headings delimit sections,
+// while HTML block types 1-5 retain blank lines until their closing marker.
+test("setext headings cannot borrow the pin from an earlier install section", () => {
+  for (const underline of ["=", "====", "-", "-----", "   ===  ", "  ---\t"]) {
+    const source = `## Earlier\n${clone}\n${build}\n\nLater\n${underline}\n${brew}\n`;
+    assert.match(auditRawInstallSource(source, "3.7.0").join("\n"), /install section must include/, underline);
+  }
+  assert.deepEqual(auditRawInstallSource(`${raw}\n\x60\x60\x60text\nLater\n-----\n\x60\x60\x60\n`, "3.7.0"), []);
+});
+
+test("HTML blocks keep install commands together until their own terminator", t => {
+  const f = fixture(t);
+  const unpinned = "git clone https://github.com/pipelab-org/pipelock.git";
+  for (const [open, close] of [["<pre>", "</pre>"], ["<PRE class='shell'>", "</PRE>"], ["<script>", "</script>"], ["<style>", "</style>"], ["<textarea>", "</textarea>"], ["<!--", "-->"], ["<?instruction", "?>"], ["<!DOCTYPE", ">"], ["<![CDATA[", "]]>"]]) {
+    const body = `${open}\n${unpinned}\n\n## shell comment\n\nmake install\n${close}\n`;
+    writeFileSync(f.guide, body);
+    assert.match(f.audit().join("\n"), /hand-written source/, open);
+    assert.ok(auditRawInstallSource(`${raw}\n## Later\n${body}`, "3.7.0").length, open);
+    // A separate example after a closed block must not pair with its clone.
+    writeFileSync(f.guide, `${open}\n${unpinned}\n${close}\n\nBuild another tool with \x60make install\x60.\n`);
+    assert.deepEqual(f.audit(), [], open);
   }
 });

@@ -75,6 +75,7 @@ function sections(source, examples = false) {
   const result = [];
   let current = "";
   let fence = null;
+  let htmlEnd = null;
   // Callers pass text whose front matter is already removed. Stripping again
   // would drop a leading thematic-break pair and every command between them.
   const lines = source.split("\n");
@@ -86,6 +87,24 @@ function sections(source, examples = false) {
   const blank = line => /^[ \t]*$/.test(line);
   let previous = "";
   for (const [index, line] of lines.entries()) {
+    // Section 4.6 types 1-5 end at a marker, not a blank line. Other HTML
+    // block types use the ordinary blank-line boundary below.
+    if (!fence && !htmlEnd) {
+      htmlEnd = /^ {0,3}<(?:script|pre|style|textarea)(?:[ \t>]|$)/i.test(line) ? /<\/(?:script|pre|style|textarea)>/i
+        : /^ {0,3}<!--/.test(line) ? /-->/
+          : /^ {0,3}<\?/.test(line) ? /\?>/
+            : /^ {0,3}<![A-Z]/.test(line) ? />/
+              : /^ {0,3}<!\[CDATA\[/.test(line) ? /\]\]>/ : null;
+      if (htmlEnd && examples) { result.push(current); current = ""; }
+    }
+    if (htmlEnd) {
+      current += `${line}\n`;
+      if (htmlEnd.test(line)) {
+        htmlEnd = null;
+        if (examples) { result.push(current); current = ""; }
+      }
+      continue;
+    }
     // CommonMark 0.31.2 section 4.5 (fenced code blocks).
     const marker = line.match(/^ {0,3}(`{3,}|~{3,})(.*)$/);
     if (marker) {
@@ -109,7 +128,8 @@ function sections(source, examples = false) {
       previous = line;
     }
     // Section 4.2: the # sequence may be followed by the end of the line.
-    if (!fence && (/^ {0,3}#{1,2}(?:\s|$)/.test(line) || /^\s*<h2\b/i.test(line))) {
+    if (!fence && (/^ {0,3}#{1,2}(?:[ \t]|$)/.test(line)
+      || /^ {0,3}(?:=+|-+)[ \t]*$/.test(line) || /^\s*<h2\b/i.test(line))) {
       result.push(current);
       current = "";
     }
