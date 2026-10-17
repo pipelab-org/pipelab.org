@@ -394,3 +394,57 @@ test("rendered headings delimit raw sections and indented text does not split an
     assert.match(f.audit().join("\n"), /hand-written source/, JSON.stringify(body));
   }
 });
+
+// Section 4.6 type 1 opens before a space, tab, ">" or the end of the line, and
+// the renderer adds "/>". A bare slash opens nothing, so it cannot swallow the
+// heading below it and let an unpinned section borrow the earlier pin.
+test("a bare slash after a raw-text tag name does not open an HTML block", () => {
+  for (const open of ["<pre/x", "<pre/", "<script/y", "<style/", "<textarea/", "<PRE/z", "   <pre/x"]) {
+    const source = `${raw}\n${open}\n\n## Later\n${brew}\n`;
+    assert.match(auditRawInstallSource(source, "3.7.0").join("\n"), /install section must include/, open);
+  }
+});
+
+// Hugo's goldmark opens raw HTML blocks on shapes the specification does not.
+// Examples follow the renderer, so a clone and build it keeps in one block pair
+// across marker lines. The outer raw pass keeps the specification, so the heading
+// below the same opener still starts its own section.
+test("renderer-only HTML block openers keep a real install together", t => {
+  const f = fixture(t);
+  const unpinned = "git clone https://github.com/pipelab-org/pipelock.git";
+  for (const open of ["</ div", "</  address>", "<meta", "<META", "<pre\f>", "<script\f", "</textarea>", "</x/>", "</ x />", "</ custom-tag a=b>", "   </ span >"]) {
+    for (const marker of ["---", "===", "## step", "\x60\x60\x60", "~~~"]) {
+      const body = `${open}\n${unpinned}\n${marker}\nmake install\n`;
+      writeFileSync(f.guide, body);
+      writeFileSync(f.guide, `---\ntitle: Current\n---\n${body}`);
+      assert.match(f.audit().join("\n"), /hand-written source/, JSON.stringify(body));
+    }
+    assert.match(auditRawInstallSource(`${raw}\n${open}\n## Later\n${brew}\n`, "3.7.0").join("\n"), /install section must include/, open);
+  }
+  // goldmark requires spaces, not a tab, after a type 6 name and a closing tag without attributes.
+  writeFileSync(f.guide, `---\ntitle: Current\n---\n</x a=b>\n${unpinned}\n---\nmake install\n`);
+  assert.deepEqual(f.audit(), [], "a closing tag with attributes is paragraph text");
+});
+
+// Section 4.6: type 7 cannot interrupt a paragraph, but it can follow any block
+// that leaves none open: a thematic break (4.1), indented code (4.4), a setext
+// heading (4.3) or a finished HTML block. A "=" run after a closed block is
+// paragraph text, as is "--", while a single "-" is an empty list item.
+test("an HTML block of type 7 may follow any block that leaves no paragraph open", t => {
+  const f = fixture(t);
+  const unpinned = "git clone https://github.com/pipelab-org/pipelock.git";
+  for (const before of ["---", "***", "- - -", "_ _ _", "   ----", "    code", "\tcode", "# h", "text\n---", "text\n===", "-", "text\n-", "text\n--", "<!-- c -->", "\x60\x60\x60\nx\n\x60\x60\x60"]) {
+    for (const marker of ["---", "## step", "\x60\x60\x60", "==="]) {
+      const body = `${before}\n<custom-tag>\n${unpinned}\n${marker}\nmake install\n`;
+      writeFileSync(f.guide, `---\ntitle: Current\n---\n${body}`);
+      assert.match(f.audit().join("\n"), /hand-written source/, JSON.stringify(body));
+      assert.ok(auditRawInstallSource(`${raw}\n## Later\n${body}`, "3.7.0").length, JSON.stringify(body));
+    }
+    const hidden = `${raw}\n${before}\n<custom-tag>\n\x60\x60\x60\n\n## Later\n${brew}\n`;
+    assert.match(auditRawInstallSource(hidden, "3.7.0").join("\n"), /install section must include/, JSON.stringify(before));
+  }
+  for (const before of ["text", "\n===", "\n=", "\n--", "text\n    indented"]) {
+    writeFileSync(f.guide, `---\ntitle: Current\n---\n${before}\n<custom-tag>\n${unpinned}\n---\nmake install\n`);
+    assert.deepEqual(f.audit(), [], JSON.stringify(before));
+  }
+});

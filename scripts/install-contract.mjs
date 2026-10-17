@@ -69,6 +69,21 @@ const tagName = "[A-Za-z][A-Za-z0-9-]*";
 const tagAttribute = "[ \\t]+[A-Za-z_:][A-Za-z0-9_.:-]*(?:[ \\t]*=[ \\t]*(?:[^ \\t\"'=<>`]+|'[^']*'|\"[^\"]*\"))?";
 const htmlBlockSix = new RegExp(`^ {0,3}</?(?:${htmlBlockNames})(?:[ \\t]|/?>|$)`, "i");
 const htmlBlockSeven = new RegExp(`^ {0,3}(?:<${rawTextTags}${tagName}(?:${tagAttribute})*[ \\t]*/?>|</${rawTextTags}${tagName}[ \\t]*>)[ \\t]*$`, "i");
+// Type 1 opens before a space, tab, ">" or the end of the line; "/>" is the one
+// extra form Hugo's renderer accepts everywhere. A bare "/" does not open a block.
+const htmlBlockOne = /^ {0,3}<(?:script|pre|style|textarea)(?:[ \t>]|\/>|$)/i;
+// Hugo renders content with goldmark, which opens raw HTML blocks on a few shapes
+// the specification does not: a form feed after a type 1 name, "meta" and spaces
+// after "</" for type 6, and a closing tag ending "/>" or naming textarea for type 7.
+// Only example pairing follows it: there a missed block splits a real install, while
+// the outer raw pass has no renderer and keeps the specification so a heading stays a heading.
+const rendererBlockOne = /^ {0,3}<(?:script|pre|style|textarea)\f/i;
+const rendererBlockSix = new RegExp(`^ {0,3}<(?:/ *)?(?:${htmlBlockNames}|meta)(?: |/?>|$)`, "i");
+// Spaces after "</" also make goldmark treat the closing tag as an opening tag with attributes.
+const notRenderedRaw = "(?!(?:script|style|pre)(?![A-Za-z0-9-]))";
+const rendererBlockSeven = new RegExp(`^ {0,3}(?:</ *${notRenderedRaw}${tagName} */?>|</ +${notRenderedRaw}${tagName}(?:${tagAttribute})+ */?>)[ \\t]*$`, "i");
+// Section 4.1: three or more matching -, * or _ characters, spaces and tabs allowed between.
+const thematicBreak = /^ {0,3}(?:(?:\*[ \t]*){3,}|(?:-[ \t]*){3,}|(?:_[ \t]*){3,})$/;
 
 function frontMatter(source) {
   return source.match(/^---\n([\s\S]*?)\n---\n?/)?.[1] || "";
@@ -98,21 +113,26 @@ function sections(source, examples = false) {
   let previous = "";
   let closed = true;
   for (const [index, line] of lines.entries()) {
-    // A blank line, ATX heading, closing fence or HTML block end cannot leave a paragraph open.
+    // A blank line, heading, thematic break, closing fence or HTML block end cannot
+    // leave a paragraph open, and neither can an indented code line that began no
+    // paragraph. A "=" run after a closed block is paragraph text, not an underline,
+    // and so is "--"; a single "-" is an empty list item.
     const followsBlock = closed;
-    closed = blank(line) || /^ {0,3}#{1,6}(?:[ \t]|$)/.test(line);
+    closed = blank(line) || /^ {0,3}#{1,6}(?:[ \t]|$)/.test(line) || thematicBreak.test(line)
+      || (/^ {0,3}(?:=+|-+)[ \t]*$/.test(line) && (!followsBlock || /^ {0,3}-[ \t]*$/.test(line)))
+      || (followsBlock && indented(line));
     // Section 4.6 types 1-5 end at a marker, not a blank line. Types 6 and 7
     // end at a blank line, and inside them headings and fences are raw text.
     if (htmlBlock && blank(line)) htmlBlock = false;
     if (!fence && !htmlEnd && !htmlBlock) {
-      // Hugo's Goldmark renderer also opens these raw blocks with a self-closing tag.
-      htmlEnd = /^ {0,3}<(?:script|pre|style|textarea)(?:[ \t/>]|$)/i.test(line) ? /<\/(?:script|pre|style|textarea)>/i
+      htmlEnd = htmlBlockOne.test(line) || (examples && rendererBlockOne.test(line)) ? /<\/(?:script|pre|style|textarea)>/i
         : /^ {0,3}<!--/.test(line) ? /-->/
           : /^ {0,3}<\?/.test(line) ? /\?>/
             : /^ {0,3}<![A-Za-z]/.test(line) ? />/
               : /^ {0,3}<!\[CDATA\[/.test(line) ? /\]\]>/ : null;
       // Type 7 cannot interrupt a paragraph, so it only starts where none can be open.
-      htmlBlock = !htmlEnd && (htmlBlockSix.test(line) || (followsBlock && htmlBlockSeven.test(line)));
+      htmlBlock = !htmlEnd && (htmlBlockSix.test(line) || (followsBlock && htmlBlockSeven.test(line))
+        || (examples && (rendererBlockSix.test(line) || (followsBlock && rendererBlockSeven.test(line)))));
       if ((htmlEnd || htmlBlock) && examples) { result.push(current); current = ""; }
     }
     if (htmlEnd) {
@@ -155,12 +175,18 @@ function sections(source, examples = false) {
       previous = line;
     }
     // Section 4.2: the # sequence may be followed by the end of the line.
-    if (!fence && (/^ {0,3}#{1,2}(?:[ \t]|$)/.test(line)
-      || /^ {0,3}(?:=+|-+)[ \t]*$/.test(line))) {
+    if (!fence && /^ {0,3}#{1,2}(?:[ \t]|$)/.test(line)) {
       result.push(current);
       current = "";
     }
     current += `${line}\n`;
+    // Section 4.3: an underline ends the heading it belongs to. Keeping it in that
+    // section stops the next one from starting at an orphan "=" run, which the
+    // inner pass would read as paragraph text and so lose the closed block.
+    if (!fence && /^ {0,3}(?:=+|-+)[ \t]*$/.test(line)) {
+      result.push(current);
+      current = "";
+    }
   }
   result.push(current);
   return result;
