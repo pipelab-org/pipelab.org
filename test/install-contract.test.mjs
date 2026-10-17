@@ -331,6 +331,26 @@ test("thematic breaks and orphan underlines preserve one install section", () =>
   }
 });
 
+test("thematic breaks separate article examples but stay inside code blocks", t => {
+  const f = fixture(t);
+  const unpinned = "git clone https://github.com/pipelab-org/pipelock.git";
+  for (const marker of ["***", "- - -", "___", "---", "  * * *\t"]) {
+    for (const after of ["", "---\n", "===\n"]) {
+      const source = `${unpinned}\n${marker}\n${after}make install\n`;
+      writeFileSync(f.guide, source);
+      assert.deepEqual(f.audit(), [], JSON.stringify({ marker, after }));
+    }
+    for (const source of [
+      `\x60\x60\x60bash\n${unpinned}\n${marker}\nmake install\n\x60\x60\x60\n`,
+      `    ${unpinned}\n    ${marker}\n    make install\n`,
+      `<pre>\n${unpinned}\n${marker}\nmake install\n</pre>\n`,
+    ]) {
+      writeFileSync(f.guide, source);
+      assert.match(f.audit().join("\n"), /hand-written source/, source);
+    }
+  }
+});
+
 test("setext headings cannot borrow the pin from an earlier install section", () => {
   for (const underline of ["=", "====", "-", "-----", "   ===  ", "  ---\t"]) {
     const source = `## Earlier\n${clone}\n${build}\n\nLater\n${underline}\n${brew}\n`;

@@ -164,7 +164,11 @@ function sections(source, examples = false) {
         if (examples) { result.push(current); current = ""; continue; }
       }
     }
-    if (examples && !fence && blank(line)) {
+    if (examples && !fence && thematicBreak.test(line)) {
+      // Section 4.1: a thematic break separates rendered article examples.
+      result.push(current);
+      current = "";
+    } else if (examples && !fence && blank(line)) {
       // Section 4.4: an indented code chunk continues across blank lines.
       const next = lines.slice(index + 1).find(candidate => /\S/.test(candidate));
       if (!(indented(previous) && next !== undefined && indented(next))) {
