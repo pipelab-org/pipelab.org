@@ -238,6 +238,8 @@ test("blank lines inside an indented chunk or nested fence do not separate a rea
   const unpinned = "git clone https://github.com/pipelab-org/pipelock.git";
   for (const body of [
     `    ${unpinned}\n\n    cd pipelock\n    make install\n`,
+    ...["     ", "        ", "            ", "\t", "\t\t", "\t    "].map(indent =>
+      `${indent}${unpinned}\n\n${indent}cd pipelock\n${indent}make install\n`),
     `1. Install:\n\n    \x60\x60\x60bash\n    ${unpinned}\n\n    make install\n    \x60\x60\x60\n`,
   ]) {
     writeFileSync(f.guide, body);

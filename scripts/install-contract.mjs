@@ -74,7 +74,7 @@ function sections(source, examples = false) {
   // Callers pass text whose front matter is already removed. Stripping again
   // would drop a leading thematic-break pair and every command between them.
   const lines = source.split("\n");
-  const indented = line => /^(?: {4}|\t)\S/.test(line);
+  const indented = line => /^(?: {4}|\t)/.test(line);
   let previous = "";
   for (const [index, line] of lines.entries()) {
     // CommonMark 0.31.2 section 4.5 (fenced code blocks).
