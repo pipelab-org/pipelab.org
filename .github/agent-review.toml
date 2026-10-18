@@ -1,0 +1,13 @@
+[review]
+instructions = """
+Review the Hugo site, Worker routes, and publication workflows. Check broken links,
+canonical URLs, redirects, escaping, injection, privacy, authentication, and cache
+behavior. Keep product claims scoped to the documented enforcement and transport
+boundaries. Preserve published blog bodies and check comparative claims against
+cited sources. Trace template changes through article, section, and product pages;
+check conversion links and generated metadata. Workflow changes must keep immutable
+pins, limited credentials, and failure results distinct from completed reviews.
+"""
+
+[ignore]
+glob = ["**/package-lock.json", "**/node_modules/**"]
