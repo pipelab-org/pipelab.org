@@ -1,9 +1,9 @@
 ---
-title: "Pipelock: Open-Source Agent Firewall"
-linkTitle: "Pipelock: Open-Source Agent Firewall"
-subtitle: "Pipelock scans mediated HTTP, MCP, and WebSocket traffic for secret leaks, prompt injection, and tool poisoning, then emits signed action receipts you can verify offline."
-description: "Pipelock: open-source agent firewall that blocks secret leaks and SSRF, detects prompt injection, and emits signed receipts you verify offline."
-lastmod: 2026-10-14
+title: "Pipelock: Open-Source AI Agent Firewall"
+linkTitle: "Pipelock: Open-Source AI Agent Firewall"
+subtitle: "Pipelock scans agent traffic routed through it for secret leaks, malicious instructions and unsafe tool use. Linux containment adds host restrictions when configured."
+description: "Pipelock is an open-source AI agent firewall that scans routed MCP, HTTP and WebSocket traffic for secret leaks, prompt injection and unsafe tool use."
+lastmod: 2026-10-19
 og_image: "https://pipelab.org/images/og/og-product.png"
 disable_cta: true
 type: pipelock

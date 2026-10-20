@@ -9,7 +9,11 @@ Description: {{ .Site.Params.description }}
 ## Overview
 
 PipeLab is the website and company behind Pipelock.
-Pipelock is an open-source agent firewall for MCP and AI agent egress.
+Pipelock is an open-source AI agent firewall.
+
+Protect your data and work from AI agents.
+
+Pipelock scans agent traffic routed through it for secret leaks, malicious instructions and unsafe tool use. Linux containment adds host restrictions when configured.
 Pipelock mediates MCP, HTTP, and WebSocket traffic and can emit signed evidence for mediated actions when receipt or flight-recorder signing is configured.
 
 Public methodology. Public attack cases. Public Pipelock results.

@@ -1060,8 +1060,8 @@ const pipelockPage = readFileSync(path.join(repoRoot, "content", "pipelock.md"),
 if (/<div class="pipelock-ci-grid">[\s\S]*?<\/section>\s*---\s*<!--[\s\S]*?AGENT EGRESS CONTROL/.test(pipelockPage)) {
   issues.push("content/pipelock.md: Markdown dividers must not become extra CI grid items");
 }
-if (!pipelockTemplateSource.includes('<span class="pipelock-category">Open-source agent firewall</span>')) {
-  issues.push("pipelock hero: visible category line must identify Pipelock as an open-source agent firewall");
+if (!pipelockTemplateSource.includes('<span class="pipelock-category">AI agent firewall</span>')) {
+  issues.push("pipelock hero: visible category line must identify Pipelock as an AI agent firewall");
 }
 if (/^subtitle:\s*"The open-source agent firewall/m.test(pipelockPage)) {
   issues.push("content/pipelock.md: hero lead must not repeat the visible product category line");

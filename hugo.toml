@@ -8,7 +8,7 @@ ignoreFiles = ['\.devto\.md$', '\.dzone\.(md|html)$']
 disableHugoGeneratorInject = true
 
 [params]
-  description = "Pipelock is an open-source agent firewall for MCP and AI agent egress. It mediates MCP, HTTP, and WebSocket traffic and can emit signed evidence for mediated actions when receipt or flight-recorder signing is configured."
+  description = "Pipelock is an open-source AI agent firewall. Pipelock scans agent traffic routed through it for secret leaks, malicious instructions and unsafe tool use. Linux containment adds host restrictions when configured."
   email = "luckypipe@pipelab.org"
   github = "https://github.com/luckyPipewrench"
   twitter = "https://x.com/pipelockhq"

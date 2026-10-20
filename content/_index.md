@@ -1,8 +1,8 @@
 ---
-title: "PipeLab: Runtime Security and Evidence for AI Agents"
+title: "PipeLab: Pipelock AI Agent Firewall"
 linkTitle: "PipeLab"
-seoTitle: "PipeLab: Runtime Security and Evidence for AI Agents"
-description: "PipeLab builds Pipelock, an open-source agent firewall for mediated egress and MCP traffic, with signed evidence for security and compliance."
-lastmod: 2026-08-08
+seoTitle: "PipeLab: Pipelock AI Agent Firewall"
+description: "PipeLab builds Pipelock, an AI agent firewall that scans routed traffic for secret leaks, malicious instructions and unsafe tool use."
+lastmod: 2026-10-19
 og_image: "https://pipelab.org/images/og/og-homepage.png"
 ---
