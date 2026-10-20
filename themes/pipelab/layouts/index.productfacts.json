@@ -1,7 +1,7 @@
 {{- $stats := site.Data.stats -}}
 {{- $facts := dict
   "name" "Pipelock"
-  "category" "open-source agent firewall"
+  "category" "AI agent firewall"
   "version" site.Params.pipelock_version
   "license" (dict "core" "Apache-2.0" "enterprise" "Elastic-2.0")
   "transports" (slice "HTTP" "WebSocket" "MCP")
