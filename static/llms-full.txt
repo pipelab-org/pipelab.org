@@ -288,7 +288,7 @@ Founder LinkedIn: https://www.linkedin.com/in/joshwaldrep
 
 ### Product
 - URL: https://pipelab.org/pipelock/
-- Title: Pipelock: Open-Source Agent Firewall
+- Title: Pipelock: Open-Source AI Agent Firewall
 - Summary: Product overview, architecture, transports, threat model, FAQ, install paths, and current release framing.
 
 ### Proof
