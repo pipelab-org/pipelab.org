@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import vm from 'node:vm';
+import { createServer } from 'node:http';
 import test from 'node:test';
 
 function source(file) {
@@ -46,7 +47,7 @@ function harness(mode = 'replay') {
   });
   // Keep the production handlers intact; skip page boot and expose closure state.
   let live = source('viewer-live.js');
-  live = live.replace(/\}\)\(\);\s*$/, `window.liveTest = { run: runBrowserVerify, handle, create: createSession, blocks(value) { blockCount = value; }, reset: resetBrowserVerifyState, session(value) { token = value; }, ready(value) { verifierReady = value; } }; })();`);
+  live = live.replace(/\}\)\(\);\s*$/, `window.liveTest = { run: runBrowserVerify, load: loadPipelockVerifier, script: loadScriptWithGuards, handle, create: createSession, blocks(value) { blockCount = value; }, reset: resetBrowserVerifyState, session(value) { token = value; }, ready(value) { verifierReady = value; } }; })();`);
   vm.runInContext(live, context);
   const replay = source('viewer.js').replace(/main\(\)\.catch\([^\n]+\);\s*$/, '');
   vm.runInContext(replay, context);
@@ -61,9 +62,10 @@ function harness(mode = 'replay') {
     context.window.pipelockVerifyStaticBundle = async () => out;
     context.window.pipelockVerifyBundle = () => out;
   };
+  const verifyStaticBundle = context.window.pipelockVerifyStaticBundle;
   setResult(valid);
   const run = () => mode === 'live' ? context.window.liveTest.run() : vm.runInContext('runReplayBrowserVerify()', context);
-  return { node, context, run, setResult, valid, timers, flushTimers() { for (const [id, fn] of timers) { timers.delete(id); fn(); } } };
+  return { node, context, run, setResult, valid, verifyStaticBundle, timers, flushTimers() { for (const [id, fn] of timers) { timers.delete(id); fn(); } } };
 }
 
 function noSuccess(h) {
@@ -114,10 +116,14 @@ for (const outcome of ['success', 'error']) {
   });
   test(`Live session reset discards stale ${outcome}`, async () => {
     const h = harness('live'); let resolve, reject;
+    let downloads = 0;
+    h.context.fetch = async () => { downloads++; return { ok: true, headers: { get() { return ''; } }, arrayBuffer: async () => new ArrayBuffer(1) }; };
     h.context.window.liveTest.ready(new Promise((yes, no) => { resolve = yes; reject = no; }));
     const pending = h.run(); h.context.window.liveTest.reset(); h.context.window.liveTest.session('session-two');
     if (outcome === 'success') resolve(); else reject(new Error('stale error'));
-    await pending; noSuccess(h);
+    await pending;
+    assert.equal(downloads, 0, 'retired loading must stop before downloading a bundle');
+    noSuccess(h);
     assert.equal(h.node('browserVerifyResult').hidden, true);
   });
 }
@@ -407,3 +413,191 @@ test('replay-only copy: the Live tab opens the Playground page in the same tab',
   assert.deepEqual(opened, [['/playground/', '_top']]);
   assert.equal(h.context.document.body.dataset.mode, 'replay');
 });
+
+
+function deferred() {
+  let resolve, reject;
+  const promise = new Promise((yes, no) => { resolve = yes; reject = no; });
+  return { promise, resolve, reject };
+}
+
+for (const newer of [false, true]) {
+  test(`replay: late VALID after restart cannot replace ${newer ? 'a pending attempt' : 'the reset view'}`, { timeout: 2000 }, async () => {
+    const h = harness('replay');
+    const old = deferred(); const next = deferred();
+    let calls = 0;
+    h.context.window.pipelockVerifyStaticBundle = () => (++calls === 1 ? old.promise : next.promise);
+    const pending = h.run();
+    vm.runInContext('restart()', h.context);
+    const current = newer ? h.run() : null;
+    const before = h.node('replayBrowserVerifyResult').textContent;
+    old.resolve(h.valid); await pending;
+    noSuccess(h);
+    assert.equal(h.node('replayBrowserVerifyResult').textContent, before);
+    if (newer) {
+      assert.equal(h.node('replayBrowserVerify').disabled, true);
+      const duplicate = h.run();
+      assert.equal(calls, 2, 'old completion must not unlock the newer attempt');
+      await duplicate;
+      next.resolve({ valid: true, checks: [{ name: 'new-session-check', pass: true }] });
+      await current;
+      assert.equal(h.node('stamp').classList.contains('on'), true);
+      assert.match(h.node('replayBrowserVerifyResult').textContent, /new-session-check/);
+    } else {
+      h.setResult(h.valid); await h.run();
+      assert.equal(h.node('stamp').classList.contains('on'), true, 'a fresh attempt can still succeed');
+    }
+  });
+}
+
+for (const stage of ['response', 'body']) {
+  for (const newer of [false, true]) {
+    test(`live: late VALID bytes at ${stage} after reset cannot replace ${newer ? 'a pending attempt' : 'the reset view'}`, { timeout: 2000 }, async () => {
+      const h = harness('live');
+      const entered = deferred(); const old = deferred(); const next = deferred(); const nextEntered = deferred();
+      let downloads = 0; let verified = 0;
+      h.context.window.pipelockVerifyBundle = () => { verified++; return h.valid; };
+      const response = (body) => ({ ok: true, headers: { get() { return ''; } }, arrayBuffer: () => body });
+      h.context.fetch = () => {
+        downloads++;
+        if (downloads > 1) return { ...response(next.promise), arrayBuffer() { nextEntered.resolve(); return next.promise; } };
+        if (stage === 'response') { entered.resolve(); return old.promise; }
+        return { ...response(old.promise), arrayBuffer() { entered.resolve(); return old.promise; } };
+      };
+      const pending = h.run(); await entered.promise;
+      h.context.window.liveTest.reset();
+      // Keep the token in one case to isolate the generation guard; change it
+      // in the other to exercise replacement-session behavior as well.
+      if (newer) h.context.window.liveTest.session('session-two');
+      const current = newer ? h.run() : null;
+      if (newer) await nextEntered.promise;
+      const before = h.node('browserVerifyResult').textContent;
+      old.resolve(stage === 'response' ? response(Promise.resolve(new ArrayBuffer(1))) : new ArrayBuffer(1));
+      await pending;
+      noSuccess(h); assert.equal(verified, 0, 'retired bytes must never reach the verifier');
+      assert.equal(h.node('browserVerifyResult').textContent, before);
+      if (newer) {
+        assert.equal(h.node('browserVerify').disabled, true);
+        const duplicate = h.run();
+        await new Promise((resolve) => setImmediate(resolve));
+        assert.equal(downloads, 2, 'old completion must not unlock the newer attempt');
+        await duplicate;
+        next.resolve(new ArrayBuffer(1)); await current;
+      } else {
+        h.context.fetch = async () => response(Promise.resolve(new ArrayBuffer(1)));
+        await h.run();
+      }
+      assert.equal(verified, 1);
+      assert.equal(h.node('stamp').classList.contains('on'), true);
+    });
+  }
+}
+
+for (const path of ['runtime', 'wasm', 'live bundle', 'replay bundle']) {
+  for (const redirected of [false, true]) {
+    test(`${path}: real Fetch ${redirected ? 'refuses a local 302' : 'accepts direct bytes'}`, { timeout: 5000 }, async (t) => {
+      let initialRequests = 0; let redirectedRequests = 0;
+      const server = createServer((req, res) => {
+        if (req.url === '/redirected-bytes') redirectedRequests++; else initialRequests++;
+        if (redirected && req.url !== '/redirected-bytes') {
+          res.writeHead(302, { Location: '/redirected-bytes' }); res.end();
+        } else {
+          res.writeHead(200, { 'Content-Type': 'application/octet-stream' }); res.end(Buffer.from([1]));
+        }
+      });
+      t.after(() => new Promise((resolve) => { server.close(resolve); server.closeAllConnections(); }));
+      await new Promise((resolve, reject) => { server.once('error', reject); server.listen(0, '127.0.0.1', resolve); });
+      const origin = `http://127.0.0.1:${server.address().port}`;
+      const h = harness('live');
+      const requested = []; const executed = [];
+      h.context.document.querySelector = () => null;
+      h.context.document.head = { appendChild(script) { executed.push('script'); script.onload(); } };
+      h.context.Blob = Blob;
+      // Keep URL stubs inside this VM rather than modifying the host URL class.
+      h.context.URL = { createObjectURL() { return 'blob:runtime'; }, revokeObjectURL() {} };
+      h.context.WebAssembly = { async instantiate(bytes) { assert.deepEqual([...new Uint8Array(bytes)], [1]); executed.push('wasm'); return { instance: {} }; } };
+      h.context.window.Go = function () {
+        this.importObject = {};
+        this.run = () => { executed.push('go'); h.context.window.pipelockVerifyBundle = () => h.valid; };
+      };
+      h.context.fetch = async (url, options) => {
+        requested.push({ url, options });
+        // Resolve document-relative production URLs as a browser would. Pass
+        // its options unchanged to real Fetch; the local server owns the 302.
+        return fetch(new URL(url, origin), options);
+      };
+      let run;
+      if (path === 'runtime') run = () => h.context.window.liveTest.script('wasm_exec.js', '');
+      if (path === 'wasm') {
+        h.context.window.liveTest.ready(null);
+        h.context.window.pipelockVerifyBundle = undefined;
+        run = () => h.context.window.liveTest.load();
+      }
+      if (path === 'live bundle') {
+        h.context.window.pipelockVerifyBundle = (bytes) => { assert.deepEqual([...bytes], [1]); executed.push('verify'); return h.valid; };
+        run = () => h.run();
+      }
+      if (path === 'replay bundle') {
+        h.context.window.pipelockVerifyBundle = (bytes) => { assert.deepEqual([...bytes], [1]); executed.push('verify'); return h.valid; };
+        run = () => h.verifyStaticBundle('bundle.bin');
+      }
+      if (redirected && path !== 'live bundle') await assert.rejects(run(), TypeError);
+      else {
+        const result = await run();
+        if (!redirected && path === 'replay bundle') assert.equal(result.valid, true);
+      }
+      assert.equal(requested.length, 1, 'the target production fetch must run exactly once');
+      assert.equal(initialRequests, 1, 'the real server must receive the production request');
+      assert.equal(redirectedRequests, 0, 'Fetch must not follow the redirect');
+      const expectedURL = { runtime: 'wasm_exec.js', wasm: 'pipelock-verifier.wasm', 'replay bundle': 'bundle.bin' }[path];
+      if (expectedURL) assert.equal(requested[0].url, expectedURL);
+      else assert.match(requested[0].url, /bundle\?token=session-one&format=raw$/);
+      if (redirected) {
+        assert.deepEqual(executed, []);
+        noSuccess(h);
+        if (path === 'live bundle') assert.match(h.node('browserVerifyResult').textContent, /Could not verify:/);
+      } else {
+        assert.ok(executed.length > 0, 'the nonredirect control must reach execution or verification');
+        if (path === 'live bundle') assert.equal(h.node('stamp').classList.contains('on'), true);
+      }
+      assert.equal(requested[0].options.redirect, 'error');
+    });
+  }
+}
+
+
+for (const mode of ['replay', 'live']) {
+  test(`${mode}: late rejection cannot overwrite or unlock a newer pending attempt`, { timeout: 2000 }, async () => {
+    const h = harness(mode);
+    const old = deferred(); const next = deferred(); const entered = deferred(); const nextEntered = deferred();
+    let calls = 0;
+    if (mode === 'replay') {
+      h.context.window.pipelockVerifyStaticBundle = () => {
+        calls++;
+        if (calls === 1) { entered.resolve(); return old.promise; }
+        nextEntered.resolve(); return next.promise;
+      };
+    } else {
+      h.context.fetch = async () => ({ ok: true, headers: { get() { return ''; } }, arrayBuffer() {
+        calls++;
+        if (calls === 1) { entered.resolve(); return old.promise; }
+        nextEntered.resolve(); return next.promise;
+      } });
+    }
+    const pending = h.run(); await entered.promise;
+    if (mode === 'replay') vm.runInContext('restart()', h.context);
+    else { h.context.window.liveTest.reset(); h.context.window.liveTest.session('session-two'); }
+    const current = h.run(); await nextEntered.promise;
+    const prefix = mode === 'replay' ? 'replayBrowserVerify' : 'browserVerify';
+    const snapshot = () => [h.node(prefix + 'Result').textContent, h.node(prefix + 'Result').className,
+      h.node(prefix).className, h.node(prefix).disabled, h.node('statusLabel').textContent];
+    const before = snapshot();
+    old.reject(new Error('retired download failed')); await pending;
+    noSuccess(h); assert.deepEqual(snapshot(), before, 'stale failure must leave the newer UI alone');
+    const duplicate = h.run(); await new Promise((resolve) => setImmediate(resolve));
+    assert.equal(calls, 2, 'stale rejection must not unlock the newer attempt'); await duplicate;
+    next.resolve(mode === 'replay' ? h.valid : new ArrayBuffer(1)); await current;
+    assert.equal(h.node('stamp').classList.contains('on'), true);
+    assert.equal(h.node(prefix).classList.contains('ok'), true);
+  });
+}
