@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import vm from 'node:vm';
+import { createServer } from 'node:http';
 import test from 'node:test';
 
 function source(file) {
@@ -115,10 +116,14 @@ for (const outcome of ['success', 'error']) {
   });
   test(`Live session reset discards stale ${outcome}`, async () => {
     const h = harness('live'); let resolve, reject;
+    let downloads = 0;
+    h.context.fetch = async () => { downloads++; return { ok: true, headers: { get() { return ''; } }, arrayBuffer: async () => new ArrayBuffer(1) }; };
     h.context.window.liveTest.ready(new Promise((yes, no) => { resolve = yes; reject = no; }));
     const pending = h.run(); h.context.window.liveTest.reset(); h.context.window.liveTest.session('session-two');
     if (outcome === 'success') resolve(); else reject(new Error('stale error'));
-    await pending; noSuccess(h);
+    await pending;
+    assert.equal(downloads, 0, 'retired loading must stop before downloading a bundle');
+    noSuccess(h);
     assert.equal(h.node('browserVerifyResult').hidden, true);
   });
 }
@@ -411,9 +416,9 @@ test('replay-only copy: the Live tab opens the Playground page in the same tab',
 
 
 function deferred() {
-  let resolve;
-  const promise = new Promise((yes) => { resolve = yes; });
-  return { promise, resolve };
+  let resolve, reject;
+  const promise = new Promise((yes, no) => { resolve = yes; reject = no; });
+  return { promise, resolve, reject };
 }
 
 for (const newer of [false, true]) {
@@ -546,3 +551,67 @@ for (const path of ['runtime', 'wasm', 'live bundle', 'replay bundle']) {
     });
   }
 }
+
+
+for (const mode of ['replay', 'live']) {
+  test(`${mode}: late rejection cannot overwrite or unlock a newer pending attempt`, { timeout: 2000 }, async () => {
+    const h = harness(mode);
+    const old = deferred(); const next = deferred(); const entered = deferred(); const nextEntered = deferred();
+    let calls = 0;
+    if (mode === 'replay') {
+      h.context.window.pipelockVerifyStaticBundle = () => {
+        calls++;
+        if (calls === 1) { entered.resolve(); return old.promise; }
+        nextEntered.resolve(); return next.promise;
+      };
+    } else {
+      h.context.fetch = async () => ({ ok: true, headers: { get() { return ''; } }, arrayBuffer() {
+        calls++;
+        if (calls === 1) { entered.resolve(); return old.promise; }
+        nextEntered.resolve(); return next.promise;
+      } });
+    }
+    const pending = h.run(); await entered.promise;
+    if (mode === 'replay') vm.runInContext('restart()', h.context);
+    else { h.context.window.liveTest.reset(); h.context.window.liveTest.session('session-two'); }
+    const current = h.run(); await nextEntered.promise;
+    const prefix = mode === 'replay' ? 'replayBrowserVerify' : 'browserVerify';
+    const snapshot = () => [h.node(prefix + 'Result').textContent, h.node(prefix + 'Result').className,
+      h.node(prefix).className, h.node(prefix).disabled, h.node('statusLabel').textContent];
+    const before = snapshot();
+    old.reject(new Error('retired download failed')); await pending;
+    noSuccess(h); assert.deepEqual(snapshot(), before, 'stale failure must leave the newer UI alone');
+    const duplicate = h.run(); await new Promise((resolve) => setImmediate(resolve));
+    assert.equal(calls, 2, 'stale rejection must not unlock the newer attempt'); await duplicate;
+    next.resolve(mode === 'replay' ? h.valid : new ArrayBuffer(1)); await current;
+    assert.equal(h.node('stamp').classList.contains('on'), true);
+    assert.equal(h.node(prefix).classList.contains('ok'), true);
+  });
+}
+
+test('replay bundle: real Fetch rejects a local 302 and accepts direct bytes', { timeout: 5000 }, async (t) => {
+  let directRequests = 0; let redirectRequests = 0; let redirectedRequests = 0;
+  const server = createServer((req, res) => {
+    if (req.url === '/redirect') {
+      redirectRequests++; res.writeHead(302, { Location: '/redirected-bundle' }); res.end();
+    } else {
+      if (req.url === '/bundle') directRequests++; else redirectedRequests++;
+      res.writeHead(200, { 'Content-Type': 'application/octet-stream' }); res.end(Buffer.from([1]));
+    }
+  });
+  t.after(() => new Promise((resolve) => { server.close(resolve); server.closeAllConnections(); }));
+  await new Promise((resolve, reject) => { server.once('error', reject); server.listen(0, '127.0.0.1', resolve); });
+  const origin = `http://127.0.0.1:${server.address().port}`;
+  const h = harness('replay');
+  h.context.fetch = fetch;
+  let verified = 0;
+  h.context.window.pipelockVerifyBundle = (bytes) => {
+    assert.deepEqual([...bytes], [1]); verified++; return h.valid;
+  };
+  assert.equal((await h.verifyStaticBundle(origin + '/bundle')).valid, true);
+  assert.equal(directRequests, 1); assert.equal(verified, 1);
+  await assert.rejects(h.verifyStaticBundle(origin + '/redirect'), TypeError);
+  assert.equal(redirectRequests, 1, 'the real server must receive the redirect request');
+  assert.equal(redirectedRequests, 0, 'Fetch must not follow the redirect');
+  assert.equal(verified, 1, 'redirected bytes must never reach verification');
+});
