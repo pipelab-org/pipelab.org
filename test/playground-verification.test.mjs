@@ -495,7 +495,19 @@ for (const stage of ['response', 'body']) {
 
 for (const path of ['runtime', 'wasm', 'live bundle', 'replay bundle']) {
   for (const redirected of [false, true]) {
-    test(`${path}: ${redirected ? 'redirect is refused' : 'same-origin download succeeds'}`, { timeout: 2000 }, async () => {
+    test(`${path}: real Fetch ${redirected ? 'refuses a local 302' : 'accepts direct bytes'}`, { timeout: 5000 }, async (t) => {
+      let initialRequests = 0; let redirectedRequests = 0;
+      const server = createServer((req, res) => {
+        if (req.url === '/redirected-bytes') redirectedRequests++; else initialRequests++;
+        if (redirected && req.url !== '/redirected-bytes') {
+          res.writeHead(302, { Location: '/redirected-bytes' }); res.end();
+        } else {
+          res.writeHead(200, { 'Content-Type': 'application/octet-stream' }); res.end(Buffer.from([1]));
+        }
+      });
+      t.after(() => new Promise((resolve) => { server.close(resolve); server.closeAllConnections(); }));
+      await new Promise((resolve, reject) => { server.once('error', reject); server.listen(0, '127.0.0.1', resolve); });
+      const origin = `http://127.0.0.1:${server.address().port}`;
       const h = harness('live');
       const requested = []; const executed = [];
       h.context.document.querySelector = () => null;
@@ -503,17 +515,16 @@ for (const path of ['runtime', 'wasm', 'live bundle', 'replay bundle']) {
       h.context.Blob = Blob;
       // Keep URL stubs inside this VM rather than modifying the host URL class.
       h.context.URL = { createObjectURL() { return 'blob:runtime'; }, revokeObjectURL() {} };
-      h.context.WebAssembly = { async instantiate() { executed.push('wasm'); return { instance: {} }; } };
+      h.context.WebAssembly = { async instantiate(bytes) { assert.deepEqual([...new Uint8Array(bytes)], [1]); executed.push('wasm'); return { instance: {} }; } };
       h.context.window.Go = function () {
         this.importObject = {};
         this.run = () => { executed.push('go'); h.context.window.pipelockVerifyBundle = () => h.valid; };
       };
       h.context.fetch = async (url, options) => {
         requested.push({ url, options });
-        // Simulate Fetch's redirect policy. Without the production option, the
-        // redirected bytes would be accepted and execute or report VALID.
-        if (redirected && options?.redirect === 'error') throw new TypeError('redirect refused');
-        return { ok: true, headers: { get() { return ''; } }, arrayBuffer: async () => new ArrayBuffer(1) };
+        // Resolve document-relative production URLs as a browser would. Pass
+        // its options unchanged to real Fetch; the local server owns the 302.
+        return fetch(new URL(url, origin), options);
       };
       let run;
       if (path === 'runtime') run = () => h.context.window.liveTest.script('wasm_exec.js', '');
@@ -523,26 +534,28 @@ for (const path of ['runtime', 'wasm', 'live bundle', 'replay bundle']) {
         run = () => h.context.window.liveTest.load();
       }
       if (path === 'live bundle') {
-        h.context.window.pipelockVerifyBundle = () => { executed.push('verify'); return h.valid; };
+        h.context.window.pipelockVerifyBundle = (bytes) => { assert.deepEqual([...bytes], [1]); executed.push('verify'); return h.valid; };
         run = () => h.run();
       }
       if (path === 'replay bundle') {
-        h.context.window.pipelockVerifyBundle = () => { executed.push('verify'); return h.valid; };
+        h.context.window.pipelockVerifyBundle = (bytes) => { assert.deepEqual([...bytes], [1]); executed.push('verify'); return h.valid; };
         run = () => h.verifyStaticBundle('bundle.bin');
       }
-      if (redirected && path !== 'live bundle') await assert.rejects(run(), /redirect refused/);
+      if (redirected && path !== 'live bundle') await assert.rejects(run(), TypeError);
       else {
         const result = await run();
         if (!redirected && path === 'replay bundle') assert.equal(result.valid, true);
       }
       assert.equal(requested.length, 1, 'the target production fetch must run exactly once');
+      assert.equal(initialRequests, 1, 'the real server must receive the production request');
+      assert.equal(redirectedRequests, 0, 'Fetch must not follow the redirect');
       const expectedURL = { runtime: 'wasm_exec.js', wasm: 'pipelock-verifier.wasm', 'replay bundle': 'bundle.bin' }[path];
       if (expectedURL) assert.equal(requested[0].url, expectedURL);
       else assert.match(requested[0].url, /bundle\?token=session-one&format=raw$/);
       if (redirected) {
         assert.deepEqual(executed, []);
         noSuccess(h);
-        if (path === 'live bundle') assert.match(h.node('browserVerifyResult').textContent, /redirect refused/);
+        if (path === 'live bundle') assert.match(h.node('browserVerifyResult').textContent, /Could not verify:/);
       } else {
         assert.ok(executed.length > 0, 'the nonredirect control must reach execution or verification');
         if (path === 'live bundle') assert.equal(h.node('stamp').classList.contains('on'), true);
@@ -588,30 +601,3 @@ for (const mode of ['replay', 'live']) {
     assert.equal(h.node(prefix).classList.contains('ok'), true);
   });
 }
-
-test('replay bundle: real Fetch rejects a local 302 and accepts direct bytes', { timeout: 5000 }, async (t) => {
-  let directRequests = 0; let redirectRequests = 0; let redirectedRequests = 0;
-  const server = createServer((req, res) => {
-    if (req.url === '/redirect') {
-      redirectRequests++; res.writeHead(302, { Location: '/redirected-bundle' }); res.end();
-    } else {
-      if (req.url === '/bundle') directRequests++; else redirectedRequests++;
-      res.writeHead(200, { 'Content-Type': 'application/octet-stream' }); res.end(Buffer.from([1]));
-    }
-  });
-  t.after(() => new Promise((resolve) => { server.close(resolve); server.closeAllConnections(); }));
-  await new Promise((resolve, reject) => { server.once('error', reject); server.listen(0, '127.0.0.1', resolve); });
-  const origin = `http://127.0.0.1:${server.address().port}`;
-  const h = harness('replay');
-  h.context.fetch = fetch;
-  let verified = 0;
-  h.context.window.pipelockVerifyBundle = (bytes) => {
-    assert.deepEqual([...bytes], [1]); verified++; return h.valid;
-  };
-  assert.equal((await h.verifyStaticBundle(origin + '/bundle')).valid, true);
-  assert.equal(directRequests, 1); assert.equal(verified, 1);
-  await assert.rejects(h.verifyStaticBundle(origin + '/redirect'), TypeError);
-  assert.equal(redirectRequests, 1, 'the real server must receive the redirect request');
-  assert.equal(redirectedRequests, 0, 'Fetch must not follow the redirect');
-  assert.equal(verified, 1, 'redirected bytes must never reach verification');
-});
