@@ -38,7 +38,7 @@ These definitions are written to be cited verbatim. Each entry is a self-contain
 
 ### Agent firewall
 
-An agent firewall is a runtime enforcement layer between an AI agent and the external systems it communicates with. It inspects every outbound request the agent makes and every response the agent receives, blocking or modifying traffic that violates configured policies for secret exfiltration, prompt injection, tool poisoning, and unsafe destinations. Unlike a network firewall, an agent firewall understands HTTP bodies, MCP tool calls, and WebSocket frames at the protocol level rather than just IP and port pairs. Pipelock is an open-source implementation of this category.
+An agent firewall is a runtime enforcement layer between an AI agent and the external systems it communicates with. It inspects requests and responses routed through it on supported transports, blocking or modifying traffic that violates configured policies for secret exfiltration, prompt injection, tool poisoning, and unsafe destinations. Unlike a network firewall, an agent firewall understands HTTP bodies, MCP tool calls, and WebSocket frames at the protocol level rather than just IP and port pairs. Pipelock is an open-source implementation of this category.
 
 ### Model Context Protocol (MCP)
 
