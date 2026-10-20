@@ -46,7 +46,7 @@ function harness(mode = 'replay') {
   });
   // Keep the production handlers intact; skip page boot and expose closure state.
   let live = source('viewer-live.js');
-  live = live.replace(/\}\)\(\);\s*$/, `window.liveTest = { run: runBrowserVerify, handle, create: createSession, blocks(value) { blockCount = value; }, reset: resetBrowserVerifyState, session(value) { token = value; }, ready(value) { verifierReady = value; } }; })();`);
+  live = live.replace(/\}\)\(\);\s*$/, `window.liveTest = { run: runBrowserVerify, load: loadPipelockVerifier, script: loadScriptWithGuards, handle, create: createSession, blocks(value) { blockCount = value; }, reset: resetBrowserVerifyState, session(value) { token = value; }, ready(value) { verifierReady = value; } }; })();`);
   vm.runInContext(live, context);
   const replay = source('viewer.js').replace(/main\(\)\.catch\([^\n]+\);\s*$/, '');
   vm.runInContext(replay, context);
@@ -61,9 +61,10 @@ function harness(mode = 'replay') {
     context.window.pipelockVerifyStaticBundle = async () => out;
     context.window.pipelockVerifyBundle = () => out;
   };
+  const verifyStaticBundle = context.window.pipelockVerifyStaticBundle;
   setResult(valid);
   const run = () => mode === 'live' ? context.window.liveTest.run() : vm.runInContext('runReplayBrowserVerify()', context);
-  return { node, context, run, setResult, valid, timers, flushTimers() { for (const [id, fn] of timers) { timers.delete(id); fn(); } } };
+  return { node, context, run, setResult, valid, verifyStaticBundle, timers, flushTimers() { for (const [id, fn] of timers) { timers.delete(id); fn(); } } };
 }
 
 function noSuccess(h) {
@@ -407,3 +408,141 @@ test('replay-only copy: the Live tab opens the Playground page in the same tab',
   assert.deepEqual(opened, [['/playground/', '_top']]);
   assert.equal(h.context.document.body.dataset.mode, 'replay');
 });
+
+
+function deferred() {
+  let resolve;
+  const promise = new Promise((yes) => { resolve = yes; });
+  return { promise, resolve };
+}
+
+for (const newer of [false, true]) {
+  test(`replay: late VALID after restart cannot replace ${newer ? 'a pending attempt' : 'the reset view'}`, { timeout: 2000 }, async () => {
+    const h = harness('replay');
+    const old = deferred(); const next = deferred();
+    let calls = 0;
+    h.context.window.pipelockVerifyStaticBundle = () => (++calls === 1 ? old.promise : next.promise);
+    const pending = h.run();
+    vm.runInContext('restart()', h.context);
+    const current = newer ? h.run() : null;
+    const before = h.node('replayBrowserVerifyResult').textContent;
+    old.resolve(h.valid); await pending;
+    noSuccess(h);
+    assert.equal(h.node('replayBrowserVerifyResult').textContent, before);
+    if (newer) {
+      assert.equal(h.node('replayBrowserVerify').disabled, true);
+      const duplicate = h.run();
+      assert.equal(calls, 2, 'old completion must not unlock the newer attempt');
+      await duplicate;
+      next.resolve({ valid: true, checks: [{ name: 'new-session-check', pass: true }] });
+      await current;
+      assert.equal(h.node('stamp').classList.contains('on'), true);
+      assert.match(h.node('replayBrowserVerifyResult').textContent, /new-session-check/);
+    } else {
+      h.setResult(h.valid); await h.run();
+      assert.equal(h.node('stamp').classList.contains('on'), true, 'a fresh attempt can still succeed');
+    }
+  });
+}
+
+for (const stage of ['response', 'body']) {
+  for (const newer of [false, true]) {
+    test(`live: late VALID bytes at ${stage} after reset cannot replace ${newer ? 'a pending attempt' : 'the reset view'}`, { timeout: 2000 }, async () => {
+      const h = harness('live');
+      const entered = deferred(); const old = deferred(); const next = deferred(); const nextEntered = deferred();
+      let downloads = 0; let verified = 0;
+      h.context.window.pipelockVerifyBundle = () => { verified++; return h.valid; };
+      const response = (body) => ({ ok: true, headers: { get() { return ''; } }, arrayBuffer: () => body });
+      h.context.fetch = () => {
+        downloads++;
+        if (downloads > 1) return { ...response(next.promise), arrayBuffer() { nextEntered.resolve(); return next.promise; } };
+        if (stage === 'response') { entered.resolve(); return old.promise; }
+        return { ...response(old.promise), arrayBuffer() { entered.resolve(); return old.promise; } };
+      };
+      const pending = h.run(); await entered.promise;
+      h.context.window.liveTest.reset();
+      // Keep the token in one case to isolate the generation guard; change it
+      // in the other to exercise replacement-session behavior as well.
+      if (newer) h.context.window.liveTest.session('session-two');
+      const current = newer ? h.run() : null;
+      if (newer) await nextEntered.promise;
+      const before = h.node('browserVerifyResult').textContent;
+      old.resolve(stage === 'response' ? response(Promise.resolve(new ArrayBuffer(1))) : new ArrayBuffer(1));
+      await pending;
+      noSuccess(h); assert.equal(verified, 0, 'retired bytes must never reach the verifier');
+      assert.equal(h.node('browserVerifyResult').textContent, before);
+      if (newer) {
+        assert.equal(h.node('browserVerify').disabled, true);
+        const duplicate = h.run();
+        await new Promise((resolve) => setImmediate(resolve));
+        assert.equal(downloads, 2, 'old completion must not unlock the newer attempt');
+        await duplicate;
+        next.resolve(new ArrayBuffer(1)); await current;
+      } else {
+        h.context.fetch = async () => response(Promise.resolve(new ArrayBuffer(1)));
+        await h.run();
+      }
+      assert.equal(verified, 1);
+      assert.equal(h.node('stamp').classList.contains('on'), true);
+    });
+  }
+}
+
+for (const path of ['runtime', 'wasm', 'live bundle', 'replay bundle']) {
+  for (const redirected of [false, true]) {
+    test(`${path}: ${redirected ? 'redirect is refused' : 'same-origin download succeeds'}`, { timeout: 2000 }, async () => {
+      const h = harness('live');
+      const requested = []; const executed = [];
+      h.context.document.querySelector = () => null;
+      h.context.document.head = { appendChild(script) { executed.push('script'); script.onload(); } };
+      h.context.Blob = Blob;
+      // Keep URL stubs inside this VM rather than modifying the host URL class.
+      h.context.URL = { createObjectURL() { return 'blob:runtime'; }, revokeObjectURL() {} };
+      h.context.WebAssembly = { async instantiate() { executed.push('wasm'); return { instance: {} }; } };
+      h.context.window.Go = function () {
+        this.importObject = {};
+        this.run = () => { executed.push('go'); h.context.window.pipelockVerifyBundle = () => h.valid; };
+      };
+      h.context.fetch = async (url, options) => {
+        requested.push({ url, options });
+        // Simulate Fetch's redirect policy. Without the production option, the
+        // redirected bytes would be accepted and execute or report VALID.
+        if (redirected && options?.redirect === 'error') throw new TypeError('redirect refused');
+        return { ok: true, headers: { get() { return ''; } }, arrayBuffer: async () => new ArrayBuffer(1) };
+      };
+      let run;
+      if (path === 'runtime') run = () => h.context.window.liveTest.script('wasm_exec.js', '');
+      if (path === 'wasm') {
+        h.context.window.liveTest.ready(null);
+        h.context.window.pipelockVerifyBundle = undefined;
+        run = () => h.context.window.liveTest.load();
+      }
+      if (path === 'live bundle') {
+        h.context.window.pipelockVerifyBundle = () => { executed.push('verify'); return h.valid; };
+        run = () => h.run();
+      }
+      if (path === 'replay bundle') {
+        h.context.window.pipelockVerifyBundle = () => { executed.push('verify'); return h.valid; };
+        run = () => h.verifyStaticBundle('bundle.bin');
+      }
+      if (redirected && path !== 'live bundle') await assert.rejects(run(), /redirect refused/);
+      else {
+        const result = await run();
+        if (!redirected && path === 'replay bundle') assert.equal(result.valid, true);
+      }
+      assert.equal(requested.length, 1, 'the target production fetch must run exactly once');
+      const expectedURL = { runtime: 'wasm_exec.js', wasm: 'pipelock-verifier.wasm', 'replay bundle': 'bundle.bin' }[path];
+      if (expectedURL) assert.equal(requested[0].url, expectedURL);
+      else assert.match(requested[0].url, /bundle\?token=session-one&format=raw$/);
+      if (redirected) {
+        assert.deepEqual(executed, []);
+        noSuccess(h);
+        if (path === 'live bundle') assert.match(h.node('browserVerifyResult').textContent, /redirect refused/);
+      } else {
+        assert.ok(executed.length > 0, 'the nonredirect control must reach execution or verification');
+        if (path === 'live bundle') assert.equal(h.node('stamp').classList.contains('on'), true);
+      }
+      assert.equal(requested[0].options.redirect, 'error');
+    });
+  }
+}
