@@ -1066,6 +1066,30 @@ if (!pipelockTemplateSource.includes('<span class="pipelock-category">AI agent f
 if (/^subtitle:\s*"The open-source agent firewall/m.test(pipelockPage)) {
   issues.push("content/pipelock.md: hero lead must not repeat the visible product category line");
 }
+// The product lead and its coverage statement form one copy contract. Check
+// rendered outputs so the shared hero, markdown mirror, and static summaries
+// cannot publish the broad lead without its routing and containment limits.
+const productLead = "Protect your data and work from AI agents.";
+const productCoverage = "Pipelock scans agent traffic routed through it for secret leaks, malicious instructions and unsafe tool use. Linux containment adds host restrictions when configured.";
+for (const [relativePath, expectedOccurrences] of [
+  ["index.html", 1],
+  ["buildhop/index.html", 1],
+  ["index.md", 1],
+  ["llms.txt", 1],
+  ["llms-full.txt", 2],
+]) {
+  const source = readFileSync(path.join(publicDir, relativePath), "utf8");
+  const text = relativePath.endsWith(".html")
+    ? visibleTextFromHtml(source.replace(/<!--[\s\S]*?-->/g, " "))
+    : normalizeText(source);
+  const occurrences = text.split(productLead).slice(1);
+  if (occurrences.length !== expectedOccurrences) {
+    issues.push(`${relativePath}: expected ${expectedOccurrences} product lead occurrences, found ${occurrences.length}`);
+  }
+  if (occurrences.some((following) => !following.startsWith(` ${productCoverage}`))) {
+    issues.push(`${relativePath}: product lead must be immediately followed by the exact coverage statement`);
+  }
+}
 const securityTxt = readFileSync(path.join(repoRoot, "static", ".well-known", "security.txt"), "utf8");
 const enabledTrackers = [];
 // Same rule as the scanner-order check above: parse the TOML. This value drives
