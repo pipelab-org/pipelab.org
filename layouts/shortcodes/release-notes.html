@@ -1,0 +1,20 @@
+{{- /* Lists every Pipelock release post, newest first, with its upgrade guide
+       when one exists. Release posts are blog pages named pipelock-vNNN-release. */ -}}
+{{- $releases := slice -}}
+{{- range where site.RegularPages "Section" "blog" -}}
+  {{- if findRE `^pipelock-v[0-9]+-release$` .File.ContentBaseName -}}{{- $releases = $releases | append . -}}{{- end -}}
+{{- end -}}
+<table>
+<thead><tr><th>Release</th><th>Date</th><th>What changed</th><th>Upgrade guide</th></tr></thead>
+<tbody>
+{{- range sort $releases "Date" "desc" }}
+{{- $guide := site.GetPage (printf "/learn/%s" (replace .File.ContentBaseName "-release" "-upgrade")) }}
+<tr>
+<td><a href="{{ .RelPermalink }}">{{ .Title }}</a></td>
+<td>{{ .Date.Format "2006-01-02" }}</td>
+<td>{{ .Description }}</td>
+<td>{{ with $guide }}<a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a>{{ else }}None{{ end }}</td>
+</tr>
+{{- end }}
+</tbody>
+</table>

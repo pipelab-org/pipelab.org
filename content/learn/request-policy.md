@@ -74,3 +74,5 @@ Operation-level matching covers the request shapes that slip past host-only and 
 Request policy runs before the learn-and-lock contract gate, so a contract allow can never suppress an operation-policy block. It is independent of `request_body_scanning`; it reads a body itself only when a route-matched operation predicate needs one. It composes with DLP and the domain blocklist rather than replacing either.
 
 For the full field reference, see the configuration guide in the Pipelock repository. To turn the operations your agent actually performs into a reviewed allowlist, pair this with [agent egress control](/learn/agent-egress-control/) and [verifiable egress control](/learn/verifiable-egress-control/). Agents that reach Pipelock through a framework hook instead of MCP wire in through the [Hermes integration](/learn/hermes-integration/).
+
+Operation-level request policy first shipped in [Pipelock v2.6](/blog/pipelock-v260-release/). The [release notes index](/learn/pipelock-release-notes/) lists what changed in later versions.

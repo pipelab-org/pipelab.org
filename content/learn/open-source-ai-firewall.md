@@ -1,11 +1,12 @@
 ---
-title: "Open Source AI Firewall: Self-Hosted Agent Security"
+title: "AI Firewall vs LLM Firewall vs Agent Firewall: Open-Source Options (2026)"
 linkTitle: "Open Source AI Firewall"
-seoTitle: "Open Source AI Firewall: LLM vs Agent vs Gateway"
+seoTitle: "AI vs LLM vs Agent Firewall: Open Source (2026)"
 subtitle: "Runtime agent protection you can inspect, modify, and deploy anywhere."
-description: "Open source AI firewall comparison: LLM firewall vs agent firewall vs gateway, with Pipelock, LlamaFirewall, NeMo Guardrails, and MCP tools."
+description: "Free, open source, self-hosted AI firewall options compared: AI firewall vs LLM firewall vs agent firewall, with Pipelock, LlamaFirewall, and NeMo."
 date: 2026-04-11
-lastmod: 2026-08-08
+lastmod: 2026-10-21
+software_jsonld: true
 faq:
   - q: "What is an open source AI firewall?"
     a: "An open source AI firewall is a self-hosted security tool that sits between AI agents and the network, scanning traffic for credential leaks, prompt injection, SSRF, and tool poisoning. Because the source code is public, you can audit exactly what it scans, how it decides, and what it logs. No vendor black box."
@@ -172,7 +173,7 @@ Pipelock scans mediated traffic for 65 credential patterns, prompt injection (wi
 - [Why Pipelock Is an Egress Agent Firewall](/learn/egress-vs-inbound-agent-firewall/): why Pipelock controls outbound effects instead of relying on prompt filtering at the door
 - [Agent Firewall vs WAF](/compare/agent-firewall-vs-waf/): why inbound web protection and agent egress control solve different problems
 - [MCP Runtime Security](/learn/mcp-runtime-security/): live-traffic defenses for MCP that pre-deploy scanners miss
-- [MCP Vulnerability Scanner](/learn/mcp-vulnerability-scanner/): pre-deploy and runtime MCP scanner landscape
+- [MCP Security Tools](/learn/mcp-security-tools/): scanners, gateways, and proxies compared
 - [AI Runtime Security](/learn/ai-runtime-security/): the runtime threat surface beyond the network layer
 - [Pipelock](/pipelock/): full feature list, deployment options, and framework coverage
 - [AI Agent Security](/learn/ai-agent-security/): three security layers explained

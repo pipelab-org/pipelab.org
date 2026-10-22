@@ -103,6 +103,7 @@ faq:
       <a href="/install/">All install methods</a>
       <a href="/learn/claude-code-hooks/">Claude Code guide</a>
       <a href="/learn/mcp-proxy/">MCP proxy guide</a>
+      <a href="/learn/mcp-security/">MCP security checklist</a>
     </nav>
     <p class="pipelock-runbook-release"><span>Current container</span><code>{{< install-cmd docker >}}</code></p>
   </div>

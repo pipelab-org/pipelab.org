@@ -1,0 +1,40 @@
+{{- /* Cloudflare evaluates rules top-down and asks for static rules before
+       dynamic ones (placeholders or splats). Hand rules with a dynamic source
+       are held back and printed after the generated static rules. */ -}}
+{{- $hand := readFile "static/_redirects" -}}
+{{- $sources := slice -}}
+{{- $static := slice -}}
+{{- $dynamic := slice -}}
+{{- range split $hand "\n" -}}
+  {{- $f := split (trim . " \t\r") " " -}}
+  {{- if and (gt (len $f) 1) (not (hasPrefix (index $f 0) "#")) -}}
+    {{- $sources = $sources | append (index $f 0) -}}
+    {{- if or (strings.Contains (index $f 0) ":") (strings.Contains (index $f 0) "*") -}}
+      {{- $dynamic = $dynamic | append . -}}
+    {{- else -}}
+      {{- $static = $static | append . -}}
+    {{- end -}}
+  {{- else -}}
+    {{- $static = $static | append . -}}
+  {{- end -}}
+{{- end -}}
+{{- delimit $static "\n" | safeHTML -}}
+{{- $paths := slice -}}
+{{- range site.AllPages -}}
+  {{- with .RelPermalink -}}{{- $paths = $paths | append . -}}{{- end -}}
+{{- end -}}
+{{- $paths = $paths | append (partial "static-index-dirs.html" "static") -}}
+{{- $out := slice -}}
+{{- range $paths | uniq | sort -}}
+  {{- if and (hasSuffix . "/") (ne . "/") (not (strings.Contains . "*")) -}}
+    {{- $src := strings.TrimSuffix "/" . -}}
+    {{- if not (in $sources $src) -}}{{- $out = $out | append (printf "%s %s 301" $src .) -}}{{- end -}}
+  {{- end -}}
+{{- end }}
+
+# Generated at build time: permanent trailing-slash redirect for every
+# rendered directory page. Paths with a file extension never match these.
+{{ delimit $out "\n" }}
+
+# Hand rules with placeholders or splats, kept after every static rule.
+{{ delimit $dynamic "\n" | safeHTML }}

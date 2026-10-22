@@ -102,7 +102,7 @@ Defenses that aren't tested are assumptions. Red teaming turns assumptions into 
 
 - [AI Agent Security](/learn/ai-agent-security/): the three security layers explained
 - [What is an Agent Firewall?](/agent-firewall/): the egress inspection architecture
-- [How to Secure Your MCP Setup](/learn/how-to-secure-mcp/): seven attacks, seven defenses
+- [MCP Security](/learn/mcp-security/): best-practices checklist and hub
 - [MCP Proxy](/learn/mcp-proxy/): how scanning MCP traffic works
 - [Pipelock](/pipelock/): open-source agent firewall with DLP, injection scanning, and egress control
 - [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

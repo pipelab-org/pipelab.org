@@ -26,7 +26,7 @@ const OUT = path.join(process.cwd(), "data", "schema-org-properties.json");
 const EMITTED_TYPES = [
   "AboutPage", "Answer", "BlogPosting", "BreadcrumbList", "ContactPage",
   "ContactPoint", "DefinedTerm", "DefinedTermSet", "FAQPage", "HowTo",
-  "HowToStep", "ImageObject", "ListItem", "Offer", "Organization", "Person",
+  "HowToStep", "ImageObject", "ItemList", "ListItem", "Offer", "Organization", "Person",
   "Question", "SoftwareApplication", "TechArticle", "WebSite",
 ];
 

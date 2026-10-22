@@ -1,11 +1,11 @@
 ---
-title: "MCP Security: Risks, Best Practices, and Runtime Defenses"
+title: "MCP Security: Best Practices Checklist (2026)"
 linkTitle: "MCP Security"
-seoTitle: "MCP Security: Best Practices and Defenses"
+seoTitle: "MCP Security: Best Practices Checklist (2026)"
 subtitle: "Guide to Model Context Protocol risks, best practices, and the runtime defenses that stop tool poisoning, leaks, and injection."
-description: "MCP security guide to risks, best practices, OWASP controls, tool poisoning, secret leaks, SSRF, runtime defenses, and audit."
+description: "MCP security best practices checklist for 2026, mapped to the OWASP MCP Top 10: tool poisoning, secret leaks, SSRF, runtime defenses, and audit."
 date: 2026-02-24
-lastmod: 2026-05-16
+lastmod: 2026-10-21
 faq:
   - q: "What is MCP security?"
     a: "MCP security is the practice of protecting AI agents that use the Model Context Protocol to call external tools. It covers threats like tool description poisoning, rug-pull attacks, credential exfiltration through tool arguments, prompt injection in tool responses, SSRF through tool-triggered requests, shadow MCP servers, and supply chain compromise of MCP server packages. MCP security differs from API security because MCP tool descriptions enter the agent's context window and can influence model behavior."
@@ -15,6 +15,8 @@ faq:
     a: "An MCP rug-pull is when a tool server changes its tool descriptions mid-session. The tool starts with a benign description, passes initial review, then changes to include malicious instructions. Install-time scanners miss this because they only check descriptions once. Invariant Labs demonstrated a rug-pull against WhatsApp MCP in 2025. Detection requires fingerprinting every tool description on first sight and flagging any change during the session."
   - q: "What is the OWASP MCP Top 10?"
     a: "The OWASP MCP Top 10 is a beta threat taxonomy for the Model Context Protocol, published at owasp.org/www-project-mcp-top-10/. It catalogs the most serious MCP risks, including tool poisoning, token mismanagement, shadow MCP servers, and context over-sharing. The project is the closest thing the industry has to a neutral framework for MCP security, and it maps directly to the attacks documented in public disclosures."
+  - q: "What does the MCP specification say about security?"
+    a: "The MCP documentation has a Security Best Practices page that covers the confused deputy problem, token passthrough, SSRF during OAuth discovery, state handle hijacking, local MCP server compromise, OAuth authorization URL validation, stdio transport security in proxy setups, mix-up attacks, localhost redirect URI impersonation, client ID metadata document trust policies, and scope minimization. It is written mostly for people implementing MCP clients, servers, and authorization flows."
   - q: "How do you secure MCP connections?"
     a: "MCP security needs multiple layers. Install-time scanners check tool descriptions before first use but miss rug-pulls. Runtime proxies scan every MCP message as it passes through, detecting poisoning, credential leaks, and response injection. Tool allowlists restrict which tools the agent can call. Gateways handle routing and authorization. Shadow MCP discovery catches unauthorized servers. Supply chain scanning catches malicious packages before they run. No single control stops every attack. Defense in depth combines scanning, runtime inspection, allowlists, and authorization."
 learn_cat: mcp
@@ -24,6 +26,9 @@ tags:
   - owasp
   - overview
 ---
+
+*Last updated: 2026-10-21.*
+
 MCP security is the practice of protecting AI agents that use the Model Context Protocol from threats originating in tool descriptions, tool arguments, tool responses, and the underlying transport. The four channels each carry different risk: tool descriptions and responses can carry hidden instructions, tool arguments can leak credentials, and transport metadata can hide exfiltration. Static install-time scanners catch some risks but miss rug-pull attacks where a server changes its tools mid-session, so runtime inspection at the proxy layer is necessary.
 
 The risk is already measurable. [Endor Labs analyzed 2,614 MCP implementations](https://www.endorlabs.com/learn/classic-vulnerabilities-meet-ai-infrastructure-why-mcp-needs-appsec) and found that 82% use file operations prone to path traversal, 67% use APIs related to code injection, and 34% use APIs susceptible to command injection. [AgentSeal scanned 1,808 MCP servers](https://agentseal.org/blog/mcp-server-security-findings) and reported security findings in 66% of them. The official [MCP security best practices](https://modelcontextprotocol.io/docs/2026-07-28/tutorials/security/security_best_practices), the [OWASP GenAI secure MCP server guide](https://genai.owasp.org/resource/a-practical-guide-for-secure-mcp-server-development/), and the [OWASP MCP Top 10](https://owasp.org/projects/mcp-top-10) now define the baseline. As of May 2026, practical MCP security means combining install-time scanning, runtime proxy inspection, tool allowlists, authorization, audit, and shadow-server discovery.
@@ -32,20 +37,97 @@ The risk is already measurable. [Endor Labs analyzed 2,614 MCP implementations](
 
 MCP security is the practice of protecting AI agents that use the Model Context Protocol to call external tools. It covers threats like tool description poisoning, rug-pull attacks, credential exfiltration through tool arguments, prompt injection in tool responses, SSRF through tool-triggered requests, shadow MCP servers, and supply chain compromise of MCP server packages. MCP security differs from API security because MCP tool descriptions enter the agent's context window and can influence model behavior.
 
-## Choose the right MCP security page
+## Go deeper
 
-MCP security is now broad enough that one page should not answer every query. Use this hub as the threat-model overview, then go deeper by intent:
+| If you need | Read |
+|---|---|
+| A comparison of scanners, proxies, and gateways | [MCP Security Tools](/learn/mcp-security-tools/) |
+| Each OWASP MCP Top 10 category in detail | [OWASP MCP Top 10](/learn/owasp-mcp-top10/) |
+| Poisoned schemas, drift, and session binding | [MCP Tool Poisoning](/learn/mcp-tool-poisoning/) |
+| Routing and central policy across servers | [MCP Gateway](/learn/mcp-gateway/) |
+| Inline scanning of MCP messages | [MCP Proxy](/learn/mcp-proxy/) |
+| OAuth 2.1, scopes, and confused deputy risk | [MCP Authorization](/learn/mcp-authorization/) |
+| Attacks that only show up once traffic flows | [MCP Runtime Security](/learn/mcp-runtime-security/) |
+| Finding MCP servers nobody approved | [Shadow MCP](/learn/shadow-mcp/) |
 
-| If you need | Read | Why |
-|---|---|---|
-| A runtime inspection model | [MCP Runtime Security](/learn/mcp-runtime-security/) | Shows which attacks only appear after traffic starts flowing. |
-| A scanner and tools comparison | [MCP Vulnerability Scanner](/learn/mcp-vulnerability-scanner/) | Separates pre-deploy scanners, runtime proxies, and adjacent hook tools. |
-| Tool poisoning and rug-pulls | [MCP Tool Poisoning](/learn/mcp-tool-poisoning/) | Canonical reference for poisoned schemas, field-level injection, drift, and session binding. |
-| Gateway architecture | [MCP Gateway](/learn/mcp-gateway/) | Covers routing, authorization, and central policy at the MCP boundary. |
-| Proxy architecture | [MCP Proxy](/learn/mcp-proxy/) | Covers inline MCP message scanning and bidirectional enforcement. |
-| Server hardening checklist | [How to Secure MCP](/learn/how-to-secure-mcp/) | Operator checklist for seven concrete attack paths. |
-| Shadow server discovery | [Shadow MCP](/learn/shadow-mcp/) | Inventory and control for unknown MCP servers. |
-| Auth and identity | [MCP Authorization](/learn/mcp-authorization/) | OAuth 2.1, PKCE, scopes, RBAC, and confused deputy risk. |
+## The threat model in one diagram
+
+```
+Agent ──tools/call arguments──> MCP server
+Agent <──tools/call results──── MCP server
+Agent <──tools/list definitions─ MCP server
+```
+
+The server controls two of the three channels that reach the model: tool definitions and tool results. The agent controls the arguments, but those are built from context the server has already influenced. Transport metadata (HTTP headers, stdio framing) wraps all of it.
+
+## MCP security checklist (2026-10-21)
+
+Each control lists the OWASP MCP Top 10 items it addresses and the matching section of the MCP Security Best Practices page. "None" means the spec page has no section for that control. Several controls, such as runtime content inspection, are operator concerns the spec does not set out to cover.
+
+OWASP MCP Top 10 items, as titled on the [project page](https://owasp.org/www-project-mcp-top-10/): MCP01:2025 Token Mismanagement & Secret Exposure, MCP02:2025 Privilege Escalation via Scope Creep, MCP03:2025 Tool Poisoning, MCP04:2025 Software Supply Chain Attacks & Dependency Tampering, MCP05:2025 Command Injection & Execution, MCP06:2025 Prompt Injection via Contextual Payloads, MCP07:2025 Insufficient Authentication & Authorization, MCP08:2025 Lack of Audit and Telemetry, MCP09:2025 Shadow MCP Servers, MCP10:2025 Context Injection & Over-Sharing.
+
+| # | Control | OWASP MCP Top 10 | MCP Security Best Practices section |
+|---|---|---|---|
+| 1 | Keep an inventory of every MCP server | MCP09 | None |
+| 2 | Pin, verify, and review server packages | MCP04 | Local MCP Server Compromise |
+| 3 | Scan tool definitions before approval and on every `tools/list` | MCP03 | None |
+| 4 | Detect tool definition changes mid-session and pin the tool inventory | MCP03 | None |
+| 5 | Scan tool arguments for credentials | MCP01, MCP10 | None |
+| 6 | Scan tool results for prompt injection | MCP06, MCP03 | None |
+| 7 | Restrict tools and dangerous arguments | MCP02, MCP05 | Scope Minimization |
+| 8 | Use audience-bound, minimally scoped tokens and never pass them through | MCP01, MCP02, MCP07 | Token Passthrough; Scope Minimization; Confused Deputy Problem |
+| 9 | Block SSRF to private ranges and metadata endpoints | MCP05 | Server-Side Request Forgery (SSRF) |
+| 10 | Sandbox local servers and require consent before running them | MCP04, MCP05 | Local MCP Server Compromise; stdio Transport Security in Proxy Scenarios |
+| 11 | Validate OAuth flows, redirect URIs, and state handles | MCP07 | Confused Deputy Problem; OAuth Authorization URL Validation; State Handle Hijacking; Mix-Up Attacks; Localhost Redirect URI Impersonation |
+| 12 | Log every tool call and decision, and fail closed | MCP08 | stdio Transport Security in Proxy Scenarios (logging of stdio usage) |
+
+### 1. Keep an inventory of every MCP server
+
+Find MCP configuration in repositories, developer machines, CI jobs, and agent images. A server you don't know about gets no review and no runtime controls. OWASP describes shadow MCP servers as deployments "that operate outside the organization's formal security governance" (MCP09). See [Shadow MCP](/learn/shadow-mcp/).
+
+### 2. Pin, verify, and review server packages
+
+Pin versions, review new servers before approval, and verify the binary or package you run is the one you reviewed. OWASP MCP04 notes that "a compromised dependency can alter agent behavior or introduce execution-level backdoors." The MCP spec page's Local MCP Server Compromise section lists a malicious payload inside the server itself as one of its attack paths.
+
+### 3. Scan tool definitions, not just once
+
+A tool definition is text the model reads. Poisoning can sit in the description, parameter descriptions, defaults, enums, or examples. Scan definitions before approval, then scan every `tools/list` response at runtime, because a server can return different definitions later (MCP03).
+
+### 4. Detect drift and pin the tool inventory
+
+Fingerprint each tool definition on first sight. Flag any change inside a session, and treat tools that appear after the first `tools/list` as unknown. This is what catches a rug-pull: a tool that passes review and then changes.
+
+### 5. Scan tool arguments for credentials
+
+An agent builds arguments from its context. If that context holds secrets and has been injected, the secrets can leave in a tool call instead of an HTTP request. Run DLP on `tools/call` arguments, including encoded forms (MCP01, MCP10).
+
+### 6. Scan tool results for prompt injection
+
+Tool results go straight into the model's context. Scan them for instruction-like content before the agent sees them. OWASP MCP06 compares this to classic injection: "the 'interpreter' is the model and the 'payload' is text."
+
+### 7. Restrict tools and dangerous arguments
+
+Expose only the tools a task needs. For tools that run shell commands or touch files, add argument-level rules, and normalize shell obfuscation before matching (MCP02, MCP05). The MCP spec's Scope Minimization section makes the same point for OAuth scopes: start with a minimal set and elevate only when a privileged operation needs it.
+
+### 8. Bind tokens to the server and keep scopes small
+
+The spec is explicit: "MCP servers MUST NOT accept any tokens that were not explicitly issued for the MCP server." Token passthrough breaks audit trails and lets a stolen token reach other services. Avoid wildcard scopes and don't publish every scope in `scopes_supported` (both listed under Common Mistakes in the spec's Scope Minimization section). MCP proxy servers that sit in front of third-party APIs must implement per-client consent to prevent confused deputy attacks. See [MCP Authorization](/learn/mcp-authorization/).
+
+### 9. Block SSRF
+
+A malicious server can hand a client URLs that point at internal services during OAuth metadata discovery, and tools that fetch URLs have the same problem. The spec says clients SHOULD block private and link-local ranges (including `169.254.0.0/16`), validate redirect targets, consider DNS rebinding, and, for server-side clients, consider an egress proxy that enforces network policy.
+
+### 10. Sandbox local servers
+
+A local MCP server runs with the client's privileges. The spec says a client offering one-click local server setup MUST show the exact command and get explicit approval first. It also says clients SHOULD run servers in a sandbox with minimal default privileges and restricted file system and network access. Proxy services that spawn stdio servers SHOULD sandbox those processes too.
+
+### 11. Validate OAuth flows
+
+Check redirect URIs by exact string match, use single-use `state` values, only allow `http`/`https` authorization URLs (no `javascript:` or `file:`), never open URLs through a shell, and don't treat a state handle as authentication. These are client and server implementation duties under MCP07. A network proxy cannot fix a server that skips them.
+
+### 12. Log everything and fail closed
+
+Record the tool name, server identity, definition hash, argument digest, verdict, and agent identity for each call. OWASP MCP08 asks for "detailed logs of tool invocations, context changes, and user-agent interactions with immutable audit trails." If a policy check cannot run, the call should not pass.
 
 ## What MCP security actually covers
 
@@ -253,7 +335,7 @@ A practical stack:
 7. **Telemetry.** Log every MCP event with description hashes and argument digests. Keep 90 days.
 8. **Incident response.** When something fires, have a playbook. Know how to revoke access fast.
 
-Not every deployment needs all eight layers. A single-user agent running locally doesn't need the same stack as a fleet of agents running in production. But every production deployment should have discovery, runtime inspection, and telemetry at minimum. The rest scale with risk. For the full how-to, see [how to secure MCP](/learn/how-to-secure-mcp/).
+Not every deployment needs all eight layers. A single-user agent running locally doesn't need the same stack as a fleet of agents running in production. But every production deployment should have discovery, runtime inspection, and telemetry at minimum. The rest scale with risk.
 
 ## How Pipelock handles MCP security
 
@@ -279,18 +361,154 @@ Pipelock pairs the MCP proxy with the HTTP proxy via `pipelock run --mcp-listen 
 
 Pipelock doesn't replace scanners, gateways, or authorization tooling. It's the runtime inspection layer in a defense-in-depth stack. Combine it with a scanner for pre-install checks, a gateway for routing, and a discovery tool for inventory, and you cover most of the control matrix above.
 
+## Starter config: seven MCP attacks, seven settings
+
+Each attack below maps to one Pipelock setting. Every YAML block on this page was checked with `pipelock check --config` against Pipelock 3.7.0 on 2026-10-21. Start in audit mode: use `action: warn`, review the logs, tune for false positives, then switch to `action: block`.
+
+| Attack | Setting |
+|---|---|
+| Tool description poisoning | `mcp_tool_scanning` |
+| Rug-pull (mid-session drift) | `mcp_tool_scanning.detect_drift` |
+| Credential leak in tool arguments | `mcp_input_scanning` |
+| Prompt injection in tool responses | Response scanning, on by default in MCP proxy mode |
+| SSRF through MCP tools | SSRF protection on the proxy path, plus `sandbox` for stdio servers |
+| Shell obfuscation in tool arguments | `mcp_tool_policy` |
+| Multi-step tool chain exfiltration | `tool_chain_detection` |
+
+### Tool poisoning and rug-pulls
+
+Scan the full tool schema on every `tools/list` response, including parameter descriptions, defaults, and examples. `detect_drift: true` fingerprints each definition on first sight and flags changes within the session.
+
+```yaml
+mcp_tool_scanning:
+  enabled: true
+  action: block
+  detect_drift: true
+```
+
+### Credential leaks through tool arguments
+
+Run DLP on `tools/call` arguments before they reach the server. Base64, hex, and URL encoding are decoded before scanning. `on_parse_error: block` stops malformed MCP messages instead of forwarding them.
+
+```yaml
+mcp_input_scanning:
+  enabled: true
+  action: block
+  on_parse_error: block
+```
+
+### SSRF and local server isolation
+
+In HTTP mode (`--upstream`), requests from the proxy go through Pipelock's SSRF protection: private IP blocking, metadata endpoint blocking, and DNS rebinding prevention. For stdio servers, the process sandbox uses Landlock, seccomp, and network namespaces on Linux to restrict what the server can reach.
+
+```yaml
+sandbox:
+  enabled: true
+  strict: true
+```
+
+### Shell obfuscation in tool arguments
+
+Pipelock resolves backtick substitution, `$@` and `$*` insertion, `${VAR:offset:length}` path construction, brace expansion, and IFS manipulation before matching policy rules. `tool_pattern` matches the tool name and `arg_pattern` matches the deobfuscated argument.
+
+```yaml
+mcp_tool_policy:
+  enabled: true
+  action: block
+  rules:
+    - name: "Credential File Access"
+      tool_pattern: '(?i)^(bash|shell|exec|run_command)$'
+      arg_pattern: '(?i)(\.ssh/(id_|authorized)|\.aws/credentials|\.env\b)'
+      action: block
+    - name: "Network Exfiltration"
+      tool_pattern: '(?i)^(bash|shell|exec|run_command)$'
+      arg_pattern: '(?i)\b(curl|wget)\b.*(-d\s|--data|--upload-file|-X\s+POST)'
+      action: block
+    - name: "Reverse Shell"
+      tool_pattern: '(?i)^(bash|shell|exec|run_command)$'
+      arg_pattern: '(?i)(bash\s+-i\s+>&|/dev/tcp/|mkfifo\s+|nc\s+-e)'
+      action: block
+```
+
+### Multi-step tool chain exfiltration
+
+Some attacks only show up in sequence. A `read_file` on a credential file followed by an `http_request` to an external endpoint is innocent call by call and exfiltration together. Tool chain detection uses subsequence matching, so the calls don't need to be consecutive.
+
+```yaml
+tool_chain_detection:
+  enabled: true
+  action: block
+```
+
+### Pin the tool inventory per session
+
+Session binding records the tools from the first `tools/list` response and blocks any tool that appears later. It needs tool scanning for the baseline. It is off by default because some servers add tools dynamically, so enable it where the inventory should be stable.
+
+```yaml
+mcp_tool_scanning:
+  enabled: true
+  action: warn
+  detect_drift: true
+mcp_session_binding:
+  enabled: true
+```
+
+### All together
+
+```yaml
+# Scan tool descriptions for poisoning + detect mid-session changes
+mcp_tool_scanning:
+  enabled: true
+  action: warn          # start with warn, promote to block after tuning
+  detect_drift: true
+
+# Scan tool arguments for credential leaks
+mcp_input_scanning:
+  enabled: true
+  action: warn
+  on_parse_error: block
+
+# Block dangerous shell commands via tool policy
+mcp_tool_policy:
+  enabled: true
+  action: block
+  rules:
+    - name: "Credential File Access"
+      tool_pattern: '(?i)^(bash|shell|exec|run_command|execute|terminal)$'
+      arg_pattern: '(?i)(\.ssh/(id_|authorized)|\.aws/credentials|\.env\b|\.netrc)'
+      action: block
+    - name: "Network Exfiltration"
+      tool_pattern: '(?i)^(bash|shell|exec|run_command|execute|terminal)$'
+      arg_pattern: '(?i)\b(curl|wget)\b.*(-d\s|--data|--upload-file|-X\s+POST)'
+      action: block
+
+# Detect multi-step exfiltration sequences
+tool_chain_detection:
+  enabled: true
+  action: warn
+
+# Pin tool inventory per session (enable for stable environments)
+mcp_session_binding:
+  enabled: false        # set to true when tool inventory is stable
+```
+
+Apply it by wrapping the server:
+
+```bash
+pipelock mcp proxy --config mcp-security.yaml -- npx @modelcontextprotocol/server-filesystem
+pipelock mcp proxy --config mcp-security.yaml --upstream https://mcp.example.com/mcp
+```
+
 ## Further reading
 
 - [State of MCP Security 2026](/blog/state-of-mcp-security-2026/): the annual threat report with incident stats and trend analysis
 - [CVE-2026-25253: WebSocket Hijacking in OpenClaw AI Agents](/blog/openclaw-cve-2026-25253/): the attack chain on a popular agent framework and the runtime defense pattern
 - [MCP Runtime Security](/learn/mcp-runtime-security/): depth on the runtime layer specifically, including the four classes pre-deploy scanners miss
-- [MCP Vulnerability Scanner](/learn/mcp-vulnerability-scanner/): pre-deploy and runtime scanner landscape compared
 - [MCP Proxy](/learn/mcp-proxy/): how a runtime MCP proxy scans tool traffic
 - [MCP Tool Poisoning Defense](/learn/mcp-tool-poisoning/): deep dive on the attack and detection techniques
 - [MCP Vulnerabilities](/learn/mcp-vulnerabilities/): the full vulnerability catalog with runtime defenses for each
 - [MCP Gateway](/learn/mcp-gateway/): routing, access control, and policy at the MCP boundary
 - [MCP Security Tools](/learn/mcp-security-tools/): the tool landscape compared across scanner, proxy, and gateway categories
-- [How to Secure MCP](/learn/how-to-secure-mcp/): seven attacks, seven defenses, and the config to stop each one
 - [Shadow MCP](/learn/shadow-mcp/): inventory and discovery of unauthorized MCP servers
 - [MCP Authorization](/learn/mcp-authorization/): OAuth 2.1, PKCE, and the confused deputy problem
 - [Tool Descriptions Are an Attack Surface](/blog/tool-poisoning-mcp-attack-surface/): the original Pipelock writeup on the attack pattern

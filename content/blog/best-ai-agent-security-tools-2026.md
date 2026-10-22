@@ -8,6 +8,31 @@ summary: "24 AI agent security options mapped to the six boundaries: model gatew
 description: "Compare AI agent security tools for 2026 by boundary: model gateway, MCP gateway, identity, platform governance, containment, and egress."
 tags: ["ai-security", "agent-security", "mcp-security", "pipelock"]
 blog_cat: "comparisons"
+item_list:
+  - "Vercel AI Gateway"
+  - "Cloudflare AI Gateway"
+  - "Kong, IBM, and the enterprise gateway pack"
+  - "LlamaFirewall"
+  - "NeMo Guardrails"
+  - "Docker MCP Gateway"
+  - "Runlayer"
+  - "agentgateway"
+  - "Cisco mcp-scanner"
+  - "Snyk agent-scan (formerly Invariant)"
+  - "Enkrypt AI"
+  - "Okta agent identity"
+  - "Pomerium"
+  - "Silverfort and BeyondTrust"
+  - "Zenity"
+  - "Reco AI, Obsidian, SentinelOne, Microsoft Agent 365"
+  - "Coder Agent Firewall"
+  - "Cloudflare Sandbox Auth"
+  - "GitHub Codespaces and Copilot's sandboxed runner"
+  - "Linux Landlock and seccomp"
+  - "Pipelock"
+  - "iron-proxy"
+  - "Backslash Security"
+  - "Nightfall AI"
 ---
 
 The AI agent security market splits into six boundaries: model and API gateway, MCP and tool gateway, identity and non-human identity governance, agent application and platform governance, runtime and workspace containment, and network egress and content firewall. Most "best of" pages mix the categories without naming the difference, which is how a buyer ends up with a model gateway when the threat model needed a content firewall. This piece walks the tools that sit in each boundary and what each one catches.

@@ -97,8 +97,8 @@ If you arrived here looking for a runtime control inside an MCP server, you want
 The hub at [MCP Security](/learn/mcp-security/) covers the full taxonomy: definition, threat catalog, best practices, OWASP mapping, and rollout sequencing. This page is depth on the runtime layer specifically. The sibling pages:
 
 - [MCP Tool Poisoning](/learn/mcp-tool-poisoning/) goes deep on the tool-description and tool-response poisoning class.
-- [How to Secure MCP](/learn/how-to-secure-mcp/) is the operator checklist.
-- [MCP Vulnerability Scanner](/learn/mcp-vulnerability-scanner/) compares pre-deploy scanners.
+- [MCP Security](/learn/mcp-security/) is the best-practices checklist.
+- [MCP Security Tools](/learn/mcp-security-tools/) compares pre-deploy scanners and runtime proxies.
 - [OWASP MCP Top 10](/learn/owasp-mcp-top10/) is the framework crosswalk.
 - [Agent Firewall](/agent-firewall/) is the architecture the runtime layer sits inside.
 - [Agent Egress Control](/learn/agent-egress-control/) is the broader control surface beyond MCP.
@@ -127,7 +127,6 @@ Runtime MCP inspection does not replace pre-deploy scanning, package supply-chai
 
 - [MCP Security](/learn/mcp-security/) — the hub page covering taxonomy, threats, and rollout.
 - [MCP Tool Poisoning](/learn/mcp-tool-poisoning/) — definitive page on the poisoning class.
-- [MCP Vulnerability Scanner](/learn/mcp-vulnerability-scanner/) — pre-deploy scanner landscape.
 - [OWASP MCP Top 10 coverage](/learn/owasp-mcp-top10/) — framework mapping.
 - [Shadow MCP](/learn/shadow-mcp/) — discovery and inventory of unauthorized servers.
 - [Agent Egress Control](/learn/agent-egress-control/) — broader control surface beyond MCP.

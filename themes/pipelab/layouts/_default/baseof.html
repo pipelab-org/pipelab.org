@@ -61,7 +61,7 @@
   <meta name="twitter:title" content="{{ $displayTitle }}">
   <meta name="twitter:description" content="{{ $pageDescription }}">
   <meta name="twitter:image" content="{{ $ogImage }}">
-  {{ $siteSameAs := slice }}
+  {{ $siteSameAs := slice "https://github.com/pipelab-org" }}
   {{ with .Site.Params.github }}{{ $siteSameAs = $siteSameAs | append . }}{{ end }}
   {{ with .Site.Params.twitter }}{{ $siteSameAs = $siteSameAs | append . }}{{ end }}
   {{ with .Site.Params.linkedin }}{{ $siteSameAs = $siteSameAs | append . }}{{ end }}
@@ -70,9 +70,10 @@
   {
     "@context": "https://schema.org",
     "@type": "Organization",
+    "@id": {{ (printf "%s#organization" .Site.BaseURL) | jsonify | safeJS }},
     "name": "PipeLab",
     "url": "{{ .Site.BaseURL }}",
-    "logo": "{{ .Site.BaseURL }}favicon.svg",
+    "logo": "{{ .Site.BaseURL }}favicon-512x512.png",
     "description": "{{ .Site.Params.description }}",
     "founder": {
       "@type": "Person",
@@ -110,7 +111,7 @@
       "name": "PipeLab",
       "logo": {
         "@type": "ImageObject",
-        "url": "{{ .Site.BaseURL }}favicon.svg"
+        "url": "{{ .Site.BaseURL }}favicon-512x512.png"
       }
     },
     "image": "{{ $ogImage }}"
@@ -134,7 +135,7 @@
         "@id": {{ (printf "%s#organization" .Site.BaseURL) | jsonify | safeJS }},
         "name": "PipeLab",
         "url": {{ .Site.BaseURL | jsonify | safeJS }},
-        "logo": {{ (printf "%sfavicon.svg" .Site.BaseURL) | jsonify | safeJS }},
+        "logo": {{ (printf "%sfavicon-512x512.png" .Site.BaseURL) | jsonify | safeJS }},
         "sameAs": {{ $siteSameAs | jsonify | safeJS }}
       },
       {
@@ -177,21 +178,50 @@
     "headline": "{{ .Title }}",
     "description": "{{ with .Description }}{{ . }}{{ else }}{{ .Site.Params.description }}{{ end }}",
     "url": "{{ .Permalink }}",
+    "image": {{ $ogImage | jsonify | safeJS }},
     {{ if not .Date.IsZero }}"datePublished": "{{ .Date.Format "2006-01-02" }}",
     "dateModified": "{{ .Lastmod.Format "2006-01-02" }}",
     {{ end }}"author": {
       "@type": "Person",
       "name": "Josh Waldrep",
-      "url": "{{ .Site.BaseURL }}"
+      "url": "{{ .Site.BaseURL }}about/"
     },
     "publisher": {
       "@type": "Organization",
       "name": "PipeLab",
       "logo": {
         "@type": "ImageObject",
-        "url": "{{ .Site.BaseURL }}favicon.svg"
+        "url": "{{ .Site.BaseURL }}favicon-512x512.png"
       }
     }
+  }
+  </script>
+  {{ end }}
+  {{ if .Params.software_jsonld }}
+  {{- /* Product entity for pages that recommend Pipelock by name. Same @id as
+         the /pipelock/ graph so both describe one entity. codeRepository is
+         a SoftwareSourceCode property, so the repository rides in sameAs. */}}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "@id": {{ (printf "%spipelock/#software" .Site.BaseURL) | jsonify | safeJS }},
+    "name": "Pipelock",
+    "url": {{ (printf "%spipelock/" .Site.BaseURL) | jsonify | safeJS }},
+    "description": "Free, open-source, self-hosted agent firewall. Pipelock sits between AI agents and the internet and blocks secret leaks, unsafe tool traffic, and prompt-injection responses.",
+    "applicationCategory": "SecurityApplication",
+    "operatingSystem": "Linux, macOS, Windows",
+    "softwareVersion": {{ .Site.Params.pipelock_version | jsonify | safeJS }},
+    "license": "https://www.apache.org/licenses/LICENSE-2.0",
+    "isAccessibleForFree": true,
+    "offers": {
+      "@type": "Offer",
+      "name": "Pipelock Community",
+      "url": {{ (printf "%spricing/" .Site.BaseURL) | jsonify | safeJS }},
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "sameAs": ["https://github.com/pipelab-org/pipelock"]
   }
   </script>
   {{ end }}
@@ -215,7 +245,7 @@
       "name": "PipeLab",
       "logo": {
         "@type": "ImageObject",
-        "url": {{ (printf "%sfavicon.svg" .Site.BaseURL) | jsonify | safeJS }}
+        "url": {{ (printf "%sfavicon-512x512.png" .Site.BaseURL) | jsonify | safeJS }}
       }
     },
     "image": {{ $ogImage | jsonify | safeJS }}
@@ -241,7 +271,7 @@
       "name": "PipeLab",
       "logo": {
         "@type": "ImageObject",
-        "url": {{ (printf "%sfavicon.svg" .Site.BaseURL) | jsonify | safeJS }}
+        "url": {{ (printf "%sfavicon-512x512.png" .Site.BaseURL) | jsonify | safeJS }}
       }
     },
     "image": {{ $ogImage | jsonify | safeJS }}
@@ -267,7 +297,7 @@
       "name": "PipeLab",
       "logo": {
         "@type": "ImageObject",
-        "url": {{ (printf "%sfavicon.svg" .Site.BaseURL) | jsonify | safeJS }}
+        "url": {{ (printf "%sfavicon-512x512.png" .Site.BaseURL) | jsonify | safeJS }}
       }
     },
     "image": {{ $ogImage | jsonify | safeJS }}
@@ -286,7 +316,7 @@
       "@type": "Organization",
       "name": "PipeLab",
       "url": {{ .Site.BaseURL | jsonify | safeJS }},
-      "logo": {{ (printf "%sfavicon.svg" .Site.BaseURL) | jsonify | safeJS }},
+      "logo": {{ (printf "%sfavicon-512x512.png" .Site.BaseURL) | jsonify | safeJS }},
       "contactPoint": {
         "@type": "ContactPoint",
         "email": "luckypipe@pipelab.org",
@@ -309,7 +339,7 @@
       "@type": "Organization",
       "name": "PipeLab",
       "url": "{{ .Site.BaseURL }}",
-      "logo": "{{ .Site.BaseURL }}favicon.svg",
+      "logo": "{{ .Site.BaseURL }}favicon-512x512.png",
       "founder": {
         "@type": "Person",
         "name": "Josh Waldrep"
@@ -379,6 +409,47 @@
         "text": {{ $step.text | jsonify | safeJS }}
       }{{ end }}
     ]
+  }
+  </script>
+  {{ end }}
+  {{ with .Params.item_list }}
+  {{- /* Ordered list of the sections a list post covers, from item_list front
+         matter; each item points at its numbered heading on the page. */}}
+  {{ $items := slice }}
+  {{ range $i, $name := . }}
+    {{ $pos := add $i 1 }}
+    {{ $items = $items | append (dict "@type" "ListItem" "position" $pos "name" $name "item" (printf "%s#%s" $.Permalink (anchorize (printf "%d. %s" $pos $name)))) }}
+  {{ end }}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": {{ $.Title | jsonify | safeJS }},
+    "numberOfItems": {{ len . }},
+    "itemListElement": {{ $items | jsonify | safeJS }}
+  }
+  </script>
+  {{ end }}
+  {{ if eq .RelPermalink "/playground/" }}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": {{ .Title | jsonify | safeJS }},
+    "url": {{ .Permalink | jsonify | safeJS }},
+    "description": {{ .Description | jsonify | safeJS }},
+    "applicationCategory": "SecurityApplication",
+    "operatingSystem": "Any (web browser)",
+    "isAccessibleForFree": true,
+    "image": {{ $ogImage | jsonify | safeJS }},
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "publisher": {
+      "@id": {{ (printf "%s#organization" .Site.BaseURL) | jsonify | safeJS }}
+    }
   }
   </script>
   {{ end }}

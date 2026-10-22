@@ -160,7 +160,7 @@ No single tool covers every class above, so the workflow combines four layers.
 
 **Route live traffic through a runtime inspection proxy.** Static scanners miss rug-pulls, response injection, credential leaks in arguments, and poisoned data returned at runtime. An inspection proxy ([MCP Proxy](/learn/mcp-proxy/), [Agent Firewall](/agent-firewall/)) scans tool descriptions on every session, arguments on every call, and responses on every reply.
 
-**Audit the inventory.** Walk every developer machine and CI runner. List every MCP server. Check binary hashes and SBOMs against published releases. Flag any server without an approval ticket. See [Shadow MCP](/learn/shadow-mcp/). The [How to Secure MCP](/learn/how-to-secure-mcp/) guide pulls the short operator checklist together.
+**Audit the inventory.** Walk every developer machine and CI runner. List every MCP server. Check binary hashes and SBOMs against published releases. Flag any server without an approval ticket. See [Shadow MCP](/learn/shadow-mcp/). The [MCP security best practices](/learn/mcp-security/) checklist pulls the short operator steps together.
 
 ## Mitigation layers
 
@@ -182,7 +182,6 @@ No layer is a full answer. Runtime inspection is the widest because it sees cont
 - [MCP Security](/learn/mcp-security/): the full MCP threat model.
 - [MCP Tool Poisoning](/learn/mcp-tool-poisoning/): deep dive on poisoning and rug-pulls.
 - [Tool Poisoning MCP Attack Surface](/blog/tool-poisoning-mcp-attack-surface/): the blog companion to this page's poisoning section.
-- [How to Secure MCP](/learn/how-to-secure-mcp/): seven attacks and seven defenses.
 - [MCP Authorization](/learn/mcp-authorization/): OAuth 2.1, scoped tokens, and the MCPoison class of bugs.
 - [Shadow MCP](/learn/shadow-mcp/): inventory and discovery workflow.
 - [MCP Proxy](/learn/mcp-proxy/) and [MCP Gateway](/learn/mcp-gateway/): the runtime inspection and gateway patterns.

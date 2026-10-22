@@ -126,5 +126,5 @@ If the chatbot is also an agent, add the controls in the [agent security best pr
 - [Prompt injection defense at the network layer](/learn/prompt-injection-network-defense/): pattern-matching detection at the proxy.
 - [LLM prompt injection](/learn/llm-prompt-injection/): the category, the variants, and defense-in-depth.
 - [Agent security best practices](/learn/ai-agent-security-best-practices/): the broader checklist when the chatbot can also act.
-- [How to secure your MCP setup](/learn/how-to-secure-mcp/): the practitioner tutorial for MCP-enabled chatbots.
+- [MCP security best practices](/learn/mcp-security/): the checklist for MCP-enabled chatbots.
 - [Pipelock](/pipelock/): the open-source agent firewall.

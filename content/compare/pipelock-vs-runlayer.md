@@ -1,9 +1,9 @@
 ---
-title: "Pipelock vs Runlayer"
+title: "Runlayer Pricing & Features vs Pipelock (Free, Open Source)"
 linkTitle: "Pipelock vs Runlayer"
-seoTitle: "Pipelock vs Runlayer: MCP Governance Comparison"
+seoTitle: "Runlayer Pricing & Features vs Pipelock"
 subtitle: "A self-hosted proxy that inspects routed agent traffic, next to a Runlayer-hosted or self-hosted AI control plane with MCP governance and content inspection."
-description: "Compare Pipelock vs Runlayer: a proxy scanning HTTP, WebSocket, and MCP traffic with signed receipts, and a control plane that governs and scans MCP tools."
+description: "Runlayer pricing and features vs Pipelock: a deployment-sized platform fee and MCP control plane next to a free, open-source agent traffic proxy."
 date: 2026-04-05
 lastmod: 2026-10-14
 reviewed: "October 2026"

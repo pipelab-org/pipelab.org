@@ -1,7 +1,7 @@
 {
   "_source": "https://schema.org/version/latest/schemaorg-current-https.jsonld",
-  "_source_sha256": "0f0c97a4f666b2f8563573fe48453782fd51b87a504523cf0c9aff6a71c3eec4",
-  "_retrieved": "2026-09-03",
+  "_source_sha256": "0a4b8c4c910fc831ec8695196510973390906a5ee34dc6b862dfec4d21a12f74",
+  "_retrieved": "2026-10-22",
   "_generated_by": "scripts/generate-schema-property-table.mjs",
   "_note": "Properties this site emits, each confirmed against the published schema.org vocabulary as valid for its type. Do not edit by hand; rebuild the site and rerun the generator.",
   "types": {
@@ -65,6 +65,11 @@
     ],
     "ImageObject": [
       "url"
+    ],
+    "ItemList": [
+      "itemListElement",
+      "name",
+      "numberOfItems"
     ],
     "ListItem": [
       "item",

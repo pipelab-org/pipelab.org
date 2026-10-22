@@ -1,11 +1,11 @@
 ---
-title: "AI Egress Proxy: Control What Your Agents Send"
+title: "AI Egress Proxy: Route and Inspect All Agent Traffic"
 linkTitle: "AI Egress Proxy"
-seoTitle: "AI Egress Proxy: Control What Your Agents Send"
+seoTitle: "AI Egress Proxy: Route and Inspect Agent Traffic"
 subtitle: "One enforcement point between your agents and the internet."
-description: "An AI egress proxy routes all agent traffic through one control point. Inspect HTTP and MCP requests, block data leaks, and enforce network policy."
+description: "How an AI egress proxy works: route agent HTTP, WebSocket, and MCP traffic through one inspection point, deployed via env var or companion proxy."
 date: 2026-04-11
-lastmod: 2026-04-23
+lastmod: 2026-10-22
 faq:
   - q: "What is an AI egress proxy?"
     a: "An AI egress proxy is a forward proxy that sits between AI agents and the internet. All outbound HTTP, MCP, and WebSocket traffic from the agent passes through the proxy, which inspects requests for credential leaks, prompt injection, SSRF, and policy violations before forwarding them."

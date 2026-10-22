@@ -6,7 +6,7 @@
 /docs/ /learn/ 301
 /ecosystem/ /proof/ 301
 /categories/ /tags/ 301
-/categories/:slug /tags/:slug 301
+/categories/:slug /tags/:slug/ 301
 /rules/pipelock-community /learn/community-rules/ 301
 /rules/pipelock-community/ /learn/community-rules/ 301
 /gauntlet/results/:id /gauntlet/results/ 200
@@ -92,3 +92,15 @@
 /agent/ /agent-firewall/ 301
 /cve-2026-25253 /blog/openclaw-cve-2026-25253/ 301
 /cve-2026-25253/ /blog/openclaw-cve-2026-25253/ 301
+# MCP cluster consolidation: the hub owns the checklist intent and the tools
+# page owns the scanner and comparison intent.
+/learn/how-to-secure-mcp /learn/mcp-security/ 301
+/learn/how-to-secure-mcp/ /learn/mcp-security/ 301
+/learn/how-to-secure-mcp/index.md /learn/mcp-security/index.md 301
+/learn/mcp-vulnerability-scanner /learn/mcp-security-tools/ 301
+/learn/mcp-vulnerability-scanner/ /learn/mcp-security-tools/ 301
+/learn/mcp-vulnerability-scanner/index.md /learn/mcp-security-tools/index.md 301
+
+# Tag pages that emptied when the MCP how-to page was retired.
+/tags/config/ /tags/ 301
+/tags/tutorial/ /tags/ 301

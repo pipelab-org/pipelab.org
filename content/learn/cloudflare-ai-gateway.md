@@ -1,11 +1,11 @@
 ---
-title: "Cloudflare AI Gateway: What It Does and Where It Fits"
+title: "Cloudflare AI Gateway: Pricing, Features, Limits & Alternatives (2026)"
 linkTitle: "Cloudflare AI Gateway"
-seoTitle: "Cloudflare AI Gateway: Capabilities and Limits"
+seoTitle: "Cloudflare AI Gateway: Free Tier, Pricing & Limits"
 subtitle: "Edge-hosted observability, caching, and content scanning for LLM API traffic, with the boundary it does not cross."
-description: "Cloudflare AI Gateway runs LLM API traffic through Cloudflare's edge with caching, rate limiting, Guardrails, and DLP. What it does and does not."
+description: "Is Cloudflare AI Gateway free? Caching, rate limits, analytics, and DLP cost nothing; Guardrails and logs are billed. Limits and alternatives."
 date: 2026-05-05
-lastmod: 2026-05-05
+lastmod: 2026-10-21
 faq:
   - q: "What is Cloudflare AI Gateway?"
     a: "Cloudflare AI Gateway is a hosted gateway that sits between an application and one or more LLM providers at Cloudflare's edge. The application points its SDK at the gateway endpoint instead of the provider's endpoint, and Cloudflare relays the request to the upstream model. The gateway adds caching, rate limiting, request retry, model fallback, analytics on tokens and cost, plus Guardrails for harmful-content moderation and DLP profile scanning on prompts and completions."
@@ -111,6 +111,25 @@ Three signals say "you also need an agent firewall in front of the gateway":
 **Your compliance story needs evidence from outside the actor.** AI Gateway logs sit on Cloudflare's side and the application's side. Pipelock's [mediator-signed action receipts](/learn/action-receipt-spec/) are produced by the deployment's signing key, separate from the agent process. The evidentiary class is different. For audit-bearing logs and incident-response workflows, the signer location matters.
 
 A combined deployment is the most common shape for serious agent stacks: AI Gateway in front of the LLM API for cost and observability, Pipelock on the agent's network path for egress enforcement and signed evidence.
+
+## Pricing and limits
+
+Per Cloudflare's [AI Gateway pricing page](https://developers.cloudflare.com/ai-gateway/reference/pricing/) (checked 2026-10-21; Cloudflare notes prices are subject to change):
+
+- **Core features are free on all plans.** Dashboard analytics, caching, and rate limiting need only a Cloudflare account.
+- **DLP scanning is free on all plans.** Accounts without a Zero Trust subscription get two predefined DLP profiles (Financial Information, and Social / Insurance / National Identifier Numbers). A Zero Trust subscription that includes DLP unlocks the full profile set, custom profiles, datasets, and OCR.
+- **Guardrails are billed as Workers AI inference.** Prompts and responses are evaluated with Llama Guard on Workers AI, so cost scales with the tokens evaluated.
+- **Log storage depends on account age.** Accounts that created their first gateway on or after September 24, 2026 use Workers Logs pricing and retention. Older accounts on Legacy Logs get 100,000 logs total on Workers Free and 10,000,000 logs per gateway on Workers Paid.
+- **Unified Billing adds a 5% fee on purchased credits.** Provider inference rates pass through without markup.
+- **Logpush exports are billed** at Logpush rates by volume exported.
+
+## Alternatives
+
+AI Gateway is an LLM-API gateway, so the alternatives depend on which gap you are filling:
+
+- **Another LLM-API gateway** if you want the same shape elsewhere. See [Pipelock vs Cloudflare AI Gateway](/compare/pipelock-vs-cloudflare-ai-gateway/) for how the hosted gateway compares to a self-hosted proxy.
+- **An MCP gateway** if your agents call tools. See [MCP gateway: open source vs commercial](/learn/mcp-gateway/).
+- **An open-source agent firewall** if you need egress inspection on HTTP, WebSocket, and MCP traffic outside the LLM API path. See [AI firewall vs LLM firewall vs agent firewall](/learn/open-source-ai-firewall/).
 
 ## Further reading
 

@@ -277,7 +277,7 @@ The [MCP security](/learn/mcp-security/) guide walks through the full threat mod
 - [MCP Tool Poisoning](/learn/mcp-tool-poisoning/): the attack that hides in tool descriptions
 - [Shadow MCP](/learn/shadow-mcp/): MCP servers that bypass your gateway
 - [The State of MCP Security in 2026](/blog/state-of-mcp-security-2026/)
-- [MCP Scanner Comparison 2026](/blog/mcp-scanner-comparison-2026/)
+- [MCP Security Tools](/learn/mcp-security-tools/)
 - [Pipelock vs Docker MCP Gateway](/compare/pipelock-vs-docker-mcp-gateway/)
 - [Pipelock](/pipelock/) and the [Agent Firewall](/agent-firewall/) overview
 - [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

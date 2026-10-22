@@ -6,8 +6,16 @@ ignoreFiles = ['\.devto\.md$', '\.dzone\.(md|html)$']
 # Hugo 0.168 moved its injected generator meta tag to the end of <head>, so the
 # same page renders differently across Hugo versions. Nothing reads the tag.
 disableHugoGeneratorInject = true
+# Git history feeds sitemap <lastmod> only (layouts/_default/sitemap.xml).
+# Page .Lastmod keeps reading front matter, so visible dates and structured
+# data do not move. Builds need full history: in a shallow clone every file
+# shares one commit and the sitemap falls back to front matter dates.
+# Commits up to params.sitemap_git_since are ignored because the repository
+# history starts with a one-commit import that touched every file.
+enableGitInfo = true
 
 [params]
+  sitemap_git_since = "2026-10-09T23:59:59Z"
   description = "Pipelock is an open-source agent firewall for MCP and AI agent egress. It mediates MCP, HTTP, and WebSocket traffic and can emit signed evidence for mediated actions when receipt or flight-recorder signing is configured."
   email = "luckypipe@pipelab.org"
   github = "https://github.com/luckyPipewrench"
@@ -90,7 +98,7 @@ pipelock_version = "3.7.0"
   notAlternative = true
 
 [outputs]
-  home = ["html", "rss", "markdown", "productFacts"]
+  home = ["html", "rss", "markdown", "productFacts", "redirects"]
   page = ["html", "markdown"]
   section = ["html", "rss", "markdown"]
 
@@ -104,3 +112,19 @@ pipelock_version = "3.7.0"
 # therefore use an inlined aria-hidden SVG rather than alt="".
 [minify.tdewolff.html]
   keepQuotes = true
+
+# The redirects output reads the hand-maintained static/_redirects list and
+# renders the complete rule file after static assets are copied. Generated
+# /path -> /path/ rules request permanent redirects; verify Cloudflare's
+# precedence over asset html_handling on a deployed preview before merge.
+[mediaTypes."text/redirects"]
+  delimiter = ""
+
+[outputFormats.redirects]
+  mediaType = "text/redirects"
+  baseName = "_redirects"
+  isPlainText = true
+  notAlternative = true
+
+[frontmatter]
+  lastmod = ["lastmod", "modified", "date", "publishDate"]
