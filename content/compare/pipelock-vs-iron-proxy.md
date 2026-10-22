@@ -5,7 +5,7 @@ seoTitle: "iron-proxy Review: Setup and Alternatives"
 subtitle: "Content inspection with signed receipts next to default-deny egress with credential brokering. Two open-source proxies, two halves of the same problem."
 description: "iron-proxy allowlists agent egress and swaps placeholder credentials. What it does, how to set it up, and how it compares to open-source Pipelock."
 date: 2026-04-11
-lastmod: 2026-09-01
+lastmod: 2026-10-22
 reviewed: "September 2026"
 compare_cat: "egress"
 compare:
@@ -75,6 +75,8 @@ iron-proxy's recent releases moved onto surfaces Pipelock has covered for a whil
 So the distinction is no longer that one does MCP and the other doesn't. It's the kind of MCP control. iron-proxy decides which tools may be called. Pipelock reads the tool descriptions, arguments, and responses and looks for poisoning, drift, and injection. A serious MCP deployment wants both.
 
 ## iron-proxy setup at a glance
+
+Setup instructions checked October 21, 2026. The broader comparison was reviewed in September 2026.
 
 From the [iron-proxy README](https://github.com/paradigmxyz/iron-proxy#installation) (checked 2026-10-21):
 

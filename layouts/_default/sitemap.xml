@@ -1,20 +1,13 @@
 {{ printf "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>" | safeHTML }}
-{{- /* lastmod is the later of the front matter date and the git author date
-       of the page's source file. Git dates at or before
-       site.Params.sitemap_git_since (the repository import) are ignored. A
-       shallow clone reports one commit for every file, so when the pages
-       share fewer than two distinct commits git dates are ignored too. */ -}}
-{{- $hashes := slice }}
-{{- range .Data.Pages }}{{ with .GitInfo }}{{ $hashes = $hashes | append .Hash }}{{ end }}{{ end }}
-{{- $useGit := gt (len (uniq $hashes)) 1 }}
-{{- if not $useGit }}{{ warnf "sitemap: git history has fewer than two commits (shallow clone?); lastmod falls back to front matter. Run git fetch --unshallow before the build to use git dates." }}{{ end }}
-{{- $since := time (default "1970-01-01T00:00:00Z" site.Params.sitemap_git_since) }}
+{{- /* Use the same editorial date as the page and its structured data.
+       Google asks for the last significant update, not a mechanical edit:
+       https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap
+       Git dates also depend on clone depth and cannot establish that distinction. */ -}}
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   {{- range .Data.Pages }}
   {{- $robots := lower (default "" .Params.robots) }}
   {{- if not (or (eq .Kind "taxonomy") (eq .Kind "term") (in $robots "noindex")) }}
   {{- $lastmod := .Lastmod }}
-  {{- if $useGit }}{{ with .GitInfo }}{{ if and (.AuthorDate.After $since) (.AuthorDate.After $lastmod) }}{{ $lastmod = .AuthorDate }}{{ end }}{{ end }}{{ end }}
   <url>
     <loc>{{ .Permalink }}</loc>
     {{- if not $lastmod.IsZero }}
