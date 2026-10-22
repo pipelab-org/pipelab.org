@@ -12,7 +12,7 @@ if [ "$#" -ne 0 ]; then
 fi
 
 archive="pipelock-verifier_${PIPELAB_VERIFIER_VERSION}_linux_amd64.tar.gz"
-release_url="https://github.com/luckyPipewrench/pipelock/releases/download/v${PIPELAB_VERIFIER_VERSION}/${archive}"
+release_url="https://github.com/pipelab-org/pipelock/releases/download/v${PIPELAB_VERIFIER_VERSION}/${archive}"
 download_dir="$(mktemp -d "${TMPDIR:-/tmp}/pipelock-verifier-download.XXXXXX")"
 trap 'rm -r -- "$download_dir"; if [ -n "${replacement:-}" ]; then rm -f -- "$replacement"; fi' EXIT
 

@@ -113,7 +113,7 @@ If you run more than one agent on shared storage:
 3. Know your attack surface. List every way your agents communicate. Every channel is a potential path for lateral movement.
 4. Check for unexpected changes to behavioral files. Even running diff manually is better than nothing.
 
-Or try Pipelock's integrity monitoring: [github.com/luckyPipewrench/pipelock](https://github.com/luckyPipewrench/pipelock).
+Or try Pipelock's integrity monitoring: [github.com/pipelab-org/pipelock](https://github.com/pipelab-org/pipelock).
 
 ---
 

@@ -24,9 +24,9 @@ sources:
     checked: 2026-09-01
     note: "agents act as authenticated users through existing OAuth and identity-provider flows; credentials stay in the runtime; a control plane records which user's agent did what"
   - label: "Auth0 for AI Agents"
-    url: "https://auth0.com/ai"
-    checked: 2026-09-01
-    note: "Auth for MCP: OAuth 2.1 and OIDC, resource-scoped tokens, permission downscoping through token exchange, fine-grained authorization, a human kill switch for sensitive actions"
+    url: "https://auth0.com/solutions/ship-ai-agents"
+    checked: 2026-10-22
+    note: "centralized identity, fine-grained authorization for agents acting on behalf of users, centralized policies, and traceable actions"
   - label: "Cerbos"
     url: "https://www.cerbos.dev/"
     checked: 2026-09-01
@@ -60,7 +60,7 @@ Authorization sprawl is a real problem and the identity vendors are solving it. 
 
 **[Arcade](https://www.arcade.dev/)** says agents act as real users with dynamic permissions through your existing identity provider and OAuth flows, credentials never leave its runtime, and a control plane records what the agent did, for which user, in which system.
 
-**[Auth0 for AI Agents](https://auth0.com/ai)** describes Auth for MCP: OAuth 2.1 and OIDC built in, resource-scoped tokens, permission downscoping through token exchange, fine-grained authorization, and a human kill switch for sensitive actions.
+**[Auth0 for AI Agents](https://auth0.com/solutions/ship-ai-agents)** describes centralized identity and fine-grained authorization for agents acting on behalf of users. It emphasizes centralized policies that can change without application code changes, plus traceable actions for auditing.
 
 **[Cerbos](https://www.cerbos.dev/)** is an open-source policy decision point with enforcement points, applying fine-grained authorization across apps, APIs, AI agents, MCP servers, and workloads, and logging every allow and deny decision with context.
 
@@ -114,4 +114,4 @@ The gateway issues the permission, and in the identity products the credential. 
 - [Pipelock vs agentgateway](/compare/pipelock-vs-agentgateway/): a proxy with CEL authorization built in
 - [Pipelock vs AWS AgentCore Gateway](/compare/pipelock-vs-aws-agentcore-gateway/): OAuth on both sides of a managed gateway
 - [Pipelock vs Runlayer](/compare/pipelock-vs-runlayer/): identity-based access in a control plane you can run hosted or self-hosted
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

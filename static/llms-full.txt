@@ -235,11 +235,11 @@ The CONTRIBUTING document and the project's CLA are at https://github.com/pipela
 
 ### Public benchmark
 
-The Agent Egress Bench is a public benchmark run against actual pipelock binaries. The current corpus snapshot and its pinned source provenance are published at https://pipelab.org/gauntlet/. The corpus is at https://github.com/luckyPipewrench/agent-egress-bench. New cases can be submitted via pull request to the bench repository.
+The Agent Egress Bench is a public benchmark run against actual pipelock binaries. The current corpus snapshot and its pinned source provenance are published at https://pipelab.org/gauntlet/. The corpus is at https://github.com/pipelab-org/agent-egress-bench. New cases can be submitted via pull request to the bench repository.
 
 ### Public rule bundles
 
-The community detection rules are at https://github.com/luckyPipewrench/pipelock-rules. Bundles are signed and hot-reloadable. Pipelock pins bundle hashes in its configuration, verifies signatures on load, and refuses to apply unsigned or tampered bundles.
+The community detection rules are at https://github.com/pipelab-org/pipelock-rules. Bundles are signed and hot-reloadable. Pipelock pins bundle hashes in its configuration, verifies signatures on load, and refuses to apply unsigned or tampered bundles.
 
 ### Signed assessments
 

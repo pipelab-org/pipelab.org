@@ -64,7 +64,7 @@ Runtime tools sit in the traffic path between the agent and external services. E
 
 **Examples:**
 
-- **[Pipelock](/pipelock/):** Open-source agent firewall. Content-inspecting egress proxy for HTTP and MCP traffic. Scans for credential leaks (DLP with multi-layer decode), prompt injection (6-pass normalization), SSRF, tool poisoning, and rug-pulls. Runs as a single binary. Supports domain allowlists, MCP wrapping via stdio or HTTP, hash-chained audit logging, and Claude Code hooks. [GitHub](https://github.com/luckyPipewrench/pipelock).
+- **[Pipelock](/pipelock/):** Open-source agent firewall. Content-inspecting egress proxy for HTTP and MCP traffic. Scans for credential leaks (DLP with multi-layer decode), prompt injection (6-pass normalization), SSRF, tool poisoning, and rug-pulls. Runs as a single binary. Supports domain allowlists, MCP wrapping via stdio or HTTP, hash-chained audit logging, and Claude Code hooks. [GitHub](https://github.com/pipelab-org/pipelock).
 - **[iron-proxy](https://github.com/paradigmxyz/iron-proxy):** Open-source Go proxy for AI agent egress. Host allowlisting plus boundary credential proxying, where the proxy holds the real secrets and the sandbox gets placeholders. Its docs also describe an LLM judge transform that sends a serialized request envelope to a model, documented as an additional rejection layer that can only deny and cannot override the proxy's other controls, and MCP interception that enforces a default-deny tool allowlist and filters `tools/list` responses. Checked September 2026.
 - **[Promptfoo](https://github.com/promptfoo/promptfoo):** Open-source LLM testing and red teaming framework. Includes an MCP proxy mode for intercepting tool calls. OpenAI announced plans to acquire Promptfoo in March 2026 (pending closing). Primary focus is evaluation and red teaming rather than inline blocking.
 
@@ -127,4 +127,4 @@ For an enterprise with many teams: start with governance to get visibility, then
 - [MCP Proxy](/learn/mcp-proxy/): how Pipelock's MCP scanning proxy works
 - [What is an Agent Firewall?](/agent-firewall/): the egress inspection architecture
 - [Pipelock](/pipelock/): open-source agent firewall with DLP, injection scanning, and egress control
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

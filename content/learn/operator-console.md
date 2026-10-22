@@ -91,4 +91,6 @@ Or try the [browser challenge](/playground/): a real agent guards a planted secr
 
 ## Upgrading
 
-Pipelock 3.2 is the current hardening line with fail-closed changes to receipt verification, reload behavior, and signing-key requirements. Read the [GitHub releases](https://github.com/luckyPipewrench/pipelock/releases) before upgrading.
+Pipelock 3.2 introduced fail-closed changes to receipt verification, reload behavior, and signing-key requirements, and later releases keep them. Check the [release notes](/learn/pipelock-release-notes/) and the [GitHub releases](https://github.com/pipelab-org/pipelock/releases) before upgrading.
+
+The operator dashboard and the free evidence viewer arrived in [Pipelock v3.1](/blog/pipelock-v310-release/).

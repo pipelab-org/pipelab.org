@@ -1,6 +1,6 @@
 Contact: mailto:luckypipe@pipelab.org
-Contact: https://github.com/luckyPipewrench/pipelock/security/advisories/new
-Policy: https://github.com/luckyPipewrench/pipelock/security/policy
+Contact: https://github.com/pipelab-org/pipelock/security/advisories/new
+Policy: https://github.com/pipelab-org/pipelock/security/policy
 Canonical: https://pipelab.org/.well-known/security.txt
 Preferred-Languages: en
-Expires: 2026-10-21T00:00:00.000Z
+Expires: 2027-04-21T00:00:00.000Z

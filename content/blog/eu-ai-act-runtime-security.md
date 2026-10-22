@@ -125,7 +125,7 @@ I built Pipelock because AI coding agents needed runtime security and nothing wa
 
 One binary, nine dependencies, open source.
 
-There's an [Article-by-Article mapping](https://github.com/luckyPipewrench/pipelock/blob/main/docs/compliance/eu-ai-act-mapping.md) showing how each feature maps to EU AI Act requirements, with NIST AI RMF references side by side. It covers Articles 9, 12, 13, 14, 15, and 26. Everything in the mapping points to actual code, and gaps are called out explicitly.
+There's an [Article-by-Article mapping](https://github.com/pipelab-org/pipelock/blob/main/docs/compliance/eu-ai-act-mapping.md) showing how each feature maps to EU AI Act requirements, with NIST AI RMF references side by side. It covers Articles 9, 12, 13, 14, 15, and 26. Everything in the mapping points to actual code, and gaps are called out explicitly.
 
 Pipelock is one layer. You need more than one. You still need process sandboxing, least-privilege file access, and actual risk management at the org level. The mapping doc tells you exactly what's covered and what's not.
 
@@ -153,4 +153,4 @@ Pipelock is one layer. You need more than one. You still need process sandboxing
 - prEN 18282: Cybersecurity for AI Systems. CEN/CENELEC. ([status](https://aiassurance.institute/pren-18282-clauses.html))
 - OWASP AI Exchange Liaison with CEN/CENELEC and ISO. OWASP, May 2025. ([link](https://owaspai.org/))
 - NIST CAISI: Request for Information on AI Agent Security. Federal Register, January 2026. ([link](https://www.federalregister.gov/documents/2026/01/08/2026-00206/request-for-information-regarding-security-considerations-for-artificial-intelligence-agents))
-- Pipelock EU AI Act Compliance Mapping. ([link](https://github.com/luckyPipewrench/pipelock/blob/main/docs/compliance/eu-ai-act-mapping.md))
+- Pipelock EU AI Act Compliance Mapping. ([link](https://github.com/pipelab-org/pipelock/blob/main/docs/compliance/eu-ai-act-mapping.md))

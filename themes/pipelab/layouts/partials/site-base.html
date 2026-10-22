@@ -1,5 +1,5 @@
 {{/* Base-template behaviour: nav, live star count, analytics bootstrap.
      Fingerprinted like site-fx.js so these scripts do not need unsafe-inline.
-     Not deferred: posthogReady must exist before any later page script runs. */}}
+     Deferred: page scripts that need analytics wait for DOMContentLoaded. */}}
 {{- $siteBase := resources.Get "js/site-base.js" | minify | fingerprint -}}
-<script src="{{ $siteBase.RelPermalink }}" integrity="{{ $siteBase.Data.Integrity }}"></script>
+<script defer src="{{ $siteBase.RelPermalink }}" integrity="{{ $siteBase.Data.Integrity }}"></script>

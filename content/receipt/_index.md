@@ -16,7 +16,7 @@ for offline verifier consumption.
 
 The pages on this section are demonstration receipts signed with the
 public conformance test key
-([`sdk/conformance/testdata/test-key.json`](https://github.com/luckyPipewrench/pipelock/blob/main/sdk/conformance/testdata/test-key.json)).
+([`sdk/conformance/testdata/test-key.json`](https://github.com/pipelab-org/pipelock/blob/main/sdk/conformance/testdata/test-key.json)).
 Anyone can run the conformance verifier against them and read accept or
 reject from the exit code. Real customer receipts come from the customer's
 Pipelock deployment, signed by the customer's own key.

@@ -76,7 +76,7 @@ Capability separation is the architectural foundation. The agent runs in the pri
 
 Outbound DLP scanning runs on every request body, header, and URL parameter. Patterns cover the canonical providers (`sk-ant-api03`, `AKIA`, `ASIA`, `ghp_`, `gho_`, `ghs_`, `github_pat_`, `eyJ` for JWTs, `-----BEGIN` for private keys), with checksum validators where the format supports them. The scanner decodes base64, hex, and URL encoding before matching, and it scans environment-variable values directly so a leak through a non-prefixed format still trips a check. It also matches partial disclosure of a known secret: a contiguous piece of a canary or configured environment or file secret above a length floor, or a secret spelled out as decimal character codes.
 
-Built-in provider keys carry a credential audience. On inspected traffic, an Anthropic key sent to Anthropic's API on an accepted header or path carrier is allowed, and the same key sent to other destinations is still subject to DLP. Plain CONNECT without TLS interception relays opaque bytes that aren't scanned. Every allow produces audit metadata, and a signed receipt only with a configured, healthy recorder and signer. The audience host sets are compiled in and can't be set from YAML. The coverage table is in the [provider-key DLP coverage doc](https://github.com/luckyPipewrench/pipelock/blob/main/docs/security/provider-key-dlp-coverage.md).
+Built-in provider keys carry a credential audience. On inspected traffic, an Anthropic key sent to Anthropic's API on an accepted header or path carrier is allowed, and the same key sent to other destinations is still subject to DLP. Plain CONNECT without TLS interception relays opaque bytes that aren't scanned. Every allow produces audit metadata, and a signed receipt only with a configured, healthy recorder and signer. The audience host sets are compiled in and can't be set from YAML. The coverage table is in the [provider-key DLP coverage doc](https://github.com/pipelab-org/pipelock/blob/main/docs/security/provider-key-dlp-coverage.md).
 
 Domain blocklists cover the destinations attackers reach for. Pastebin, requestbin, ngrok tunnels, ephemeral webhook receivers, and free DNS services are the usual stash points. A blocklist is not enough on its own (attackers can use new domains), but it raises the cost of the easy attacks and forces an attacker to set up infrastructure that is itself observable.
 
@@ -109,4 +109,4 @@ Each probe maps to a specific control. The first tests pattern coverage. The sec
 - [Pipelock hooks for Claude Code](/learn/claude-code-hooks/)
 - [MCP security threat model](/learn/mcp-security/)
 - [What is an agent firewall?](/agent-firewall/)
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

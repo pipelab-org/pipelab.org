@@ -179,6 +179,6 @@ Pipelock doesn't replace the review work. It replaces the guessing work. You sti
 - [OWASP MCP Top 10](/learn/owasp-mcp-top10/): risk categories including MCP09 Shadow MCP Servers
 - [Compliance Evidence](/learn/compliance-evidence/): framework mappings and signed assessment bundles for auditors
 - [Pipelock](/pipelock/): product overview and installation
-- [OWASP MCP Top 10](https://owasp.org/www-project-mcp-top-10/): the upstream framework, including MCP09 Shadow MCP Servers
+- [OWASP MCP Top 10](https://owasp.org/projects/mcp-top-10): the upstream framework, including MCP09 Shadow MCP Servers
 - [Vulnerable MCP Project](https://vulnerablemcp.info/): a catalog of known vulnerabilities and attack patterns in public MCP servers
 - [Mend's shadow MCP post](https://www.mend.io/blog/shadow-mcp-unauthorized-ai-connectivity-in-your-codebase/): an early public write-up on unauthorized AI connectivity

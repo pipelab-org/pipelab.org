@@ -1,9 +1,9 @@
 ---
 title: "EU AI Act Compliance: Article 26 Deployer Obligations and 6-Month Log Retention"
 linkTitle: "EU AI Act Compliance"
-seoTitle: "EU AI Act Compliance Guide for AI Agents (2026)"
+seoTitle: "EU AI Act Article 26(6): 6-Month Log Retention"
 subtitle: "Article 26 deployer duties including the 6-month log retention floor, plus runtime controls for Articles 9, 14, and 15. Regulation (EU) 2026/1744 defers stand-alone Annex III high-risk obligations to 2 December 2027."
-description: "EU AI Act compliance for AI agents: Article 26 deployer duties, the 26(6) six-month log retention rule, and the runtime controls that satisfy them."
+description: "EU AI Act Article 26(6): deployers of high-risk AI must keep automatically generated logs for at least six months. Who keeps them and how agents comply."
 date: 2026-03-07
 lastmod: 2026-08-24
 faq:
@@ -206,7 +206,7 @@ Pipelock's controls also map to the [NIST AI Risk Management Framework 1.0](http
 | MEASURE | Prometheus metrics, structured audit logs, alerting | Art. 12, 15 |
 | MANAGE | HITL override, kill switch, hot-reload, MCP scanning | Art. 14, 15 |
 
-The full mapping with subcategory-level detail is in the [EU AI Act Compliance Mapping](https://github.com/luckyPipewrench/pipelock/blob/main/docs/compliance/eu-ai-act-mapping.md) document.
+The full mapping with subcategory-level detail is in the [EU AI Act Compliance Mapping](https://github.com/pipelab-org/pipelock/blob/main/docs/compliance/eu-ai-act-mapping.md) document.
 
 ## Enforcement Timeline
 
@@ -240,7 +240,7 @@ pipelock run --config pipelock.yaml
 
 Set `HTTPS_PROXY=http://127.0.0.1:8888` on your agent. Every connection is now logged and filtered. Enable TLS interception for full HTTPS body scanning.
 
-For the full compliance mapping with NIST crosswalk, see the [source document on GitHub](https://github.com/luckyPipewrench/pipelock/blob/main/docs/compliance/eu-ai-act-mapping.md).
+For the full compliance mapping with NIST crosswalk, see the [source document on GitHub](https://github.com/pipelab-org/pipelock/blob/main/docs/compliance/eu-ai-act-mapping.md).
 
 Generate signed compliance evidence for your deployment with [`pipelock assess`](/assess/).
 

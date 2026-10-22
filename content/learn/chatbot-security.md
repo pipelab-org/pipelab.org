@@ -118,13 +118,13 @@ For any chatbot deployment that touches sensitive data or has tool access:
 - [ ] Kill switch the operator can flip without restarting the chatbot
 - [ ] Signed evidence trail for any high-stakes action
 
-If the chatbot is also an agent, add the controls in the [agent security best practices](/learn/ai-agent-security-best-practices/) checklist.
+If the chatbot is also an agent, add the controls in the [AI agent security and hardening](/learn/ai-agent-security/) checklist.
 
 ## Related guides
 
 - [What is an agent firewall?](/agent-firewall/): the network layer that catches what the model misses.
 - [Prompt injection defense at the network layer](/learn/prompt-injection-network-defense/): pattern-matching detection at the proxy.
 - [LLM prompt injection](/learn/llm-prompt-injection/): the category, the variants, and defense-in-depth.
-- [Agent security best practices](/learn/ai-agent-security-best-practices/): the broader checklist when the chatbot can also act.
-- [How to secure your MCP setup](/learn/how-to-secure-mcp/): the practitioner tutorial for MCP-enabled chatbots.
+- [AI agent security and hardening](/learn/ai-agent-security/): the broader checklist when the chatbot can also act.
+- [MCP security best practices](/learn/mcp-security/): the checklist for MCP-enabled chatbots.
 - [Pipelock](/pipelock/): the open-source agent firewall.

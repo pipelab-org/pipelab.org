@@ -146,4 +146,4 @@ For commercial agents such as Claude Code or Cursor, guardrails aren't an option
 - [Pipelock vs cloud model guardrails](/compare/pipelock-vs-cloud-model-guardrails/): Bedrock Guardrails and Azure AI Content Safety at the same boundary
 - [Prompt injection: network-layer defense](/learn/prompt-injection-network-defense/): how firewalls catch injection at the proxy
 - [Agent firewall vs WAF](/compare/agent-firewall-vs-waf/): another commonly confused pair
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

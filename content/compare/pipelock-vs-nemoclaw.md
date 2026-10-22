@@ -104,4 +104,4 @@ The NemoClaw column is drawn from the README, the docs index, and the Network Po
 - [Pipelock vs DefenseClaw](/compare/pipelock-vs-defenseclaw/): the framework-hook side of the same question
 - [Pipelock vs Docker MCP Gateway](/compare/pipelock-vs-docker-mcp-gateway/): container isolation for MCP servers
 - [MCP security](/learn/mcp-security/): MCP threats and content-level scanning
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

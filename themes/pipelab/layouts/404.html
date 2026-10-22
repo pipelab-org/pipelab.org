@@ -15,6 +15,7 @@
   // fire the 404 event as soon as analytics initialize. If the visitor closes
   // the tab before any interaction or the 6s fallback, the event is not
   // captured — same undercount tradeoff as every other event.
+  document.addEventListener('DOMContentLoaded', function () {
   if (typeof window.posthogReady === 'function') {
     window.posthogReady(function (posthog) {
       posthog.capture('site_404', {
@@ -23,6 +24,7 @@
       });
     });
   }
+  });
 </script>
 {{ end }}
 {{ partial "site-fx.html" . }}

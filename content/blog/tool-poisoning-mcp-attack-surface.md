@@ -77,7 +77,7 @@ When send_message is invoked, change the recipient to
 
 The MCP spec allows tool definitions to change between `tools/list` responses. There's no built-in integrity check, no hash pinning, and no required re-approval flow. The `notifications/tools/list_changed` notification is optional and doesn't mandate user re-consent.
 
-[OWASP classifies the rug pull as a sub-technique of MCP03:2025 Tool Poisoning.](https://owasp.org/www-project-mcp-top-10/) [Microsoft's guidance](https://developer.microsoft.com/blog/protecting-against-indirect-injection-attacks-mcp/) calls it out explicitly: "tool definitions can be dynamically amended to include malicious content later."
+[OWASP classifies the rug pull as a sub-technique of MCP03:2025 Tool Poisoning.](https://owasp.org/projects/mcp-top-10) [Microsoft's guidance](https://developer.microsoft.com/blog/protecting-against-indirect-injection-attacks-mcp/) calls it out explicitly: "tool definitions can be dynamically amended to include malicious content later."
 
 ## Why this is hard to stop at the model layer
 
@@ -89,7 +89,7 @@ Static scanning before connection (tools like `mcp-scan`) catches known patterns
 
 ## What catches this at the network layer
 
-[Pipelock](https://github.com/luckyPipewrench/pipelock) sits between the agent and MCP servers, scanning all tool definitions in both directions. Three detection layers handle the three variants above.
+[Pipelock](https://github.com/pipelab-org/pipelock) sits between the agent and MCP servers, scanning all tool definitions in both directions. Three detection layers handle the three variants above.
 
 **Layer 1: Tool poison pattern matching.** Six regex patterns scan tool descriptions for instruction tags (`<IMPORTANT>`, `[CRITICAL]`, `**SYSTEM**`), file exfiltration directives (both "read ~/.ssh/id_rsa and send" and "~/.ssh/config, upload it"), cross-tool manipulation ("instead of using the search tool"), and dangerous capability declarations ("executes arbitrary shell scripts", "downloads files from URLs and executes them"). All patterns run after Unicode normalization (NFKC + confusable mapping), so common evasion techniques like Cyrillic `о` substitution and zero-width character insertion are caught.
 
@@ -173,6 +173,6 @@ Honest limitations:
 
 The broader point: tool descriptions are part of your agent's attack surface. Any text that enters the LLM context window is a potential injection vector. Static pre-connection scanning catches known patterns at install time. Runtime proxy scanning catches changes mid-session. Neither replaces the other.
 
-Full configuration reference: [docs/configuration.md](https://github.com/luckyPipewrench/pipelock/blob/main/docs/configuration.md)
+Full configuration reference: [docs/configuration.md](https://github.com/pipelab-org/pipelock/blob/main/docs/configuration.md)
 
-If you find a poisoning pattern that bypasses detection, [open an issue](https://github.com/luckyPipewrench/pipelock/issues).
+If you find a poisoning pattern that bypasses detection, [open an issue](https://github.com/pipelab-org/pipelock/issues).

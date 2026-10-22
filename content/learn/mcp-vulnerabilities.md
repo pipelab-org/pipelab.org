@@ -154,13 +154,13 @@ Year is the disclosure year. CVSS is "Not public" where no rating has been publi
 
 No single tool covers every class above, so the workflow combines four layers.
 
-**Start with the public trackers.** The [Vulnerable MCP Project](https://vulnerablemcp.info/) is the community CVE index. The [OWASP MCP Top 10](https://owasp.org/www-project-mcp-top-10/) is the category framework in beta as of 2026. Both give you the vocabulary and known-bad list before you scan your own servers.
+**Start with the public trackers.** The [Vulnerable MCP Project](https://vulnerablemcp.info/) is the community CVE index. The [OWASP MCP Top 10](https://owasp.org/projects/mcp-top-10) is the category framework in beta as of 2026. Both give you the vocabulary and known-bad list before you scan your own servers.
 
 **Run a static scanner against tool definitions.** Cisco mcp-scanner, Snyk agent-scan (the former Invariant mcp-scan), and Backslash Security analyze tool definitions and configs before the server ships. See [MCP security tools](/learn/mcp-security-tools/) for the landscape.
 
 **Route live traffic through a runtime inspection proxy.** Static scanners miss rug-pulls, response injection, credential leaks in arguments, and poisoned data returned at runtime. An inspection proxy ([MCP Proxy](/learn/mcp-proxy/), [Agent Firewall](/agent-firewall/)) scans tool descriptions on every session, arguments on every call, and responses on every reply.
 
-**Audit the inventory.** Walk every developer machine and CI runner. List every MCP server. Check binary hashes and SBOMs against published releases. Flag any server without an approval ticket. See [Shadow MCP](/learn/shadow-mcp/). The [How to Secure MCP](/learn/how-to-secure-mcp/) guide pulls the short operator checklist together.
+**Audit the inventory.** Walk every developer machine and CI runner. List every MCP server. Check binary hashes and SBOMs against published releases. Flag any server without an approval ticket. See [Shadow MCP](/learn/shadow-mcp/). The [MCP security best practices](/learn/mcp-security/) checklist pulls the short operator steps together.
 
 ## Mitigation layers
 
@@ -182,11 +182,10 @@ No layer is a full answer. Runtime inspection is the widest because it sees cont
 - [MCP Security](/learn/mcp-security/): the full MCP threat model.
 - [MCP Tool Poisoning](/learn/mcp-tool-poisoning/): deep dive on poisoning and rug-pulls.
 - [Tool Poisoning MCP Attack Surface](/blog/tool-poisoning-mcp-attack-surface/): the blog companion to this page's poisoning section.
-- [How to Secure MCP](/learn/how-to-secure-mcp/): seven attacks and seven defenses.
 - [MCP Authorization](/learn/mcp-authorization/): OAuth 2.1, scoped tokens, and the MCPoison class of bugs.
 - [Shadow MCP](/learn/shadow-mcp/): inventory and discovery workflow.
 - [MCP Proxy](/learn/mcp-proxy/) and [MCP Gateway](/learn/mcp-gateway/): the runtime inspection and gateway patterns.
 - [MCP Security Tools](/learn/mcp-security-tools/): landscape of scanners, gateways, and inspection proxies.
-- [OWASP MCP Top 10](https://owasp.org/www-project-mcp-top-10/): the upstream category framework.
+- [OWASP MCP Top 10](https://owasp.org/projects/mcp-top-10): the upstream category framework.
 - [Vulnerable MCP Project](https://vulnerablemcp.info/): the community CVE tracker.
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock).
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock).

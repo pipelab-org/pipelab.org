@@ -93,4 +93,4 @@ Put the gateway in front of the AWS estate and the firewall next to the agent.
 - [Pipelock vs agentgateway](/compare/pipelock-vs-agentgateway/): the open-source proxy with a similar shape
 - [Pipelock vs Cloudflare AI Gateway](/compare/pipelock-vs-cloudflare-ai-gateway/): another hosted gateway, at the model boundary
 - [Agent firewall vs agent authorization gateway](/compare/agent-firewall-vs-agent-authorization-gateway/): the concept behind the authorization rows
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

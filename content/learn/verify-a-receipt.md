@@ -60,7 +60,7 @@ The Pipelock verifier is available as the built-in CLI, a standalone Go binary, 
 | `pipelock-verifier` (Go) | [`cmd/pipelock-verifier`](https://github.com/pipelab-org/pipelock/tree/main/cmd/pipelock-verifier), shipped as its own GoReleaser archive | Subcommands `receipt`, `chain`, `audit-packet`. No proxy, no scanner, no network surface. |
 | `pipelock-verifier-ts` | [`sdk/verifiers/ts`](https://github.com/pipelab-org/pipelock/tree/main/sdk/verifiers/ts) | Node/Bun port via `@noble/ed25519` and `ajv` |
 | `pipelock-verifier-rs` | [`sdk/verifiers/rust`](https://github.com/pipelab-org/pipelock/tree/main/sdk/verifiers/rust) | Rust port with embedded schema |
-| `pipelock-verify` | [`pipelock-verify-python`](https://github.com/luckyPipewrench/pipelock-verify-python) | Python port for receipt chains and Python audit scripts |
+| `pipelock-verify` | [`pipelock-verify-python`](https://github.com/pipelab-org/pipelock-verify-python) | Python port for receipt chains and Python audit scripts |
 
 Core Go invocations:
 
@@ -96,20 +96,20 @@ You can also check a chain without installing anything. The [browser verifier](/
 ## Walk the seven-case quick path
 
 The full
-[public conformance corpus](https://github.com/luckyPipewrench/agent-egress-bench/tree/main/receipts/v0/conformance)
+[public conformance corpus](https://github.com/pipelab-org/agent-egress-bench/tree/main/receipts/v0/conformance)
 ships 28 fixtures (8 golden, 8 edge, 12 malicious) covering every
 `reject_reason` in the closed enum. A verifier author runs the whole corpus.
 A first-time reader can grasp the format in seven hand-picked cases:
 
 | # | Fixture | Category | What it shows |
 | --- | --- | --- | --- |
-| 1 | [`golden/01-allow-clean-get`](https://github.com/luckyPipewrench/agent-egress-bench/blob/main/receipts/v0/conformance/golden/01-allow-clean-get.json) | golden | A clean allowed GET request. The basic happy-path signed receipt. |
-| 2 | [`golden/03-block-dlp-aws-key`](https://github.com/luckyPipewrench/agent-egress-bench/blob/main/receipts/v0/conformance/golden/03-block-dlp-aws-key.json) | golden | A blocked DLP hit still produces a signed receipt. Blocked is not silent. |
-| 3 | [`malicious/m01-forged-signature-wrong-key`](https://github.com/luckyPipewrench/agent-egress-bench/blob/main/receipts/v0/conformance/malicious/m01-forged-signature-wrong-key.json) | malicious | Reject reason: `signature_invalid`. Attacker rewrote `signer_key` to claim the pinned key; the foreign signature fails. |
-| 4 | [`malicious/m03-expired-timestamp`](https://github.com/luckyPipewrench/agent-egress-bench/blob/main/receipts/v0/conformance/malicious/m03-expired-timestamp.json) | malicious | Reject reason: `expired`. Receipt is past the verifier's `max_age` window. |
-| 5 | [`malicious/m08-tampered-chain-prev-hash`](https://github.com/luckyPipewrench/agent-egress-bench/blob/main/receipts/v0/conformance/malicious/m08-tampered-chain-prev-hash.jsonl) | malicious | Reject reason: `chain_break`. A receipt's `chain_prev_hash` does not match the SHA-256 of the prior receipt. |
-| 6 | [`malicious/m11-body-tampered-after-sign`](https://github.com/luckyPipewrench/agent-egress-bench/blob/main/receipts/v0/conformance/malicious/m11-body-tampered-after-sign.json) | malicious | Reject reason: `body_tampered`. Signature was valid for the original body; `action_record.target` was rewritten post-signing. |
-| 7 | [`edge/e04-edge-of-freshness-window`](https://github.com/luckyPipewrench/agent-egress-bench/blob/main/receipts/v0/conformance/edge/e04-edge-of-freshness-window.json) | edge | A receipt right at the freshness boundary. A correct verifier still accepts; off-by-one verifiers do not. |
+| 1 | [`golden/01-allow-clean-get`](https://github.com/pipelab-org/agent-egress-bench/blob/main/receipts/v0/conformance/golden/01-allow-clean-get.json) | golden | A clean allowed GET request. The basic happy-path signed receipt. |
+| 2 | [`golden/03-block-dlp-aws-key`](https://github.com/pipelab-org/agent-egress-bench/blob/main/receipts/v0/conformance/golden/03-block-dlp-aws-key.json) | golden | A blocked DLP hit still produces a signed receipt. Blocked is not silent. |
+| 3 | [`malicious/m01-forged-signature-wrong-key`](https://github.com/pipelab-org/agent-egress-bench/blob/main/receipts/v0/conformance/malicious/m01-forged-signature-wrong-key.json) | malicious | Reject reason: `signature_invalid`. Attacker rewrote `signer_key` to claim the pinned key; the foreign signature fails. |
+| 4 | [`malicious/m03-expired-timestamp`](https://github.com/pipelab-org/agent-egress-bench/blob/main/receipts/v0/conformance/malicious/m03-expired-timestamp.json) | malicious | Reject reason: `expired`. Receipt is past the verifier's `max_age` window. |
+| 5 | [`malicious/m08-tampered-chain-prev-hash`](https://github.com/pipelab-org/agent-egress-bench/blob/main/receipts/v0/conformance/malicious/m08-tampered-chain-prev-hash.jsonl) | malicious | Reject reason: `chain_break`. A receipt's `chain_prev_hash` does not match the SHA-256 of the prior receipt. |
+| 6 | [`malicious/m11-body-tampered-after-sign`](https://github.com/pipelab-org/agent-egress-bench/blob/main/receipts/v0/conformance/malicious/m11-body-tampered-after-sign.json) | malicious | Reject reason: `body_tampered`. Signature was valid for the original body; `action_record.target` was rewritten post-signing. |
+| 7 | [`edge/e04-edge-of-freshness-window`](https://github.com/pipelab-org/agent-egress-bench/blob/main/receipts/v0/conformance/edge/e04-edge-of-freshness-window.json) | edge | A receipt right at the freshness boundary. A correct verifier still accepts; off-by-one verifiers do not. |
 
 Each `.json` fixture has a sibling `.expect.json` describing the verdict any
 correct verifier MUST emit, the `reject_reason` enum value, the expected
@@ -121,7 +121,7 @@ across the corpus, compare line by line.
 Clone the bench, pin the test key, run the verifier on a golden receipt:
 
 ```bash
-git clone https://github.com/luckyPipewrench/agent-egress-bench.git
+git clone https://github.com/pipelab-org/agent-egress-bench.git
 cd agent-egress-bench/receipts/v0/conformance
 
 # Public test key (committed for reproducibility; production deployments pin their own)
@@ -187,7 +187,7 @@ Three things, in order, every time:
 
 Add the verifier-side policy checks on top: pinned signer key, max age,
 replay window, schema version, strict JSON parsing. The
-[conformance README](https://github.com/luckyPipewrench/agent-egress-bench/tree/main/receipts/v0/conformance)
+[conformance README](https://github.com/pipelab-org/agent-egress-bench/tree/main/receipts/v0/conformance)
 documents the exact policy assumptions every conformance run uses.
 
 ## Where to go next
@@ -207,9 +207,9 @@ documents the exact policy assumptions every conformance run uses.
   frozen receipt.
 * [Audit Packet v0 schema](/schemas/audit-packet-v0.schema.json): the
   JSON Schema the bundle producers and verifiers both honor.
-* [pipelock-agent-egress-action](https://github.com/luckyPipewrench/pipelock-agent-egress-action):
+* [pipelock-agent-egress-action](https://github.com/pipelab-org/pipelock-agent-egress-action):
   the GitHub Action that produces complete Audit Packets in CI.
-* [Conformance corpus README](https://github.com/luckyPipewrench/agent-egress-bench/tree/main/receipts/v0/conformance):
+* [Conformance corpus README](https://github.com/pipelab-org/agent-egress-bench/tree/main/receipts/v0/conformance):
   the closed reject-reason enum, policy assumptions, and the generator
   that produces the fixtures.
 

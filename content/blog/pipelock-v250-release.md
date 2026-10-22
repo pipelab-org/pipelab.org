@@ -145,4 +145,4 @@ Start with:
 
 Full operator guide: [Pipelock v2.5 upgrade guide](/learn/pipelock-v250-upgrade/).
 
-Full changelog at the [public repo](https://github.com/luckyPipewrench/pipelock/blob/main/CHANGELOG.md).
+Full changelog at the [public repo](https://github.com/pipelab-org/pipelock/blob/main/CHANGELOG.md).

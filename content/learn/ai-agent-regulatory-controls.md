@@ -100,7 +100,7 @@ The deeper Article-by-Article mapping lives on the [EU AI Act compliance page](/
 
 - **GOVERN**, capability separation, fail-closed defaults, per-instance isolation, signed policy hash, posture capsule for runtime governance evidence.
 - **MAP**, audit packet + session metadata + chain-linked receipt history for "what was the system doing in this context."
-- **MEASURE**, scanner verdicts, [Agent Egress Bench](https://github.com/luckyPipewrench/agent-egress-bench) corpus results, signed conformance bundles for "how is the system performing against measurable controls."
+- **MEASURE**, scanner verdicts, [Agent Egress Bench](https://github.com/pipelab-org/agent-egress-bench) corpus results, signed conformance bundles for "how is the system performing against measurable controls."
 - **MANAGE**, kill switch, fail-closed verdicts, HITL approvals, adaptive enforcement levels for "how do we respond when something goes wrong."
 
 **What Pipelock does NOT cover under NIST AI RMF:**
@@ -127,7 +127,7 @@ Pipelock supplies runtime-control evidence that an AIMS can reference for monito
 
 ### EU Digital Operational Resilience Act (DORA), Regulation (EU) 2022/2554
 
-**Source:** [eba.europa.eu/single-rule-book-qa](https://www.eba.europa.eu/single-rule-book-qa)
+**Source:** [European Commission: Digital Operational Resilience Act](https://finance.ec.europa.eu/digital-finance/cyber-resilience_en#legislation)
 
 **Timeline:**
 
@@ -246,7 +246,7 @@ OWASP frameworks are community-driven, not regulatory. They are widely cited ins
 
 1. **Identify your jurisdiction and applicable framework.** Procurement, legal, and compliance will know; this page is not a substitute for that work.
 2. **Map your obligations to the artifact rows in the table above.** For each artifact, the table identifies which framework's items it supports.
-3. **Generate the bundle.** Run [`pipelock assess`](/assess/) to produce a signed evidence bundle covering the configuration hash (a SHA-256 of the active config) and the run's scanner verdicts. Cite the bundle as evidence for the specific framework obligations you map to it; the bundle itself is framework-neutral. Provide the bundle and the public key to the auditor. They verify offline with the [Python verifier](https://github.com/luckyPipewrench/pipelock-verify-python).
+3. **Generate the bundle.** Run [`pipelock assess`](/assess/) to produce a signed evidence bundle covering the configuration hash (a SHA-256 of the active config) and the run's scanner verdicts. Cite the bundle as evidence for the specific framework obligations you map to it; the bundle itself is framework-neutral. Provide the bundle and the public key to the auditor. They verify offline with the [Python verifier](https://github.com/pipelab-org/pipelock-verify-python).
 4. **Walk through a single decision end-to-end.** The [What did my agent do?](/learn/what-did-my-agent-do/) demo page shows the full chain, request, verdict, signed receipt, verifier output, so the reviewer can see exactly what one row of the bundle looks like in operation.
 
 ## Further reading

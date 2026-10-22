@@ -45,6 +45,8 @@ test("guide renderer accepts every shipped integration mark under a subpath", as
 test("guide renderer rejects malformed mark identifiers before resolving assets", async (t) => {
   const base = { name: "Fixture", color: "#123abc" };
   const cases = [
+    [{ ...base, img: "/images/brands/hermes.png", img_small: "/missing.png" }, /image asset.*missing/],
+    [{ ...base, img: "/images/brands/hermes.png", img_small: "/../outside.png" }, /invalid image path/],
     ...["./claude", "brands/claude", "claude.svg", "claude\\mark", "claude mark"].map((brand) => [{ ...base, brand }, /invalid brand slug/]),
     ...["images/brands/hermes.png", "/images/./brands/hermes.png", "/images//brands/hermes.png", "/images\\brands\\hermes.png", "/images/brands/hermes.png?size=88"].map((img) => [{ ...base, img }, /invalid image path/]),
     [{ ...base, img: "/images/brands/missing.png" }, /image asset .* is missing/],
@@ -82,7 +84,7 @@ test("homepage preserves shipped marks and intentional placeholders", async (t) 
         if (surface === "orbit") assert.equal(marks[0], marks[1], "desktop and mobile marks must match");
         for (const mark of marks) {
           if (entry.brand) assert.match(mark, /<svg\b/);
-          else if (entry.img) assert.ok(mark.includes(`<img src="/preview${entry.img}" alt="${entry.name} logo" width="28" height="28" loading="lazy" decoding="async">`));
+          else if (entry.img) assert.ok(mark.includes(`<img src="/preview${entry.img_small || entry.img}" alt="${entry.name} logo" width="28" height="28" loading="lazy" decoding="async">`));
           else assert.equal(mark, entry.name.slice(0, 2).toUpperCase());
         }
       });

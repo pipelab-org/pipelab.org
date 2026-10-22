@@ -1,11 +1,11 @@
 ---
-title: "Pipelock vs iron-proxy"
+title: "iron-proxy Review: What It Does, Setup, and Open-Source Alternatives"
 linkTitle: "Pipelock vs iron-proxy"
-seoTitle: "Pipelock vs iron-proxy: Open Source Agent Proxies"
+seoTitle: "iron-proxy Review: Setup and Alternatives"
 subtitle: "Content inspection with signed receipts next to default-deny egress with credential brokering. Two open-source proxies, two halves of the same problem."
-description: "Pipelock scans HTTP, WebSocket, and MCP traffic for secrets and injection. iron-proxy allowlists egress and swaps placeholder credentials. Side-by-side."
+description: "iron-proxy allowlists agent egress and swaps placeholder credentials. What it does, how to set it up, and how it compares to open-source Pipelock."
 date: 2026-04-11
-lastmod: 2026-09-01
+lastmod: 2026-10-22
 reviewed: "September 2026"
 compare_cat: "egress"
 compare:
@@ -19,6 +19,18 @@ compare:
   pick_pipelock: "You need to know what is inside the traffic: leaked secrets in bodies, injected responses, poisoned tool descriptions, and a signed record of each decision."
   pick_both: "iron-proxy owns the credential boundary and the allowlist. Pipelock inspects the payloads and receipts the decisions. They sit at different layers and don't conflict."
 sources:
+  - label: "iron-proxy README: installation and production usage"
+    url: "https://github.com/paradigmxyz/iron-proxy#installation"
+    checked: 2026-10-21
+  - label: "iron-proxy images on Docker Hub"
+    url: "https://hub.docker.com/r/ironsh/iron-proxy"
+    checked: 2026-10-21
+  - label: "iron-proxy releases"
+    url: "https://github.com/paradigmxyz/iron-proxy/releases"
+    checked: 2026-10-21
+  - label: "iron-proxy Docker Compose example"
+    url: "https://github.com/paradigmxyz/iron-proxy/tree/main/examples/docker-compose"
+    checked: 2026-10-21
   - label: "iron-proxy README"
     url: "https://github.com/paradigmxyz/iron-proxy"
     checked: 2026-09-01
@@ -61,6 +73,16 @@ iron-proxy answers "may this leave, and with which credential?" Pipelock answers
 iron-proxy's recent releases moved onto surfaces Pipelock has covered for a while. MCP is first-class: a default-deny tool allowlist, `tools/call` denials returned as JSON-RPC errors, and `tools/list` filtering so denied tools never reach the agent's catalog. The LLM Judge transform asks a model for an allow or deny decision on outbound HTTP requests. The control plane handles enrollment, fleet policy, and audit search.
 
 So the distinction is no longer that one does MCP and the other doesn't. It's the kind of MCP control. iron-proxy decides which tools may be called. Pipelock reads the tool descriptions, arguments, and responses and looks for poisoning, drift, and injection. A serious MCP deployment wants both.
+
+## iron-proxy setup at a glance
+
+Setup instructions checked October 21, 2026. The broader comparison was reviewed in September 2026.
+
+From the [iron-proxy README](https://github.com/paradigmxyz/iron-proxy#installation) (checked 2026-10-21):
+
+- **Install.** Docker images are published on [Docker Hub](https://hub.docker.com/r/ironsh/iron-proxy), and prebuilt Linux and macOS binaries for amd64 and arm64 are on [GitHub Releases](https://github.com/paradigmxyz/iron-proxy/releases). It can also be built from source.
+- **Try it.** The repository ships a [Docker Compose example](https://github.com/paradigmxyz/iron-proxy/tree/main/examples/docker-compose) you can start with `docker compose up`.
+- **Production shape.** You generate a CA, because iron-proxy terminates TLS with leaf certificates it signs on the fly, then create a Docker network, start the proxy, and route client containers through it. Those containers must trust the CA.
 
 ## Feature comparison
 
@@ -122,4 +144,4 @@ Neither note is a defect. They're design choices, and a default can change in on
 - [Agent egress security](/learn/agent-egress-security/): why egress is the control point for agents
 - [AI egress proxy](/learn/ai-egress-proxy/): how egress proxies fit into agent security
 - [Pipelock vs open source MCP gateways](/compare/pipelock-vs-open-source-mcp-gateways/): the routing-gateway side of the same question
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

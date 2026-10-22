@@ -84,4 +84,4 @@ go install github.com/luckyPipewrench/pipelock/cmd/pipelock@v3.4.0
 docker pull ghcr.io/luckypipewrench/pipelock:3.4.0
 ```
 
-Read the full [v3.4.0 changelog](https://github.com/luckyPipewrench/pipelock/releases/tag/v3.4.0), inspect the [proof stack](/proof/), or run the [public gauntlet](/gauntlet/) against the release yourself.
+Read the full [v3.4.0 changelog](https://github.com/pipelab-org/pipelock/releases/tag/v3.4.0), inspect the [proof stack](/proof/), or run the [public gauntlet](/gauntlet/) against the release yourself.

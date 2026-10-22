@@ -4,4 +4,6 @@ description: "A release-pinned inventory of Pipelock's operator-visible controls
 layout: "single"
 type: "capabilities"
 release_target: "3.7.0"
+date: 2026-10-09
+lastmod: 2026-10-17
 ---

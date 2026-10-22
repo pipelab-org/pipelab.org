@@ -90,7 +90,7 @@ pipelock_version = "3.7.0"
   notAlternative = true
 
 [outputs]
-  home = ["html", "rss", "markdown", "productFacts"]
+  home = ["html", "rss", "markdown", "productFacts", "redirects"]
   page = ["html", "markdown"]
   section = ["html", "rss", "markdown"]
 
@@ -104,3 +104,19 @@ pipelock_version = "3.7.0"
 # therefore use an inlined aria-hidden SVG rather than alt="".
 [minify.tdewolff.html]
   keepQuotes = true
+
+# The redirects output reads the hand-maintained static/_redirects list and
+# renders the complete rule file after static assets are copied. Generated
+# /path -> /path/ rules request permanent redirects; verify Cloudflare's
+# precedence over asset html_handling on a deployed preview before merge.
+[mediaTypes."text/redirects"]
+  delimiter = ""
+
+[outputFormats.redirects]
+  mediaType = "text/redirects"
+  baseName = "_redirects"
+  isPlainText = true
+  notAlternative = true
+
+[frontmatter]
+  lastmod = ["lastmod", "modified", "date", "publishDate"]

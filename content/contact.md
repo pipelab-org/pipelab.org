@@ -20,7 +20,7 @@ lead: "Pick a topic and send the context. Trials, licensing, support, security d
 - [About](/about/)
 - [Compare](/compare/)
 - [Learn](/learn/)
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)
 - [PipeLab on X](https://x.com/pipelockhq)
 - [PipeLab on LinkedIn](https://www.linkedin.com/company/pipelab-org)
 - [Founder on X](https://x.com/luckyPipewrench)

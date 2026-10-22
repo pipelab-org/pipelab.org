@@ -24,8 +24,8 @@ sources:
     checked: 2026-09-01
     note: "six components: AI Gateway, Agent Security, AI Red Teaming, AI Runtime Security, AI Model Security, AI Posture Management"
   - label: "Noma Security"
-    url: "https://www.noma.security/"
-    checked: 2026-09-01
+    url: "https://noma.security/"
+    checked: 2026-10-22
     note: "positions a unified platform for end-to-end AI security with offerings for endpoint agents, SaaS agents, and homegrown agents"
   - label: "NeuralTrust"
     url: "https://neuraltrust.ai/"
@@ -62,7 +62,7 @@ The platform question is about shape, not quality. Broad and managed, or narrow 
 
 **[Prisma AIRS](https://www.paloaltonetworks.com/ai-security/prisma-airs)** from Palo Alto Networks lists six components: AI Gateway, Agent Security, AI Red Teaming, AI Runtime Security, AI Model Security, and AI Posture Management. Compared in depth on [Pipelock vs Prisma AIRS](/compare/pipelock-vs-prisma-airs/).
 
-**[Noma Security](https://www.noma.security/)** positions a unified platform for end-to-end AI security, with offerings for the agents employees use on endpoints, agents running on SaaS platforms, and homegrown agents.
+**[Noma Security](https://noma.security/)** positions a unified platform for end-to-end AI security, with offerings for the agents employees use on endpoints, agents running on SaaS platforms, and homegrown agents.
 
 **[NeuralTrust](https://neuraltrust.ai/)** lists TrustGuard for agent runtime security, TrustGate as an agent gateway that connects agents to models and tools, and agent posture management.
 
@@ -110,4 +110,4 @@ A platform for the estate and a firewall where a provable boundary matters. The 
 - [What is an agent firewall?](/agent-firewall/): definition and evaluation checklist
 - [Pipelock vs Prisma AIRS](/compare/pipelock-vs-prisma-airs/): the platform comparison in depth
 - [Pipelock vs Runlayer](/compare/pipelock-vs-runlayer/) and [Pipelock vs Backslash Security](/compare/pipelock-vs-backslash/): control planes for MCP access and endpoints
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

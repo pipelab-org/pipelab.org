@@ -89,4 +89,4 @@ The two tools stop failures at different moments. A poisoned skill in a marketpl
 - [Agent firewall vs agent sandbox](/compare/agent-firewall-vs-agent-sandbox/): where install-time and runtime controls sit
 - [Pipelock vs DefenseClaw](/compare/pipelock-vs-defenseclaw/): another tool that scans components before they run
 - [MCP tool poisoning](/learn/mcp-tool-poisoning/): what the scanners and the firewall both look for
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

@@ -126,4 +126,4 @@ The wrong answer is to pick one and assume it covers everything. All three of th
 - [MCP Security Tools](/learn/mcp-security-tools/) is a broader comparison with more vendors
 - [MCP Proxy](/learn/mcp-proxy/) explains the runtime proxy pattern in more detail
 - [Pipelock product page](/pipelock/) has the full scanner inventory and install instructions
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock) is the source
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock) is the source

@@ -12,7 +12,7 @@ faq:
   - q: "How does the OWASP MCP Top 10 differ from the OWASP Top 10 for LLMs?"
     a: "The OWASP Top 10 for LLMs covers the model and the application that wraps it: prompt injection at the model layer, training data poisoning, output handling, and similar concerns. The OWASP MCP Top 10 focuses on the protocol an agent uses to call external tools. That means tool poisoning, server authentication, audit gaps, and shadow servers. There is overlap on prompt injection, but the MCP framework looks at where injection enters through tool descriptions and tool responses, not through the user prompt. Most teams need both."
   - q: "Which tools cover the OWASP MCP Top 10 risks?"
-    a: "No single tool covers all ten risks. Pre-deploy scanners catch tool poisoning and supply chain issues at install time. Runtime proxies inspect tool calls and responses while the agent runs and catch rug-pulls, command injection, and intent flow subversion. Identity gateways handle authentication and scope enforcement. Audit log platforms cover the telemetry gap. Network allowlists and MCP gateways add policy at the routing layer. A defensible MCP deployment combines four to six of these categories so each tool covers a different row of the matrix."
+    a: "No single tool covers all ten risks. Pre-deploy scanners catch tool poisoning and supply chain issues at install time. Runtime proxies inspect tool calls and responses while the agent runs and catch rug-pulls, command injection, and prompt injection via contextual payloads. Identity gateways handle authentication and scope enforcement. Audit log platforms cover the telemetry gap. Network allowlists and MCP gateways add policy at the routing layer. A defensible MCP deployment combines four to six of these categories so each tool covers a different row of the matrix."
   - q: "Does Pipelock cover the OWASP MCP Top 10?"
     a: "Pipelock covers the runtime inspection rows: tool poisoning, prompt injection through tool responses, credential leaks, context oversharing, and part of command-injection defense. It partially supports audit and shadow-MCP evidence through the flight recorder, discovery, and signed receipts when a signing key is configured. It does not replace an identity gateway for authentication, authorization, token lifecycle, or per-tool scopes."
 learn_cat: compliance
@@ -22,7 +22,7 @@ tags:
   - mcp
   - OWASP-MCP
 ---
-The [OWASP MCP Top 10](https://owasp.org/www-project-mcp-top-10/) is the first OWASP framework dedicated to Model Context Protocol security. It catalogs the ten risk categories most likely to compromise an MCP deployment, from token mismanagement to shadow servers. The project is in beta as of 2026 under the lead of Vandana Verma Sehgal, with categories published as MCP01:2025 through MCP10:2025.
+The [OWASP MCP Top 10](https://owasp.org/projects/mcp-top-10) is the first OWASP framework dedicated to Model Context Protocol security. It catalogs the ten risk categories most likely to compromise an MCP deployment, from token mismanagement to shadow servers. The project is in beta as of 2026 under the lead of Vandana Verma Sehgal, with categories published as MCP01:2025 through MCP10:2025.
 
 This page explains every category, then maps each one to the control type that actually mitigates it. The matrix is the core of the page. No single tool category covers all ten risks, and the honest answer about any vendor (including Pipelock) is that it covers some rows fully, some partially, and others not at all.
 
@@ -32,7 +32,7 @@ If you want background on the protocol itself, start with [MCP Security](/learn/
 
 OWASP runs several Top 10 projects. The web Top 10 has been around for two decades. The [Top 10 for LLM Applications](/learn/owasp-llm-top10/) launched in 2023. The [Top 10 for Agentic Applications](/learn/owasp-agentic-top10/) followed in 2025. The OWASP MCP Top 10 is the newest entry and the first to focus on a single protocol surface.
 
-The project page lives at [owasp.org/www-project-mcp-top-10](https://owasp.org/www-project-mcp-top-10/). At time of writing, the framework is in Phase 3, beta release and pilot testing, which means the categories are stable enough to cite but the rankings and descriptions may shift. Check the project page for the current license terms before commercial use.
+The project page lives at [owasp.org/www-project-mcp-top-10](https://owasp.org/projects/mcp-top-10). At time of writing, the framework is in Phase 3, beta release and pilot testing, which means the categories are stable enough to cite but the rankings and descriptions may shift. Check the project page for the current license terms before commercial use.
 
 The framework exists because MCP changed the risk model for AI agents. Before MCP, an agent had a small fixed set of tools coded into the application. With MCP, the agent discovers tools at runtime from any server it can reach, and every server is a trust boundary. The OWASP MCP Top 10 catalogs the ten ways that boundary fails most often.
 
@@ -40,7 +40,7 @@ The categories are based on real incidents. The Postmark MCP supply chain compro
 
 ## The ten risk categories
 
-The list below uses the live OWASP MCP Top 10 categories as published on the project page. Because the framework is in beta, descriptions and ordering may change. Check the [official OWASP page](https://owasp.org/www-project-mcp-top-10/) for the current version before you cite specific wording in audit material.
+The list below uses the live OWASP MCP Top 10 categories as published on the project page. Because the framework is in beta, descriptions and ordering may change. Check the [official OWASP page](https://owasp.org/projects/mcp-top-10) for the current version before you cite specific wording in audit material.
 
 | ID | Category | What it covers |
 |----|----------|----------------|
@@ -49,7 +49,7 @@ The list below uses the live OWASP MCP Top 10 categories as published on the pro
 | MCP03:2025 | Tool Poisoning | Malicious tool descriptions or schemas that hijack agent behavior |
 | MCP04:2025 | Software Supply Chain Attacks & Dependency Tampering | Compromised packages, backdoored servers, poisoned dependencies |
 | MCP05:2025 | Command Injection & Execution | Agents constructing system commands from untrusted input |
-| MCP06:2025 | Intent Flow Subversion | Injection that hijacks the agent's reasoning chain through context |
+| MCP06:2025 | Prompt Injection via Contextual Payloads | Injection that hijacks the agent's reasoning chain through context |
 | MCP07:2025 | Insufficient Authentication & Authorization | Servers that fail to verify identity or enforce access controls |
 | MCP08:2025 | Lack of Audit and Telemetry | Missing logs, no real-time alerting, no record of what happened |
 | MCP09:2025 | Shadow MCP Servers | Unapproved MCP deployments operating outside governance |
@@ -68,7 +68,7 @@ This is the most important section on the page. Each row is one OWASP MCP risk. 
 | MCP03: Tool Poisoning | No | No | Yes | Yes | No | Complementary |
 | MCP04: Supply Chain | No | No | Yes | Partial | No | Complementary |
 | MCP05: Command Injection | No | No | Partial | Partial | No | Complementary |
-| MCP06: Intent Flow Subversion | No | No | Partial | Yes | No | Complementary |
+| MCP06: Prompt Injection via Contextual Payloads | No | No | Partial | Yes | No | Complementary |
 | MCP07: Auth & Authorization | No | Partial | No | No | Yes | Complementary |
 | MCP08: Audit & Telemetry | No | No | No | Partial | No | Yes |
 | MCP09: Shadow MCP | Partial | Partial | No | Partial | No | Complementary |
@@ -76,7 +76,7 @@ This is the most important section on the page. Each row is one OWASP MCP risk. 
 
 A few things to read into the matrix:
 
-**Pipelock sits in the Runtime Proxy column.** It catches tool poisoning, command injection, intent flow subversion, and context oversharing in flight. It does not handle authentication for you, it does not replace an identity gateway, and it cannot fully verify packages before they ship. The matrix shows where Pipelock fits and where you need a different tool.
+**Pipelock sits in the Runtime Proxy column.** It catches tool poisoning, command injection, prompt injection via contextual payloads, and context oversharing in flight. It does not handle authentication for you, it does not replace an identity gateway, and it cannot fully verify packages before they ship. The matrix shows where Pipelock fits and where you need a different tool.
 
 **The audit column is "complementary" for almost every row** because audit logs do not prevent anything on their own. They give you the record an auditor wants and the trail an incident responder needs. Pair an audit platform with whichever control covers the actual risk and you have both prevention and evidence.
 
@@ -99,7 +99,7 @@ The practical control set is direct: scan `tools/list`, scan `tools/call` argume
 | MCP03: Tool Poisoning | Tool description scanning plus session baselines for changed tool definitions | Pre-deploy review of new MCP servers |
 | MCP04: Supply Chain Attacks & Dependency Tampering | Runtime drift detection and DLP backstop if a compromised server tries to exfiltrate | Package provenance, signatures, dependency scanning |
 | MCP05: Command Injection & Execution | Tool argument scanning for command-injection patterns before the server receives input | Server-side input validation and sandboxing |
-| MCP06: Intent Flow Subversion | 34 injection and response patterns with 6-pass normalization on tool descriptions and responses | Model-side guardrails and tight tool scopes |
+| MCP06: Prompt Injection via Contextual Payloads | 34 injection and response patterns with 6-pass normalization on tool descriptions and responses | Model-side guardrails and tight tool scopes |
 | MCP07: Insufficient Authentication & Authorization | Decision logs can show who called what when identity is supplied upstream | Identity gateway, OAuth, mTLS, scopes |
 | MCP08: Lack of Audit and Telemetry | Flight recorder, hash chains, structured decisions, and signed receipts when a signing key is configured | SIEM retention, review cadence, incident sign-off |
 | MCP09: Shadow MCP Servers | MCP config discovery and runtime evidence of servers the agent actually contacts | Asset inventory and CI policy for unapproved servers |
@@ -141,9 +141,9 @@ The compensating control at the network level is a runtime proxy that scans tool
 
 For containment after the fact, sandbox the MCP server. On Linux, run it under Landlock plus seccomp plus a network namespace. On macOS, use sandbox-exec. On Windows, pair the server with a runtime sandbox like agentsh. Even a vulnerable server cannot exfiltrate data it cannot reach.
 
-## MCP06: Intent flow subversion
+## MCP06: Prompt injection via contextual payloads
 
-Intent flow subversion is the OWASP category for prompt injection that hijacks the agent's reasoning chain through MCP context. The injection might enter through a tool description, a tool response, a fetched document, or a memory entry. Once the agent reads it, the injected instructions compete with the user's original goal for control of the next action.
+Prompt injection via contextual payloads is the OWASP category for prompt injection that hijacks the agent's reasoning chain through MCP context. The injection might enter through a tool description, a tool response, a fetched document, or a memory entry. Once the agent reads it, the injected instructions compete with the user's original goal for control of the next action.
 
 The defense is content inspection at every entry point. Pipelock scans tool descriptions, tool arguments, tool responses, and fetched HTTP content. The pattern library includes "ignore previous instructions" variants, system and role overrides, jailbreak templates, multi-language equivalents, and known injection corpora. The response and description scanners normalize text and decode encoded variants before matching.
 
@@ -220,11 +220,11 @@ The first cuts are fast. Order matters because some controls reduce the cost of 
 
 ## Further reading
 
-- [OWASP MCP Top 10 project page](https://owasp.org/www-project-mcp-top-10/) (the official source)
+- [OWASP MCP Top 10 project page](https://owasp.org/projects/mcp-top-10) (the official source)
 - [The State of MCP Security 2026](/blog/state-of-mcp-security-2026/) (market overview and where the industry stands)
 - [MCP Tool Poisoning Defense](/learn/mcp-tool-poisoning/)
 - [MCP Runtime Security](/learn/mcp-runtime-security/) (live-traffic defenses, runtime mapping to MCP Top 10)
-- [MCP Vulnerability Scanner](/learn/mcp-vulnerability-scanner/) (pre-deploy and runtime scanner landscape)
+- [MCP Security Tools](/learn/mcp-security-tools/) (pre-deploy and runtime scanner landscape)
 - [Tool Poisoning: The MCP Attack Surface](/blog/tool-poisoning-mcp-attack-surface/)
 - [Shadow MCP](/learn/shadow-mcp/)
 - [MCP Authorization](/learn/mcp-authorization/)
@@ -238,5 +238,5 @@ The first cuts are fast. Order matters because some controls reduce the cost of 
 - [OWASP Agentic Top 10 coverage](/learn/owasp-agentic-top10/)
 - [Pipelock](/pipelock/)
 - [What is an Agent Firewall?](/agent-firewall/)
-- [MCP specification](https://modelcontextprotocol.io/)
+- [MCP specification](https://modelcontextprotocol.io/docs/2026-07-28/getting-started/intro)
 - [Vulnerable MCP Project](https://vulnerablemcp.info/)

@@ -100,4 +100,4 @@ The full upgrade guide walks through enabling redaction with a staged rollout an
 
 If you operate Pipelock in production and want to feed receipts into a SIEM, an audit pipeline, or a long-window LLM detection funnel, the new [Agent Evidence detection integration guide](/learn/agent-evidence-detection-integration/) walks the full path from `flight_recorder.signing_key_path` to a working Python receipt consumer.
 
-Full changelog at the [public repo](https://github.com/luckyPipewrench/pipelock/blob/main/CHANGELOG.md).
+Full changelog at the [public repo](https://github.com/pipelab-org/pipelock/blob/main/CHANGELOG.md).

@@ -113,7 +113,7 @@ The buyers who come out ahead from this wave are the ones who ask one question b
 - [AI Agent Security Tools](/learn/ai-agent-security-tools/) (independent + commercial)
 - [Open-Source AI Firewalls Compared](/learn/open-source-ai-firewall/)
 - [Pipelock vs commercial alternatives](/compare/)
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)
 - [Pipelock product page](/pipelock/)
 
 If you're evaluating tools right now and want to talk through the landscape with someone who isn't selling you an enterprise platform, my email is in the footer. I do have my own project in the mix, but I'm happy to be a sounding board even if you pick a competitor.

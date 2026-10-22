@@ -1,12 +1,17 @@
 {{ printf "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>" | safeHTML }}
+{{- /* Use the same editorial date as the page and its structured data.
+       Google asks for the last significant update, not a mechanical edit:
+       https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap
+       Git dates also depend on clone depth and cannot establish that distinction. */ -}}
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   {{- range .Data.Pages }}
   {{- $robots := lower (default "" .Params.robots) }}
   {{- if not (or (eq .Kind "taxonomy") (eq .Kind "term") (in $robots "noindex")) }}
+  {{- $lastmod := .Lastmod }}
   <url>
     <loc>{{ .Permalink }}</loc>
-    {{- if not .Lastmod.IsZero }}
-    <lastmod>{{ .Lastmod.Format "2006-01-02T15:04:05-07:00" | safeHTML }}</lastmod>
+    {{- if not $lastmod.IsZero }}
+    <lastmod>{{ $lastmod.Format "2006-01-02T15:04:05-07:00" | safeHTML }}</lastmod>
     {{- end }}
   </url>
   {{- end }}

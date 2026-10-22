@@ -8,6 +8,31 @@ summary: "24 AI agent security options mapped to the six boundaries: model gatew
 description: "Compare AI agent security tools for 2026 by boundary: model gateway, MCP gateway, identity, platform governance, containment, and egress."
 tags: ["ai-security", "agent-security", "mcp-security", "pipelock"]
 blog_cat: "comparisons"
+item_list:
+  - "Vercel AI Gateway"
+  - "Cloudflare AI Gateway"
+  - "Kong, IBM, and the enterprise gateway pack"
+  - "LlamaFirewall"
+  - "NeMo Guardrails"
+  - "Docker MCP Gateway"
+  - "Runlayer"
+  - "agentgateway"
+  - "Cisco mcp-scanner"
+  - "Snyk agent-scan (formerly Invariant)"
+  - "Enkrypt AI"
+  - "Okta agent identity"
+  - "Pomerium"
+  - "Silverfort and BeyondTrust"
+  - "Zenity"
+  - "Reco AI, Obsidian, SentinelOne, Microsoft Agent 365"
+  - "Coder Agent Firewall"
+  - "Cloudflare Sandbox Auth"
+  - "GitHub Codespaces and Copilot's sandboxed runner"
+  - "Linux Landlock and seccomp"
+  - "Pipelock"
+  - "iron-proxy"
+  - "Backslash Security"
+  - "Nightfall AI"
 ---
 
 The AI agent security market splits into six boundaries: model and API gateway, MCP and tool gateway, identity and non-human identity governance, agent application and platform governance, runtime and workspace containment, and network egress and content firewall. Most "best of" pages mix the categories without naming the difference, which is how a buyer ends up with a model gateway when the threat model needed a content firewall. This piece walks the tools that sit in each boundary and what each one catches.
@@ -386,7 +411,7 @@ Open source agent firewall, written in Go, ships as a single binary. Sits betwee
 
 **Best for:** teams running agents with network access who want open source, content-level egress protection without adopting a vendor SDK.
 
-Links: [Pipelock site](/pipelock/), [GitHub](https://github.com/luckyPipewrench/pipelock).
+Links: [Pipelock site](/pipelock/), [GitHub](https://github.com/pipelab-org/pipelock).
 
 ### 22. iron-proxy
 
@@ -459,6 +484,6 @@ Quick decision shortcut for the common cases. Developer machine running a coding
 - [Agent Firewall Guide](/agent-firewall/) goes deep on boundary 6 specifically.
 - [Pipelock Comparisons](/compare/) walks through head-to-head positioning against specific alternatives.
 - [Pipelock](/pipelock/) is the open source agent firewall I build.
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock) has the code, the tests, and the issues.
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock) has the code, the tests, and the issues.
 
 If a tool deserves a spot on this list and is missing, the [contact page](/contact/) has the form. Corrections welcome.

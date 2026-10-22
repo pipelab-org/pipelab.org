@@ -115,4 +115,4 @@ If your organization is using Claude Code, Cursor, Codex, or ChatGPT with skills
 - [Action Receipt Specification](/learn/action-receipt-spec/): receipt format, chain rules, verification
 - [Agent Egress Security](/learn/agent-egress-security/): credential leak vectors and defenses
 - [What is an Agent Firewall?](/agent-firewall/): runtime architecture and capability separation
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

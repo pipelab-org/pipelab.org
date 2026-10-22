@@ -1,10 +1,11 @@
 ---
-title: "How to Secure AI Agents: Preventing Credential Leaks"
+title: "Agent Egress Security: How AI Agents Leak Credentials and How to Stop It"
 linkTitle: "Agent Egress Security"
-seoTitle: "Agent Egress Security: Stop AI Credential Leaks"
+seoTitle: "Agent Egress Security: How AI Agents Leak Secrets"
 subtitle: "Your agent has API keys, shell access, and unrestricted network. What could go wrong?"
-description: "Agent egress security controls outbound AI agent traffic to stop credential leaks via HTTP, DNS, and MCP. Attack vectors and runtime defenses."
+description: "How AI agents leak API keys and tokens through HTTP, DNS, and MCP tool calls, why classic DLP misses it, and the egress controls that stop it."
 date: 2026-02-24
+lastmod: 2026-10-22
 faq:
   - q: "How can AI agents leak credentials?"
     a: "AI agents can leak credentials through outbound HTTP requests (embedding keys in URLs, headers, or POST bodies), DNS queries (encoding secrets in subdomains), MCP tool arguments, and encoded payloads (base64, hex, URL encoding). An agent with shell access can read .env files, SSH keys, and cloud credentials, then send them to any server it can reach."
@@ -197,6 +198,14 @@ export HTTPS_PROXY=http://127.0.0.1:8888
 # iptables, Docker network, or K8s NetworkPolicy
 ```
 
+## Worked examples
+
+Three Make It Leak cases show these leak paths end to end, each with the blocked request and its signed receipt:
+
+- [#002: poisoned ticket, webhook exfiltration](/make-it-leak/002/): a support ticket pushes the agent to POST private-key material to a webhook.
+- [#003: poisoned README, key paste](/make-it-leak/003/): a README pushes the agent to paste a provider API key to a paste site.
+- [#004: hostile page, session keys](/make-it-leak/004/): a web page pushes the agent to send a JWT session token to an attacker host.
+
 ## Further reading
 
 - [AI Egress Proxy](/learn/ai-egress-proxy/) : the single control point this guide describes, covered as a standalone AI egress proxy
@@ -213,4 +222,4 @@ export HTTPS_PROXY=http://127.0.0.1:8888
 - [Prompt Injection: Network-Layer Defense](/learn/prompt-injection-network-defense/) : catching the injection that triggers exfiltration
 - [Preventing SSRF in AI Agents](/learn/preventing-ssrf-in-ai-agents/) : cloud metadata, private CIDRs, DNS rebinding, and parser-differential gaps
 - [Redaction placeholders](/learn/redaction-placeholders/) : decoding the `<pl:...>` and `<private_address>` tokens a redactor leaves behind
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

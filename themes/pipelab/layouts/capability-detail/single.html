@@ -15,9 +15,9 @@
 {{- $source := $inventory.source -}}
 {{- $inventoryPage := site.GetPage "/capabilities" -}}
 {{- $releaseVersion := cond (eq $source.status "release") $source.release_version $inventoryPage.Params.release_target -}}
-{{- $manifestURL := printf "https://github.com/luckyPipewrench/pipelock/blob/%s/docs/security/capability-manifest.json" $source.commit -}}
-{{- $entrySourceURL := printf "https://github.com/luckyPipewrench/pipelock/blob/%s/%s" $source.commit $capability.operator_entry_point.source.file -}}
-{{- $implementationURL := printf "https://github.com/luckyPipewrench/pipelock/blob/%s/%s" $source.commit $capability.implementation.file -}}
+{{- $manifestURL := printf "https://github.com/pipelab-org/pipelock/blob/%s/docs/security/capability-manifest.json" $source.commit -}}
+{{- $entrySourceURL := printf "https://github.com/pipelab-org/pipelock/blob/%s/%s" $source.commit $capability.operator_entry_point.source.file -}}
+{{- $implementationURL := printf "https://github.com/pipelab-org/pipelock/blob/%s/%s" $source.commit $capability.implementation.file -}}
 {{- $references := index site.Data.pipelock_capability_references.capabilities $capability.id -}}
 {{- $sourceCorrection := index site.Data.pipelock_capability_references.source_corrections $capability.id -}}
 
@@ -118,7 +118,7 @@
         <div class="capdoc-source-note">
           <span class="capdoc-label">{{ .label }}</span>
           <p>{{ .text }}</p>
-          <a href="https://github.com/luckyPipewrench/pipelock/blob/{{ $source.commit }}/{{ .path }}" target="_blank" rel="noopener noreferrer">
+          <a href="https://github.com/pipelab-org/pipelock/blob/{{ $source.commit }}/{{ .path }}" target="_blank" rel="noopener noreferrer">
             {{ .symbol }} <span aria-hidden="true">&nearr;</span>
           </a>
         </div>
@@ -132,7 +132,7 @@
           {{ range $references }}
             {{- $href := .path -}}
             {{- $external := eq .kind "source" -}}
-            {{- if $external }}{{ $href = printf "https://github.com/luckyPipewrench/pipelock/blob/%s/%s" $source.commit .path }}{{ end -}}
+            {{- if $external }}{{ $href = printf "https://github.com/pipelab-org/pipelock/blob/%s/%s" $source.commit .path }}{{ end -}}
             <a href="{{ $href }}"{{ if $external }} target="_blank" rel="noopener noreferrer"{{ end }}>
               <span>{{ if $external }}Pipelock source{{ else }}PipeLab guide{{ end }}</span>
               <strong>{{ .label }}</strong>

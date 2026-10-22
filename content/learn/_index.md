@@ -30,7 +30,6 @@ Use the filter and search at the top of the page to narrow the list, or jump str
 ### MCP Security
 
 - [MCP Security](/learn/mcp-security/)
-- [MCP Server Security](/learn/how-to-secure-mcp/)
 - [MCP Vulnerabilities](/learn/mcp-vulnerabilities/)
 - [MCP Tool Poisoning Defense](/learn/mcp-tool-poisoning/)
 - [MCP Proxy](/learn/mcp-proxy/)
@@ -78,6 +77,7 @@ Use the filter and search at the top of the page to narrow the list, or jump str
 - [Contain an AI Agent on Linux](/learn/pipelock-contain-guide/)
 - [License Setup](/learn/license-setup/)
 - [Pipelock Kill Switch](/learn/kill-switch/)
+- [Pipelock Release Notes](/learn/pipelock-release-notes/)
 - [Pipelock v3.7 Upgrade Guide](/learn/pipelock-v370-upgrade/)
 - [Launch a Command Through Pipelock](/learn/pipelock-exec/)
 - [Parallel Signed Receipt Chains](/learn/parallel-receipt-chains/)
@@ -119,7 +119,6 @@ Use the filter and search at the top of the page to narrow the list, or jump str
 - [What Pipelock Claims and Doesn't](/learn/non-bypass-doctrine/)
 - [Known Limitations](/learn/known-limitations/)
 - [AI Agent Security](/learn/ai-agent-security/)
-- [Agent Security Best Practices](/learn/ai-agent-security-best-practices/)
 - [Agent Security Tools](/learn/ai-agent-security-tools/)
 - [AI Egress Proxy](/learn/ai-egress-proxy/)
 - [Denial of Wallet](/learn/denial-of-wallet/)

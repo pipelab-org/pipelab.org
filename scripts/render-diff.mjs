@@ -100,6 +100,9 @@ export function normalizeForCompare(logical, text) {
     return normalizeCss(text);
   }
   let s = normalizeDocument(text);
+  if (ext === ".html") {
+    s = s.replace(/(<style\b[^>]*>)([\s\S]*?)(<\/style>)/gi, (_, open, css, close) => open + normalizeCss(css) + close);
+  }
   if (ext === ".html" || ext === ".xml" || ext === ".svg" || ext === ".md") {
     s = stripChromaColorSpans(s);
     if (ext === ".xml") {

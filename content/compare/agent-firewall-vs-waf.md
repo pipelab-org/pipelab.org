@@ -110,4 +110,4 @@ Agent -> Pipelock -> internet, MCP  (protected from leaks and injection)
 - [Agent egress security](/learn/agent-egress-security/): preventing credential leaks from agents
 - [Why Pipelock is an egress agent firewall](/learn/egress-vs-inbound-agent-firewall/): why it controls egress instead of filtering inbound like a WAF
 - [OWASP Core Rule Set](https://coreruleset.org/): the open-source WAF rule set for traditional web attacks
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

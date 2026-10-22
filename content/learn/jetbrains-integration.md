@@ -37,7 +37,7 @@ JetBrains MCP security starts with scanning what flows between your IDE and MCP 
 JetBrains integration is pure MCP proxy wrapping, which unlocks the current signed-evidence surface when receipt signing is configured:
 
 - **Mediator-signed action receipts for MCP decisions (v2.2.0).** With `flight_recorder.signing_key_path` set in the pipelock config, each proxied Junie MCP decision emits a chained Ed25519 receipt on the `mcp_stdio` transport.
-- **Cross-implementation verifier (v2.2.0).** Receipts verify byte-for-byte against a published [Python verifier](https://github.com/luckyPipewrench/pipelock-verify-python) using a conformance suite. The receipt format is open, not a vendor artifact.
+- **Cross-implementation verifier (v2.2.0).** Receipts verify byte-for-byte against a published [Python verifier](https://github.com/pipelab-org/pipelock-verify-python) using a conformance suite. The receipt format is open, not a vendor artifact.
 - **RFC 9421 mediation envelope signing (v2.2.0).** If a Junie config routes to a remote MCP server over HTTP/SSE, every request carries an Ed25519 `Pipelock-Mediation` signature with a canonical policy hash.
 - **Posture verify CI gate (v2.2.0).** `pipelock posture verify` gates deploys with distinct exit codes: `0` pass, `1` could not complete, `2` verified but failed.
 - **Class-preserving redaction on `tools/call` arguments (v2.3.0).** With the `redaction` section enabled in the pipelock config, matched secrets in `params.arguments` are rewritten in place with typed placeholders like `<pl:aws-access-key:1>` before forwarding to the MCP server. Runs on Pipelock's MCP proxy transports. Irreversible. Fail-closed on parse errors. Tool responses are not redacted in v1.

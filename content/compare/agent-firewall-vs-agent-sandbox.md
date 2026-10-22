@@ -109,4 +109,4 @@ Run the firewall inside the sandbox as the proxy the agent is forced through, an
 - [Pipelock vs ToolHive](/compare/pipelock-vs-toolhive/): containerized MCP servers
 - [Pipelock vs Docker MCP Gateway](/compare/pipelock-vs-docker-mcp-gateway/): Docker's container gateway
 - [Agent firewall vs guardrails](/compare/agent-firewall-vs-guardrails/): the other layer readers confuse with a firewall
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

@@ -252,9 +252,9 @@ The category is moving fast. Below is a snapshot as of early 2026. Capabilities 
 
 **Camp 2: MCP gateway and routing.** [Docker MCP Gateway](/compare/pipelock-vs-docker-mcp-gateway/); [Runlayer](/compare/pipelock-vs-runlayer/); agentgateway (open source); TrueFoundry, Operant AI, Obot, Lasso, MintMCP. Capabilities and content inspection depth vary widely. Not documented in public docs for many of these unless you check the vendor site directly.
 
-**Camp 3: Content inspection and runtime defense.** [Pipelock](https://github.com/luckyPipewrench/pipelock) is the open-source agent firewall maintained here (Apache-2.0 core; Enterprise features under ELv2). Go. Four proxy transports (fetch, forward/CONNECT, WebSocket, MCP stdio/HTTP/WebSocket), a fixed-order scanner pipeline with DLP before DNS, and 7 preset configs. See the [OWASP threat coverage mapping](https://github.com/luckyPipewrench/pipelock/blob/main/docs/owasp-mapping.md) and the [pipelock product page](/pipelock/). Other products in this camp: Cisco mcp-scanner (pre-deploy), Snyk agent-scan (pre-deploy), [Backslash Security](/compare/pipelock-vs-backslash/), Nightfall AI, Promptfoo.
+**Camp 3: Content inspection and runtime defense.** [Pipelock](https://github.com/pipelab-org/pipelock) is the open-source agent firewall maintained here (Apache-2.0 core; Enterprise features under ELv2). Go. Four proxy transports (fetch, forward/CONNECT, WebSocket, MCP stdio/HTTP/WebSocket), a fixed-order scanner pipeline with DLP before DNS, and 7 preset configs. See the [OWASP threat coverage mapping](https://github.com/pipelab-org/pipelock/blob/main/docs/owasp-mapping.md) and the [pipelock product page](/pipelock/). Other products in this camp: Cisco mcp-scanner (pre-deploy), Snyk agent-scan (pre-deploy), [Backslash Security](/compare/pipelock-vs-backslash/), Nightfall AI, Promptfoo.
 
-*Disclosure: this page was written by the Pipelock maintainer. Pipelock sits in Camp 3. The framework above is meant to help you compare products fairly, including against Pipelock. If you know of another agent firewall implementation, [open an issue](https://github.com/luckyPipewrench/pipelock/issues) and we will add it.*
+*Disclosure: this page was written by the Pipelock maintainer. Pipelock sits in Camp 3. The framework above is meant to help you compare products fairly, including against Pipelock. If you know of another agent firewall implementation, [open an issue](https://github.com/pipelab-org/pipelock/issues) and we will add it.*
 
 ```bash
 {{< install-cmd go >}}
@@ -304,7 +304,7 @@ To see what your agent traffic looks like before enforcing, run `pipelock audit 
 
 - [GitHub Copilot cloud agent firewall docs](https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/customize-the-firewall): the canonical Camp 1 product
 - [GitHub `gh-aw-firewall` repo](https://github.com/github/gh-aw-firewall): open source allowlist firewall
-- [OWASP MCP Top 10](https://owasp.org/www-project-mcp-top-10/): community threat list for MCP
+- [OWASP MCP Top 10](https://owasp.org/projects/mcp-top-10): community threat list for MCP
 - [Anthropic: Disrupting AI-powered espionage (GTG-1002)](https://www.anthropic.com/news/disrupting-AI-espionage)
-- [OWASP Agentic Top 10 mapping](https://github.com/luckyPipewrench/pipelock/blob/main/docs/owasp-mapping.md)
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [OWASP Agentic Top 10 mapping](https://github.com/pipelab-org/pipelock/blob/main/docs/owasp-mapping.md)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

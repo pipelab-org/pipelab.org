@@ -208,7 +208,7 @@ An MCP proxy is one of several security layers that can live around an agent. Th
 
 The row that matters most: pre-deploy scanners look at definitions before any user traffic hits the server, and they catch the obvious stuff cheaply. An MCP proxy looks at traffic while it runs, so it catches the runtime-only stuff a scanner cannot see. Run both. They don't overlap much, and the attacker has to evade both to win.
 
-For a fuller list of tools in each category see [MCP security tools](/learn/mcp-security-tools/) and the [MCP scanner comparison](/blog/mcp-scanner-comparison-2026/) blog post.
+For a fuller list of tools in each category see [MCP security tools](/learn/mcp-security-tools/).
 
 ## MCP proxy implementations compared
 
@@ -228,19 +228,13 @@ Several MCP proxies and proxy-adjacent tools exist in 2026. Different projects o
 
 **Docker MCP Gateway.** Container-isolation approach: runs MCP servers in isolated containers with network restrictions, call tracing, and a `--block-secrets` control. Strong at isolation, some content-level controls.
 
-For the detailed comparison see [Pipelock vs Docker MCP Gateway](/compare/pipelock-vs-docker-mcp-gateway/) and the [MCP scanner comparison](/blog/mcp-scanner-comparison-2026/).
+For the detailed comparison see [Pipelock vs Docker MCP Gateway](/compare/pipelock-vs-docker-mcp-gateway/) and the [MCP security tools comparison](/learn/mcp-security-tools/).
 
 ## Getting started with an MCP proxy
 
 [Install Pipelock](/install/) (Go binary, no runtime deps):
 
 ```bash
-# Linux/macOS
-curl -L https://github.com/pipelab-org/pipelock/releases/latest/download/pipelock_linux_amd64 -o pipelock
-chmod +x pipelock
-sudo mv pipelock /usr/local/bin/
-
-# Or build the pinned release from source
 {{< install-cmd go >}}
 ```
 
@@ -291,12 +285,10 @@ This runs Pipelock's built-in posture check, lists each MCP server you have conf
 - [MCP Security Tools](/learn/mcp-security-tools/): full landscape of pre-deploy and runtime tools
 - [MCP Tool Poisoning](/learn/mcp-tool-poisoning/): the attack that hides in descriptions
 - [MCP Vulnerabilities](/learn/mcp-vulnerabilities/): every MCP attack vector mapped
-- [How to Secure MCP](/learn/how-to-secure-mcp/): seven attacks, seven defenses
 - [Shadow MCP](/learn/shadow-mcp/): unauthorized servers that bypass your proxy
 - [MCP Authorization](/learn/mcp-authorization/): OAuth 2.1, scopes, and the confused deputy problem
 - [OWASP MCP Top 10](/learn/owasp-mcp-top10/): risk categories mapped to proxy-layer controls
 - [State of MCP Security 2026](/blog/state-of-mcp-security-2026/): incident and control coverage report
-- [MCP Scanner Comparison](/blog/mcp-scanner-comparison-2026/): Cisco vs Snyk vs Pipelock
 - [Pipelock Product Page](/pipelock/): the full agent firewall
 - [What is an Agent Firewall?](/agent-firewall/): architecture overview
 - [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

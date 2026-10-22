@@ -91,4 +91,4 @@ A signed receipt from a mediator proves what the mediator decided about the traf
 - [Action receipt spec](/learn/action-receipt-spec/): Pipelock's receipt format
 - [Flight recorder](/learn/flight-recorder/): the hash-chained record behind the receipts
 - [Proof](/proof/): Pipelock's public receipts and verifier
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

@@ -79,11 +79,9 @@ For organizations the paper describes as below the "Cyber Poverty Line" (a conce
 
 ## What to do this week
 
-The paper's own aggressive timetable says "start this week" for six of the eleven priority actions. For the runtime controls in PA 3 and PA 8:
+The paper's own aggressive timetable says "start this week" for six of the eleven priority actions. For the runtime controls in PA 3 and PA 8, [install Pipelock](/install/), then run:
 
 ```bash
-curl -L https://github.com/luckyPipewrench/pipelock/releases/latest/download/pipelock_linux_amd64 -o pipelock
-chmod +x pipelock && sudo mv pipelock /usr/local/bin/
 pipelock init
 pipelock claude setup   # or: pipelock cursor install
 pipelock assess

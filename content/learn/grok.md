@@ -37,7 +37,7 @@ related:
 ---
 [Grok Build](https://docs.x.ai/build/overview) is xAI's coding agent. The `grok` CLI has an interactive TUI, a headless mode, ACP, and MCP servers configured with `grok mcp` or `~/.grok/config.toml`. Model traffic is ordinary HTTPS. Pipelock covers that path as a forward proxy, and it covers MCP tool traffic when you wrap each stdio server with `pipelock mcp proxy`.
 
-There is no `pipelock grok install`. Do not treat this page as env-only, and do not treat MCP as unsupported. The full command reference lives in the [Grok CLI integration guide](https://github.com/luckyPipewrench/pipelock/blob/main/docs/guides/grok.md) on GitHub.
+There is no `pipelock grok install`. Do not treat this page as env-only, and do not treat MCP as unsupported. The full command reference lives in the [Grok CLI integration guide](https://github.com/pipelab-org/pipelock/blob/main/docs/guides/grok.md) on GitHub.
 
 ## Why Grok needs an agent firewall
 
@@ -185,7 +185,7 @@ Replacing a native HTTP remote with a stdio `pipelock mcp proxy --upstream` wrap
 
 When Pipelock terminates TLS so it can scan HTTPS bodies on the forward-proxy path:
 
-1. Enable interception and distribute the CA per the [TLS interception guide](https://github.com/luckyPipewrench/pipelock/blob/main/docs/guides/tls-interception.md).
+1. Enable interception and distribute the CA per the [TLS interception guide](https://github.com/pipelab-org/pipelock/blob/main/docs/guides/tls-interception.md).
 2. Trust `~/.pipelock/ca.pem` in the **OS trust store**. Grok loads system roots. On Linux that is typically `update-ca-certificates` or `update-ca-trust`; on macOS, the system keychain.
 
 Without a trusted CA, intercepted HTTPS handshakes fail. Without interception, CONNECT tunnels stay body-opaque.
@@ -220,4 +220,4 @@ If you use enterprise OIDC, also allow your IdP domain.
 
 **TLS handshake failures after enabling interception.** Trust the Pipelock CA in the OS store. `NODE_EXTRA_CA_CERTS` alone does not fix the Rust CLI.
 
-See also: [Continue.dev MCP Security](/learn/continue/) · [MCP Proxy](/learn/mcp-proxy/) · [Known Limitations](/learn/known-limitations/) · [Grok CLI integration guide](https://github.com/luckyPipewrench/pipelock/blob/main/docs/guides/grok.md)
+See also: [Continue.dev MCP Security](/learn/continue/) · [MCP Proxy](/learn/mcp-proxy/) · [Known Limitations](/learn/known-limitations/) · [Grok CLI integration guide](https://github.com/pipelab-org/pipelock/blob/main/docs/guides/grok.md)

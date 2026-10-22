@@ -6,7 +6,7 @@
 /docs/ /learn/ 301
 /ecosystem/ /proof/ 301
 /categories/ /tags/ 301
-/categories/:slug /tags/:slug 301
+/categories/:slug /tags/:slug/ 301
 /rules/pipelock-community /learn/community-rules/ 301
 /rules/pipelock-community/ /learn/community-rules/ 301
 /gauntlet/results/:id /gauntlet/results/ 200
@@ -84,3 +84,41 @@
 /gauntlet-site/* /gauntlet/evidence/:splat 301
 /compare/pipelock-vs-agent-wall/ /compare/pipelock-vs-open-source-mcp-gateways/ 301
 /compare/pipelock-vs-agent-wall/index.md /compare/pipelock-vs-open-source-mcp-gateways/index.md 301
+
+# Retired guide and shorthand URLs with matching current pages.
+/learn/cursor-hooks /learn/cursor-integration/ 301
+/learn/cursor-hooks/ /learn/cursor-integration/ 301
+/agent /agent-firewall/ 301
+/agent/ /agent-firewall/ 301
+/cve-2026-25253 /blog/openclaw-cve-2026-25253/ 301
+/cve-2026-25253/ /blog/openclaw-cve-2026-25253/ 301
+# MCP cluster consolidation: the hub owns the checklist intent and the tools
+# page owns the scanner and comparison intent.
+/learn/how-to-secure-mcp /learn/mcp-security/ 301
+/learn/how-to-secure-mcp/ /learn/mcp-security/ 301
+/learn/how-to-secure-mcp/index.md /learn/mcp-security/index.md 301
+/learn/mcp-vulnerability-scanner /learn/mcp-security-tools/ 301
+/learn/mcp-vulnerability-scanner/ /learn/mcp-security-tools/ 301
+/learn/mcp-vulnerability-scanner/index.md /learn/mcp-security-tools/index.md 301
+
+# Tag pages that emptied when the MCP how-to page was retired.
+/tags/config/ /tags/ 301
+/tags/tutorial/ /tags/ 301
+
+# The best-practices checklist merged into the AI agent security page.
+/learn/ai-agent-security-best-practices /learn/ai-agent-security/ 301
+/learn/ai-agent-security-best-practices/ /learn/ai-agent-security/ 301
+/learn/ai-agent-security-best-practices/index.md /learn/ai-agent-security/index.md 301
+
+# Preserve machine-readable assets before the result-detail placeholder rule.
+/gauntlet/results/index.xml /gauntlet/results/index.xml 200
+/gauntlet/results/index.md /gauntlet/results/index.md 200
+# Taxonomies emptied by the guide consolidation, including their feeds.
+/tags/best-practices /tags/ 301
+/tags/best-practices/ /tags/ 301
+/tags/checklist /tags/ 301
+/tags/checklist/ /tags/ 301
+/tags/best-practices/index.xml /index.xml 301
+/tags/checklist/index.xml /index.xml 301
+/tags/config/index.xml /index.xml 301
+/tags/tutorial/index.xml /index.xml 301

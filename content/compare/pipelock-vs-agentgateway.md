@@ -25,11 +25,11 @@ sources:
     note: "Apache-2.0; states it is a Linux Foundation project; lists guardrails, auth, CEL RBAC, rate limiting, OpenTelemetry"
   - label: "agentgateway standalone docs"
     url: "https://agentgateway.dev/docs/standalone/latest/"
-    checked: 2026-09-01
+    checked: 2026-10-22
     note: "LLM gateway, MCP gateway, A2A gateway, non-agentic HTTP, security and observability"
   - label: "agentgateway docs index (prompt guards, MCP guardrails, MCP authorization)"
-    url: "https://agentgateway.dev/docs/standalone/latest/llms.txt"
-    checked: 2026-09-01
+    url: "https://agentgateway.dev/docs/standalone/latest/documentation/llms.txt"
+    checked: 2026-10-22
   - label: "agentgateway releases"
     url: "https://github.com/agentgateway/agentgateway/releases"
     checked: 2026-09-01
@@ -105,4 +105,4 @@ Run them in series when both matter: agentgateway decides who reaches what; Pipe
 - [Pipelock vs Envoy AI Gateway](/compare/pipelock-vs-envoy-ai-gateway/): the Envoy-based gateway with the same shape
 - [Agent firewall vs agent authorization gateway](/compare/agent-firewall-vs-agent-authorization-gateway/): the concept behind the authorization rows
 - [MCP gateway](/learn/mcp-gateway/): the category
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

@@ -41,6 +41,6 @@ Enterprise features are under ELv2. [Get in touch](https://pipelab.org/pipelock/
 
 ## Get involved
 
-The code is at [github.com/luckyPipewrench/pipelock](https://github.com/luckyPipewrench/pipelock) (Apache-2.0 core; Enterprise features under ELv2). The [CONTRIBUTING guide](https://github.com/luckyPipewrench/pipelock/blob/main/CONTRIBUTING.md) has architecture docs, testing patterns, and recipes for adding new scanner layers.
+The code is at [github.com/pipelab-org/pipelock](https://github.com/pipelab-org/pipelock) (Apache-2.0 core; Enterprise features under ELv2). The [CONTRIBUTING guide](https://github.com/pipelab-org/pipelock/blob/main/CONTRIBUTING.md) has architecture docs, testing patterns, and recipes for adding new scanner layers.
 
 If you're running AI agents in production and care about security, give it a shot. And if you break something, open an issue. That's how this gets better.

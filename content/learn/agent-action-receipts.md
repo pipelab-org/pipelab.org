@@ -101,7 +101,7 @@ Three independently relevant facts a passing verification proves:
 
 Add the relying-party policy on top: pinned signer key, max receipt
 age, replay window, schema version, strict JSON parsing. The
-[conformance corpus README](https://github.com/luckyPipewrench/agent-egress-bench/tree/main/receipts/v0/conformance)
+[conformance corpus README](https://github.com/pipelab-org/agent-egress-bench/tree/main/receipts/v0/conformance)
 documents the exact policy assumptions the public verifiers use.
 
 ## How receipts get produced
@@ -117,7 +117,7 @@ With a configured flight recorder and receipt signing key, the Pipelock proxy em
   pinned per session for rug-pull detection.
 
 Receipts append to the process's hash-chained run chain in the flight recorder. When a receipt covers an HTTP-shaped response, the `X-Pipelock-Receipt` response header carries that receipt's `action_id`, set only after the receipt is recorded. It needs a configured receipt emitter, and whether allow responses carry it depends on `flight_recorder.require_receipts`. It's a handle for looking up the signed receipt, not proof on its own. The
-[pipelock-agent-egress-action](https://github.com/luckyPipewrench/pipelock-agent-egress-action)
+[pipelock-agent-egress-action](https://github.com/pipelab-org/pipelock-agent-egress-action)
 GitHub Action bundles the chain with policy metadata into a complete
 Audit Packet on every CI run.
 

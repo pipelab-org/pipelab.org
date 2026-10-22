@@ -71,7 +71,7 @@ Agents handle multiple content types too. A single prompt injection can choose t
 
 ## Scanning request bodies
 
-[Pipelock](https://github.com/luckyPipewrench/pipelock) scans request bodies and headers on the forward proxy path. When the agent makes an outbound HTTP request through the proxy, pipelock reads the body, extracts text strings, and runs the same DLP patterns that scan URLs.
+[Pipelock](https://github.com/pipelab-org/pipelock) scans request bodies and headers on the forward proxy path. When the agent makes an outbound HTTP request through the proxy, pipelock reads the body, extracts text strings, and runs the same DLP patterns that scan URLs.
 
 The extraction handles four content types:
 
@@ -167,4 +167,4 @@ curl -x http://127.0.0.1:8888 https://httpbin.org/get \
 
 URLs, POST bodies, and headers are three separate exfiltration channels and each one needs its own scanning layer. The data in the second two never touches the URL.
 
-If you find a bypass, [open an issue](https://github.com/luckyPipewrench/pipelock/issues).
+If you find a bypass, [open an issue](https://github.com/pipelab-org/pipelock/issues).

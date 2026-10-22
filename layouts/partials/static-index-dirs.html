@@ -1,0 +1,14 @@
+{{- /* Returns URL paths ("/a/b/") for every directory under the given static
+       path that holds an index.html. */ -}}
+{{- $dir := . -}}
+{{- $found := slice -}}
+{{- range os.ReadDir $dir -}}
+  {{- if .IsDir -}}
+    {{- $sub := printf "%s/%s" $dir .Name -}}
+    {{- if fileExists (printf "%s/index.html" $sub) -}}
+      {{- $found = $found | append (printf "%s/" (strings.TrimPrefix "static" $sub)) -}}
+    {{- end -}}
+    {{- $found = $found | append (partial "static-index-dirs.html" $sub) -}}
+  {{- end -}}
+{{- end -}}
+{{- return $found -}}

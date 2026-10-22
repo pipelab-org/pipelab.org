@@ -70,7 +70,7 @@ Whether a given hard negative should be allowed or blocked depends on your polic
 
 A detection earns its false-positive rate by staying calm when benign traffic looks like an attack. If it never met dangerous-looking benign traffic in testing, it hasn't earned anything yet, no matter how good the number looks.
 
-I keep a public starter set of these lookalikes in [agent-egress-bench](https://github.com/luckyPipewrench/agent-egress-bench). It's tool-neutral, so run it against whatever you use. But treat it as a seed. The negatives that will break your rules are the ones from your own docs and logs, your own tools, and nobody can build those for you.
+I keep a public starter set of these lookalikes in [agent-egress-bench](https://github.com/pipelab-org/agent-egress-bench). It's tool-neutral, so run it against whatever you use. But treat it as a seed. The negatives that will break your rules are the ones from your own docs and logs, your own tools, and nobody can build those for you.
 
 ---
 

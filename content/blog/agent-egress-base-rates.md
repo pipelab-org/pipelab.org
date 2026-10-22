@@ -31,7 +31,7 @@ Precision is the fraction of alerts that are true: true alerts divided by all al
 
 ## A corpus doesn't give you the production mix
 
-[Agent Egress Bench](/agent-egress-bench/) reports containment and false-positive rate separately. Its [methodology](https://github.com/luckyPipewrench/agent-egress-bench/blob/c31d44fec9f42e17874ecbaaa3cbf9dd928895a6/docs/gauntlet.md) gives each benign case equal weight in the selected view. That makes the corpus composition part of the measurement.
+[Agent Egress Bench](/agent-egress-bench/) reports containment and false-positive rate separately. Its [methodology](https://github.com/pipelab-org/agent-egress-bench/blob/c31d44fec9f42e17874ecbaaa3cbf9dd928895a6/docs/gauntlet.md) gives each benign case equal weight in the selected view. That makes the corpus composition part of the measurement.
 
 If you run equal numbers of malicious and benign cases, you've chosen that ratio for the test. It doesn't establish how often malicious actions occur in your workload. Even the detector's rates might change when the input changes. The table holds them fixed to isolate the effect of the traffic mix.
 
@@ -43,4 +43,4 @@ Keep the benchmark result attached to its corpus and configuration. Then evaluat
 
 Report the counts behind the rates. For an alerting system, count what someone must investigate. For a blocking system, count legitimate actions interrupted. If repeated alerts get grouped into one incident, report that grouping separately from action-level precision.
 
-You can still use a benchmark to find regressions and compare results under the same test conditions. Before using it to forecast an operator's workload, check the [result-use rules](https://github.com/luckyPipewrench/agent-egress-bench/blob/c31d44fec9f42e17874ecbaaa3cbf9dd928895a6/docs/RESULTS-USE.md) and measure the traffic mix the forecast assumes.
+You can still use a benchmark to find regressions and compare results under the same test conditions. Before using it to forecast an operator's workload, check the [result-use rules](https://github.com/pipelab-org/agent-egress-bench/blob/c31d44fec9f42e17874ecbaaa3cbf9dd928895a6/docs/RESULTS-USE.md) and measure the traffic mix the forecast assumes.

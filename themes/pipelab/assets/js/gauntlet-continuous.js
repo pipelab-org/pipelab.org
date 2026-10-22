@@ -651,7 +651,7 @@
 
   function renderLatestRunError(element) {
     updateCard(element, "UNAVAILABLE", "unavailable", "GitHub status is temporarily unavailable. The published record remains unchanged.");
-    appendLink(appendText(element, "p", "", "gc-meta"), "Open workflow history", "https://github.com/luckyPipewrench/pipelock/actions/workflows/continuous-gauntlet.yaml");
+    appendLink(appendText(element, "p", "", "gc-meta"), "Open workflow history", "https://github.com/pipelab-org/pipelock/actions/workflows/continuous-gauntlet.yaml");
   }
 
   function renderVerified(element, loaded) {

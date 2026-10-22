@@ -118,4 +118,4 @@ DefenseClaw is the open-source local component. Cisco's commercial AI Defense se
 - [Pipelock vs NemoClaw](/compare/pipelock-vs-nemoclaw/): the sandbox side of the same question
 - [Pipelock vs Snyk Agent Scan](/compare/pipelock-vs-snyk-agent-scan/): pre-deploy scanning of the same components
 - [MCP security](/learn/mcp-security/): MCP threats and proxy-level scanning
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

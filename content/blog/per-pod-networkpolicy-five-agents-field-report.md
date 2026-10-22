@@ -71,7 +71,7 @@ initContainers:
     command: ["sh", "-c"]
     args:
       - |
-        wget -O /opt/bin/pipelock https://github.com/luckyPipewrench/pipelock/releases/...
+        wget -O /opt/bin/pipelock https://github.com/pipelab-org/pipelock/releases/...
         chmod +x /opt/bin/pipelock
 ```
 

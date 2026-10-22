@@ -154,7 +154,7 @@ Encode an AWS key in base64 and embed it in a tool argument:
 | 14. Preset configs | Yes | No | No | No |
 | 15. Human-in-the-loop | Yes | No | No | No |
 
-*This comparison is best-effort based on public documentation. If any tool's coverage has changed, [let us know](https://github.com/luckyPipewrench/pipelock/issues).*
+*This comparison is best-effort based on public documentation. If any tool's coverage has changed, [let us know](https://github.com/pipelab-org/pipelock/issues).*
 
 ---
 
@@ -164,7 +164,7 @@ Encode an AWS key in base64 and embed it in a tool argument:
 
 **For builders:** If you're building an agent firewall, use this as a feature roadmap. The evaluation scenarios make good integration tests.
 
-**For compliance:** This checklist maps to several [OWASP Agentic AI Top 10](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/) categories. See the [full OWASP mapping](https://github.com/luckyPipewrench/pipelock/blob/main/docs/owasp-mapping.md).
+**For compliance:** This checklist maps to several [OWASP Agentic AI Top 10](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/) categories. See the [full OWASP mapping](https://github.com/pipelab-org/pipelock/blob/main/docs/owasp-mapping.md).
 
 ## Further reading
 
@@ -173,4 +173,4 @@ Encode an AWS key in base64 and embed it in a tool argument:
 - [MCP Security](/learn/mcp-security/) : tool poisoning and rug-pull defense (requirements 8, 9, 10)
 - [Prompt Injection: Network-Layer Defense](/learn/prompt-injection-network-defense/) : injection detection at the proxy (requirement 3)
 - [Agent Firewall vs Guardrails](/compare/agent-firewall-vs-guardrails/) : complementary defenses
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

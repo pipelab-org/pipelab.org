@@ -26,8 +26,8 @@ sources:
     checked: 2026-09-01
     note: "a Linux Foundation project; v1.5.0 released August 2026"
   - label: "agentgateway docs index (prompt guards, MCP guardrails, MCP authorization)"
-    url: "https://agentgateway.dev/docs/standalone/latest/llms.txt"
-    checked: 2026-09-01
+    url: "https://agentgateway.dev/docs/standalone/latest/documentation/llms.txt"
+    checked: 2026-10-22
   - label: "lasso-security/mcp-gateway README"
     url: "https://github.com/lasso-security/mcp-gateway"
     checked: 2026-09-01

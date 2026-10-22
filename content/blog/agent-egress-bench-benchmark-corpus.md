@@ -28,7 +28,7 @@ So we built Agent Egress Bench.
 
 ## What's in the corpus
 
-[agent-egress-bench](https://github.com/luckyPipewrench/agent-egress-bench) is 72 test cases across 8 categories:
+[agent-egress-bench](https://github.com/pipelab-org/agent-egress-bench) is 72 test cases across 8 categories:
 
 | Category | Cases | What it tests |
 |----------|-------|---------------|
@@ -47,7 +47,7 @@ So we built Agent Egress Bench.
 
 A "runner" connects a security tool to the corpus. The runner feeds each case to the tool, observes whether it blocked or allowed the traffic, and emits JSONL output. Cases the tool can't handle (wrong transport, missing capability) score `not_applicable` instead of `fail`. Nobody gets penalized for not supporting something they don't claim to support.
 
-The repo includes a Go validator (stdlib only, no external deps) that validates case files, runner output, and tool profiles against the spec. A [runner template](https://github.com/luckyPipewrench/agent-egress-bench/tree/main/examples/runner-template) provides a working skeleton for building new runners.
+The repo includes a Go validator (stdlib only, no external deps) that validates case files, runner output, and tool profiles against the spec. A [runner template](https://github.com/pipelab-org/agent-egress-bench/tree/main/examples/runner-template) provides a working skeleton for building new runners.
 
 ## What this is not
 
@@ -62,12 +62,12 @@ All 8 categories map to the [OWASP Top 10 for Agentic Applications](https://gena
 ## Try it
 
 ```bash
-git clone https://github.com/luckyPipewrench/agent-egress-bench
+git clone https://github.com/pipelab-org/agent-egress-bench
 cd agent-egress-bench/validate
 go build -o aeb-validate .
 ./aeb-validate ../cases
 ```
 
-If you build agent egress security tools, [write a runner](https://github.com/luckyPipewrench/agent-egress-bench/blob/main/docs/ADOPTION.md). If you find a gap in the corpus, [open an issue](https://github.com/luckyPipewrench/agent-egress-bench/issues). Cases and runners from any vendor are welcome.
+If you build agent egress security tools, [write a runner](https://github.com/pipelab-org/agent-egress-bench/blob/main/docs/ADOPTION.md). If you find a gap in the corpus, [open an issue](https://github.com/pipelab-org/agent-egress-bench/issues). Cases and runners from any vendor are welcome.
 
 The repo is Apache 2.0 licensed. Full docs, governance policy, and contribution guidelines are in the repo.

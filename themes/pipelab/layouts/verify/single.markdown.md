@@ -14,5 +14,5 @@ Supply the operator's public key to verify the chain against that key. Without a
 Verification checks the supplied records for signatures, integrity, and order. It does not prove records are complete, that every action crossed Pipelock, or that an operator was honest.
 
 - [See the signed evidence model](/agent-evidence/)
-- [Read the Agent Evidence Levels spec](https://github.com/luckyPipewrench/agent-evidence-levels)
+- [Read the Agent Evidence Levels spec](https://github.com/pipelab-org/agent-evidence-levels)
 - [Get standalone verifier instructions](/learn/verify-a-receipt/)

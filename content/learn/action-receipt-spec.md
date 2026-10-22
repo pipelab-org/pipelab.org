@@ -38,13 +38,13 @@ the exact bytes the Pipelock binary writes today. Four verifier codebases now
 cover this format: three in the Pipelock repo, plus a Python verifier in a
 separate repo:
 
-* **Go** (in the Pipelock repo): [`internal/receipt`](https://github.com/luckyPipewrench/pipelock/tree/main/internal/receipt) is the reference implementation. Two binaries share that code: `pipelock verify-receipt` (built into the main binary) and the standalone [`pipelock-verifier`](https://github.com/luckyPipewrench/pipelock/tree/main/cmd/pipelock-verifier) (self-contained, no network surface, no proxy, no scanner, drop-in for CI runners and auditors; subcommands `audit-packet`, `chain`, `receipt`).
-* **TypeScript** (in the Pipelock repo): [`sdk/verifiers/ts`](https://github.com/luckyPipewrench/pipelock/tree/main/sdk/verifiers/ts), independent implementation using `@noble/ed25519` and `ajv` for JSON Schema validation; for Node/Bun consumers in JavaScript pipelines.
-* **Rust** (in the Pipelock repo): [`sdk/verifiers/rust`](https://github.com/luckyPipewrench/pipelock/tree/main/sdk/verifiers/rust), independent implementation with `audit-packet`, `chain`, and `receipt` commands matching the Go and TypeScript verifier behavior. Includes Go-compatible canonical JSON, schema validation, strict Ed25519 receipt verification, chain replay, packet cross-checks, and tests against the shared conformance fixtures.
-* **Python** (separate repo): [`pipelock-verify-python`](https://github.com/luckyPipewrench/pipelock-verify-python) `0.1.x` (`pip install pipelock-verify`) verifies ActionReceipt v1 chains. A `0.2.0` update for EvidenceReceipt v2 plus RFC 8785 JCS and an RFC 9421 directory fetcher is prepared in the repo, not yet published on PyPI.
+* **Go** (in the Pipelock repo): [`internal/receipt`](https://github.com/pipelab-org/pipelock/tree/main/internal/receipt) is the reference implementation. Two binaries share that code: `pipelock verify-receipt` (built into the main binary) and the standalone [`pipelock-verifier`](https://github.com/pipelab-org/pipelock/tree/main/cmd/pipelock-verifier) (self-contained, no network surface, no proxy, no scanner, drop-in for CI runners and auditors; subcommands `audit-packet`, `chain`, `receipt`).
+* **TypeScript** (in the Pipelock repo): [`sdk/verifiers/ts`](https://github.com/pipelab-org/pipelock/tree/main/sdk/verifiers/ts), independent implementation using `@noble/ed25519` and `ajv` for JSON Schema validation; for Node/Bun consumers in JavaScript pipelines.
+* **Rust** (in the Pipelock repo): [`sdk/verifiers/rust`](https://github.com/pipelab-org/pipelock/tree/main/sdk/verifiers/rust), independent implementation with `audit-packet`, `chain`, and `receipt` commands matching the Go and TypeScript verifier behavior. Includes Go-compatible canonical JSON, schema validation, strict Ed25519 receipt verification, chain replay, packet cross-checks, and tests against the shared conformance fixtures.
+* **Python** (separate repo): [`pipelock-verify-python`](https://github.com/pipelab-org/pipelock-verify-python) `0.1.x` (`pip install pipelock-verify`) verifies ActionReceipt v1 chains. A `0.2.0` update for EvidenceReceipt v2 plus RFC 8785 JCS and an RFC 9421 directory fetcher is prepared in the repo, not yet published on PyPI.
 
 The in-repo Go, TypeScript, and Rust codebases test against shared SDK conformance fixtures at
-[sdk/conformance/testdata/](https://github.com/luckyPipewrench/pipelock/tree/main/sdk/conformance/testdata).
+[sdk/conformance/testdata/](https://github.com/pipelab-org/pipelock/tree/main/sdk/conformance/testdata).
 The receipt envelope and surrounding **Audit Packet v0** bundle are pinned by JSON Schema at [`pipelab.org/schemas/audit-packet-v0.schema.json`](/schemas/audit-packet-v0.schema.json). The [schema mirror catalog](/schemas/) lists the pinned Agent Egress Bench and Pipelock Rules schemas with source commits and SHA-256 digests. The standalone `pipelock-verifier` cross-checks the packet's claimed totals, root hash, and final
 sequence against the actual chain on every invocation, so post-emission edits
 to the summary or verifier block are caught even when the schema and chain
@@ -188,7 +188,7 @@ listener mode, and `mcp_ws` is WebSocket. The conformance corpus also uses
 `https` as a representative value. Verifiers
 MUST NOT reject on transport value, since the set evolves with each release.
 The full table of transport-to-event mappings lives in
-[`docs/guides/receipt-transports.md`](https://github.com/luckyPipewrench/pipelock/blob/main/docs/guides/receipt-transports.md)
+[`docs/guides/receipt-transports.md`](https://github.com/pipelab-org/pipelock/blob/main/docs/guides/receipt-transports.md)
 in the Pipelock repo.
 
 ## Canonicalization
@@ -343,7 +343,7 @@ such as an HTTP response header or a webhook payload.
 ## Conformance
 
 The corpus at
-[`sdk/conformance/testdata/`](https://github.com/luckyPipewrench/pipelock/tree/main/sdk/conformance/testdata)
+[`sdk/conformance/testdata/`](https://github.com/pipelab-org/pipelock/tree/main/sdk/conformance/testdata)
 is the authoritative contract. Five files generated by deterministic Go code
 from a fixed seed, regenerable with:
 
@@ -473,14 +473,14 @@ Until that migration lands, v1 remains the canonical format for proxy action rec
 
 ## Reference
 
-* **Go reference implementation**: <https://github.com/luckyPipewrench/pipelock/tree/main/internal/receipt>
+* **Go reference implementation**: <https://github.com/pipelab-org/pipelock/tree/main/internal/receipt>
 * **`pipelock verify-receipt` CLI**: ships with every Pipelock release.
-* **Standalone `pipelock-verifier` binary**: <https://github.com/luckyPipewrench/pipelock/tree/main/cmd/pipelock-verifier>. Self-contained, drop-in for CI / auditor / third-party use. Shares the Go reference implementation in `internal/receipt`. Subcommands: `audit-packet`, `chain`, `receipt`. Distributed as a separate GoReleaser archive across linux/darwin/windows × amd64/arm64.
-* **TypeScript verifier** (independent codebase): <https://github.com/luckyPipewrench/pipelock/tree/main/sdk/verifiers/ts>
-* **Rust verifier** (independent codebase): <https://github.com/luckyPipewrench/pipelock/tree/main/sdk/verifiers/rust>. `audit-packet`, `chain`, `receipt` subcommands. Go-compatible canonical JSON, schema validation, strict Ed25519, chain replay, packet cross-checks, tested against the shared conformance fixtures.
-* **Python verifier** (independent codebase): <https://github.com/luckyPipewrench/pipelock-verify-python>. `pip install pipelock-verify` ships `0.1.x` for ActionReceipt v1; `0.2.0` (EvidenceReceipt v2) prepared in repo, PyPI publish pending.
-* **Audit Packet v0 JSON Schema**: [pipelab.org/schemas/audit-packet-v0.schema.json](/schemas/audit-packet-v0.schema.json) (sources at <https://github.com/luckyPipewrench/pipelock/tree/main/sdk/audit-packet>)
-* **Conformance corpus**: <https://github.com/luckyPipewrench/pipelock/tree/main/sdk/conformance/testdata>
+* **Standalone `pipelock-verifier` binary**: <https://github.com/pipelab-org/pipelock/tree/main/cmd/pipelock-verifier>. Self-contained, drop-in for CI / auditor / third-party use. Shares the Go reference implementation in `internal/receipt`. Subcommands: `audit-packet`, `chain`, `receipt`. Distributed as a separate GoReleaser archive across linux/darwin/windows × amd64/arm64.
+* **TypeScript verifier** (independent codebase): <https://github.com/pipelab-org/pipelock/tree/main/sdk/verifiers/ts>
+* **Rust verifier** (independent codebase): <https://github.com/pipelab-org/pipelock/tree/main/sdk/verifiers/rust>. `audit-packet`, `chain`, `receipt` subcommands. Go-compatible canonical JSON, schema validation, strict Ed25519, chain replay, packet cross-checks, tested against the shared conformance fixtures.
+* **Python verifier** (independent codebase): <https://github.com/pipelab-org/pipelock-verify-python>. `pip install pipelock-verify` ships `0.1.x` for ActionReceipt v1; `0.2.0` (EvidenceReceipt v2) prepared in repo, PyPI publish pending.
+* **Audit Packet v0 JSON Schema**: [pipelab.org/schemas/audit-packet-v0.schema.json](/schemas/audit-packet-v0.schema.json) (sources at <https://github.com/pipelab-org/pipelock/tree/main/sdk/audit-packet>)
+* **Conformance corpus**: <https://github.com/pipelab-org/pipelock/tree/main/sdk/conformance/testdata>
 * **Flight recorder format**: [Flight Recorder: AI Agent Audit Log](/learn/flight-recorder/)
 * **CI integration that emits these receipts**: [Agent Egress Control (GitHub Action)](/learn/agent-egress-control/)
 * **Trust model for verified packets**: [Audit Packet Threat Model](/learn/audit-packet-threat-model/), the canonical statement of what a verified Audit Packet proves, what it does not prove, and the trust assumptions a relying party should pin.
@@ -493,4 +493,4 @@ Until that migration lands, v1 remains the canonical format for proxy action rec
 * **Regulatory mapping**: [AI Agent Regulatory Controls Hub](/learn/ai-agent-regulatory-controls/), receipts mapped to EU AI Act, DORA, NIS2, NIST AI RMF, ISO 42001, Colorado AI Act, SOC 2.
 
 Report spec bugs or clarification requests at
-<https://github.com/luckyPipewrench/pipelock/issues>.
+<https://github.com/pipelab-org/pipelock/issues>.

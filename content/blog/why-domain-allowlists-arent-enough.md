@@ -201,5 +201,5 @@ The term "agent firewall" is worth keeping. It just needs a qualifier.
 - [GitHub Copilot: Customize the agent firewall](https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/customize-the-firewall)
 - [GitHub Copilot: Allowlist reference](https://docs.github.com/en/copilot/reference/copilot-allowlist-reference)
 - [`gh-aw-firewall` repository](https://github.com/github/gh-aw-firewall)
-- [OWASP MCP Top 10](https://owasp.org/www-project-mcp-top-10/)
-- [Model Context Protocol specification](https://modelcontextprotocol.io/)
+- [OWASP MCP Top 10](https://owasp.org/projects/mcp-top-10)
+- [Model Context Protocol specification](https://modelcontextprotocol.io/docs/2026-07-28/getting-started/intro)

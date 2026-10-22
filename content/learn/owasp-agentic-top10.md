@@ -184,4 +184,4 @@ This is where Pipelock's architecture pays off:
 - [Agent Egress Security](/learn/agent-egress-security/)
 - [MCP Security](/learn/mcp-security/)
 - [Prompt Injection: Network-Layer Defense](/learn/prompt-injection-network-defense/)
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

@@ -64,7 +64,7 @@ Different primitives, different scope, different SemVer cadence. Both belong on 
 ## Where to go next
 
 - [Marketplace listing](https://github.com/marketplace/actions/pipelock-agent-egress-control)
-- [v0.1.0 release notes](https://github.com/luckyPipewrench/pipelock-agent-egress-action/releases/tag/v0.1.0)
+- [v0.1.0 release notes](https://github.com/pipelab-org/pipelock-agent-egress-action/releases/tag/v0.1.0)
 - [Agent Egress Control setup guide](/learn/agent-egress-control/)
 - [Pipelock action receipt spec](/learn/action-receipt-spec/)
 - [Pipelock](/pipelock/)

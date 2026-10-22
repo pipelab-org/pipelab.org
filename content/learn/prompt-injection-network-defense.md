@@ -213,4 +213,4 @@ Pattern-based detection isn't perfect. Pipelock is honest about that. It catches
 - [Agent Egress Security](/learn/agent-egress-security/) : what happens after injection succeeds (credential exfiltration)
 - [Pipelock vs LlamaFirewall](/compare/pipelock-vs-llamafirewall/) : network-layer vs inference-layer head-to-head
 - [OWASP Agentic AI Top 10](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/) : the threat framework for agentic applications
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

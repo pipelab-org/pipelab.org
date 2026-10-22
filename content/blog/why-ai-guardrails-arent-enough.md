@@ -137,6 +137,6 @@ Your existing guardrails still run. You have not removed anything. You have just
 - [Agent firewall vs guardrails](/compare/agent-firewall-vs-guardrails/): side-by-side on what each layer catches
 - [Pipelock](/pipelock/): the runtime egress proxy
 - [Open source AI firewall](/learn/open-source-ai-firewall/): the open-source side of the stack
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)
 
 Guardrails are necessary. They are not sufficient. Add the network layer and sleep better.

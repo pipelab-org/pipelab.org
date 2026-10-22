@@ -47,7 +47,7 @@ An AI agent audit trail should show the action, the policy in force, the mediato
 
 ## The scenario
 
-This is the actual scenario from the [`examples/tool-response-injection/`](https://github.com/luckyPipewrench/pipelock/tree/main/examples/tool-response-injection) harness in the public Pipelock repo. The receipt JSON in the next section comes directly from running it.
+This is the actual scenario from the [`examples/tool-response-injection/`](https://github.com/pipelab-org/pipelock/tree/main/examples/tool-response-injection) harness in the public Pipelock repo. The receipt JSON in the next section comes directly from running it.
 
 A coding agent connects to an MCP server named `play-game-demo`. The server advertises one tool, `play_game`, with the description "Play a quick text adventure. Returns a short success message." That description is harmless. The tool response is the attack.
 
@@ -80,7 +80,7 @@ The agent never sees the injected payload. On the MCP stdio transport, the proxy
 
 ## The receipt that records the block
 
-This is a real artifact emitted by Pipelock, captured from the [`examples/tool-response-injection/`](https://github.com/luckyPipewrench/pipelock/tree/main/examples/tool-response-injection) harness in the public repo. Field names match the [action receipt spec](/learn/action-receipt-spec/).
+This is a real artifact emitted by Pipelock, captured from the [`examples/tool-response-injection/`](https://github.com/pipelab-org/pipelock/tree/main/examples/tool-response-injection) harness in the public repo. Field names match the [action receipt spec](/learn/action-receipt-spec/).
 
 ```json
 {
@@ -197,7 +197,7 @@ Set up any one of these, configure a flight-recorder path, and configure receipt
 The fastest accurate path is the public harness in the Pipelock repo. It uses the MCP stdio proxy, emits real receipts to `./evidence/`, and prints the verifier output as it goes:
 
 ```bash
-git clone https://github.com/luckyPipewrench/pipelock
+git clone https://github.com/pipelab-org/pipelock
 cd pipelock/examples/tool-response-injection
 pip install cryptography
 python3 demo.py
@@ -218,4 +218,4 @@ For your own deployment, the receipts come from whatever transport Pipelock wrap
 - [Flight Recorder](/learn/flight-recorder/): the hash-chained log primitive.
 - [Mediation Envelope Signing](/learn/mediation-envelope-signing/): RFC 9421 cross-mediator signing for federation.
 - [Pipelock Assess](/assess/): signed bundle generation for procurement and audit.
-- [Agent Egress Bench](https://github.com/luckyPipewrench/agent-egress-bench): public corpus the scanners are tested against.
+- [Agent Egress Bench](https://github.com/pipelab-org/agent-egress-bench): public corpus the scanners are tested against.

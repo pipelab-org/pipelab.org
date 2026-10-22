@@ -1,11 +1,12 @@
 ---
-title: "Open Source AI Firewall: Self-Hosted Agent Security"
+title: "AI Firewall vs LLM Firewall vs Agent Firewall: Open-Source Options (2026)"
 linkTitle: "Open Source AI Firewall"
-seoTitle: "Open Source AI Firewall: LLM vs Agent vs Gateway"
+seoTitle: "AI vs LLM vs Agent Firewall: Open Source (2026)"
 subtitle: "Runtime agent protection you can inspect, modify, and deploy anywhere."
-description: "Open source AI firewall comparison: LLM firewall vs agent firewall vs gateway, with Pipelock, LlamaFirewall, NeMo Guardrails, and MCP tools."
+description: "Free, open source, self-hosted AI firewall options compared: AI firewall vs LLM firewall vs agent firewall, with Pipelock, LlamaFirewall, and NeMo."
 date: 2026-04-11
-lastmod: 2026-08-08
+lastmod: 2026-10-21
+software_jsonld: true
 faq:
   - q: "What is an open source AI firewall?"
     a: "An open source AI firewall is a self-hosted security tool that sits between AI agents and the network, scanning traffic for credential leaks, prompt injection, SSRF, and tool poisoning. Because the source code is public, you can audit exactly what it scans, how it decides, and what it logs. No vendor black box."
@@ -55,7 +56,7 @@ Open-source AI firewall searches mix several boundaries. Read GitHub projects by
 
 | Project | License | Boundary | Best fit | Does not replace |
 |---|---|---|---|---|
-| [Pipelock](https://github.com/luckyPipewrench/pipelock) | Apache-2.0 core; Enterprise features under ELv2 | Agent egress firewall | Network-enforced HTTP, MCP, and WebSocket inspection with DLP, injection scanning, SSRF defense, signed evidence, and runtime audit. | MCP identity gateways, model-layer moderation, package-manager risk scoring. |
+| [Pipelock](https://github.com/pipelab-org/pipelock) | Apache-2.0 core; Enterprise features under ELv2 | Agent egress firewall | Network-enforced HTTP, MCP, and WebSocket inspection with DLP, injection scanning, SSRF defense, signed evidence, and runtime audit. | MCP identity gateways, model-layer moderation, package-manager risk scoring. |
 | [LlamaFirewall](https://github.com/meta-llama/PurpleLlama/tree/main/LlamaFirewall) | See repo | Model and prompt layer | PromptGuard, AlignmentCheck, and CodeShield-style filtering around prompts, completions, and generated code. | Agent network enforcement or MCP traffic inspection. |
 | [NeMo Guardrails](https://github.com/NVIDIA-NeMo/Guardrails) | See repo | Dialog guardrails | Colang policies for conversational behavior, topical rails, and application-level flow control. | Outbound traffic inspection or runtime MCP proxying. |
 | [agentgateway](https://github.com/agentgateway/agentgateway) | Apache 2.0 | Gateway and routing | MCP, A2A, and LLM routing with a central gateway process. | Content-level DLP unless paired with an inspection layer. |
@@ -160,7 +161,7 @@ pipelock run
 Pipelock scans mediated traffic for 65 credential patterns, prompt injection (with 6-pass encoding normalization), SSRF, DNS rebinding, and MCP tool poisoning. Every decision lands in the [flight recorder](/learn/flight-recorder/) audit log, and enabling a signing key adds mediator-signed action receipts on top.
 
 <div class="hero-buttons" style="margin-top: 2rem;">
-  <a href="https://github.com/luckyPipewrench/pipelock" class="btn btn-primary" data-event="github_click" data-event-placement="guide-body" target="_blank" rel="noopener noreferrer">GitHub</a>
+  <a href="https://github.com/pipelab-org/pipelock" class="btn btn-primary" data-event="github_click" data-event-placement="guide-body" target="_blank" rel="noopener noreferrer">GitHub</a>
   <a href="/install/" class="btn btn-ghost" data-event="install_click" data-event-placement="guide-body">Install Pipelock</a>
   <a href="/proof/" class="btn btn-ghost" data-event="proof_click" data-event-placement="guide-body">Inspect the proof</a>
 </div>
@@ -172,7 +173,7 @@ Pipelock scans mediated traffic for 65 credential patterns, prompt injection (wi
 - [Why Pipelock Is an Egress Agent Firewall](/learn/egress-vs-inbound-agent-firewall/): why Pipelock controls outbound effects instead of relying on prompt filtering at the door
 - [Agent Firewall vs WAF](/compare/agent-firewall-vs-waf/): why inbound web protection and agent egress control solve different problems
 - [MCP Runtime Security](/learn/mcp-runtime-security/): live-traffic defenses for MCP that pre-deploy scanners miss
-- [MCP Vulnerability Scanner](/learn/mcp-vulnerability-scanner/): pre-deploy and runtime MCP scanner landscape
+- [MCP Security Tools](/learn/mcp-security-tools/): scanners, gateways, and proxies compared
 - [AI Runtime Security](/learn/ai-runtime-security/): the runtime threat surface beyond the network layer
 - [Pipelock](/pipelock/): full feature list, deployment options, and framework coverage
 - [AI Agent Security](/learn/ai-agent-security/): three security layers explained
@@ -180,4 +181,4 @@ Pipelock scans mediated traffic for 65 credential patterns, prompt injection (wi
 - [Pipelock vs DefenseClaw](/compare/pipelock-vs-defenseclaw/): network proxy vs framework-hook governance
 - [Pipelock vs Cloudflare AI Gateway](/compare/pipelock-vs-cloudflare-ai-gateway/): self-hosted egress inspection vs a hosted gateway in front of the model API
 - [Pipelock vs Prisma AIRS](/compare/pipelock-vs-prisma-airs/): a focused open-source proxy vs an enterprise AI security platform
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

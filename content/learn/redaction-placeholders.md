@@ -1,7 +1,7 @@
 ---
-title: "AI Redaction Placeholders: What <private_address>, <pl:...>, and [REDACTED] Mean"
+title: "AI Redaction Placeholders: What They Mean"
 linkTitle: "Redaction Placeholders"
-seoTitle: "What <private_address> and <private_date> Mean"
+seoTitle: "<private_person> Meaning: AI Redaction"
 subtitle: "You found a token like <private_address> or <pl:aws-access-key:1> in an AI transcript. Here is what it means, which tool put it there, and whether the original value is recoverable."
 description: "Decode AI redaction placeholders like <private_address>, <private_person>, and <pl:aws-access-key:1>: what each token means, what tool emits it, and why."
 date: 2026-05-31

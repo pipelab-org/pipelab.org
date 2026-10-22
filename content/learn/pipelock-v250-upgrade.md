@@ -90,11 +90,11 @@ mediation_envelope:
 
 If a peer still emits legacy free-form actors, keep that peer on the explicit legacy migration path until it is updated. Do not leave permissive actor handling implicit.
 
-Use the operator trust CLI to inspect local state:
+Use the operator trust CLI to inspect local state and verify a raw HTTP request saved as `request.http`:
 
 ```bash
 pipelock envelope trust list
-pipelock envelope trust verify --config pipelock.yaml
+pipelock envelope trust verify --stdin < request.http
 ```
 
 ## Treat tombstones as enforced state

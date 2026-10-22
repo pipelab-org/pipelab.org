@@ -158,4 +158,4 @@ The `balanced` preset enables injection scanning on HTTP responses, MCP response
 - [Agent Firewall vs Guardrails](/compare/agent-firewall-vs-guardrails/) : how detection layers complement each other
 - [Pipelock vs LlamaFirewall](/compare/pipelock-vs-llamafirewall/) : pattern matching vs ML classification
 - [OWASP LLM Top 10](/learn/owasp-llm-top10/) : prompt injection is #1
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

@@ -71,7 +71,7 @@ When the model has no guardrails, you need tighter thresholds everywhere.
 
 ## Detecting ablated models in your project
 
-Pipelock's [`audit` command](https://github.com/luckyPipewrench/pipelock) now detects guardrail-removal toolchains in your project directory. Run `pipelock audit .` and it checks for:
+Pipelock's [`audit` command](https://github.com/pipelab-org/pipelock) now detects guardrail-removal toolchains in your project directory. Run `pipelock audit .` and it checks for:
 
 - **Python packages:** obliteratus, abliterator, refusal-ablation, llm-abliterator in requirements.txt or pyproject.toml
 - **Ablation scripts:** abliterate.py, abliteration.py, remove_refusals.py, uncensor.py
@@ -84,7 +84,7 @@ $ pipelock audit .
     Consider using the hostile-model config preset.
 ```
 
-The [hostile-model preset](https://github.com/luckyPipewrench/pipelock/blob/main/configs/hostile-model.yaml) enables every defense layer at maximum sensitivity. All DLP patterns at critical severity, aggressive entropy detection, expanded exfiltration blocklist, tool policy blocking network and environment commands, session binding, and a preconfigured kill switch.
+The [hostile-model preset](https://github.com/pipelab-org/pipelock/blob/main/configs/hostile-model.yaml) enables every defense layer at maximum sensitivity. All DLP patterns at critical severity, aggressive entropy detection, expanded exfiltration blocklist, tool policy blocking network and environment commands, session binding, and a preconfigured kill switch.
 
 ```bash
 pipelock run --config configs/hostile-model.yaml
@@ -100,4 +100,4 @@ If you're running self-hosted models, especially uncensored ones, put a firewall
 
 ---
 
-*[GitHub](https://github.com/luckyPipewrench/pipelock) // [Hostile model preset](https://github.com/luckyPipewrench/pipelock/blob/main/configs/hostile-model.yaml) // [OWASP Agentic Top 10 mapping](https://github.com/luckyPipewrench/pipelock/blob/main/docs/owasp-mapping.md)*
+*[GitHub](https://github.com/pipelab-org/pipelock) // [Hostile model preset](https://github.com/pipelab-org/pipelock/blob/main/configs/hostile-model.yaml) // [OWASP Agentic Top 10 mapping](https://github.com/pipelab-org/pipelock/blob/main/docs/owasp-mapping.md)*

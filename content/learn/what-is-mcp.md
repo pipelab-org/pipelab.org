@@ -125,7 +125,7 @@ The MCP specification documents authentication via OAuth 2.1 and structural prot
 - **Token theft and confused deputy**: when an MCP server holds an API token and the agent forwards model-influenced parameters into the call.
 - **Shadow MCP**: agents connecting to MCP servers no one in the security team knows about.
 
-Defending against these requires *runtime* scanning of MCP traffic. That means inspecting tool descriptions before the agent sees them, scanning tool responses for injection patterns before they reach the model, and pinning the tool inventory at session start so a rug-pull can be detected. See the dedicated guides on [MCP security](/learn/mcp-security/), [MCP tool poisoning](/learn/mcp-tool-poisoning/), [MCP authorization](/learn/mcp-authorization/), and [how to secure MCP](/learn/how-to-secure-mcp/).
+Defending against these requires *runtime* scanning of MCP traffic. That means inspecting tool descriptions before the agent sees them, scanning tool responses for injection patterns before they reach the model, and pinning the tool inventory at session start so a rug-pull can be detected. See the dedicated guides on [MCP security](/learn/mcp-security/), [MCP tool poisoning](/learn/mcp-tool-poisoning/), [MCP authorization](/learn/mcp-authorization/), and [how to secure MCP](/learn/mcp-security/).
 
 ## Quick MCP glossary
 
@@ -141,7 +141,6 @@ Defending against these requires *runtime* scanning of MCP traffic. That means i
 
 ## Where to go next
 
-- [How to secure MCP](/learn/how-to-secure-mcp/): practical hardening checklist for production MCP deployments.
 - [MCP tool poisoning](/learn/mcp-tool-poisoning/): what tool poisoning is, how it works, and how to detect it at runtime.
 - [MCP authorization](/learn/mcp-authorization/): auth, scopes, RBAC, and the confused-deputy problem in MCP.
 - [MCP security](/learn/mcp-security/): full reference for MCP threats and defenses.

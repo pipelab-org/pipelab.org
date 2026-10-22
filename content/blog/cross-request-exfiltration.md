@@ -41,7 +41,7 @@ The old scanner only saw one request at a time. Attackers noticed.
 
 ## Two detection layers
 
-[Pipelock](https://github.com/luckyPipewrench/pipelock) v1.2.0 adds cross-request exfiltration detection with two independent mechanisms. They're not interchangeable. Entropy tracking is a medium-confidence pressure signal. Fragment reassembly is the hard catch. Both track state per session (identified by agent name + client IP) across a sliding time window.
+[Pipelock](https://github.com/pipelab-org/pipelock) v1.2.0 adds cross-request exfiltration detection with two independent mechanisms. They're not interchangeable. Entropy tracking is a medium-confidence pressure signal. Fragment reassembly is the hard catch. Both track state per session (identified by agent name + client IP) across a sliding time window.
 
 ### Entropy budget
 
@@ -131,4 +131,4 @@ The `/fetch` endpoint gives pipelock the target URL path and query params. Each 
 
 Splitting secrets across requests was an obvious next move for attackers. It's a little surprising it took this long for tooling to catch up.
 
-If you find a bypass, [open an issue](https://github.com/luckyPipewrench/pipelock/issues).
+If you find a bypass, [open an issue](https://github.com/pipelab-org/pipelock/issues).

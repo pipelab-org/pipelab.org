@@ -287,3 +287,11 @@ test("compareTrees ignores CSS minify that is the same after canonicalization", 
   );
   assert.deepEqual(compareTrees(pinned, local), []);
 });
+
+
+test("inline CSS normalizes numeric serialization while retaining style regressions", () => {
+  const pinned = '<style>.home-product{max-width:1000px;color:#00e5a0}</style><main>Home</main>';
+  const local = '<style>.home-product{max-width:1e3px;color:#00e5a0}</style><main>Home</main>';
+  assert.equal(normalizeForCompare('index.html', pinned), normalizeForCompare('index.html', local));
+  assert.notEqual(normalizeForCompare('index.html', pinned), normalizeForCompare('index.html', local.replace('1e3px', '900px')));
+});

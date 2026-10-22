@@ -61,15 +61,15 @@ I put these numbers out because I think security tools should prove they work ag
 Build the runner, point it at your tool's profile, run it:
 
 ```bash
-git clone https://github.com/luckyPipewrench/agent-egress-bench.git
+git clone https://github.com/pipelab-org/agent-egress-bench.git
 cd agent-egress-bench/runner
 go build -o aeb-gauntlet .
 ./aeb-gauntlet --cases ../cases --profile your-tool-profile.json --output results.json
 ```
 
-The profile tells the runner what your tool supports (which transports, which capabilities) so it only scores applicable cases. Submit your results at [pipelab.org/gauntlet/submit](/gauntlet/submit/) or open a [discussion on GitHub](https://github.com/luckyPipewrench/agent-egress-bench/discussions).
+The profile tells the runner what your tool supports (which transports, which capabilities) so it only scores applicable cases. Submit your results at [pipelab.org/gauntlet/submit](/gauntlet/submit/) or open a [discussion on GitHub](https://github.com/pipelab-org/agent-egress-bench/discussions).
 
-The [methodology docs](https://github.com/luckyPipewrench/agent-egress-bench/blob/main/docs/gauntlet.md) explain scoring in detail. The [adoption guide](https://github.com/luckyPipewrench/agent-egress-bench/blob/main/docs/ADOPTION.md) walks through building a runner for your tool.
+The [methodology docs](https://github.com/pipelab-org/agent-egress-bench/blob/main/docs/gauntlet.md) explain scoring in detail. The [adoption guide](https://github.com/pipelab-org/agent-egress-bench/blob/main/docs/ADOPTION.md) walks through building a runner for your tool.
 
 ## Why this matters
 

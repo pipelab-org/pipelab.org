@@ -11,7 +11,7 @@ project_name: "Pipelock Rules"
 project_accent: "Rules"
 project_actions:
   - label: "Browse rule bundles"
-    href: "https://github.com/luckyPipewrench/pipelock-rules"
+    href: "https://github.com/pipelab-org/pipelock-rules"
     primary: true
   - label: "Read the install guide"
     href: "/learn/community-rules/"
@@ -41,9 +41,9 @@ project_sections:
     title: "Rules, fixtures, manifests, and trust docs"
     links:
       - label: "Bundles and source"
-        href: "https://github.com/luckyPipewrench/pipelock-rules"
+        href: "https://github.com/pipelab-org/pipelock-rules"
       - label: "Generated rule catalog"
-        href: "https://github.com/luckyPipewrench/pipelock-rules/blob/main/docs/rule-catalog.md"
+        href: "https://github.com/pipelab-org/pipelock-rules/blob/main/docs/rule-catalog.md"
       - label: "Installation and trust guide"
         href: "/learn/community-rules/"
       - label: "Community bundle manifest"
