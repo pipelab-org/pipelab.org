@@ -64,7 +64,7 @@ The server controls two of the three channels that reach the model: tool definit
 
 Each control lists the OWASP MCP Top 10 items it addresses and the matching section of the MCP Security Best Practices page. "None" means the spec page has no section for that control. Several controls, such as runtime content inspection, are operator concerns the spec does not set out to cover.
 
-OWASP MCP Top 10 items, as titled on the [project page](https://owasp.org/www-project-mcp-top-10/): MCP01:2025 Token Mismanagement & Secret Exposure, MCP02:2025 Privilege Escalation via Scope Creep, MCP03:2025 Tool Poisoning, MCP04:2025 Software Supply Chain Attacks & Dependency Tampering, MCP05:2025 Command Injection & Execution, MCP06:2025 Prompt Injection via Contextual Payloads, MCP07:2025 Insufficient Authentication & Authorization, MCP08:2025 Lack of Audit and Telemetry, MCP09:2025 Shadow MCP Servers, MCP10:2025 Context Injection & Over-Sharing.
+OWASP MCP Top 10 items, as titled on the [project page](https://owasp.org/projects/mcp-top-10): MCP01:2025 Token Mismanagement & Secret Exposure, MCP02:2025 Privilege Escalation via Scope Creep, MCP03:2025 Tool Poisoning, MCP04:2025 Software Supply Chain Attacks & Dependency Tampering, MCP05:2025 Command Injection & Execution, MCP06:2025 Prompt Injection via Contextual Payloads, MCP07:2025 Insufficient Authentication & Authorization, MCP08:2025 Lack of Audit and Telemetry, MCP09:2025 Shadow MCP Servers, MCP10:2025 Context Injection & Over-Sharing.
 
 | # | Control | OWASP MCP Top 10 | MCP Security Best Practices section |
 |---|---|---|---|

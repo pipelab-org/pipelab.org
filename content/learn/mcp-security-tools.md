@@ -14,11 +14,11 @@ faq:
   - q: "What should I look for when choosing an MCP security tool?"
     a: "Check for bidirectional scanning (both tool arguments and responses), encoding evasion handling (base64, hex, URL encoding), session awareness (detecting mid-session tool description changes), and protocol coverage beyond just MCP (HTTP, WebSocket). A tool that only scans one direction or only handles plaintext leaves gaps that attackers will find."
   - q: "What are the best MCP vulnerability scanners?"
-    a: "There is no single best because the lanes serve different threats. For pre-deploy scanning, the leaders include Invariant Labs MCP-Scan (open source, also offers runtime guardrails), mcpscan.ai (SaaS), NeuralTrust MCP Scanner (commercial), Proximity (open source), Cisco MCP Scanner (commercial), Akto MCP security tools (commercial), and Enkrypt MCP Scan (SaaS). For runtime scanning at the agent boundary, Pipelock is the open-source option. For server-side runtime guardrails, Cisco MCP Runtime Guardrails is the commercial one. Most enterprise rollouts combine pre-deploy and runtime."
+    a: "There is no single best because the lanes serve different threats. For pre-deploy scanning, options include Snyk Agent Scan (formerly MCP-Scan, Apache-2.0), mcpscan.ai (SaaS), NeuralTrust MCP Scanner (commercial), Proximity (open source), Cisco MCP Scanner (Apache-2.0), Akto MCP security tools (commercial), and Enkrypt MCP Scan (SaaS). For runtime scanning at the agent boundary, Pipelock is the open-source option. For server-side runtime guardrails, Cisco MCP Runtime Guardrails is the commercial one. Most enterprise rollouts combine pre-deploy and runtime."
   - q: "How do I scan an MCP server for vulnerabilities?"
     a: "Run a pre-deploy scanner against the server's `tools/list` output, source code, and dependency manifest. Look for poisoned tool descriptions, schema injection vectors, path traversal patterns, command injection patterns, and known-vulnerable dependencies. Then put a runtime scanner in front of the agent so any threats that only appear when traffic flows (rug-pulls, response injection, cross-call chains) get caught. Pre-deploy alone misses the runtime classes. Runtime alone misses the static classes. Both are necessary."
   - q: "Are MCP vulnerability scanners free?"
-    a: "Some are. Invariant Labs MCP-Scan and Proximity are open source. The SlowMist MCP Security Checklist is a free static reference, not a scanner. Pipelock is open source (Apache-2.0 core; Enterprise features under ELv2). It ships both a pre-deploy `pipelock mcp scan` subcommand and a runtime proxy. Commercial scanners (mcpscan.ai, NeuralTrust, Enkrypt MCP Scan, Cisco MCP Scanner, Snyk agent scanning, Akto) typically have free tiers but charge for full scan history, larger inventories, and team features."
+    a: "Some are. Snyk Agent Scan (formerly MCP-Scan), Cisco MCP Scanner, and Proximity are open source. The SlowMist MCP Security Checklist is a free static reference, not a scanner. Pipelock is open source (Apache-2.0 core; Enterprise features under ELv2). It ships both a pre-deploy `pipelock mcp scan` subcommand and a runtime proxy. Hosted and commercial offerings include mcpscan.ai, NeuralTrust, Enkrypt MCP Scan, and Akto. Check each vendor for current pricing and team features."
 learn_cat: mcp
 level: ref
 tags:
@@ -111,15 +111,15 @@ A scanner tells you "this MCP server looks safe right now." A proxy enforces "th
 
 ## Scanner landscape: pre-deploy and runtime
 
-The table covers the projects most commonly referenced when teams shop for MCP security. The categories below the table cover what's not in the table (server-side runtime guardrails, static checklists).
+The table covers the projects most commonly referenced when teams shop for MCP security. The categories below the table cover what's not in the table (server-side runtime guardrails, static checklists). The Snyk and Cisco scanner names, capabilities, and Apache-2.0 licenses were checked against their linked repository READMEs and licenses on October 22, 2026.
 
 | Tool | Lane | License / model | Key strength | Key gap |
 |---|---|---|---|---|
-| [Snyk Agent Scan](https://github.com/snyk/agent-scan) | Pre-deploy + runtime guardrails framework | Open source | Disclosed the original tool-poisoning class (Apr 2025) and the WhatsApp rug-pull. Strong threat-pattern catalog. | Runtime guardrails are framework-shaped, not an agent-side network proxy. Setup involves SDK integration. |
+| [Snyk Agent Scan](https://github.com/snyk/agent-scan) | Pre-deploy and inventory scanning | Apache-2.0 | Scans agent configurations, skills, and MCP tools; supports inventory reporting to Snyk Evo. | The cited README describes scanning and inventory; runtime egress enforcement needs a separate control. |
 | [mcpscan.ai](https://mcpscan.ai/) | Pre-deploy | Commercial SaaS | Easy onboarding, hosted scan workflow, scheduled re-scans. | No agent-side runtime inspection. Sends server data to the SaaS for analysis. |
 | [NeuralTrust MCP Scanner](https://neuraltrust.ai/mcp-scanner) | Pre-deploy | Commercial | Server-code and tool-definition scanning with enterprise reporting. | No public agent-side runtime layer; commercial dependency. |
 | [Proximity](https://github.com/Nova-Hunting/nova-proximity) | Pre-deploy | Open source (GPL-3.0) | Self-hosted, scriptable, suitable for CI integration. | Pre-deploy only; no runtime traffic inspection. |
-| [Cisco MCP Scanner / Runtime Guardrails](https://securitydocs.cisco.com/docs/ai-def/user/168860.dita) | Pre-deploy + server-side runtime | Commercial | Server-side runtime guardrails integrated with Cisco AI Defense. | Server-side enforcement is different from agent-side enforcement. Trust placement matters. |
+| [Cisco MCP Scanner](https://github.com/cisco-ai-defense/mcp-scanner) | Pre-deploy | Apache-2.0 | SDK and CLI for scanning MCP tools with YARA and model-based analyzers. | Point-in-time scanning; Cisco AI Defense Runtime Guardrails is a separate offering. |
 | [Akto MCP security](https://www.akto.io/blog/mcp-security-tools) | API-test driven scanning | Commercial | API-security background applied to MCP traffic shapes. | Closer to API security than agent-egress security. |
 | [Enkrypt MCP Scan](https://www.enkryptai.com/product/mcp-scanner) | Pre-deploy | Commercial SaaS | AI-driven pattern detection in MCP source. | SaaS dependency; runtime layer not in the same product. |
 | [Pipelock](/pipelock/) | Runtime agent-side proxy + pre-deploy CLI | Apache-2.0 core; Enterprise features under ELv2 | Sits between the agent and every MCP server, scans live traffic in both directions, plus a `pipelock mcp scan` subcommand for CI use (with `pipelock audit` and `pipelock git scan-diff` for related static surfaces). Tool poisoning + rug-pull + response injection + chain detection + session binding. | The runtime layer is process-isolation-strongest when deployed with proper network controls; without those, deployment shape matters more than feature parity. |
@@ -158,7 +158,7 @@ Pipelock is the open-source agent-side option in the runtime lane. Specifically:
 
 Plus a pre-deploy lane on the same project: `pipelock mcp scan` runs against MCP configs, tool definitions, and policy files. CI-friendly, JSON-output, exit-code-driven. Same threat patterns, same project, same release line. `pipelock audit` and `pipelock git scan-diff` cover related static surfaces (workspace directories and git-diff change sets).
 
-The repo also ships a standalone `pipelock-verifier` binary at `cmd/pipelock-verifier/` with subcommands for audit-packet, chain, and receipt verification (offline verification of signed action receipts and chain integrity). Release status: present on `main`, formal release tag pending the next Pipelock cut. The shipping pre-deploy lane is `pipelock mcp scan`; runtime is the MCP proxy. Use both.
+The repo also ships a standalone `pipelock-verifier` binary at `cmd/pipelock-verifier/` with subcommands for audit-packet, chain, and receipt verification (offline verification of signed action receipts and chain integrity). Download the standalone verifier archive from the [Pipelock releases](https://github.com/pipelab-org/pipelock/releases). The shipping pre-deploy lane is `pipelock mcp scan`; runtime is the MCP proxy. Use both.
 
 ### Choosing between scanners
 
@@ -166,7 +166,7 @@ If you can only run one lane, pick the lane that matches your dominant threat. I
 
 If you can run both, run a pre-deploy scanner in CI for the servers you ship and a runtime scanner in front of every agent that connects to MCP. Independent layers. Each catches what the other cannot see.
 
-Open-source bias: prefer open-source in both lanes so the scanning logic is auditable. Invariant Labs MCP-Scan and Proximity in the pre-deploy lane; Pipelock in the runtime lane. Commercial tools (mcpscan.ai, NeuralTrust, Enkrypt, Cisco, Snyk, Akto) layer on top if you need enterprise reporting and managed service.
+Open-source bias: prefer open-source in both lanes so the scanning logic is auditable. Snyk Agent Scan, Cisco MCP Scanner, and Proximity in the pre-deploy lane; Pipelock in the runtime lane. Hosted and commercial tools (mcpscan.ai, NeuralTrust, Enkrypt, Cisco AI Defense, Snyk Evo, Akto) layer on top if you need enterprise reporting and managed service.
 
 ## Evaluation checklist
 

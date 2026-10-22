@@ -243,7 +243,7 @@
       applyStars(parseInt(cachedStars, 10));
     }
     window.setTimeout(function () {
-      fetch('https://api.github.com/repos/luckyPipewrench/pipelock')
+      fetch('https://api.github.com/repos/pipelab-org/pipelock')
         .then(function (r) { return r.json(); })
         .then(function (d) {
           if (!d || !d.stargazers_count) return;

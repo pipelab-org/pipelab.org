@@ -25,7 +25,7 @@ sources:
     note: "six components: AI Gateway, Agent Security, AI Red Teaming, AI Runtime Security, AI Model Security, AI Posture Management"
   - label: "Noma Security"
     url: "https://noma.security/"
-    checked: 2026-09-01
+    checked: 2026-10-22
     note: "positions a unified platform for end-to-end AI security with offerings for endpoint agents, SaaS agents, and homegrown agents"
   - label: "NeuralTrust"
     url: "https://neuraltrust.ai/"

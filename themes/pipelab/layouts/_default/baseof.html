@@ -448,7 +448,10 @@
       "priceCurrency": "USD"
     },
     "publisher": {
-      "@id": {{ (printf "%s#organization" .Site.BaseURL) | jsonify | safeJS }}
+      "@type": "Organization",
+      "@id": {{ (printf "%s#organization" .Site.BaseURL) | jsonify | safeJS }},
+      "name": {{ .Site.Title | jsonify | safeJS }},
+      "url": {{ .Site.BaseURL | jsonify | safeJS }}
     }
   }
   </script>
