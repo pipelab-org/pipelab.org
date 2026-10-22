@@ -42,7 +42,7 @@ tags:
 ---
 [Pipelock](/pipelock/) Agent Egress Control is the missing CI primitive for AI agents. The action runs an agent script inside a Linux network namespace, routes mediated network traffic through Pipelock at the boundary, scans for credential exfiltration, prompt injection, SSRF, and policy violations, then writes a signed Audit Packet a third party can verify offline.
 
-This page is the operator-facing setup guide for v0.1.0. Full reference and design notes live in the [release notes](https://github.com/luckyPipewrench/pipelock-agent-egress-action/releases/tag/v0.1.0) and the [README](https://github.com/luckyPipewrench/pipelock-agent-egress-action#action-interface).
+This page is the operator-facing setup guide for v0.1.0. Full reference and design notes live in the [release notes](https://github.com/pipelab-org/pipelock-agent-egress-action/releases/tag/v0.1.0) and the [README](https://github.com/pipelab-org/pipelock-agent-egress-action#action-interface).
 
 ## Quick start
 
@@ -135,7 +135,7 @@ All four forms currently point to the same v0.1.0 commit. Full-length commit SHA
 
 Pin the Pipelock signer key from a known source (your Pipelock deployment or a published trust anchor) before treating the verifier output as evidence. The verifier can run without a pinned key and confirm a receipt is internally consistent, but that proves self-consistency, not provenance.
 
-The reference verifier is the [Pipelock Python verifier](https://github.com/luckyPipewrench/pipelock-verify-python). It accepts a receipt chain and a public key and returns a structured decision. Run it offline; no network access required.
+The reference verifier is the [Pipelock Python verifier](https://github.com/pipelab-org/pipelock-verify-python). It accepts a receipt chain and a public key and returns a structured decision. Run it offline; no network access required.
 
 ## See also
 
@@ -143,7 +143,7 @@ The reference verifier is the [Pipelock Python verifier](https://github.com/luck
 - [Agent Action Receipts](/learn/agent-action-receipts/) for the receipt primitive the Action bundles into Audit Packets.
 - [Audit Packet threat model](/learn/audit-packet-threat-model/) for the canonical statement of what a verified packet proves, what it does not prove, and the trust assumptions a relying party should pin.
 - [Pipelock Action Receipt Format](/learn/action-receipt-spec/) for the on-wire receipt structure.
-- [Agent Egress Bench](https://github.com/luckyPipewrench/agent-egress-bench) for the public adversarial corpus the scanner is tested against.
+- [Agent Egress Bench](https://github.com/pipelab-org/agent-egress-bench) for the public adversarial corpus the scanner is tested against.
 - [Pipelock posture verify](/learn/pipelock-posture-verify/) for the related signed-capsule and policy-gate flow used by other CI surfaces.
 - [Why Pipelock Is an Egress Agent Firewall](/learn/egress-vs-inbound-agent-firewall/) for why egress is the boundary that matters for agents, and why inbound filtering does not hold up.
 - [The Pipelock Operator Console](/learn/operator-console/) for the read-only console over the signed evidence, with a free single-session evidence view.

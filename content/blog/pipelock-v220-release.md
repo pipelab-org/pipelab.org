@@ -70,7 +70,7 @@ Before `v2.2.0`, a typo in a security-relevant config field could be silently ig
 
 In `v2.2.0`, bad fields fail loud with a clear error. That is the right failure mode.
 
-If you are upgrading from an older config, validate it before rollout with `pipelock check --config <path>` and expect to fix stale or misspelled fields. The full product page at [pipelab.org/pipelock](/pipelock/) reflects the current deployment and operator surfaces, and the full project changelog stays in the [public repo](https://github.com/luckyPipewrench/pipelock/blob/main/CHANGELOG.md).
+If you are upgrading from an older config, validate it before rollout with `pipelock check --config <path>` and expect to fix stale or misspelled fields. The full product page at [pipelab.org/pipelock](/pipelock/) reflects the current deployment and operator surfaces, and the full project changelog stays in the [public repo](https://github.com/pipelab-org/pipelock/blob/main/CHANGELOG.md).
 
 ## More than one headline feature shipped
 

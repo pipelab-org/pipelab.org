@@ -20,7 +20,7 @@ releases: 51
 # bench_verified_date fields below, measured with `make stats` in the bench
 # repository. Do not restate the commit or date in this comment: the previous
 # wording named an older snapshot than the fields did and contradicted them.
-bench_source_repository: "https://github.com/luckyPipewrench/agent-egress-bench"
+bench_source_repository: "https://github.com/pipelab-org/agent-egress-bench"
 bench_source_commit: "79a51f084fc4f4cd5254e4ec15a273c556c280d5"
 bench_verified_date: "2026-10-02"
 bench_cases: 268

@@ -159,7 +159,7 @@ The term gets used loosely. A few adjacent categories often get mixed into runti
 
 **MLSecOps pipeline controls.** Dataset governance, training pipeline integrity, experiment tracking, and model versioning live in the MLOps lifecycle. They address "how did this model come to exist" rather than "what is the model doing right now." MLSecOps is the necessary companion to runtime security, not a substitute.
 
-**Red teaming.** Offline adversarial testing of a model or agent generates findings that inform defenses. Red team outputs feed into pattern libraries, classifier training data, and policy rules. The testing itself is pre-deployment; the defenses it motivates are runtime. Tools like [Decepticon](https://github.com/PurpleAILAB/Decepticon) and adversarial AI frameworks generate the inputs runtime defenses then have to handle.
+**Red teaming.** Offline adversarial testing of a model or agent generates findings that inform defenses. Red team outputs feed into pattern libraries, classifier training data, and policy rules. The testing itself is pre-deployment; the defenses it motivates are runtime. Tools like [Decepticon](https://github.com/BitterSecurity/Decepticon) and adversarial AI frameworks generate the inputs runtime defenses then have to handle.
 
 **Data governance and DSPM.** Data security posture management for training data and RAG corpora addresses where data sits and who can access it. Runtime security addresses what leaves the system while it runs. Both are needed; they are different categories.
 

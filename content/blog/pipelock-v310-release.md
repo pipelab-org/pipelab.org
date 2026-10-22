@@ -59,7 +59,7 @@ The one warn-class case stays visible. That is the point of a public benchmark: 
 
 ## Built for scrutiny
 
-v3.1 also includes SIEM and fleet-readiness work, stronger exemption lifecycle behavior, Conductor drift and replay improvements, dashboard auth/RBAC improvements, and broader evidence surfaces across the operator path. The full implementation detail is in the [CHANGELOG](https://github.com/luckyPipewrench/pipelock/blob/main/CHANGELOG.md).
+v3.1 also includes SIEM and fleet-readiness work, stronger exemption lifecycle behavior, Conductor drift and replay improvements, dashboard auth/RBAC improvements, and broader evidence surfaces across the operator path. The full implementation detail is in the [CHANGELOG](https://github.com/pipelab-org/pipelock/blob/main/CHANGELOG.md).
 
 ## Get it
 

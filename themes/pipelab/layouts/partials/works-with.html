@@ -83,7 +83,7 @@
          style="--x: {{ .x }}%; --y: {{ .ypct }}%; --brand: {{ .color }}; --delay: {{ .delay }}s;"
          data-event="works_with_click" data-event-value="{{ .name | urlize }}" data-event-placement="works-with-orbit">
         <span class="hp-orbit-mark" aria-hidden="true">
-          {{- if .brand }}{{ partial (printf "brands/%s.svg" .brand) . }}{{ else if $hasImg }}<img src="{{ strings.TrimPrefix "/" .img | relURL }}" alt="{{ .name }} logo" width="28" height="28" loading="lazy" decoding="async">{{ else }}{{ substr .name 0 2 | upper }}{{ end -}}
+          {{- if .brand }}{{ partial (printf "brands/%s.svg" .brand) . }}{{ else if $hasImg }}<img src="{{ strings.TrimPrefix "/" (.img_small | default .img) | relURL }}" alt="{{ .name }} logo" width="28" height="28" loading="lazy" decoding="async">{{ else }}{{ substr .name 0 2 | upper }}{{ end -}}
         </span>
         <span class="hp-orbit-name">{{ .name }}</span>
       </a>
@@ -99,7 +99,7 @@
         <li>
           <a class="hp-works-tile{{ if not (or .brand $hasImg) }} hp-works-tile-mono{{ end }}" href="{{ strings.TrimPrefix "/" .href | relURL }}" style="--brand: {{ .color }};"
              {{- if hasPrefix .href "http" }} target="_blank" rel="noopener noreferrer"{{ end }}{{ with .brand }} data-brand="{{ . }}"{{ end }}>
-            <span class="hp-works-mark" aria-hidden="true">{{- if .brand }}{{ partial (printf "brands/%s.svg" .brand) . }}{{ else if $hasImg }}<img src="{{ strings.TrimPrefix "/" .img | relURL }}" alt="{{ .name }} logo" width="28" height="28" loading="lazy" decoding="async">{{ else }}{{ substr .name 0 2 | upper }}{{ end -}}</span>
+            <span class="hp-works-mark" aria-hidden="true">{{- if .brand }}{{ partial (printf "brands/%s.svg" .brand) . }}{{ else if $hasImg }}<img src="{{ strings.TrimPrefix "/" (.img_small | default .img) | relURL }}" alt="{{ .name }} logo" width="28" height="28" loading="lazy" decoding="async">{{ else }}{{ substr .name 0 2 | upper }}{{ end -}}</span>
             <span class="hp-works-name">{{ .name }}</span>
           </a>
         </li>
@@ -117,7 +117,7 @@
           <a class="hp-works-tile{{ if not (or .brand $hasImg) }} hp-works-tile-mono{{ end }}" href="{{ strings.TrimPrefix "/" .href | relURL }}" style="--brand: {{ .color }};"
              {{- if hasPrefix .href "http" }} target="_blank" rel="noopener noreferrer"{{ end }}
              data-event="works_with_click" data-event-value="{{ .name | urlize }}" data-event-placement="works-with">
-            <span class="hp-works-mark" aria-hidden="true">{{- if .brand }}{{ partial (printf "brands/%s.svg" .brand) . }}{{ else if $hasImg }}<img src="{{ strings.TrimPrefix "/" .img | relURL }}" alt="{{ .name }} logo" width="28" height="28" loading="lazy" decoding="async">{{ else }}{{ substr .name 0 2 | upper }}{{ end -}}</span>
+            <span class="hp-works-mark" aria-hidden="true">{{- if .brand }}{{ partial (printf "brands/%s.svg" .brand) . }}{{ else if $hasImg }}<img src="{{ strings.TrimPrefix "/" (.img_small | default .img) | relURL }}" alt="{{ .name }} logo" width="28" height="28" loading="lazy" decoding="async">{{ else }}{{ substr .name 0 2 | upper }}{{ end -}}</span>
             <span class="hp-works-name">{{ .name }}</span>
           </a>
         </li>

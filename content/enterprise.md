@@ -30,4 +30,4 @@ lastmod: 2026-08-08
 - [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)
 - [Scan API docs](https://github.com/pipelab-org/pipelock/blob/main/docs/scan-api.md)
 - [OWASP mapping](https://github.com/pipelab-org/pipelock/blob/main/docs/owasp-mapping.md)
-- [Pipelock action receipt verifier (Python)](https://github.com/luckyPipewrench/pipelock-verify-python)
+- [Pipelock action receipt verifier (Python)](https://github.com/pipelab-org/pipelock-verify-python)

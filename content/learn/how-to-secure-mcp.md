@@ -302,4 +302,4 @@ Safe automation in hostile environments means having controls at every action bo
 - [283 ClawHub skills are leaking your secrets](/blog/leaky-clawhub-skills/) for real-world tool poisoning findings
 - [What is an agent firewall?](/agent-firewall/) for the full architecture
 - [MCP Specification security practices](https://modelcontextprotocol.io/specification/2025-11-25) from the spec itself
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock) for the config reference and preset YAMLs
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock) for the config reference and preset YAMLs

@@ -44,7 +44,7 @@ DLP now covers distinctively prefixed LLM and provider API-key shapes, with defa
 
 ## Upgrade notes
 
-Every item in the breaking-changes set fails closed, so the upgrade risk is over-blocking, not a silent leak. Read the [CHANGELOG](https://github.com/luckyPipewrench/pipelock/blob/main/CHANGELOG.md) before rolling v3.0 to a fleet, upgrade followers ahead of the new cross-stream retarget path, and re-check any strict-mode `api_allowlist` that depended on the old messaging defaults.
+Every item in the breaking-changes set fails closed, so the upgrade risk is over-blocking, not a silent leak. Read the [CHANGELOG](https://github.com/pipelab-org/pipelock/blob/main/CHANGELOG.md) before rolling v3.0 to a fleet, upgrade followers ahead of the new cross-stream retarget path, and re-check any strict-mode `api_allowlist` that depended on the old messaging defaults.
 
 ## Get it
 
@@ -58,4 +58,4 @@ go install github.com/luckyPipewrench/pipelock/cmd/pipelock@latest
 docker pull ghcr.io/luckypipewrench/pipelock:3.0.0
 ```
 
-The full list of changes is in the [CHANGELOG](https://github.com/luckyPipewrench/pipelock/blob/main/CHANGELOG.md). If you want to see what it blocks before you trust it, [run the assessment](/assess/) and read the signed report yourself.
+The full list of changes is in the [CHANGELOG](https://github.com/pipelab-org/pipelock/blob/main/CHANGELOG.md). If you want to see what it blocks before you trust it, [run the assessment](/assess/) and read the signed report yourself.

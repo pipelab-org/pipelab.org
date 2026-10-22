@@ -81,4 +81,4 @@ Backslash acts at the endpoint: rate it, allow it, block it, send it for approva
 - [Agent firewall vs guardrails](/compare/agent-firewall-vs-guardrails/): where enforcement happens
 - [Pipelock vs Runlayer](/compare/pipelock-vs-runlayer/): another governance-platform comparison
 - [MCP security](/learn/mcp-security/): the full scope of MCP threats
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

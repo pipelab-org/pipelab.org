@@ -77,4 +77,4 @@ pipelock run             # or proxy any agent's HTTP traffic
 - [What is an Agent Firewall?](/agent-firewall/) : the architecture and evaluation checklist
 - [MCP Vulnerabilities](/learn/mcp-vulnerabilities/) : every MCP attack vector mapped
 - [Mythos-Ready Playbook](/learn/mythos-ready-playbook/) : the CSA/SANS/OWASP priority actions mapped to runtime controls
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

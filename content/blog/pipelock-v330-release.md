@@ -48,7 +48,7 @@ The Enterprise Conductor keeps a durable audit queue on each follower so evidenc
 
 v3.3 keeps tightening the line between what evidence claims and what a verifier can prove. A rule bundle that cannot establish its own compatibility no longer loads on faith: a build that cannot resolve its version will not auto-satisfy a bundle's `min_pipelock`, and the runtime reports the shortfall through an audit event, `/stats`, and a Prometheus gauge instead of quietly running rules it could not vouch for. Trusted audit-packet verification now requires an external anchor, so `pipelock audit-packet` fails closed without a `--key` or an independently obtained `--expect-sha256` rather than blessing a packet on its own say-so.
 
-Source builds also report a truthful version derived from version control now, instead of a placeholder. The full implementation detail is in the [CHANGELOG](https://github.com/luckyPipewrench/pipelock/blob/main/CHANGELOG.md), including the upgrade notes for every breaking change above.
+Source builds also report a truthful version derived from version control now, instead of a placeholder. The full implementation detail is in the [CHANGELOG](https://github.com/pipelab-org/pipelock/blob/main/CHANGELOG.md), including the upgrade notes for every breaking change above.
 
 ## Get it
 

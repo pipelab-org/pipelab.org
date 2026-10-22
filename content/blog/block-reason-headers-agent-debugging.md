@@ -45,7 +45,7 @@ This is the operator-facing half of enforcement. [Politeness vs Enforcement](/bl
 
 ## The header schema
 
-The full schema lives at [docs/specs/block-reason-header.md](https://github.com/luckyPipewrench/pipelock/blob/main/docs/specs/block-reason-header.md) in the Pipelock repo. The shape, in one paragraph:
+The full schema lives at [docs/specs/block-reason-header.md](https://github.com/pipelab-org/pipelock/blob/main/docs/specs/block-reason-header.md) in the Pipelock repo. The shape, in one paragraph:
 
 `X-Pipelock-Block-Reason: <reason>` with companion headers for version, severity, retry, and the layer that fired:
 
@@ -68,7 +68,7 @@ The reason vocabulary is closed. Examples by category include:
 - **Contract.** `contract_default_deny`, `contract_enforce_default`, `contract_non_default_port`, `contract_invalid_path`, `contract_observed_only`.
 - **Generic.** `parse_error`, `timeout`, `bad_request`, `pattern_unavailable`, `not_enabled`, `block_reason_overflow`.
 
-The full canonical list lives at [docs/specs/block-reason-header.md](https://github.com/luckyPipewrench/pipelock/blob/main/docs/specs/block-reason-header.md) in the Pipelock repo and in `internal/blockreason/blockreason.go`.
+The full canonical list lives at [docs/specs/block-reason-header.md](https://github.com/pipelab-org/pipelock/blob/main/docs/specs/block-reason-header.md) in the Pipelock repo and in `internal/blockreason/blockreason.go`.
 
 A block can have at most one reason code. The code is the primary signal. Severity and retry are advisory: severity tells the agent how loud to be when logging the block, retry tells the agent whether retrying with the same payload could ever succeed.
 
@@ -130,7 +130,7 @@ For a coding agent with a budget of three retries, this means an agent that runs
 
 The vocabulary, header format, severity values, retry semantics, and the WebSocket and MCP variants are all documented in the open-source Pipelock repo. Anyone who wants to implement this header in their own proxy can do so without a Pipelock dependency. Any HTTP client that wants to parse the header can do so without a Pipelock-specific library. The header values are short identifiers and fixed allowlist values.
 
-If a competing agent firewall wants to adopt the same vocabulary, that is a feature, not a leak. A common reason vocabulary across vendors means agents can react sensibly regardless of which proxy is in front of them. The schema lives at [docs/specs/block-reason-header.md](https://github.com/luckyPipewrench/pipelock/blob/main/docs/specs/block-reason-header.md). Take it, use it, propose changes via issue or PR.
+If a competing agent firewall wants to adopt the same vocabulary, that is a feature, not a leak. A common reason vocabulary across vendors means agents can react sensibly regardless of which proxy is in front of them. The schema lives at [docs/specs/block-reason-header.md](https://github.com/pipelab-org/pipelock/blob/main/docs/specs/block-reason-header.md). Take it, use it, propose changes via issue or PR.
 
 ## Where this fits in the agent firewall stack
 

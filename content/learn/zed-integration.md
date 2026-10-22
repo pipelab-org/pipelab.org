@@ -38,7 +38,7 @@ Zed MCP security starts with inspecting what flows between Zed and every context
 Zed integration is pure MCP proxy wrapping. That brings the current signed-evidence and class-preserving redaction surface into the Zed MCP path as soon as the wrap is in place:
 
 - **Mediator-signed action receipts for MCP decisions (v2.2.0).** With flight_recorder.signing_key_path set in the pipelock config, each proxied Zed MCP decision emits a chained Ed25519 receipt on the mcp_stdio transport.
-- **Cross-implementation verifier (v2.2.0).** Receipts verify byte-for-byte against the published [Python verifier](https://github.com/luckyPipewrench/pipelock-verify-python) using a conformance suite. The receipt format is open, not a vendor artifact.
+- **Cross-implementation verifier (v2.2.0).** Receipts verify byte-for-byte against the published [Python verifier](https://github.com/pipelab-org/pipelock-verify-python) using a conformance suite. The receipt format is open, not a vendor artifact.
 - **Class-preserving redaction on tools/call arguments (v2.3.0).** Matched secrets in params.arguments are rewritten in place with typed placeholders like <pl:aws-access-key:1> before forwarding to the MCP server.
 - **Header sidecar carrier for credential-bearing remote servers (v2.4.0).** Remote context_servers with Authorization or X-API-Key headers get their values stashed in a 0o600 sidecar file referenced via --header-file. Header values never appear in /proc/<pid>/cmdline.
 

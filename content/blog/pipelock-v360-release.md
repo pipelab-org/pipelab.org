@@ -61,10 +61,10 @@ Pro has a 30-day trial with no card and no automatic conversion. [Pricing](/pric
 
 ## Security fixes
 
-This release fixes the issues described in [CVE-2026-91179](https://github.com/luckyPipewrench/pipelock/security/advisories/GHSA-78fw-wq47-jvch) and [GHSA-7rx9-4cr3-323c](https://github.com/luckyPipewrench/pipelock/security/advisories/GHSA-7rx9-4cr3-323c). The second advisory doesn't have a CVE assigned yet. Thanks to paulchum for reporting both. Upgrade to 3.6.0 for the fixes.
+This release fixes the issues described in [CVE-2026-91179](https://github.com/pipelab-org/pipelock/security/advisories/GHSA-78fw-wq47-jvch) and [GHSA-7rx9-4cr3-323c](https://github.com/pipelab-org/pipelock/security/advisories/GHSA-7rx9-4cr3-323c). The second advisory doesn't have a CVE assigned yet. Thanks to paulchum for reporting both. Upgrade to 3.6.0 for the fixes.
 
 ## Upgrade
 
 This one has real upgrade notes. Some config that used to load is now refused, with a message naming the field: a host pattern that isn't a hostname, a wildcard passthrough over a public suffix, a temporary exception whose expiry is past that field's new maximum, and the removed `session_profiling.volume_spike_ratio`. Building from source needs Go 1.26. Contained hosts need `sudo pipelock contain install` with the new binary to move into the namespace.
 
-Read the [v3.6 upgrade guide](/learn/pipelock-v360-upgrade/) before you upgrade. The full list is on the [GitHub release](https://github.com/luckyPipewrench/pipelock/releases/tag/v3.6.0).
+Read the [v3.6 upgrade guide](/learn/pipelock-v360-upgrade/) before you upgrade. The full list is on the [GitHub release](https://github.com/pipelab-org/pipelock/releases/tag/v3.6.0).

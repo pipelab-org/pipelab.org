@@ -41,7 +41,7 @@ Hooks are the agent-side layer. For the full runtime picture, including egress i
 Recent releases extend the Claude Code integration with verifiable runtime evidence:
 
 - **Mediator-signed action receipts on the MCP path (v2.2.0).** When you wrap Claude Code's MCP servers through `pipelock mcp proxy` and configure `flight_recorder.signing_key_path`, every proxied MCP decision emits a chained Ed25519 receipt. Same evidence on stdio and HTTP/SSE transports.
-- **Cross-implementation verifier (v2.2.0).** Receipts verify byte-for-byte against a published [Python verifier](https://github.com/luckyPipewrench/pipelock-verify-python) using a conformance suite. The receipt format is open.
+- **Cross-implementation verifier (v2.2.0).** Receipts verify byte-for-byte against a published [Python verifier](https://github.com/pipelab-org/pipelock-verify-python) using a conformance suite. The receipt format is open.
 - **Posture verify CI gate (v2.2.0).** `pipelock posture verify` reads a signed posture capsule and exits `0` pass, `1` could not complete, `2` verified but failed. Gate Claude Code rollouts on that exit code in CI.
 - **RFC 9421 mediation envelope signing (v2.2.0).** Every proxied request carries an Ed25519 `Pipelock-Mediation` signature with a canonical policy hash, coexisting with upstream Web Bot Auth signatures on the same request.
 - **Class-preserving redaction on `tools/call` arguments (v2.3.0).** With the `redaction` section enabled in the pipelock config, matched secrets in `params.arguments` get rewritten in place with typed placeholders like `<pl:aws-access-key:1>` before forwarding. Applies to every wrapped MCP transport on the Claude Code MCP path. Irreversible. Fail-closed on parse errors. Tool responses are not redacted in v1.
@@ -146,7 +146,7 @@ pipelock generate config --preset claude-code > ~/.config/pipelock/claude-code.y
 pipelock claude setup
 ```
 
-The hook automatically uses the [claude-code preset](https://github.com/luckyPipewrench/pipelock/blob/main/configs/claude-code.yaml) defaults. See the [configuration reference](https://github.com/luckyPipewrench/pipelock/blob/main/docs/configuration.md) for all options.
+The hook automatically uses the [claude-code preset](https://github.com/pipelab-org/pipelock/blob/main/configs/claude-code.yaml) defaults. See the [configuration reference](https://github.com/pipelab-org/pipelock/blob/main/docs/configuration.md) for all options.
 
 ## Project-level hooks
 
@@ -204,7 +204,7 @@ Hooks scan tool calls before execution. For deeper protection, you can also wrap
 }
 ```
 
-See the [full MCP proxy guide](https://github.com/luckyPipewrench/pipelock/blob/main/docs/guides/claude-code.md) for multi-server setups, remote servers, and TLS interception.
+See the [full MCP proxy guide](https://github.com/pipelab-org/pipelock/blob/main/docs/guides/claude-code.md) for multi-server setups, remote servers, and TLS interception.
 
 When `redaction` is enabled in the pipelock config, the wrap also rewrites matched secrets in `tools/call` `params.arguments` before forwarding (Pipelock v2.3.0 and later, request-side only). The [AI agent data redaction guide](/learn/ai-agent-data-redaction/) covers profile design and rollout.
 
@@ -219,7 +219,7 @@ pipelock preflight .
 This detects poisoned `.claude/settings.json`, `.cursor/hooks.json`, `.mcp.json`, and other config files that could override your security settings or register malicious MCP servers.
 
 <div class="hero-buttons" style="margin-top: 2rem;">
-  <a href="https://github.com/luckyPipewrench/pipelock" class="btn btn-primary" data-event="github_click" data-event-placement="guide-body" target="_blank" rel="noopener noreferrer">GitHub</a>
+  <a href="https://github.com/pipelab-org/pipelock" class="btn btn-primary" data-event="github_click" data-event-placement="guide-body" target="_blank" rel="noopener noreferrer">GitHub</a>
   <a href="/install/" class="btn btn-ghost" data-event="install_click" data-event-placement="guide-body">Install Pipelock</a>
   <a href="/proof/" class="btn btn-ghost" data-event="proof_click" data-event-placement="guide-body">Inspect the proof</a>
 </div>

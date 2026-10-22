@@ -89,4 +89,4 @@ Neither shape is universally better. The honest question is which shape fits you
 - [Agent firewall vs WAF](/compare/agent-firewall-vs-waf/): why web firewalls don't cover agent traffic
 - [Pipelock vs Runlayer](/compare/pipelock-vs-runlayer/): another control-plane comparison
 - [MCP security](/learn/mcp-security/): the full scope of MCP threats
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

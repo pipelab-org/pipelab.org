@@ -58,4 +58,4 @@ brew install luckyPipewrench/tap/pipelock
 go install github.com/luckyPipewrench/pipelock/cmd/pipelock@latest
 ```
 
-The full list of changes is in the [CHANGELOG](https://github.com/luckyPipewrench/pipelock/blob/main/CHANGELOG.md). If you want to see what it blocks before you trust it, [run the assessment](/assess/) and read the signed report yourself.
+The full list of changes is in the [CHANGELOG](https://github.com/pipelab-org/pipelock/blob/main/CHANGELOG.md). If you want to see what it blocks before you trust it, [run the assessment](/assess/) and read the signed report yourself.

@@ -126,7 +126,7 @@ In late 2025, Anthropic disclosed [GTG-1002](https://www.anthropic.com/news/disr
 
 Separately, MCP adoption took off. Thousands of servers, developers connecting agents to five or ten at a time. Each server's responses flow straight into the agent's context, and most teams aren't checking what those servers actually return.
 
-I built [Pipelock](https://github.com/luckyPipewrench/pipelock) because I needed this for my own agents and nothing covered both the HTTP egress side and MCP scanning in one tool (Apache-2.0 core; Enterprise features under ELv2). It is a single Go binary and runs the architecture described in this post. Ships with seven preset configs (from audit to hostile-model) so you can start by logging detections without blocking, see what your traffic actually looks like, and tighten up from there. If the injection scanner flags a legitimate API response, you add an exception. Better to tune a few false positives than to find out your keys leaked.
+I built [Pipelock](https://github.com/pipelab-org/pipelock) because I needed this for my own agents and nothing covered both the HTTP egress side and MCP scanning in one tool (Apache-2.0 core; Enterprise features under ELv2). It is a single Go binary and runs the architecture described in this post. Ships with seven preset configs (from audit to hostile-model) so you can start by logging detections without blocking, see what your traffic actually looks like, and tighten up from there. If the injection scanner flags a legitimate API response, you add an exception. Better to tune a few false positives than to find out your keys leaked.
 
 If your agents touch credentials, put a firewall in front of them.
 
@@ -141,4 +141,4 @@ export HTTPS_PROXY=http://127.0.0.1:8888     # point your agent at it
 
 ---
 
-*[GitHub](https://github.com/luckyPipewrench/pipelock) // [Docs](https://github.com/luckyPipewrench/pipelock/tree/main/docs) // [OWASP Agentic Top 10 mapping](https://github.com/luckyPipewrench/pipelock/blob/main/docs/owasp-mapping.md)*
+*[GitHub](https://github.com/pipelab-org/pipelock) // [Docs](https://github.com/pipelab-org/pipelock/tree/main/docs) // [OWASP Agentic Top 10 mapping](https://github.com/pipelab-org/pipelock/blob/main/docs/owasp-mapping.md)*

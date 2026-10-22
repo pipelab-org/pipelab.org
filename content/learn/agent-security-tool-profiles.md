@@ -20,7 +20,7 @@ A procurement reviewer asks one question of an agent security tool:
 > Can you prove what your tool did, with evidence I can verify offline?
 
 A receipt-scoring profile is the structured answer. The rubric lives in the
-public [`agent-egress-bench`](https://github.com/luckyPipewrench/agent-egress-bench)
+public [`agent-egress-bench`](https://github.com/pipelab-org/agent-egress-bench)
 corpus. Tool maintainers publish their own profile against a fixed public
 case set. A relying party reproduces it before trusting it.
 
@@ -46,16 +46,16 @@ without a signed record). A tool can score `receipt_produced=yes` with
 `receipt_independently_verifiable=no` (the receipt validates inside the
 vendor's own stack). The buyer weights the dimensions; the rubric does not.
 There is no aggregate score, no letter grade, and no cross-tool leaderboard.
-The [rubric document](https://github.com/luckyPipewrench/agent-egress-bench/blob/main/docs/RECEIPT-SCORING.md)
+The [rubric document](https://github.com/pipelab-org/agent-egress-bench/blob/main/docs/RECEIPT-SCORING.md)
 spells out how each value is earned and which checks a verifier has to pass.
 
 The profile shape is pinned by
-[`receipt-scoring-profile-v4.schema.json`](https://github.com/luckyPipewrench/agent-egress-bench/blob/main/schemas/receipt-scoring-profile-v4.schema.json).
+[`receipt-scoring-profile-v4.schema.json`](https://github.com/pipelab-org/agent-egress-bench/blob/main/schemas/receipt-scoring-profile-v4.schema.json).
 A submission that does not validate is rejected.
 
 ## Pipelock's published profile
 
-[`profiles/pipelock.json`](https://github.com/luckyPipewrench/agent-egress-bench/blob/main/profiles/pipelock.json)
+[`profiles/pipelock.json`](https://github.com/pipelab-org/agent-egress-bench/blob/main/profiles/pipelock.json)
 historically reported at corpus v2.0.0: **113 of 113 malicious cases blocked,
 0 false positives on 38 benign baselines, 0 receipts produced or independently
 verifiable**. For current case counts and release-run scores, see the live
@@ -90,5 +90,5 @@ The review is for shape and accuracy. There is nothing to pass. The profile
 is the published evidence; the buyer reproduces it before treating it as
 trustworthy.
 
-See the [`profiles/` README](https://github.com/luckyPipewrench/agent-egress-bench/blob/main/profiles/README.md)
+See the [`profiles/` README](https://github.com/pipelab-org/agent-egress-bench/blob/main/profiles/README.md)
 for the submission steps and the reproduction command.

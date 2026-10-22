@@ -37,4 +37,4 @@ A redirect now goes through the same session policy and Git push allowlist as th
 
 ## Upgrade
 
-Contained Linux hosts use `pipelock contain upgrade`, which checks the new binary and managed configuration before it stops the old service. The full change list and the breaking-changes section are on the [GitHub release](https://github.com/luckyPipewrench/pipelock/releases/tag/v3.5.0). If you're on 3.4, read that section before you upgrade.
+Contained Linux hosts use `pipelock contain upgrade`, which checks the new binary and managed configuration before it stops the old service. The full change list and the breaking-changes section are on the [GitHub release](https://github.com/pipelab-org/pipelock/releases/tag/v3.5.0). If you're on 3.4, read that section before you upgrade.

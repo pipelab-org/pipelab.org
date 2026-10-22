@@ -123,4 +123,4 @@ When choosing an MCP security tool, check these capabilities:
 - [MCP gateway](/learn/mcp-gateway/): gateway vs proxy, market landscape
 - [MCP Tool Poisoning](/learn/mcp-tool-poisoning/): the attack that hides in tool descriptions
 - [Pipelock](/pipelock/): all features, one page
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

@@ -122,4 +122,4 @@ Neither note is a defect. They're design choices, and a default can change in on
 - [Agent egress security](/learn/agent-egress-security/): why egress is the control point for agents
 - [AI egress proxy](/learn/ai-egress-proxy/): how egress proxies fit into agent security
 - [Pipelock vs open source MCP gateways](/compare/pipelock-vs-open-source-mcp-gateways/): the routing-gateway side of the same question
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

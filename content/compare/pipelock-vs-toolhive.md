@@ -96,4 +96,4 @@ Isolation answers whether a server can escape or reach something it shouldn't. I
 - [Pipelock vs Docker MCP Gateway](/compare/pipelock-vs-docker-mcp-gateway/): Docker's container gateway for MCP servers
 - [Pipelock vs Snyk Agent Scan](/compare/pipelock-vs-snyk-agent-scan/): scanning the servers before you run them
 - [MCP security](/learn/mcp-security/): MCP-specific threats
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

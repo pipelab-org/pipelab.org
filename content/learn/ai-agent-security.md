@@ -101,7 +101,7 @@ pipelock run
 Then add hooks and guardrails as your threat model demands. The three layers are complementary, not competing.
 
 <div class="hero-buttons" style="margin-top: 2rem;">
-  <a href="https://github.com/luckyPipewrench/pipelock" class="btn btn-primary" data-event="github_click" data-event-placement="guide-body" target="_blank" rel="noopener noreferrer">GitHub</a>
+  <a href="https://github.com/pipelab-org/pipelock" class="btn btn-primary" data-event="github_click" data-event-placement="guide-body" target="_blank" rel="noopener noreferrer">GitHub</a>
   <a href="/install/" class="btn btn-ghost" data-event="install_click" data-event-placement="guide-body">Install Pipelock</a>
   <a href="/proof/" class="btn btn-ghost" data-event="proof_click" data-event-placement="guide-body">Inspect the proof</a>
 </div>
@@ -115,4 +115,4 @@ Then add hooks and guardrails as your threat model demands. The three layers are
 - [MCP Vulnerabilities](/learn/mcp-vulnerabilities/): the full MCP attack surface
 - [Prompt Injection Defense](/learn/prompt-injection-network-defense/): catching injection at the proxy layer
 - [Agent Firewall vs Guardrails](/compare/agent-firewall-vs-guardrails/): detailed comparison
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

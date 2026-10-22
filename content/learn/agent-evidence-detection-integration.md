@@ -132,7 +132,7 @@ agent.threat.detection.ruleset=...     bundle_version=...    (matching bundle)
 agent.threat.detection.correlation_id  --- request_id -------- matches
 ```
 
-A worked example (one OTLP log record + one signed receipt joined by `correlation_id`, plus a README walkthrough) lives in the Pipelock repo at [`examples/agent-threat-detection/`](https://github.com/luckyPipewrench/pipelock/tree/main/examples/agent-threat-detection).
+A worked example (one OTLP log record + one signed receipt joined by `correlation_id`, plus a README walkthrough) lives in the Pipelock repo at [`examples/agent-threat-detection/`](https://github.com/pipelab-org/pipelock/tree/main/examples/agent-threat-detection).
 
 ### Why this is off by default
 

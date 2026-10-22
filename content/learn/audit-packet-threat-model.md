@@ -19,7 +19,7 @@ tags:
 
 This page is the threat model for the packet. It describes what a verified packet does and does not prove about the run, and the trust assumptions a relying party (CISO, auditor, downstream platform, procurement reviewer) should pin before treating a `valid` verdict as provenance.
 
-The canonical text lives in the Pipelock repository at [`docs/security/audit-packet-threat-model.md`](https://github.com/luckyPipewrench/pipelock/blob/main/docs/security/audit-packet-threat-model.md). This page is the public-web restatement. When the two drift, the in-repo file wins.
+The canonical text lives in the Pipelock repository at [`docs/security/audit-packet-threat-model.md`](https://github.com/pipelab-org/pipelock/blob/main/docs/security/audit-packet-threat-model.md). This page is the public-web restatement. When the two drift, the in-repo file wins.
 
 ## What a verified packet proves
 
@@ -42,7 +42,7 @@ The chain records what Pipelock observed. It is silent about traffic that bypass
 
 A missing receipt is not a proof of absence. The packet does not enumerate traffic Pipelock should have seen but did not. Complement with runner-level network telemetry if the threat model needs negative-space evidence.
 
-The current set of paths the Pipelock binary itself does not intercept is documented at [`docs/security/current-unsupported-paths.md`](https://github.com/luckyPipewrench/pipelock/blob/main/docs/security/current-unsupported-paths.md). The egress-action's v0 boundary is documented at [Agent Egress Control](/learn/agent-egress-control/).
+The current set of paths the Pipelock binary itself does not intercept is documented at [`docs/security/current-unsupported-paths.md`](https://github.com/pipelab-org/pipelock/blob/main/docs/security/current-unsupported-paths.md). The egress-action's v0 boundary is documented at [Agent Egress Control](/learn/agent-egress-control/).
 
 ### 2. Compromised runner environment
 
@@ -100,5 +100,5 @@ Producers that meet all seven make a `valid` verdict useful as provenance: Pipel
 - [Agent Egress Control](/learn/agent-egress-control/) for the action setup guide and the v0 enforcement boundary.
 - [Pipelock Action Receipt Format](/learn/action-receipt-spec/) for the on-wire receipt structure and verifier implementations.
 - [AARP: Proves / Does Not](/learn/aarp-what-it-proves/) for the assurance profile's narrower receipt-level trust boundary.
-- [`docs/security/audit-packet-threat-model.md`](https://github.com/luckyPipewrench/pipelock/blob/main/docs/security/audit-packet-threat-model.md) for the canonical in-repo text.
-- [`docs/security/current-unsupported-paths.md`](https://github.com/luckyPipewrench/pipelock/blob/main/docs/security/current-unsupported-paths.md) for the binary-level egress paths Pipelock does not currently intercept.
+- [`docs/security/audit-packet-threat-model.md`](https://github.com/pipelab-org/pipelock/blob/main/docs/security/audit-packet-threat-model.md) for the canonical in-repo text.
+- [`docs/security/current-unsupported-paths.md`](https://github.com/pipelab-org/pipelock/blob/main/docs/security/current-unsupported-paths.md) for the binary-level egress paths Pipelock does not currently intercept.

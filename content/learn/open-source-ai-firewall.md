@@ -55,7 +55,7 @@ Open-source AI firewall searches mix several boundaries. Read GitHub projects by
 
 | Project | License | Boundary | Best fit | Does not replace |
 |---|---|---|---|---|
-| [Pipelock](https://github.com/luckyPipewrench/pipelock) | Apache-2.0 core; Enterprise features under ELv2 | Agent egress firewall | Network-enforced HTTP, MCP, and WebSocket inspection with DLP, injection scanning, SSRF defense, signed evidence, and runtime audit. | MCP identity gateways, model-layer moderation, package-manager risk scoring. |
+| [Pipelock](https://github.com/pipelab-org/pipelock) | Apache-2.0 core; Enterprise features under ELv2 | Agent egress firewall | Network-enforced HTTP, MCP, and WebSocket inspection with DLP, injection scanning, SSRF defense, signed evidence, and runtime audit. | MCP identity gateways, model-layer moderation, package-manager risk scoring. |
 | [LlamaFirewall](https://github.com/meta-llama/PurpleLlama/tree/main/LlamaFirewall) | See repo | Model and prompt layer | PromptGuard, AlignmentCheck, and CodeShield-style filtering around prompts, completions, and generated code. | Agent network enforcement or MCP traffic inspection. |
 | [NeMo Guardrails](https://github.com/NVIDIA-NeMo/Guardrails) | See repo | Dialog guardrails | Colang policies for conversational behavior, topical rails, and application-level flow control. | Outbound traffic inspection or runtime MCP proxying. |
 | [agentgateway](https://github.com/agentgateway/agentgateway) | Apache 2.0 | Gateway and routing | MCP, A2A, and LLM routing with a central gateway process. | Content-level DLP unless paired with an inspection layer. |
@@ -160,7 +160,7 @@ pipelock run
 Pipelock scans mediated traffic for 65 credential patterns, prompt injection (with 6-pass encoding normalization), SSRF, DNS rebinding, and MCP tool poisoning. Every decision lands in the [flight recorder](/learn/flight-recorder/) audit log, and enabling a signing key adds mediator-signed action receipts on top.
 
 <div class="hero-buttons" style="margin-top: 2rem;">
-  <a href="https://github.com/luckyPipewrench/pipelock" class="btn btn-primary" data-event="github_click" data-event-placement="guide-body" target="_blank" rel="noopener noreferrer">GitHub</a>
+  <a href="https://github.com/pipelab-org/pipelock" class="btn btn-primary" data-event="github_click" data-event-placement="guide-body" target="_blank" rel="noopener noreferrer">GitHub</a>
   <a href="/install/" class="btn btn-ghost" data-event="install_click" data-event-placement="guide-body">Install Pipelock</a>
   <a href="/proof/" class="btn btn-ghost" data-event="proof_click" data-event-placement="guide-body">Inspect the proof</a>
 </div>
@@ -180,4 +180,4 @@ Pipelock scans mediated traffic for 65 credential patterns, prompt injection (wi
 - [Pipelock vs DefenseClaw](/compare/pipelock-vs-defenseclaw/): network proxy vs framework-hook governance
 - [Pipelock vs Cloudflare AI Gateway](/compare/pipelock-vs-cloudflare-ai-gateway/): self-hosted egress inspection vs a hosted gateway in front of the model API
 - [Pipelock vs Prisma AIRS](/compare/pipelock-vs-prisma-airs/): a focused open-source proxy vs an enterprise AI security platform
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

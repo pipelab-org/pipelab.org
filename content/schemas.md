@@ -9,7 +9,7 @@ PipeLab mirrors exact schema bytes from pinned Agent Egress Bench and Pipelock R
 
 The upstream repositories define these schemas. The mirrors give machines a stable retrieval path for the pinned bytes.
 
-Schema validation checks an artifact's structure. It doesn't establish that signatures, scores or freshness claims are valid. The [Bench schema audit](https://github.com/luckyPipewrench/agent-egress-bench/blob/c31d44fec9f42e17874ecbaaa3cbf9dd928895a6/docs/SCHEMA-AUDIT.md) names each semantic verifier. The [Rules compatibility contract](https://github.com/luckyPipewrench/pipelock-rules/blob/aac8980c60add9f9f6b663a46d26b42da4b8c75a/compatibility/contract.yaml) records the supported reader and bundle limits.
+Schema validation checks an artifact's structure. It doesn't establish that signatures, scores or freshness claims are valid. The [Bench schema audit](https://github.com/pipelab-org/agent-egress-bench/blob/c31d44fec9f42e17874ecbaaa3cbf9dd928895a6/docs/SCHEMA-AUDIT.md) names each semantic verifier. The [Rules compatibility contract](https://github.com/pipelab-org/pipelock-rules/blob/aac8980c60add9f9f6b663a46d26b42da4b8c75a/compatibility/contract.yaml) records the supported reader and bundle limits.
 
 ## Catalog
 

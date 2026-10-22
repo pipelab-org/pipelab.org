@@ -280,4 +280,4 @@ The [MCP security](/learn/mcp-security/) guide walks through the full threat mod
 - [MCP Scanner Comparison 2026](/blog/mcp-scanner-comparison-2026/)
 - [Pipelock vs Docker MCP Gateway](/compare/pipelock-vs-docker-mcp-gateway/)
 - [Pipelock](/pipelock/) and the [Agent Firewall](/agent-firewall/) overview
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

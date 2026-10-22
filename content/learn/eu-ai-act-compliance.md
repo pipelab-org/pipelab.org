@@ -206,7 +206,7 @@ Pipelock's controls also map to the [NIST AI Risk Management Framework 1.0](http
 | MEASURE | Prometheus metrics, structured audit logs, alerting | Art. 12, 15 |
 | MANAGE | HITL override, kill switch, hot-reload, MCP scanning | Art. 14, 15 |
 
-The full mapping with subcategory-level detail is in the [EU AI Act Compliance Mapping](https://github.com/luckyPipewrench/pipelock/blob/main/docs/compliance/eu-ai-act-mapping.md) document.
+The full mapping with subcategory-level detail is in the [EU AI Act Compliance Mapping](https://github.com/pipelab-org/pipelock/blob/main/docs/compliance/eu-ai-act-mapping.md) document.
 
 ## Enforcement Timeline
 
@@ -240,7 +240,7 @@ pipelock run --config pipelock.yaml
 
 Set `HTTPS_PROXY=http://127.0.0.1:8888` on your agent. Every connection is now logged and filtered. Enable TLS interception for full HTTPS body scanning.
 
-For the full compliance mapping with NIST crosswalk, see the [source document on GitHub](https://github.com/luckyPipewrench/pipelock/blob/main/docs/compliance/eu-ai-act-mapping.md).
+For the full compliance mapping with NIST crosswalk, see the [source document on GitHub](https://github.com/pipelab-org/pipelock/blob/main/docs/compliance/eu-ai-act-mapping.md).
 
 Generate signed compliance evidence for your deployment with [`pipelock assess`](/assess/).
 

@@ -106,4 +106,4 @@ The difference is where the evidentiary anchor sits, not which product is better
 - [Agent egress security](/learn/agent-egress-security/): why egress is the control point for agents
 - [Open source AI firewall](/learn/open-source-ai-firewall/): the category Pipelock sits in
 - [Action receipt spec](/learn/action-receipt-spec/): the wire format for Pipelock's signed receipts
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

@@ -94,4 +94,4 @@ v3.6 adds installers for [Pi](/learn/pi/) and Continue.dev. Pi uses a named list
 
 Upgrade followers before you publish a bundle that uses a 3.6-only field. A follower older than 3.6 refuses a bundle with `arg_source: patch_targets` at load rather than running without the rule.
 
-The full change list is on the [GitHub release](https://github.com/luckyPipewrench/pipelock/releases/tag/v3.6.0). For what's new rather than what breaks, see the [v3.6 release post](/blog/pipelock-v360-release/).
+The full change list is on the [GitHub release](https://github.com/pipelab-org/pipelock/releases/tag/v3.6.0). For what's new rather than what breaks, see the [v3.6 release post](/blog/pipelock-v360-release/).

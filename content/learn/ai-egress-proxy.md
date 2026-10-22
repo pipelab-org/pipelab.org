@@ -171,4 +171,4 @@ Not every egress proxy does the same thing. [iron-proxy](/compare/pipelock-vs-ir
 - [MCP Security](/learn/mcp-security/): the MCP attack surface and how to scan it
 - [AI Agent Security](/learn/ai-agent-security/): hooks, guardrails, and egress inspection compared
 - [Agent Egress Security](/learn/agent-egress-security/): credential leak vectors and defenses
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

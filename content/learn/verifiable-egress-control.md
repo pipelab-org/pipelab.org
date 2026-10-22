@@ -113,7 +113,7 @@ Pipelock implements the property pair with:
   ([pipelab.org/schemas/audit-packet-v0.schema.json](/schemas/audit-packet-v0.schema.json))
   and a GitHub Action that emits complete bundles in CI.
 - **Public conformance corpus** at
-  [agent-egress-bench/receipts/v0/conformance/](https://github.com/luckyPipewrench/agent-egress-bench/tree/main/receipts/v0/conformance)
+  [agent-egress-bench/receipts/v0/conformance/](https://github.com/pipelab-org/agent-egress-bench/tree/main/receipts/v0/conformance)
   with golden, malicious, and edge cases.
 
 Current product framing:

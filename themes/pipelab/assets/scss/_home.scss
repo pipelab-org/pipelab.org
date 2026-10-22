@@ -201,7 +201,7 @@
   .hp-term-title {
     font-family: var(--font-mono), monospace;
     font-size: 0.78rem;
-    color: var(--text-dim);
+    color: var(--text-muted);
     letter-spacing: 0.04em;
     margin-left: 0.5rem;
   }
@@ -250,6 +250,8 @@
 
   .hp-term-body .comment { color: var(--text-muted); }
   .hp-term-body .out { color: var(--accent); }
+
+  button.hp-term-row { min-height: 24px; }
 
   .hp-term-row {
     white-space: pre;
@@ -318,12 +320,12 @@
     margin: 0.9rem 0 0;
     font-family: var(--font-mono), monospace;
     font-size: 0.8rem;
-    color: var(--text-dim);
+    color: var(--text-muted);
   }
   .hp-hero-foot .link { color: var(--accent); text-decoration: none; }
   .hp-hero-foot .link:hover { text-decoration: underline; }
 
-  .hp-term-row .comment { color: var(--text-dim); }
+  .hp-term-row .comment { color: var(--text-muted); }
 
   .hp-btn-meta {
     color: var(--text-dim);

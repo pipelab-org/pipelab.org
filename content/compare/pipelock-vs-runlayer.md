@@ -122,4 +122,4 @@ Agents don't only act through governed tool calls. They fetch URLs and call APIs
 - [Pipelock vs Backslash Security](/compare/pipelock-vs-backslash/): another governance-platform comparison
 - [Agent firewall vs AI security platform](/compare/agent-firewall-vs-ai-security-platform/): the shape question, across the platform vendors
 - [MCP security](/learn/mcp-security/): the full scope of MCP threats
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

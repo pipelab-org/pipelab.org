@@ -56,5 +56,5 @@ The category exists now. The guide gives buyers and builders a concrete checklis
 ## References
 
 - [NSA Cybersecurity Information Sheet: Model Context Protocol (MCP): Security Design Considerations for AI-Driven Automation](https://www.nsa.gov/Portals/75/documents/Cybersecurity/CSI_MCP_SECURITY.pdf) (PDF, May 2026, U/OO/6030316-26)
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
-- [Agent Egress Bench: receipt verifier conformance corpus](https://github.com/luckyPipewrench/agent-egress-bench)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)
+- [Agent Egress Bench: receipt verifier conformance corpus](https://github.com/pipelab-org/agent-egress-bench)

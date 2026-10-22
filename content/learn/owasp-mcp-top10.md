@@ -22,7 +22,7 @@ tags:
   - mcp
   - OWASP-MCP
 ---
-The [OWASP MCP Top 10](https://owasp.org/www-project-mcp-top-10/) is the first OWASP framework dedicated to Model Context Protocol security. It catalogs the ten risk categories most likely to compromise an MCP deployment, from token mismanagement to shadow servers. The project is in beta as of 2026 under the lead of Vandana Verma Sehgal, with categories published as MCP01:2025 through MCP10:2025.
+The [OWASP MCP Top 10](https://owasp.org/projects/mcp-top-10) is the first OWASP framework dedicated to Model Context Protocol security. It catalogs the ten risk categories most likely to compromise an MCP deployment, from token mismanagement to shadow servers. The project is in beta as of 2026 under the lead of Vandana Verma Sehgal, with categories published as MCP01:2025 through MCP10:2025.
 
 This page explains every category, then maps each one to the control type that actually mitigates it. The matrix is the core of the page. No single tool category covers all ten risks, and the honest answer about any vendor (including Pipelock) is that it covers some rows fully, some partially, and others not at all.
 
@@ -32,7 +32,7 @@ If you want background on the protocol itself, start with [MCP Security](/learn/
 
 OWASP runs several Top 10 projects. The web Top 10 has been around for two decades. The [Top 10 for LLM Applications](/learn/owasp-llm-top10/) launched in 2023. The [Top 10 for Agentic Applications](/learn/owasp-agentic-top10/) followed in 2025. The OWASP MCP Top 10 is the newest entry and the first to focus on a single protocol surface.
 
-The project page lives at [owasp.org/www-project-mcp-top-10](https://owasp.org/www-project-mcp-top-10/). At time of writing, the framework is in Phase 3, beta release and pilot testing, which means the categories are stable enough to cite but the rankings and descriptions may shift. Check the project page for the current license terms before commercial use.
+The project page lives at [owasp.org/www-project-mcp-top-10](https://owasp.org/projects/mcp-top-10). At time of writing, the framework is in Phase 3, beta release and pilot testing, which means the categories are stable enough to cite but the rankings and descriptions may shift. Check the project page for the current license terms before commercial use.
 
 The framework exists because MCP changed the risk model for AI agents. Before MCP, an agent had a small fixed set of tools coded into the application. With MCP, the agent discovers tools at runtime from any server it can reach, and every server is a trust boundary. The OWASP MCP Top 10 catalogs the ten ways that boundary fails most often.
 
@@ -40,7 +40,7 @@ The categories are based on real incidents. The Postmark MCP supply chain compro
 
 ## The ten risk categories
 
-The list below uses the live OWASP MCP Top 10 categories as published on the project page. Because the framework is in beta, descriptions and ordering may change. Check the [official OWASP page](https://owasp.org/www-project-mcp-top-10/) for the current version before you cite specific wording in audit material.
+The list below uses the live OWASP MCP Top 10 categories as published on the project page. Because the framework is in beta, descriptions and ordering may change. Check the [official OWASP page](https://owasp.org/projects/mcp-top-10) for the current version before you cite specific wording in audit material.
 
 | ID | Category | What it covers |
 |----|----------|----------------|
@@ -220,7 +220,7 @@ The first cuts are fast. Order matters because some controls reduce the cost of 
 
 ## Further reading
 
-- [OWASP MCP Top 10 project page](https://owasp.org/www-project-mcp-top-10/) (the official source)
+- [OWASP MCP Top 10 project page](https://owasp.org/projects/mcp-top-10) (the official source)
 - [The State of MCP Security 2026](/blog/state-of-mcp-security-2026/) (market overview and where the industry stands)
 - [MCP Tool Poisoning Defense](/learn/mcp-tool-poisoning/)
 - [MCP Runtime Security](/learn/mcp-runtime-security/) (live-traffic defenses, runtime mapping to MCP Top 10)
@@ -238,5 +238,5 @@ The first cuts are fast. Order matters because some controls reduce the cost of 
 - [OWASP Agentic Top 10 coverage](/learn/owasp-agentic-top10/)
 - [Pipelock](/pipelock/)
 - [What is an Agent Firewall?](/agent-firewall/)
-- [MCP specification](https://modelcontextprotocol.io/)
+- [MCP specification](https://modelcontextprotocol.io/docs/2026-07-28/getting-started/intro)
 - [Vulnerable MCP Project](https://vulnerablemcp.info/)

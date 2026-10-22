@@ -53,7 +53,7 @@ kill_switch:
   api_token: ""                        # or PIPELOCK_KILLSWITCH_API_TOKEN from a secret
 ```
 
-Full field reference: [configuration guide](https://github.com/luckyPipewrench/pipelock/blob/main/docs/configuration.md).
+Full field reference: [configuration guide](https://github.com/pipelab-org/pipelock/blob/main/docs/configuration.md).
 
 ## When it fires on its own
 

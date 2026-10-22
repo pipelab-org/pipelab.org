@@ -119,4 +119,4 @@ Pipelock is an open-source AI agent firewall that sits between agents and the ne
 - [OWASP Agentic Top 10](/learn/owasp-agentic-top10/): Per-threat coverage assessment
 - [Assess](/assess/): Generate signed compliance reports
 - [Pipelock](/pipelock/): Product overview and installation
-- [GitHub](https://github.com/luckyPipewrench/pipelock): Source code and documentation
+- [GitHub](https://github.com/pipelab-org/pipelock): Source code and documentation

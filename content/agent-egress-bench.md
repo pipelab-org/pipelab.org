@@ -11,7 +11,7 @@ project_name: "Agent Egress Bench"
 project_accent: "Bench"
 project_actions:
   - label: "Run the benchmark"
-    href: "https://github.com/luckyPipewrench/agent-egress-bench"
+    href: "https://github.com/pipelab-org/agent-egress-bench"
     primary: true
   - label: "View Pipelock runs"
     href: "/gauntlet/"
@@ -41,11 +41,11 @@ project_sections:
     title: "The corpus and method are public"
     links:
       - label: "Source and quick start"
-        href: "https://github.com/luckyPipewrench/agent-egress-bench"
+        href: "https://github.com/pipelab-org/agent-egress-bench"
       - label: "Scoring method"
-        href: "https://github.com/luckyPipewrench/agent-egress-bench/blob/main/docs/gauntlet.md"
+        href: "https://github.com/pipelab-org/agent-egress-bench/blob/main/docs/gauntlet.md"
       - label: "Add another security tool"
-        href: "https://github.com/luckyPipewrench/agent-egress-bench/blob/main/docs/ADOPTION.md"
+        href: "https://github.com/pipelab-org/agent-egress-bench/blob/main/docs/ADOPTION.md"
       - label: "Pipelock's first-party runs"
         href: "/gauntlet/"
 date: 2026-08-27

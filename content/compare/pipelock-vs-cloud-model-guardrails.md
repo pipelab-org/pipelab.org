@@ -105,4 +105,4 @@ The guardrail protects the conversation with the model. The firewall inspects th
 - [Agent firewall vs guardrails](/compare/agent-firewall-vs-guardrails/): the category-level version of this comparison
 - [Pipelock vs Lakera Guard](/compare/pipelock-vs-lakera-guard/): a vendor classifier at the same boundary
 - [Pipelock vs Cloudflare AI Gateway](/compare/pipelock-vs-cloudflare-ai-gateway/): a hosted gateway with guardrails at the model boundary
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

@@ -105,4 +105,4 @@ Defenses that aren't tested are assumptions. Red teaming turns assumptions into 
 - [How to Secure Your MCP Setup](/learn/how-to-secure-mcp/): seven attacks, seven defenses
 - [MCP Proxy](/learn/mcp-proxy/): how scanning MCP traffic works
 - [Pipelock](/pipelock/): open-source agent firewall with DLP, injection scanning, and egress control
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

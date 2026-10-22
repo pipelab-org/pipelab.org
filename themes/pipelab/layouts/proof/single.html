@@ -92,7 +92,7 @@
   <section class="proof-deep" data-fx="reveal live" id="validate" aria-label="Validate: Agent Egress Bench">
     <div class="proof-deep-head">
       <p class="proof-deep-label">01 · Validate</p>
-      <h2 data-fx="decrypt"><a href="https://github.com/luckyPipewrench/agent-egress-bench" target="_blank" rel="noopener noreferrer">Agent Egress Bench</a></h2>
+      <h2 data-fx="decrypt"><a href="https://github.com/pipelab-org/agent-egress-bench" target="_blank" rel="noopener noreferrer">Agent Egress Bench</a></h2>
       <p class="proof-deep-sub">A public corpus of adversarial test cases. The same corpus Pipelock tests itself against.</p>
     </div>
     <div class="proof-deep-body fx-exhibit-band">
@@ -102,7 +102,7 @@
         {{- $ex := readFile "assets/exhibits/bench-case.json" -}}
         {{- if not $ex -}}{{- errorf "proof exhibit assets/exhibits/bench-case.json is missing or empty" -}}{{- end -}}
         <pre class="fx-exhibit-doc" data-fx="scan"><code>{{ $ex }}</code></pre>
-        <figcaption class="fx-exhibit-src">real case file &middot; <a href="https://github.com/luckyPipewrench/agent-egress-bench/blob/main/cases/url/url-dlp-aws-key-001.json" target="_blank" rel="noopener noreferrer">url-dlp-aws-key-001.json</a> &middot; snapshot <code>{{ substr $stats.bench_source_commit 0 12 }}</code></figcaption>
+        <figcaption class="fx-exhibit-src">real case file &middot; <a href="https://github.com/pipelab-org/agent-egress-bench/blob/main/cases/url/url-dlp-aws-key-001.json" target="_blank" rel="noopener noreferrer">url-dlp-aws-key-001.json</a> &middot; snapshot <code>{{ substr $stats.bench_source_commit 0 12 }}</code></figcaption>
       </figure>
       <div class="fx-exhibit-claims">
       <ul class="proof-claim-list">
@@ -112,7 +112,7 @@
       </ul>
       {{ partial "bench-provenance.html" . }}
       <div class="proof-deep-actions">
-        <a href="https://github.com/luckyPipewrench/agent-egress-bench" class="btn btn-primary" target="_blank" rel="noopener noreferrer">Run the bench</a>
+        <a href="https://github.com/pipelab-org/agent-egress-bench" class="btn btn-primary" target="_blank" rel="noopener noreferrer">Run the bench</a>
         <a href="/gauntlet/" class="btn btn-ghost">View benchmark results</a>
       </div>
       </div>
@@ -123,7 +123,7 @@
   <section class="proof-deep" data-fx="reveal live" id="govern" aria-label="Govern: Pipelock Rules">
     <div class="proof-deep-head">
       <p class="proof-deep-label">02 · Govern</p>
-      <h2 data-fx="decrypt"><a href="https://github.com/luckyPipewrench/pipelock-rules" target="_blank" rel="noopener noreferrer">Pipelock Rules</a></h2>
+      <h2 data-fx="decrypt"><a href="https://github.com/pipelab-org/pipelock-rules" target="_blank" rel="noopener noreferrer">Pipelock Rules</a></h2>
       <p class="proof-deep-sub">Community detection patterns distributed as Ed25519-signed YAML bundles. Hot-reloadable. Tampered rules fail signature verification.</p>
     </div>
     <div class="proof-deep-body fx-exhibit-band fx-exhibit-flip">
@@ -133,7 +133,7 @@
         {{- $ex := readFile "assets/exhibits/rules-bundle.yaml" -}}
         {{- if not $ex -}}{{- errorf "proof exhibit assets/exhibits/rules-bundle.yaml is missing or empty" -}}{{- end -}}
         <pre class="fx-exhibit-doc" data-fx="scan"><code>{{ $ex }}</code></pre>
-        <figcaption class="fx-exhibit-src">real bundle head &middot; <a href="https://github.com/luckyPipewrench/pipelock-rules/blob/main/published/pipelock-community/bundle.yaml" target="_blank" rel="noopener noreferrer">pipelock-community/bundle.yaml</a> &middot; signature: <code>bundle.yaml.sig</code></figcaption>
+        <figcaption class="fx-exhibit-src">real bundle head &middot; <a href="https://github.com/pipelab-org/pipelock-rules/blob/main/published/pipelock-community/bundle.yaml" target="_blank" rel="noopener noreferrer">pipelock-community/bundle.yaml</a> &middot; signature: <code>bundle.yaml.sig</code></figcaption>
       </figure>
       <div class="fx-exhibit-claims">
       <ul class="proof-claim-list">
@@ -147,7 +147,7 @@
         <li><strong>The trust model is public</strong>: which key signs what, and what a failed check refuses to load. <a href="/learn/community-rules/">Install flow + trust model</a>.</li>
       </ul>
       <div class="proof-deep-actions">
-        <a href="https://github.com/luckyPipewrench/pipelock-rules" class="btn btn-primary" target="_blank" rel="noopener noreferrer">View bundle source</a>
+        <a href="https://github.com/pipelab-org/pipelock-rules" class="btn btn-primary" target="_blank" rel="noopener noreferrer">View bundle source</a>
         <a href="/learn/community-rules/" class="btn btn-ghost">Install flow</a>
       </div>
       </div>
@@ -278,7 +278,7 @@ $ pipelock verify-receipt ./receipt.json --key 70b991eb77816fc4ef0ae6a54d8a4119d
         <h3>Demo assessment</h3>
         <p>A real signed Assess report so you can see the artifact shape before you license.</p>
       </a>
-      <a class="proof-evidence-card" data-fx="reveal spotlight" href="https://github.com/luckyPipewrench/pipelock/blob/main/docs/security-assurance.md" target="_blank" rel="noopener noreferrer">
+      <a class="proof-evidence-card" data-fx="reveal spotlight" href="https://github.com/pipelab-org/pipelock/blob/main/docs/security-assurance.md" target="_blank" rel="noopener noreferrer">
         <p class="proof-evidence-eyebrow">Threat model</p>
         <h3>Security assurance case</h3>
         <p>Trust boundaries, documented limitations, and the cases the binary does not cover.</p>

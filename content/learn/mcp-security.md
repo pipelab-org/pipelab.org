@@ -26,7 +26,7 @@ tags:
 ---
 MCP security is the practice of protecting AI agents that use the Model Context Protocol from threats originating in tool descriptions, tool arguments, tool responses, and the underlying transport. The four channels each carry different risk: tool descriptions and responses can carry hidden instructions, tool arguments can leak credentials, and transport metadata can hide exfiltration. Static install-time scanners catch some risks but miss rug-pull attacks where a server changes its tools mid-session, so runtime inspection at the proxy layer is necessary.
 
-The risk is already measurable. [Endor Labs analyzed 2,614 MCP implementations](https://www.endorlabs.com/learn/classic-vulnerabilities-meet-ai-infrastructure-why-mcp-needs-appsec) and found that 82% use file operations prone to path traversal, 67% use APIs related to code injection, and 34% use APIs susceptible to command injection. [AgentSeal scanned 1,808 MCP servers](https://agentseal.org/blog/mcp-server-security-findings) and reported security findings in 66% of them. The official [MCP security best practices](https://modelcontextprotocol.io/docs/2026-07-28/tutorials/security/security_best_practices), the [OWASP GenAI secure MCP server guide](https://genai.owasp.org/resource/a-practical-guide-for-secure-mcp-server-development/), and the [OWASP MCP Top 10](https://owasp.org/www-project-mcp-top-10/) now define the baseline. As of May 2026, practical MCP security means combining install-time scanning, runtime proxy inspection, tool allowlists, authorization, audit, and shadow-server discovery.
+The risk is already measurable. [Endor Labs analyzed 2,614 MCP implementations](https://www.endorlabs.com/learn/classic-vulnerabilities-meet-ai-infrastructure-why-mcp-needs-appsec) and found that 82% use file operations prone to path traversal, 67% use APIs related to code injection, and 34% use APIs susceptible to command injection. [AgentSeal scanned 1,808 MCP servers](https://agentseal.org/blog/mcp-server-security-findings) and reported security findings in 66% of them. The official [MCP security best practices](https://modelcontextprotocol.io/docs/2026-07-28/tutorials/security/security_best_practices), the [OWASP GenAI secure MCP server guide](https://genai.owasp.org/resource/a-practical-guide-for-secure-mcp-server-development/), and the [OWASP MCP Top 10](https://owasp.org/projects/mcp-top-10) now define the baseline. As of May 2026, practical MCP security means combining install-time scanning, runtime proxy inspection, tool allowlists, authorization, audit, and shadow-server discovery.
 
 ## What is MCP security?
 
@@ -128,7 +128,7 @@ A careful attacker doesn't start poisoned. They start clean.
 
 That pattern is called a rug-pull. [Invariant Labs demonstrated it against WhatsApp MCP](https://invariantlabs.ai/blog/whatsapp-mcp-exploited). The server started with a harmless "get a random fact" tool. After the user approved it, the description changed. The new version instructed the agent to forward WhatsApp messages to an attacker-controlled address. [Microsoft's MCP security guidance](https://developer.microsoft.com/blog/protecting-against-indirect-injection-attacks-mcp/) calls it out explicitly: "tool definitions can be dynamically amended to include malicious content later."
 
-Detection requires fingerprinting every tool description the first time you see it and comparing every subsequent response to that baseline. SHA-256 hashes work. Any change to a previously approved description is suspicious and should at minimum trigger an alert. Some changes are legitimate (new parameters, version bumps), but none of them should pass silently. [OWASP classifies the rug-pull as a sub-technique of MCP03:2025 Tool Poisoning.](https://owasp.org/www-project-mcp-top-10/)
+Detection requires fingerprinting every tool description the first time you see it and comparing every subsequent response to that baseline. SHA-256 hashes work. Any change to a previously approved description is suspicious and should at minimum trigger an alert. Some changes are legitimate (new parameters, version bumps), but none of them should pass silently. [OWASP classifies the rug-pull as a sub-technique of MCP03:2025 Tool Poisoning.](https://owasp.org/projects/mcp-top-10)
 
 ## Prompt injection via MCP responses
 
@@ -196,7 +196,7 @@ Supply chain defense is conventional: pin versions, check hashes, review source 
 
 MCP doesn't ship with audit. The spec defines how agents and servers talk. It doesn't define how that conversation gets logged, who can read the logs, or how long they stick around. Every server implements its own (or doesn't). Every client implements its own (or doesn't). The result is that when something goes wrong, nobody has the data to figure out what happened.
 
-The [OWASP MCP Top 10](https://owasp.org/www-project-mcp-top-10/) flags observability as a category gap. Without audit, you can't detect exfiltration after the fact. You can't prove compliance. You can't answer "which tool called this endpoint and with what data" when a regulator asks. The strongest audit trails usually come from deployments running behind a proxy that logs everything. That's not the default. That's a choice.
+The [OWASP MCP Top 10](https://owasp.org/projects/mcp-top-10) flags observability as a category gap. Without audit, you can't detect exfiltration after the fact. You can't prove compliance. You can't answer "which tool called this endpoint and with what data" when a regulator asks. The strongest audit trails usually come from deployments running behind a proxy that logs everything. That's not the default. That's a choice.
 
 Good MCP telemetry records: every `tools/list` response with a description hash, every `tools/call` request with argument digests, every `tools/call` response with a result digest, and every transport event (connect, disconnect, error). Keep that for 90 days minimum. Correlate with upstream HTTP logs so you can trace a single agent task across both protocols. See [flight recorder](/learn/flight-recorder/) for the pattern.
 
@@ -213,7 +213,7 @@ Every MCP security product fits into one of six categories, and no product cover
 
 ## OWASP MCP Top 10 coverage
 
-The [OWASP MCP Top 10](https://owasp.org/www-project-mcp-top-10/) is the closest thing the industry has to a neutral threat taxonomy for MCP. It's in beta as of 2026. The categories include tool poisoning, token mismanagement, shadow MCP servers, context over-sharing, and supply chain compromise. The project is led by Vandana Verma Sehgal through the OWASP GenAI working group.
+The [OWASP MCP Top 10](https://owasp.org/projects/mcp-top-10) is the closest thing the industry has to a neutral threat taxonomy for MCP. It's in beta as of 2026. The categories include tool poisoning, token mismanagement, shadow MCP servers, context over-sharing, and supply chain compromise. The project is led by Vandana Verma Sehgal through the OWASP GenAI working group.
 
 If you're building an MCP security program, map your controls to the OWASP categories first. It gives you a common vocabulary with auditors, vendors, and peers. It forces you to confront the categories you don't cover. And it protects you against drift: when a new attack gets published, you can ask where it lands on the taxonomy instead of trying to invent a new category every week.
 
@@ -297,6 +297,6 @@ Pipelock doesn't replace scanners, gateways, or authorization tooling. It's the 
 - [What is an Agent Firewall?](/agent-firewall/): full architecture and threat model
 - [MCP Security Best Practices](https://modelcontextprotocol.io/docs/2026-07-28/tutorials/security/security_best_practices): official MCP security guidance
 - [OWASP GenAI Secure MCP Server Development](https://genai.owasp.org/resource/a-practical-guide-for-secure-mcp-server-development/): secure implementation guide
-- [OWASP MCP Top 10](https://owasp.org/www-project-mcp-top-10/): beta threat taxonomy
+- [OWASP MCP Top 10](https://owasp.org/projects/mcp-top-10): beta threat taxonomy
 - [Endor Labs MCP AppSec analysis](https://www.endorlabs.com/learn/classic-vulnerabilities-meet-ai-infrastructure-why-mcp-needs-appsec): scan data across 2,614 implementations
 - [Vulnerable MCP Project](https://vulnerablemcp.info/): public tracker for MCP CVEs and disclosures

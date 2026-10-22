@@ -111,4 +111,4 @@ With a signing key configured, Pipelock can emit signed receipts for mediated de
 - [Pipelock vs LlamaFirewall](/compare/pipelock-vs-llamafirewall/): an open-source guardrail at the same boundary
 - [Pipelock vs cloud model guardrails](/compare/pipelock-vs-cloud-model-guardrails/): the provider-run filters at the same boundary
 - [Action receipt spec](/learn/action-receipt-spec/): the wire format for Pipelock's signed receipts
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

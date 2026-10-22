@@ -47,6 +47,6 @@ Read [Compliance Evidence Substrate](/learn/compliance-evidence-substrate/) for 
 
 ## Further reading
 
-- [SOC 2 Trust Services Criteria](https://www.aicpa-cima.com/resources/article/trust-services-criteria): the framework source.
+- [SOC 2 Trust Services Criteria](https://www.aicpa-cima.com/resources/download/2017-trust-services-criteria-with-revised-points-of-focus-2022): the framework source.
 - [AI compliance evidence](/learn/compliance-evidence/): Pipelock assessment and evidence bundles.
 - [Compliance Evidence Substrate](/learn/compliance-evidence-substrate/): scope and evidence limits.

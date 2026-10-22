@@ -107,4 +107,4 @@ Run both for defense in depth.
 - [MCP security](/learn/mcp-security/): MCP-specific threats and how scanning addresses them
 - [Pipelock vs open source MCP gateways](/compare/pipelock-vs-open-source-mcp-gateways/): Docker alongside agentgateway, Lasso, and Obot
 - [Pipelock vs NemoClaw](/compare/pipelock-vs-nemoclaw/): another sandbox-versus-scanning comparison
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

@@ -20,15 +20,15 @@ compare:
   pick_both: "Envoy AI Gateway for platform-level routing and access. Pipelock next to the agent for payload inspection and evidence."
 sources:
   - label: "envoyproxy/ai-gateway README"
-    url: "https://github.com/envoyproxy/ai-gateway"
+    url: "https://github.com/theagentrouter/agent-router"
     checked: 2026-09-01
     note: "Apache-2.0; follows the CNCF code of conduct"
   - label: "Envoy AI Gateway docs: MCP gateway capabilities"
-    url: "https://aigateway.envoyproxy.io/docs/capabilities/mcp/"
+    url: "https://theagentrouter.ai/docs/capabilities/mcp/"
     checked: 2026-09-01
     note: "server multiplexing, tool filtering, OAuth authentication, JWT claims, scopes, and CEL authorization, upstream API key injection"
   - label: "Envoy AI Gateway releases"
-    url: "https://github.com/envoyproxy/ai-gateway/releases"
+    url: "https://github.com/theagentrouter/agent-router/releases"
     checked: 2026-09-01
     note: "v1.1.0 from August 2026 was the newest release at the time of checking"
 faq:
@@ -44,7 +44,7 @@ faq:
 
 **[Pipelock](/pipelock/)** is an open-source agent firewall. It inspects HTTP, WebSocket, and MCP traffic routed through it on the agent's network path for credential leaks, prompt injection, SSRF, and tool poisoning, and can emit signed action receipts for mediated decisions when a signing key is configured.
 
-**[Envoy AI Gateway](https://github.com/envoyproxy/ai-gateway)** is an Apache-2.0 extension to Envoy Gateway from the Envoy community. Its docs describe an LLM gateway and an MCP gateway. The MCP side aggregates multiple servers into one endpoint, filters which tools are exposed, authenticates clients with OAuth, and applies access rules from JWT claims, scopes, and CEL expressions. Upstream API keys are injected at the gateway so clients never hold them.
+**[Envoy AI Gateway](https://github.com/theagentrouter/agent-router)** is an Apache-2.0 extension to Envoy Gateway from the Envoy community. Its docs describe an LLM gateway and an MCP gateway. The MCP side aggregates multiple servers into one endpoint, filters which tools are exposed, authenticates clients with OAuth, and applies access rules from JWT claims, scopes, and CEL expressions. Upstream API keys are injected at the gateway so clients never hold them.
 
 Envoy AI Gateway is platform routing and access control on Envoy. Pipelock is payload inspection and evidence next to the agent.
 
@@ -100,4 +100,4 @@ The gateway lives at the platform edge. The firewall lives next to the agent. A 
 - [Pipelock vs agentgateway](/compare/pipelock-vs-agentgateway/): the other Apache-2.0 agent proxy with the same shape
 - [Pipelock vs open source MCP gateways](/compare/pipelock-vs-open-source-mcp-gateways/): the wider gateway roundup
 - [MCP gateway](/learn/mcp-gateway/): the category
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

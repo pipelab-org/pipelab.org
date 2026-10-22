@@ -45,10 +45,10 @@ Release-mode runs sample `/proc/<pid>/status` and Pipelock's Prometheus `/metric
 ## Reproduce
 
 ```bash
-git clone https://github.com/luckyPipewrench/pipelock
+git clone https://github.com/pipelab-org/pipelock
 cd pipelock
 make bench-egress
 cat bench/egress/results.json
 ```
 
-The bench lives in-tree at [`bench/egress/`](https://github.com/luckyPipewrench/pipelock/tree/main/bench/egress) and its [README](https://github.com/luckyPipewrench/pipelock/blob/main/bench/egress/README.md) documents the JSON schema, the five mock backends, and the three configs. Use `make bench-egress-release` for 10,000-iteration percentiles (45-60 min).
+The bench lives in-tree at [`bench/egress/`](https://github.com/pipelab-org/pipelock/tree/main/bench/egress) and its [README](https://github.com/pipelab-org/pipelock/blob/main/bench/egress/README.md) documents the JSON schema, the five mock backends, and the three configs. Use `make bench-egress-release` for 10,000-iteration percentiles (45-60 min).

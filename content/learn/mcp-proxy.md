@@ -235,12 +235,6 @@ For the detailed comparison see [Pipelock vs Docker MCP Gateway](/compare/pipelo
 [Install Pipelock](/install/) (Go binary, no runtime deps):
 
 ```bash
-# Linux/macOS
-curl -L https://github.com/pipelab-org/pipelock/releases/latest/download/pipelock_linux_amd64 -o pipelock
-chmod +x pipelock
-sudo mv pipelock /usr/local/bin/
-
-# Or build the pinned release from source
 {{< install-cmd go >}}
 ```
 

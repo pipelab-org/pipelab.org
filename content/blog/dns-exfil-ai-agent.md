@@ -81,7 +81,7 @@ This isn't theoretical. DNS subdomain exfiltration is a well-known technique in 
 
 The fix is straightforward: scan the URL before any network I/O, including DNS resolution.
 
-[Pipelock](https://github.com/luckyPipewrench/pipelock) uses a fixed-order scanner pipeline with DLP before DNS. The durable property is the boundary, not a layer count: the visible request target is checked for malformed input, destination policy, secrets, and encoded exfiltration before hostname resolution begins.
+[Pipelock](https://github.com/pipelab-org/pipelock) uses a fixed-order scanner pipeline with DLP before DNS. The durable property is the boundary, not a layer count: the visible request target is checked for malformed input, destination policy, secrets, and encoded exfiltration before hostname resolution begins.
 
 ```
 Request shape       URL bounds, parsing, scheme, port, CRLF, traversal
@@ -112,7 +112,7 @@ No DNS query. No TCP connection. The URL is rejected at the string level before 
 The quickstart Docker Compose environment enforces real network isolation:
 
 ```bash
-git clone https://github.com/luckyPipewrench/pipelock
+git clone https://github.com/pipelab-org/pipelock
 cd pipelock/examples/quickstart
 docker compose --profile verify up --abort-on-container-exit --exit-code-from verify
 ```
@@ -150,4 +150,4 @@ Honest limitations:
 
 DNS exfil is one vector. The broader point is that scan ordering matters. Any time your security tool does network I/O before scanning, you have a pre-scan exfiltration window. Check where your DLP runs relative to DNS resolution.
 
-If you find a bypass, [open an issue](https://github.com/luckyPipewrench/pipelock/issues).
+If you find a bypass, [open an issue](https://github.com/pipelab-org/pipelock/issues).

@@ -13,10 +13,10 @@ project_name: "Agent Evidence Level"
 project_accent: "Level"
 project_actions:
   - label: "Read the specification"
-    href: "https://github.com/luckyPipewrench/agent-evidence-levels/blob/main/SPEC.md"
+    href: "https://github.com/pipelab-org/agent-evidence-levels/blob/main/SPEC.md"
     primary: true
   - label: "Run the checker"
-    href: "https://github.com/luckyPipewrench/agent-evidence-levels"
+    href: "https://github.com/pipelab-org/agent-evidence-levels"
 project_facts:
   - label: "Status"
     value: "Draft v0.1"
@@ -49,11 +49,11 @@ project_sections:
     link_grid: true
     links:
       - label: "Specification"
-        href: "https://github.com/luckyPipewrench/agent-evidence-levels/blob/main/SPEC.md"
+        href: "https://github.com/pipelab-org/agent-evidence-levels/blob/main/SPEC.md"
       - label: "Reference checker"
-        href: "https://github.com/luckyPipewrench/agent-evidence-levels"
+        href: "https://github.com/pipelab-org/agent-evidence-levels"
       - label: "Evidence registry"
-        href: "https://github.com/luckyPipewrench/agent-evidence-levels/blob/main/GRADES.md"
+        href: "https://github.com/pipelab-org/agent-evidence-levels/blob/main/GRADES.md"
       - label: "Verification record schema"
         href: "/schemas/ael/v0.1/verification-record.schema.json"
 date: 2026-07-03

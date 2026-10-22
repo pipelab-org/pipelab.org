@@ -191,4 +191,4 @@ mv claude-code.yaml pipelock.yaml
 
 That's it. Pipelock sits in the middle. Claude Code doesn't know it's there. Your MCP servers don't know it's there. But every response gets scanned before it reaches the agent.
 
-More detail: [troubleshooting](https://github.com/luckyPipewrench/pipelock/blob/main/docs/guides/claude-code.md), [config reference](https://github.com/luckyPipewrench/pipelock/blob/main/configs/claude-code.yaml), [other presets](https://github.com/luckyPipewrench/pipelock/tree/main/configs).
+More detail: [troubleshooting](https://github.com/pipelab-org/pipelock/blob/main/docs/guides/claude-code.md), [config reference](https://github.com/pipelab-org/pipelock/blob/main/configs/claude-code.yaml), [other presets](https://github.com/pipelab-org/pipelock/tree/main/configs).

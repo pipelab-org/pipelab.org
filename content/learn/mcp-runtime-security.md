@@ -132,4 +132,4 @@ Runtime MCP inspection does not replace pre-deploy scanning, package supply-chai
 - [Shadow MCP](/learn/shadow-mcp/) — discovery and inventory of unauthorized servers.
 - [Agent Egress Control](/learn/agent-egress-control/) — broader control surface beyond MCP.
 - [Agent Firewall](/agent-firewall/) — the architectural pattern this runtime layer fits into.
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

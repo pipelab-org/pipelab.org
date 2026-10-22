@@ -161,7 +161,7 @@ No scanner catches everything, and a security tool that pretends otherwise is th
 - **Parser differentials.** A payload nested deeply enough that the JSON parser, the regex engine, and the URL parser disagree about its structure.
 - **Direct egress.** Anything that bypasses the proxy is outside coverage. That is why containment is a deployment requirement, not an afterthought.
 
-Naming the gaps is the point. You can decide what residual risk you accept; you cannot do that with a tool that claims full coverage. For the full standing register, see [Known Limitations](/learn/known-limitations/). Common encoding and Unicode evasions, including cross-script homoglyphs and field-split secrets, are handled rather than gaps; the [bypass resistance doc](https://github.com/luckyPipewrench/pipelock/blob/main/docs/bypass-resistance.md) has the technique-by-technique detail.
+Naming the gaps is the point. You can decide what residual risk you accept; you cannot do that with a tool that claims full coverage. For the full standing register, see [Known Limitations](/learn/known-limitations/). Common encoding and Unicode evasions, including cross-script homoglyphs and field-split secrets, are handled rather than gaps; the [bypass resistance doc](https://github.com/pipelab-org/pipelock/blob/main/docs/bypass-resistance.md) has the technique-by-technique detail.
 
 ## Where to go next
 

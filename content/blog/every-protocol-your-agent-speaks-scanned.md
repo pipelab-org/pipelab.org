@@ -126,4 +126,4 @@ pipelock generate config --preset balanced > pipelock.yaml
 pipelock run --config pipelock.yaml
 ```
 
-[GitHub](https://github.com/luckyPipewrench/pipelock) | [What is an agent firewall?](/agent-firewall/) | [Agent Egress Security](/learn/agent-egress-security/) | [MCP Security](/learn/mcp-security/)
+[GitHub](https://github.com/pipelab-org/pipelock) | [What is an agent firewall?](/agent-firewall/) | [Agent Egress Security](/learn/agent-egress-security/) | [MCP Security](/learn/mcp-security/)

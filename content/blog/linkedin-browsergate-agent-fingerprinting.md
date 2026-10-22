@@ -94,7 +94,7 @@ No governance for machine actions at the browser level means the only real prote
 
 The alternative is deploying agents into a web where every site they visit can silently map their capabilities, fingerprint their infrastructure, and track them across sessions. That's the status quo. It doesn't have to stay that way.
 
-[Pipelock](https://github.com/luckyPipewrench/pipelock) scans agent traffic at the network boundary today across HTTP, MCP, and WebSocket. Content-aware mediation for agent browsing sessions is the next step in that architecture.
+[Pipelock](https://github.com/pipelab-org/pipelock) scans agent traffic at the network boundary today across HTTP, MCP, and WebSocket. Content-aware mediation for agent browsing sessions is the next step in that architecture.
 
 ---
 

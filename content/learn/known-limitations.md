@@ -50,9 +50,9 @@ These are mediated but not absolute. Pipelock reduces the risk without closing i
 
 ## False-positive and true-positive rates
 
-Detection quality is a moving target, so it gets reported, not asserted. The measurement source is the public [agent egress benchmark](https://github.com/luckyPipewrench/agent-egress-bench): a tool-neutral corpus of attack and benign cases scored by an open runner, plus Pipelock's in-repo evasion test suite for the encoding and Unicode classes.
+Detection quality is a moving target, so it gets reported, not asserted. The measurement source is the public [agent egress benchmark](https://github.com/pipelab-org/agent-egress-bench): a tool-neutral corpus of attack and benign cases scored by an open runner, plus Pipelock's in-repo evasion test suite for the encoding and Unicode classes.
 
-When a benchmark run is recorded, the measured figures are published here: the benign-traffic false-positive rate and the attack-corpus true-positive (catch) rate, with the corpus version and date. The numbers always come from a real run, never an estimate, and they are not posted on a fixed per-release schedule. Between updates, the [benchmark repo](https://github.com/luckyPipewrench/agent-egress-bench) holds the current public corpus and runner, so anyone can reproduce the score independently.
+When a benchmark run is recorded, the measured figures are published here: the benign-traffic false-positive rate and the attack-corpus true-positive (catch) rate, with the corpus version and date. The numbers always come from a real run, never an estimate, and they are not posted on a fixed per-release schedule. Between updates, the [benchmark repo](https://github.com/pipelab-org/agent-egress-bench) holds the current public corpus and runner, so anyone can reproduce the score independently.
 
 No measured snapshot has been recorded here yet.
 

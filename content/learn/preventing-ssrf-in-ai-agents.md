@@ -169,4 +169,4 @@ If any probe succeeds, the gap is real. Fix the parser disagreement or the missi
 - [AI Egress Proxy](/learn/ai-egress-proxy/): the proxy pattern that enforces SSRF and DLP at one point
 - [What is an Agent Firewall?](/agent-firewall/): full architecture including capability separation
 - [MCP Security](/learn/mcp-security/): SSRF through MCP tool calls and other tool-channel risks
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

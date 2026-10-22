@@ -118,7 +118,7 @@ pipelock generate config --preset cursor > ~/.config/pipelock/cursor.yaml
 pipelock cursor install --config ~/.config/pipelock/cursor.yaml
 ```
 
-The [cursor preset](https://github.com/luckyPipewrench/pipelock/blob/main/configs/cursor.yaml) is a good starting point. See the [configuration reference](https://github.com/luckyPipewrench/pipelock/blob/main/docs/configuration.md) for all options.
+The [cursor preset](https://github.com/pipelab-org/pipelock/blob/main/configs/cursor.yaml) is a good starting point. See the [configuration reference](https://github.com/pipelab-org/pipelock/blob/main/docs/configuration.md) for all options.
 
 ## Verify the installation
 
@@ -179,13 +179,13 @@ Cursor hooks return allow or deny decisions per tool call. Recent releases add o
 
 - **`pipelock posture verify` CI gate (v2.2.0).** Verify a signed posture capsule against a named policy (`enterprise` or `strict`). Exit codes are distinct: `0` pass, `1` could not complete, `2` verified but failed. CI knows the difference between "broken" and "over-permissive".
 - **RFC 9421 mediation envelope signing (v2.2.0).** If Cursor's MCP servers are also wrapped through `pipelock mcp proxy`, every proxied request carries an Ed25519 `Pipelock-Mediation` signature with a canonical policy hash. Coexists with Web Bot Auth `sig1` on the same request.
-- **Mediator-signed action receipts on the MCP path (v2.2.0).** When receipt signing is configured (`flight_recorder.signing_key_path` in the pipelock config), every wrapped MCP proxy decision emits a chained Ed25519 receipt. Byte-verifiable offline with a published [Python verifier](https://github.com/luckyPipewrench/pipelock-verify-python).
+- **Mediator-signed action receipts on the MCP path (v2.2.0).** When receipt signing is configured (`flight_recorder.signing_key_path` in the pipelock config), every wrapped MCP proxy decision emits a chained Ed25519 receipt. Byte-verifiable offline with a published [Python verifier](https://github.com/pipelab-org/pipelock-verify-python).
 - **Class-preserving redaction on `tools/call` arguments (v2.3.0).** When Cursor's MCP servers are wrapped through `pipelock mcp proxy` and the `redaction` section is enabled in the pipelock config, matched secrets inside `params.arguments` are rewritten in place with typed placeholders like `<pl:aws-access-key:1>` before forwarding. Irreversible. Fail-closed on parse errors. Tool responses are not redacted in v1.
 
 See the [action receipt spec](/learn/action-receipt-spec/) for the receipt format and the [AI agent data redaction guide](/learn/ai-agent-data-redaction/) for redaction rollout.
 
 <div class="hero-buttons" style="margin-top: 2rem;">
-  <a href="https://github.com/luckyPipewrench/pipelock" class="btn btn-primary" data-event="github_click" data-event-placement="guide-body" target="_blank" rel="noopener noreferrer">GitHub</a>
+  <a href="https://github.com/pipelab-org/pipelock" class="btn btn-primary" data-event="github_click" data-event-placement="guide-body" target="_blank" rel="noopener noreferrer">GitHub</a>
   <a href="/install/" class="btn btn-ghost" data-event="install_click" data-event-placement="guide-body">Install Pipelock</a>
   <a href="/proof/" class="btn btn-ghost" data-event="proof_click" data-event-placement="guide-body">Inspect the proof</a>
 </div>

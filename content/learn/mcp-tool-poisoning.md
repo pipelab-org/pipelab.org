@@ -172,7 +172,7 @@ Session-level fingerprinting catches rug-pulls. Hash each tool definition on the
 
 ## SAFE-T1201 and detection frameworks
 
-The security community has started cataloging MCP-specific attack techniques. The [SAFE-MCP framework](https://www.safemcp.org/) tracks MCP adversary techniques in a MITRE-style format. Tool poisoning is filed under SAFE-T1001 (Tool Poisoning Attack), with rug-pulls tracked separately as SAFE-T1201 (MCP Rug Pull Attack). These identifiers are starting to appear in vendor detection rules and research papers. The [OWASP MCP Top 10](https://owasp.org/www-project-mcp-top-10/) (beta 2026) files tool poisoning as MCP03. SlowMist's [MCP Security Validation Guide](https://github.com/slowmist/openclaw-security-practice-guide/blob/main/docs/Validation-Guide-en.md) includes tool description tampering in its nineteen-item checklist; Pipelock's coverage is at [/learn/slowmist-mcp-security-coverage/](/learn/slowmist-mcp-security-coverage/).
+The security community has started cataloging MCP-specific attack techniques. The [SAFE-MCP framework](https://www.safemcp.org/) tracks MCP adversary techniques in a MITRE-style format. Tool poisoning is filed under SAFE-T1001 (Tool Poisoning Attack), with rug-pulls tracked separately as SAFE-T1201 (MCP Rug Pull Attack). These identifiers are starting to appear in vendor detection rules and research papers. The [OWASP MCP Top 10](https://owasp.org/projects/mcp-top-10) (beta 2026) files tool poisoning as MCP03. SlowMist's [MCP Security Validation Guide](https://github.com/slowmist/openclaw-security-practice-guide/blob/main/docs/Validation-Guide-en.md) includes tool description tampering in its nineteen-item checklist; Pipelock's coverage is at [/learn/slowmist-mcp-security-coverage/](/learn/slowmist-mcp-security-coverage/).
 
 ## Detection methods
 
@@ -349,7 +349,7 @@ Each scenario maps to one of the four detection layers. Running all six is the f
 - [State of MCP Security 2026](/blog/state-of-mcp-security-2026/): annual review of the MCP threat landscape
 - [OWASP MCP Top 10 coverage](/learn/owasp-mcp-top10/): framework crosswalk
 - [Pipelock vs DefenseClaw](/compare/pipelock-vs-defenseclaw/): runtime proxy versus pre-deploy scanning compared
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)
 
 External sources:
 
@@ -358,6 +358,6 @@ External sources:
 - [CyberArk: Poison Everywhere](https://web.archive.org/web/20260511055221/https://www.cyberark.com/resources/threat-research-blog/poison-everywhere-no-output-from-your-mcp-server-is-safe)
 - [MCPTox benchmark (arxiv 2508.14925)](https://arxiv.org/abs/2508.14925): academic systematization of tool-poisoning evaluation across 45 MCP servers, 353 tools, 1,312 test cases, and 20 LLM agents
 - [Solo.io: Prevent MCP Tool Poisoning With a Registration Workflow](https://www.solo.io/blog/prevent-mcp-tool-poisoning-with-registration-workflow): registration-workflow control as a protocol-policy defense (Christian Posta, May 2025)
-- [OWASP MCP Top 10 (beta)](https://owasp.org/www-project-mcp-top-10/)
+- [OWASP MCP Top 10 (beta)](https://owasp.org/projects/mcp-top-10)
 - [Cisco mcp-scanner](https://github.com/cisco-ai-defense/mcp-scanner)
 - [SAFE-MCP framework](https://www.safemcp.org/): MITRE-style catalog of MCP adversary techniques

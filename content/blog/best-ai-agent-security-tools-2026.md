@@ -386,7 +386,7 @@ Open source agent firewall, written in Go, ships as a single binary. Sits betwee
 
 **Best for:** teams running agents with network access who want open source, content-level egress protection without adopting a vendor SDK.
 
-Links: [Pipelock site](/pipelock/), [GitHub](https://github.com/luckyPipewrench/pipelock).
+Links: [Pipelock site](/pipelock/), [GitHub](https://github.com/pipelab-org/pipelock).
 
 ### 22. iron-proxy
 
@@ -459,6 +459,6 @@ Quick decision shortcut for the common cases. Developer machine running a coding
 - [Agent Firewall Guide](/agent-firewall/) goes deep on boundary 6 specifically.
 - [Pipelock Comparisons](/compare/) walks through head-to-head positioning against specific alternatives.
 - [Pipelock](/pipelock/) is the open source agent firewall I build.
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock) has the code, the tests, and the issues.
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock) has the code, the tests, and the issues.
 
 If a tool deserves a spot on this list and is missing, the [contact page](/contact/) has the form. Corrections welcome.

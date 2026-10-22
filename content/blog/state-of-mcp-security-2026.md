@@ -24,13 +24,13 @@ blog_cat: "mcp"
 - **Tool poisoning is demonstrated, not theoretical**: Invariant Labs proved in April 2025 that hidden instructions in tool descriptions enter the agent's context window as trusted content. The ecosystem has no built-in defense.
 - **The OWASP MCP Top 10 is in beta** as of 2026 and lists ten distinct risk classes. No single tool category covers the whole list on its own.
 
-The deeper sections below cover each incident with primary sources, map them against the [OWASP MCP Top 10](https://owasp.org/www-project-mcp-top-10/), and grade six categories of defenses on coverage. For the evergreen [MCP threat model and best-practices guide](/learn/mcp-security/), start with the pillar page. The runtime inspection layer Pipelock sits in is designed for tool poisoning, response injection, and credential leaks in tool arguments. See [MCP security tools](/learn/mcp-security-tools/) for the broader landscape, [MCP tool poisoning](/learn/mcp-tool-poisoning/) for the attack class, and [Pipelock](/pipelock/) for the runtime control.
+The deeper sections below cover each incident with primary sources, map them against the [OWASP MCP Top 10](https://owasp.org/projects/mcp-top-10), and grade six categories of defenses on coverage. For the evergreen [MCP threat model and best-practices guide](/learn/mcp-security/), start with the pillar page. The runtime inspection layer Pipelock sits in is designed for tool poisoning, response injection, and credential leaks in tool arguments. See [MCP security tools](/learn/mcp-security-tools/) for the broader landscape, [MCP tool poisoning](/learn/mcp-tool-poisoning/) for the attack class, and [Pipelock](/pipelock/) for the runtime control.
 
 ## Why this report exists
 
 Every vendor with an MCP security product has an opinion about MCP risk. What the industry does not have is a shared snapshot of the ecosystem: what got hit, what the attackers did, which controls would have caught which attack, and where the gaps sit in April 2026.
 
-This report is the snapshot. It covers public incidents disclosed from April 2025 through early 2026, maps them against the [OWASP MCP Top 10](https://owasp.org/www-project-mcp-top-10/) (in beta), and grades six categories of defenses on how much of the risk surface they cover. Only public sources are used: vendor disclosure posts, CVE trackers, research blogs, and OWASP project pages. Every claim has a citation.
+This report is the snapshot. It covers public incidents disclosed from April 2025 through early 2026, maps them against the [OWASP MCP Top 10](https://owasp.org/projects/mcp-top-10) (in beta), and grades six categories of defenses on how much of the risk surface they cover. Only public sources are used: vendor disclosure posts, CVE trackers, research blogs, and OWASP project pages. Every claim has a citation.
 
 2026 matters as a snapshot year because MCP went from a protocol most security teams had barely heard of to the default integration layer for AI agents in less than 18 months. Adoption outpaced hardening. The CVEs and disclosures stacking up in public databases reflect that gap, and the defense market is still sorting itself into camps.
 
@@ -90,7 +90,7 @@ The pattern is unmistakable. Attacks hit every layer: package registry, tool des
 
 ## OWASP MCP Top 10 coverage matrix
 
-The [OWASP MCP Top 10](https://owasp.org/www-project-mcp-top-10/) is in beta as of April 2026, with Vandana Verma Sehgal leading the project. The ten categories are:
+The [OWASP MCP Top 10](https://owasp.org/projects/mcp-top-10) is in beta as of April 2026, with Vandana Verma Sehgal leading the project. The ten categories are:
 
 1. **MCP01:** Token Mismanagement and Secret Exposure
 2. **MCP02:** Privilege Escalation via Scope Creep
@@ -184,7 +184,7 @@ If you run any of this today, you are ahead of most of the public incident victi
 
 ## Methodology and limitations
 
-Sources: [OWASP MCP Top 10](https://owasp.org/www-project-mcp-top-10/) beta, the [Vulnerable MCP Project](https://vulnerablemcp.info/) community tracker, [Invariant Labs](https://invariantlabs.ai/) research, [Snyk Labs](https://labs.snyk.io/) and the Snyk security blog, Check Point Research, Cymulate, Koi Security, Acuvity and Proofpoint, Cisco AI Defense, the [Model Context Protocol](https://modelcontextprotocol.io/) docs, and reporting from The Hacker News, Dark Reading, The Register, and Infosecurity Magazine on specific CVE disclosures. Tool category descriptions come from vendor public documentation and open-source code.
+Sources: [OWASP MCP Top 10](https://owasp.org/projects/mcp-top-10) beta, the [Vulnerable MCP Project](https://vulnerablemcp.info/) community tracker, [Invariant Labs](https://invariantlabs.ai/) research, [Snyk Labs](https://labs.snyk.io/) and the Snyk security blog, Check Point Research, Cymulate, Koi Security, Acuvity and Proofpoint, Cisco AI Defense, the [Model Context Protocol](https://modelcontextprotocol.io/docs/2026-07-28/getting-started/intro) docs, and reporting from The Hacker News, Dark Reading, The Register, and Infosecurity Magazine on specific CVE disclosures. Tool category descriptions come from vendor public documentation and open-source code.
 
 Limitations. Incident counts are lower bounds; the real number of MCP security incidents in 2025-2026 is higher than the publicly disclosed total. CVE totals lag active research, and disclosure rates vary by period. The coverage matrix reflects public tooling in April 2026, and any row could shift as vendors ship updates. "No" and "Partial" cells reflect vendor public documentation; capabilities may exist that are not yet documented. Tool camp assignments are based on primary positioning, and several vendors straddle camps.
 
@@ -206,9 +206,9 @@ Internal:
 
 External:
 
-- [OWASP MCP Top 10](https://owasp.org/www-project-mcp-top-10/) (beta, led by Vandana Verma Sehgal)
+- [OWASP MCP Top 10](https://owasp.org/projects/mcp-top-10) (beta, led by Vandana Verma Sehgal)
 - [The Vulnerable MCP Project](https://vulnerablemcp.info/) community CVE tracker
-- [Model Context Protocol](https://modelcontextprotocol.io/) official documentation and security best practices
+- [Model Context Protocol](https://modelcontextprotocol.io/docs/2026-07-28/getting-started/intro) official documentation and security best practices
 - [Invariant Labs research blog](https://invariantlabs.ai/blog) for ongoing MCP attack research
 - [Cisco AI Defense blog](https://blogs.cisco.com/ai) for mcp-scanner and DefenseClaw updates
 

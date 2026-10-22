@@ -86,4 +86,4 @@ pipelock rules install --path ./my-rules/ --allow-unsigned
 
 ## Source
 
-The rules source is on GitHub: [luckyPipewrench/pipelock-rules](https://github.com/luckyPipewrench/pipelock-rules). Contributions welcome. See CONTRIBUTING.md for the rule format and testing requirements.
+The rules source is on GitHub: [pipelab-org/pipelock-rules](https://github.com/pipelab-org/pipelock-rules). Contributions welcome. See CONTRIBUTING.md for the rule format and testing requirements.

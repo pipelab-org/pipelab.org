@@ -53,7 +53,7 @@ Or worse: the agent stores your API key in its memory file, and a different skil
 
 You need something inspecting what actually leaves your machine while the agent is running. Not before. During.
 
-I built [Pipelock](https://github.com/luckyPipewrench/pipelock) for exactly this. It's an [agent firewall](/agent-firewall/) that sits between your agent and the internet as a proxy, scanning every outbound request:
+I built [Pipelock](https://github.com/pipelab-org/pipelock) for exactly this. It's an [agent firewall](/agent-firewall/) that sits between your agent and the internet as a proxy, scanning every outbound request:
 
 1. **SSRF protection** blocks requests to internal IPs and catches DNS rebinding
 2. **Domain blocklist** blocks known exfiltration targets like pastebin and transfer.sh
@@ -67,7 +67,7 @@ Pipelock also uses capability separation. The process that has your secrets (the
 
 When Pipelock catches something, it takes one of four actions depending on your config: **block** the request entirely, **strip** the matched pattern and forward the cleaned request, **warn** by logging the detection and passing through, or **ask** with a terminal prompt that lets you approve, deny, or strip in real time.
 
-The [OWASP Top 10 for Agentic Applications](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/) identifies these classes of risk, covering insecure output handling and excessive agent capabilities. Pipelock's [OWASP mapping](https://github.com/luckyPipewrench/pipelock/blob/main/docs/owasp-mapping.md) covers all 10 threats.
+The [OWASP Top 10 for Agentic Applications](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/) identifies these classes of risk, covering insecure output handling and excessive agent capabilities. Pipelock's [OWASP mapping](https://github.com/pipelab-org/pipelock/blob/main/docs/owasp-mapping.md) covers all 10 threats.
 
 ## Defense in Depth
 
@@ -95,11 +95,11 @@ pipelock generate config --preset balanced -o pipelock.yaml
 pipelock run --config pipelock.yaml
 ```
 
-Demo: see the [quick start guide](https://github.com/luckyPipewrench/pipelock#quick-start) to try it yourself
+Demo: see the [quick start guide](https://github.com/pipelab-org/pipelock#quick-start) to try it yourself
 
-OWASP Agentic Top 10 mapping: [docs/owasp-mapping.md](https://github.com/luckyPipewrench/pipelock/blob/main/docs/owasp-mapping.md)
+OWASP Agentic Top 10 mapping: [docs/owasp-mapping.md](https://github.com/pipelab-org/pipelock/blob/main/docs/owasp-mapping.md)
 
-Repo: [github.com/luckyPipewrench/pipelock](https://github.com/luckyPipewrench/pipelock)
+Repo: [github.com/pipelab-org/pipelock](https://github.com/pipelab-org/pipelock)
 
 ---
 

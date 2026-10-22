@@ -64,7 +64,7 @@ Authentication without authorization is an open door behind a keypad.
 
 ## The MCP spec on authorization
 
-The MCP spec at [modelcontextprotocol.io](https://modelcontextprotocol.io/) now documents authorization patterns as a first-class concern rather than leaving them to implementations.
+The MCP spec at [modelcontextprotocol.io](https://modelcontextprotocol.io/docs/2026-07-28/getting-started/intro) now documents authorization patterns as a first-class concern rather than leaving them to implementations.
 
 **OAuth 2.1 flows for server access.** The spec references OAuth 2.1 for HTTP-based MCP transports. Agents obtain tokens from an authorization server, present them on each request, and the server validates scope before execution. Public clients use PKCE to protect the authorization code exchange.
 
@@ -221,6 +221,6 @@ The layers do not step on each other. Aembit issues tokens, agentgateway checks 
 - [Compliance Evidence](/learn/compliance-evidence/) maps agent behavior to SOC 2, EU AI Act, NIST 800-53
 - [Flight Recorder](/learn/flight-recorder/) is the hash-chained audit log Pipelock writes
 - [Pipelock](/pipelock/) is the runtime proxy that handles content inspection and audit
-- [MCP spec at modelcontextprotocol.io](https://modelcontextprotocol.io/) is the source of truth for protocol-level authorization
-- [OWASP MCP Top 10](https://owasp.org/www-project-mcp-top-10/) tracks the risk categories that auditors will ask about
+- [MCP spec at modelcontextprotocol.io](https://modelcontextprotocol.io/docs/2026-07-28/getting-started/intro) is the source of truth for protocol-level authorization
+- [OWASP MCP Top 10](https://owasp.org/projects/mcp-top-10) tracks the risk categories that auditors will ask about
 - [Aembit MCP auth patterns](https://aembit.io/blog/mcp-authentication-and-authorization-patterns/) covers identity gateway design for MCP

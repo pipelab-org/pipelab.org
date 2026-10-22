@@ -40,7 +40,7 @@ VS Code integration is pure MCP proxy wrapping, which unlocks the current signed
 
 - **Mediator-signed action receipts for MCP decisions (v2.2.0).** With `flight_recorder.signing_key_path` set in the pipelock config, each proxied MCP decision emits a chained Ed25519 receipt on the `mcp_stdio` transport for stdio-wrapped servers, and on `mcp_http_upstream` / `mcp_http_listener` for HTTP-backed servers.
 - **RFC 9421 mediation envelope signing (v2.2.0).** HTTP/SSE servers get an Ed25519 `Pipelock-Mediation` header on every proxied request, with a canonical policy hash that downstream services can verify before trusting.
-- **Cross-implementation conformance (v2.2.0).** Receipts verify byte-for-byte against the published [Python verifier](https://github.com/luckyPipewrench/pipelock-verify-python). The format is open.
+- **Cross-implementation conformance (v2.2.0).** Receipts verify byte-for-byte against the published [Python verifier](https://github.com/pipelab-org/pipelock-verify-python). The format is open.
 - **Posture verify CI gate (v2.2.0).** `pipelock posture verify` gates deploys with distinct exit codes: `0` pass, `1` could not complete, `2` verified but failed.
 - **Class-preserving redaction on `tools/call` arguments (v2.3.0).** With the `redaction` section enabled in the pipelock config, matched secrets in `params.arguments` get rewritten in place with typed placeholders like `<pl:aws-access-key:1>` before forwarding to the MCP server. Runs on Pipelock's MCP proxy transports: `mcp_stdio`, `mcp_http_upstream`, `mcp_http_listener`, and `mcp_ws`. Irreversible. Fail-closed on parse errors. Tool responses are not redacted in v1.
 
@@ -179,7 +179,7 @@ pipelock preflight .
 This detects poisoned `.vscode/mcp.json`, `.cursor/hooks.json`, `.mcp.json`, and `.claude/settings.json` files that could register malicious MCP servers or override your security settings.
 
 <div class="hero-buttons" style="margin-top: 2rem;">
-  <a href="https://github.com/luckyPipewrench/pipelock" class="btn btn-primary" data-event="github_click" data-event-placement="guide-body" target="_blank" rel="noopener noreferrer">GitHub</a>
+  <a href="https://github.com/pipelab-org/pipelock" class="btn btn-primary" data-event="github_click" data-event-placement="guide-body" target="_blank" rel="noopener noreferrer">GitHub</a>
   <a href="/install/" class="btn btn-ghost" data-event="install_click" data-event-placement="guide-body">Install Pipelock</a>
   <a href="/proof/" class="btn btn-ghost" data-event="proof_click" data-event-placement="guide-body">Inspect the proof</a>
 </div>

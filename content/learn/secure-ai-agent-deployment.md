@@ -172,4 +172,4 @@ For the Kubernetes path added in `v2.2.0`, start with [Pipelock Kubernetes compa
 - [Pipelock Kubernetes companion proxy](/learn/pipelock-kubernetes-companion-proxy/): enforced K8s rollout pattern in `v2.2.0`
 - [Pipelock session recovery](/learn/pipelock-session-recovery/): inspect, explain, release, and terminate airlocked sessions
 - [Pipelock](/pipelock/): all features, one page
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

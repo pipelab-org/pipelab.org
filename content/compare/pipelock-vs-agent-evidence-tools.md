@@ -119,4 +119,4 @@ Two more projects came up in research and were left off. CertNode publishes a re
 - [Flight recorder](/learn/flight-recorder/): the hash-chained record behind the receipts
 - [Proof](/proof/): Pipelock's public receipts and verifier
 - [Pipelock vs Microsoft AGT](/compare/pipelock-vs-microsoft-agent-governance-toolkit/): an in-process governance SDK with its own audit chain
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

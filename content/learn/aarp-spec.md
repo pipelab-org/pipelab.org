@@ -38,11 +38,11 @@ receipt, and it never emits a "trusted" or "safe" verdict.
 
 This page is an implementation spec for an experimental v0.x profile. It
 describes what the reference verifier does today. The reference implementation is
-[`internal/aarp`](https://github.com/luckyPipewrench/pipelock/tree/main/internal/aarp)
+[`internal/aarp`](https://github.com/pipelab-org/pipelock/tree/main/internal/aarp)
 in the Pipelock repository, exercised by the standalone
-[`pipelock-verifier aarp`](https://github.com/luckyPipewrench/pipelock/tree/main/cmd/pipelock-verifier)
+[`pipelock-verifier aarp`](https://github.com/pipelab-org/pipelock/tree/main/cmd/pipelock-verifier)
 command. The normative envelope spec lives in the repository at
-[`docs/specs/aarp-v0.1-envelope.md`](https://github.com/luckyPipewrench/pipelock/blob/main/docs/specs/aarp-v0.1-envelope.md);
+[`docs/specs/aarp-v0.1-envelope.md`](https://github.com/pipelab-org/pipelock/blob/main/docs/specs/aarp-v0.1-envelope.md);
 this page is the public restatement. When the page, the in-repo spec, and the
 code ever disagree, the code wins.
 
@@ -416,7 +416,7 @@ log inclusion are deferred.
 
 ## Conformance and ports
 
-The reference implementation is Go ([`internal/aarp`](https://github.com/luckyPipewrench/pipelock/tree/main/internal/aarp)).
+The reference implementation is Go ([`internal/aarp`](https://github.com/pipelab-org/pipelock/tree/main/internal/aarp)).
 Independent verifier ports in TypeScript, Rust, and Python appraise the AARP
 envelope: the parallel signatures, JCS canonicalization, number safety, the
 protected-suite binding with fail-closed-on-unknown-suite, the claim-set-by-axis

@@ -124,7 +124,7 @@ The full Pipelock options surface (trusted domains, MCP tool redirect profiles, 
 - [Sure chart README, Pipelock section](https://github.com/we-promise/sure/blob/main/charts/sure/README.md#pipelock-ai-agent-security-proxy)
 - [Sure product site](https://sure.am/)
 - [Sure documentation site](https://docs.sure.am)
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock) for the firewall itself
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock) for the firewall itself
 - [Pipelock license setup](/learn/license-setup/) if the deployment uses Pro features
 
 If you're deploying Sure with Helm and you have turned on the external AI assistant, turn on Pipelock and set the guard. The chart already wired the deployment path.

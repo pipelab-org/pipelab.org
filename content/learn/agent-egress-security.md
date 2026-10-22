@@ -213,4 +213,4 @@ export HTTPS_PROXY=http://127.0.0.1:8888
 - [Prompt Injection: Network-Layer Defense](/learn/prompt-injection-network-defense/) : catching the injection that triggers exfiltration
 - [Preventing SSRF in AI Agents](/learn/preventing-ssrf-in-ai-agents/) : cloud metadata, private CIDRs, DNS rebinding, and parser-differential gaps
 - [Redaction placeholders](/learn/redaction-placeholders/) : decoding the `<pl:...>` and `<private_address>` tokens a redactor leaves behind
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

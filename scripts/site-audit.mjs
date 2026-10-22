@@ -206,6 +206,17 @@ const titleOwners = new Map();
 const descriptionOwners = new Map();
 
 const homeHtml = readFileSync(path.join(publicDir, "index.html"), "utf8");
+// The homepage ships only its own complete styles inline. Keep other pages on
+// the shared stylesheet until their page-specific coverage has been checked.
+if (/<link\b[^>]*rel="stylesheet"[^>]*href="[^"]*style\.min/.test(homeHtml) || !/<style>[^<]*\.home-product/.test(homeHtml)) {
+  issues.push("homepage: inline page styles must replace the full site stylesheet");
+}
+const baseTag = homeHtml.match(/<script\b[^>]*src="[^"]*site-base\.min[^"]*"[^>]*>/)?.[0];
+if (!baseTag || !/\bdefer(?:[\s=>])/.test(baseTag)) issues.push("homepage: base behavior must be deferred");
+for (const button of homeHtml.matchAll(/<button\b[^>]*class="hp-term-row"[^>]*>/g)) {
+  if (/aria-label=/.test(button[0])) issues.push("homepage: command rows must keep their visible accessible name");
+}
+
 for (const requiredTag of [
   '<link rel="manifest" href="/site.webmanifest">',
   '<link rel="mask-icon" href="/images/brand/pipelab-mark-mono-dark.svg" color="#00e5a0">',

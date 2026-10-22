@@ -136,4 +136,4 @@ The practical goal isn't perfection. It's making attacks expensive enough to det
 - [Agent Egress Security](/learn/agent-egress-security/) : what happens after injection succeeds
 - [What is an Agent Firewall?](/agent-firewall/) : the architecture that limits blast radius
 - [OWASP LLM Top 10](/learn/owasp-llm-top10/) : prompt injection is #1 on the list
-- [Pipelock on GitHub](https://github.com/luckyPipewrench/pipelock)
+- [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)

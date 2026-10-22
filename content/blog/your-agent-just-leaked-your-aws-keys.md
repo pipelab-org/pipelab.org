@@ -114,6 +114,6 @@ pipelock run --config balanced.yaml &   # from repo root, or use: pipelock gener
 curl "http://127.0.0.1:8888/fetch?url=https://example.com/?t=AKIAIOSFODNN7EXAMPLE"
 ```
 
-If you find a bypass, [open an issue](https://github.com/luckyPipewrench/pipelock/issues).
+If you find a bypass, [open an issue](https://github.com/pipelab-org/pipelock/issues).
 
 Full definition and requirements checklist: [What is an agent firewall?](/agent-firewall/)

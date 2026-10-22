@@ -61,7 +61,7 @@ orbit:
         py: 280.8
         delay: 1.4
       - name: "Codex CLI"
-        href: "https://github.com/luckyPipewrench/pipelock/blob/main/docs/guides/codex.md"
+        href: "https://github.com/pipelab-org/pipelock/blob/main/docs/guides/codex.md"
         color: "#F4F4F5"
         brand: openai
         x: 37.8
@@ -70,7 +70,7 @@ orbit:
         py: 168.1
         delay: 1.8
       - name: "OpenClaw"
-        href: "https://github.com/luckyPipewrench/pipelock/blob/main/docs/guides/openclaw.md"
+        href: "https://github.com/pipelab-org/pipelock/blob/main/docs/guides/openclaw.md"
         color: "#FF4D4D"
         brand: openclaw
         x: 11.2
@@ -99,7 +99,7 @@ orbit:
         py: 58.8
         delay: 2.8
       - name: "Cline"
-        href: "https://github.com/luckyPipewrench/pipelock/blob/main/docs/guides/cline.md"
+        href: "https://github.com/pipelab-org/pipelock/blob/main/docs/guides/cline.md"
         color: "#F4F4F5"
         brand: cline
         x: 54.9
@@ -108,7 +108,7 @@ orbit:
         py: 46.6
         delay: 3.2
       - name: "OpenCode"
-        href: "https://github.com/luckyPipewrench/pipelock/blob/main/docs/guides/opencode.md"
+        href: "https://github.com/pipelab-org/pipelock/blob/main/docs/guides/opencode.md"
         color: "#F4F4F5"
         brand: opencode
         x: 72.8
@@ -117,7 +117,7 @@ orbit:
         py: 83.4
         delay: 3.5
       - name: "LangGraph"
-        href: "https://github.com/luckyPipewrench/pipelock/blob/main/docs/guides/langgraph.md"
+        href: "https://github.com/pipelab-org/pipelock/blob/main/docs/guides/langgraph.md"
         color: "#7FC8FF"
         brand: langchain
         x: 85.5
@@ -126,7 +126,7 @@ orbit:
         py: 160.6
         delay: 3.9
       - name: "CrewAI"
-        href: "https://github.com/luckyPipewrench/pipelock/blob/main/docs/guides/crewai.md"
+        href: "https://github.com/pipelab-org/pipelock/blob/main/docs/guides/crewai.md"
         color: "#FF5A50"
         brand: crewai
         x: 90
@@ -135,7 +135,7 @@ orbit:
         py: 260.6
         delay: 4.2
       - name: "Google ADK"
-        href: "https://github.com/luckyPipewrench/pipelock/blob/main/docs/guides/google-adk.md"
+        href: "https://github.com/pipelab-org/pipelock/blob/main/docs/guides/google-adk.md"
         color: "#4285F4"
         brand: google
         x: 85.4
@@ -144,7 +144,7 @@ orbit:
         py: 360.4
         delay: 4.6
       - name: "AutoGen"
-        href: "https://github.com/luckyPipewrench/pipelock/blob/main/docs/guides/autogen.md"
+        href: "https://github.com/pipelab-org/pipelock/blob/main/docs/guides/autogen.md"
         color: "#F4F4F5"
         brand: autogen
         x: 72.6
@@ -153,7 +153,7 @@ orbit:
         py: 437.3
         delay: 4.9
       - name: "OpenAI Agents"
-        href: "https://github.com/luckyPipewrench/pipelock/blob/main/docs/guides/openai-agents.md"
+        href: "https://github.com/pipelab-org/pipelock/blob/main/docs/guides/openai-agents.md"
         color: "#F4F4F5"
         brand: openai
         x: 54.7
@@ -166,6 +166,7 @@ orbit:
         color: "#F4F4F5"
         # Source: https://github.com/NousResearch/hermes-agent/blob/main/apps/desktop/public/apple-touch-icon.png
         img: "/images/brands/hermes.png"
+        img_small: "/images/brands/hermes-56.png"
         x: 35.7
         ypct: 88.6
         px: 357.2
@@ -198,11 +199,11 @@ rows:
         color: "#2496ED"
         brand: docker
       - name: "Kubernetes"
-        href: "https://github.com/luckyPipewrench/pipelock/blob/main/docs/guides/kubernetes-enterprise-deployment.md"
+        href: "https://github.com/pipelab-org/pipelock/blob/main/docs/guides/kubernetes-enterprise-deployment.md"
         color: "#326CE5"
         brand: kubernetes
       - name: "Helm chart"
-        href: "https://github.com/luckyPipewrench/pipelock/tree/main/charts/pipelock"
+        href: "https://github.com/pipelab-org/pipelock/tree/main/charts/pipelock"
         color: "#277A9F"
         brand: helm
       - name: "Cloudflare Sandboxes"
@@ -210,7 +211,7 @@ rows:
         color: "#F38020"
         brand: cloudflare
       - name: "GitHub Actions"
-        href: "https://github.com/luckyPipewrench/pipelock-agent-egress-action"
+        href: "https://github.com/pipelab-org/pipelock-agent-egress-action"
         color: "#2088FF"
         brand: githubactions
       - name: "Sure"
@@ -222,7 +223,7 @@ rows:
         href: "/install/"
         color: "#FBB040"
         brand: homebrew
-      - name: "Go"
+      - name: "Install with Go"
         href: "/install/"
         color: "#00ADD8"
         brand: go
@@ -237,40 +238,40 @@ rows:
         color: "#F46800"
         brand: grafana
       - name: "Splunk"
-        href: "https://github.com/luckyPipewrench/pipelock/blob/main/docs/guides/siem-integration.md"
+        href: "https://github.com/pipelab-org/pipelock/blob/main/docs/guides/siem-integration.md"
         color: "#F4F4F5"
         brand: splunk
       - name: "Elastic"
-        href: "https://github.com/luckyPipewrench/pipelock/blob/main/docs/guides/siem-integration.md"
+        href: "https://github.com/pipelab-org/pipelock/blob/main/docs/guides/siem-integration.md"
         color: "#FEC514"
         brand: elastic
       - name: "Microsoft Sentinel"
-        href: "https://github.com/luckyPipewrench/pipelock/blob/main/docs/guides/siem-integration.md"
+        href: "https://github.com/pipelab-org/pipelock/blob/main/docs/guides/siem-integration.md"
         color: "#1B93EB"
         brand: microsoft-sentinel
       - name: "Grafana Loki"
-        href: "https://github.com/luckyPipewrench/pipelock/blob/main/docs/guides/siem-integration.md"
+        href: "https://github.com/pipelab-org/pipelock/blob/main/docs/guides/siem-integration.md"
         color: "#F46800"
         brand: grafana
       - name: "OpenTelemetry"
-        href: "https://github.com/luckyPipewrench/pipelock/blob/main/docs/guides/siem-integration.md"
+        href: "https://github.com/pipelab-org/pipelock/blob/main/docs/guides/siem-integration.md"
         color: "#F5A800"
         brand: opentelemetry
   - label: "Verify receipts in"
     items:
-      - name: "Go"
+      - name: "Verify receipts with Go"
         href: "/learn/verify-a-receipt/"
         color: "#00ADD8"
         brand: go
       - name: "TypeScript"
-        href: "https://github.com/luckyPipewrench/pipelock/tree/main/sdk/verifiers/ts"
+        href: "https://github.com/pipelab-org/pipelock/tree/main/sdk/verifiers/ts"
         color: "#3178C6"
         brand: typescript
       - name: "Rust"
-        href: "https://github.com/luckyPipewrench/pipelock/tree/main/sdk/verifiers/rust"
+        href: "https://github.com/pipelab-org/pipelock/tree/main/sdk/verifiers/rust"
         color: "#DEA584"
         brand: rust
       - name: "Python"
-        href: "https://github.com/luckyPipewrench/pipelock-verify-python"
+        href: "https://github.com/pipelab-org/pipelock-verify-python"
         color: "#3776AB"
         brand: python

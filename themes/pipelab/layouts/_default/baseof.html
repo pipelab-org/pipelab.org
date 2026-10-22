@@ -32,8 +32,13 @@
   <link rel="mask-icon" href="/images/brand/pipelab-mark-mono-dark.svg" color="#00e5a0">
   <link rel="manifest" href="/site.webmanifest">
   <link rel="preload" href="/fonts/inter-variable.woff2" as="font" type="font/woff2" crossorigin>
+  {{ if .IsHome }}
+  {{ $style := resources.Get "scss/home-critical.scss" | toCSS | minify }}
+  <style>{{ $style.Content | safeCSS }}</style>
+  {{ else }}
   {{ $style := resources.Get "scss/style.scss" | toCSS (dict "targetPath" "css/style.css") | minify | fingerprint }}
   <link rel="stylesheet" href="{{ $style.RelPermalink }}" integrity="{{ $style.Data.Integrity }}">
+  {{ end }}
   <meta property="og:title" content="{{ $displayTitle }}">
   <meta property="og:description" content="{{ $pageDescription }}">
   <meta property="og:type" content="{{ if .IsHome }}website{{ else if and (eq .Section "blog") (not .IsSection) }}article{{ else }}website{{ end }}">
@@ -113,11 +118,11 @@
   </script>
   {{ else if eq .Type "pipelock" }}
   {{ $sameAs := slice
-    "https://github.com/luckyPipewrench/pipelock"
+    "https://github.com/pipelab-org/pipelock"
     "https://github.com/luckyPipewrench/homebrew-tap"
-    "https://github.com/luckyPipewrench/pipelock-agent-egress-action"
-    "https://github.com/luckyPipewrench/pipelock-verify-python"
-    "https://github.com/luckyPipewrench/agent-egress-bench"
+    "https://github.com/pipelab-org/pipelock-agent-egress-action"
+    "https://github.com/pipelab-org/pipelock-verify-python"
+    "https://github.com/pipelab-org/agent-egress-bench"
   }}
   {{ range $siteSameAs }}{{ $sameAs = $sameAs | append . }}{{ end }}
   <script type="application/ld+json">
@@ -145,7 +150,7 @@
         {{- /* No codeRepository here: schema.org scopes that property to
                SoftwareSourceCode, not SoftwareApplication, and validators
                reject it. The repository URL is carried by sameAs below. */}}
-        "downloadUrl": "https://github.com/luckyPipewrench/pipelock/releases",
+        "downloadUrl": "https://github.com/pipelab-org/pipelock/releases",
         "isAccessibleForFree": true,
         "image": {{ (or .Params.og_image (printf "%simages/og/og-product.png" .Site.BaseURL)) | jsonify | safeJS }},
         "offers": {

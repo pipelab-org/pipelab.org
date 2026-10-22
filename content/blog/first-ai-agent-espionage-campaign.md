@@ -105,7 +105,7 @@ If you run AI coding agents with network access:
 
 Pipelock handles 1-5 out of the box. For 6, you bring the container. For 7, Pipelock gives you network audit logs; process, filesystem, and behavioral logging are on you.
 
-Get started: `brew install luckyPipewrench/tap/pipelock` or grab a [preset config](https://github.com/luckyPipewrench/pipelock/tree/main/configs) and run `pipelock run --config balanced.yaml`. Full setup guide for Claude Code [here](https://github.com/luckyPipewrench/pipelock/blob/main/docs/guides/claude-code.md).
+Get started: `brew install luckyPipewrench/tap/pipelock` or grab a [preset config](https://github.com/pipelab-org/pipelock/tree/main/configs) and run `pipelock run --config balanced.yaml`. Full setup guide for Claude Code [here](https://github.com/pipelab-org/pipelock/blob/main/docs/guides/claude-code.md).
 
 ---
 

@@ -11,6 +11,9 @@
   {{- else if not (fileExists (printf "static%s" $entry.img)) -}}
     {{- errorf "%s %q: image asset %q is missing" $context $entry.name $entry.img -}}
   {{- else -}}
+    {{- with $entry.img_small -}}
+      {{- $smallValid := partial "integration-mark.html" (dict "entry" (dict "img" . "name" $entry.name) "context" $context "required" true) -}}
+    {{- end -}}
     {{- $hasImg = true -}}
   {{- end -}}
 {{- else if .required -}}
