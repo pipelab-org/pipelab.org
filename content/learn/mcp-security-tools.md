@@ -50,9 +50,13 @@ These tools analyze MCP server tool descriptions before you connect them to an a
 
 [mcp-scanner](https://github.com/cisco-ai-defense/mcp-scanner) connects to an MCP server, pulls tool descriptions, and runs them through YARA rules and an LLM-based classifier to detect hidden instructions. It flags descriptions that tell the agent to read files, exfiltrate data, or change behavior. Good for catching obvious tool poisoning before deployment. Relies on LLM judgment, so novel attacks may pass.
 
-### Snyk agent-scan
+### Snyk Agent Scan
 
-Snyk's [agent-scan](https://snyk.io/) (formerly Invariant Labs' MCP-Scan, acquired in 2025) integrates with their vulnerability database. It analyzes MCP server packages and tool descriptions for injection patterns. Fits into existing Snyk workflows if your team already uses Snyk for dependency scanning.
+[Snyk Agent Scan](https://github.com/snyk/agent-scan) discovers agent configurations, MCP servers, and skills, then reports risks such as prompt injection, tool poisoning, and malicious skill content. Background mode periodically scans and reports results to Snyk Evo. The CLI uses the [Apache-2.0 license](https://github.com/snyk/agent-scan/blob/main/LICENSE); scans require a Snyk account and API token.
+
+The [official README](https://github.com/snyk/agent-scan/blob/main/README.md), checked October 22, 2026, describes local checks plus API analysis. It sends agent application details, MCP configurations and signatures, tool names and descriptions, and skill content for analysis, with secrets redacted before transmission. Snyk states that MCP tool-call contents and results are not stored or logged.
+
+Scanning can execute configured stdio server commands or contact remote MCP servers to retrieve tool descriptions. Interactive scans ask for consent per server by default. Background and push-key scans inspect remote servers automatically, but only start stdio servers with `--dangerously-run-mcp-servers`. Review configured commands and URLs; use a sandbox for untrusted configurations. These are component-scanning and inventory features; assess any separate enterprise runtime-governance offering on its own documentation.
 
 ### mcpscan.ai (Invariant Labs)
 
