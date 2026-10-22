@@ -416,6 +416,10 @@ mcp_tool_policy:
   enabled: true
   action: block
   rules:
+    - name: "Destructive File Delete"
+      tool_pattern: '(?i)^(?:mcp__[a-z0-9_-]+__|[a-z0-9_-]+[.:])?(bash|shell|exec|run_command|execute|terminal|bash_exec)$'
+      arg_pattern: '(?i)\brm\s+(--\s+)?(-[a-z]*[rf]\b|--(?:recursive|force)\b)'
+      action: block
     - name: "Credential File Access"
       tool_pattern: '(?i)^(bash|shell|exec|run_command)$'
       arg_pattern: '(?i)(\.ssh/(id_|authorized)|\.aws/credentials|\.env\b)'
@@ -455,6 +459,8 @@ mcp_session_binding:
 
 ### All together
 
+An explicit `rules` list replaces the built-in tool-policy rules. This example includes destructive-delete blocking; add the other rules your deployment needs from the [balanced configuration](https://github.com/pipelab-org/pipelock/blob/v3.7.0/configs/balanced.yaml).
+
 ```yaml
 # Scan tool descriptions for poisoning + detect mid-session changes
 mcp_tool_scanning:
@@ -473,6 +479,10 @@ mcp_tool_policy:
   enabled: true
   action: block
   rules:
+    - name: "Destructive File Delete"
+      tool_pattern: '(?i)^(?:mcp__[a-z0-9_-]+__|[a-z0-9_-]+[.:])?(bash|shell|exec|run_command|execute|terminal|bash_exec)$'
+      arg_pattern: '(?i)\brm\s+(--\s+)?(-[a-z]*[rf]\b|--(?:recursive|force)\b)'
+      action: block
     - name: "Credential File Access"
       tool_pattern: '(?i)^(bash|shell|exec|run_command|execute|terminal)$'
       arg_pattern: '(?i)(\.ssh/(id_|authorized)|\.aws/credentials|\.env\b|\.netrc)'
@@ -495,7 +505,7 @@ mcp_session_binding:
 Apply it by wrapping the server:
 
 ```bash
-pipelock mcp proxy --config mcp-security.yaml -- npx @modelcontextprotocol/server-filesystem
+pipelock mcp proxy --config mcp-security.yaml -- npx @modelcontextprotocol/server-filesystem "$PWD"
 pipelock mcp proxy --config mcp-security.yaml --upstream https://mcp.example.com/mcp
 ```
 

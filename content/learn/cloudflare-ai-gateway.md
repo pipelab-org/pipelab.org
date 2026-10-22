@@ -3,7 +3,7 @@ title: "Cloudflare AI Gateway: Pricing, Features, Limits & Alternatives (2026)"
 linkTitle: "Cloudflare AI Gateway"
 seoTitle: "Cloudflare AI Gateway: Free Tier, Pricing & Limits"
 subtitle: "Edge-hosted observability, caching, and content scanning for LLM API traffic, with the boundary it does not cross."
-description: "Is Cloudflare AI Gateway free? Caching, rate limits, analytics, and DLP cost nothing; Guardrails and logs are billed. Limits and alternatives."
+description: "Cloudflare AI Gateway pricing: caching, rate limits, analytics, and DLP are free. Guardrails are billed; log limits and charges depend on the logging plan."
 date: 2026-05-05
 lastmod: 2026-10-21
 faq:
