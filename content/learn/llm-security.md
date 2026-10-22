@@ -77,7 +77,7 @@ Agents that can fetch URLs, browse the web, or make arbitrary HTTP calls have th
 
 The agent calls a tool it shouldn't, with parameters it shouldn't, on behalf of a user whose authority it shouldn't have. This is the agentic version of privilege escalation: the model is tricked into exercising a capability outside its intended scope. Tool policy enforcement (allow/deny/redirect on specific tool calls) is the runtime answer.
 
-Deep dive: [Chatbot Security](/learn/chatbot-security/) · [AI Agent Security Best Practices](/learn/ai-agent-security-best-practices/).
+Deep dive: [Chatbot Security](/learn/chatbot-security/) · [AI Agent Security & Hardening](/learn/ai-agent-security/).
 
 ## Where the defenses live
 
@@ -120,7 +120,7 @@ CSA, SANS, and other industry bodies are contributing too: the [Mythos-Ready Pla
 
 ## Where to start
 
-- **You're deploying an LLM application for the first time:** read [LLM Prompt Injection](/learn/llm-prompt-injection/) and [AI Agent Security Best Practices](/learn/ai-agent-security-best-practices/). Start with the OWASP LLM Top 10 as your risk inventory.
+- **You're deploying an LLM application for the first time:** read [LLM Prompt Injection](/learn/llm-prompt-injection/) and [AI Agent Security & Hardening](/learn/ai-agent-security/). Start with the OWASP LLM Top 10 as your risk inventory.
 - **You ship an agent that calls MCP servers:** read [MCP Security](/learn/mcp-security/), [MCP Tool Poisoning](/learn/mcp-tool-poisoning/), and [Shadow MCP](/learn/shadow-mcp/). Plan for runtime scanning on every tool call.
 - **You need an evaluation framework:** [Agent Firewall Evaluation Checklist](/agent-firewall-checklist/) walks through what a production runtime control must do.
 - **You're in a compliance-heavy environment:** [EU AI Act Compliance](/learn/eu-ai-act-compliance/), [AI Agent Compliance](/learn/ai-agent-compliance/), and [Compliance Evidence](/learn/compliance-evidence/) map the runtime controls to audit requirements.

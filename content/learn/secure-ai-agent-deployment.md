@@ -168,7 +168,7 @@ For the Kubernetes path added in `v2.2.0`, start with [Pipelock Kubernetes compa
 - [AI Runtime Security](/learn/ai-runtime-security/): the runtime threat model across model, agent, and infrastructure layers
 - [Generative AI Firewall](/learn/generative-ai-firewall/): the vendor category for inline AI traffic inspection
 - [What is an Agent Firewall?](/agent-firewall/): the egress inspection architecture
-- [AI Agent Security Best Practices](/learn/ai-agent-security-best-practices/): operational checklists
+- [AI Agent Security & Hardening](/learn/ai-agent-security/): operational checklists
 - [Pipelock Kubernetes companion proxy](/learn/pipelock-kubernetes-companion-proxy/): enforced K8s rollout pattern in `v2.2.0`
 - [Pipelock session recovery](/learn/pipelock-session-recovery/): inspect, explain, release, and terminate airlocked sessions
 - [Pipelock](/pipelock/): all features, one page

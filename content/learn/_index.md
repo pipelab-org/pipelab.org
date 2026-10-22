@@ -119,7 +119,6 @@ Use the filter and search at the top of the page to narrow the list, or jump str
 - [What Pipelock Claims and Doesn't](/learn/non-bypass-doctrine/)
 - [Known Limitations](/learn/known-limitations/)
 - [AI Agent Security](/learn/ai-agent-security/)
-- [Agent Security Best Practices](/learn/ai-agent-security-best-practices/)
 - [Agent Security Tools](/learn/ai-agent-security-tools/)
 - [AI Egress Proxy](/learn/ai-egress-proxy/)
 - [Denial of Wallet](/learn/denial-of-wallet/)

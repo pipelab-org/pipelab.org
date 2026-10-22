@@ -19,6 +19,8 @@ faq:
     a: "Agent hardening means reducing an agent's access to the minimum its task needs and putting deterministic controls outside the model: a sandbox for execution, a proxy that enforces which destinations it can reach, approval gates for risky tool calls, and a kill switch. The model's own safety training is not a security boundary."
   - q: "Why isn't the model's built-in safety enough?"
     a: "Model safety training can be bypassed with crafted input, and the model can't reliably tell instructions from data in fetched pages or tool results. Controls that run outside the agent's process, such as a sandbox or an egress proxy, keep working when the model is fooled."
+  - q: "How do you keep SSH keys and credentials away from an AI agent?"
+    a: "Use two controls. Keep ~/.ssh and credential files out of reach with OS or container filesystem isolation. Then route HTTP and MCP traffic through a proxy that scans outbound requests for keys and tokens. Isolation prevents the read; egress scanning blocks common credential-shaped leaks if the agent gets access anyway."
 learn_cat: concepts
 level: intro
 tags:

@@ -104,3 +104,8 @@
 # Tag pages that emptied when the MCP how-to page was retired.
 /tags/config/ /tags/ 301
 /tags/tutorial/ /tags/ 301
+
+# The best-practices checklist merged into the AI agent security page.
+/learn/ai-agent-security-best-practices /learn/ai-agent-security/ 301
+/learn/ai-agent-security-best-practices/ /learn/ai-agent-security/ 301
+/learn/ai-agent-security-best-practices/index.md /learn/ai-agent-security/index.md 301
