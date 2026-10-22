@@ -127,7 +127,7 @@ Pipelock supplies runtime-control evidence that an AIMS can reference for monito
 
 ### EU Digital Operational Resilience Act (DORA), Regulation (EU) 2022/2554
 
-**Source:** [eba.europa.eu/single-rule-book-qa](https://www.eba.europa.eu/single-rule-book-qa)
+**Source:** [European Commission: Digital Operational Resilience Act](https://finance.ec.europa.eu/digital-finance/cyber-resilience_en#legislation)
 
 **Timeline:**
 

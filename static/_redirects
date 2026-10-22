@@ -84,3 +84,11 @@
 /gauntlet-site/* /gauntlet/evidence/:splat 301
 /compare/pipelock-vs-agent-wall/ /compare/pipelock-vs-open-source-mcp-gateways/ 301
 /compare/pipelock-vs-agent-wall/index.md /compare/pipelock-vs-open-source-mcp-gateways/index.md 301
+
+# Retired guide and shorthand URLs with matching current pages.
+/learn/cursor-hooks /learn/cursor-integration/ 301
+/learn/cursor-hooks/ /learn/cursor-integration/ 301
+/agent /agent-firewall/ 301
+/agent/ /agent-firewall/ 301
+/cve-2026-25253 /blog/openclaw-cve-2026-25253/ 301
+/cve-2026-25253/ /blog/openclaw-cve-2026-25253/ 301
