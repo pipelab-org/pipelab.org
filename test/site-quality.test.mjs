@@ -22,6 +22,9 @@ test("current response-pattern claims use the shared datum", () => {
       `<span>${value}</span> response patterns`,
       `${value}\nresponse-scanning patterns`,
       `<span>Response patterns</span><strong>${value}</strong>`,
+      `| Prompt injection detection | Not documented | Yes (${value} patterns, 6-pass) |`,
+      `| **Response scanning** | ${value} built-in patterns |`,
+      `| Injection | injection (${value} patterns) |`,
     ]) {
       for (const file of ["content/learn/example.md", "data/example.yaml", "themes/pipelab/layouts/index.html", "static/llms-full.txt"]) {
         assert.equal(responsePatternClaims(file, claim).length, 1, `${file}: ${claim}`);
@@ -30,7 +33,7 @@ test("current response-pattern claims use the shared datum", () => {
   }
   assert.deepEqual(responsePatternClaims("content/blog/historical.md", "25 injection patterns"), []);
   assert.deepEqual(responsePatternClaims("content/learn/pipelock-v250-upgrade.md", "25 injection patterns"), []);
-  for (const claim of ['{{< stat key="response_patterns" >}} injection patterns', "65 DLP patterns", "6 response-scanning passes", "34% of implementations", "3. Scan inbound traffic for prompt injection patterns\n4. Block unsafe destinations"]) {
+  for (const claim of ['{{< stat key="response_patterns" >}} injection patterns', "65 DLP patterns", "6 response-scanning passes", "34% of implementations", "3. Scan inbound traffic for prompt injection patterns\n4. Block unsafe destinations", '| Prompt injection detection | Yes ({{< stat key="response_patterns" >}} patterns, 6-pass) |', "| Credential DLP scanning | Yes (65 patterns) |\n| Prompt injection detection | Yes |"]) {
     assert.deepEqual(responsePatternClaims("content/learn/example.md", claim), [], claim);
   }
 });

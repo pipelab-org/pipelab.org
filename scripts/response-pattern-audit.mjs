@@ -7,16 +7,23 @@ import { parse } from "yaml";
 // These signatures cover the count phrasings used by the site's current copy,
 // including the compact "34 injection" and "injection (34 patterns)" forms.
 const countClaim = /\b\d+\s+(?:(?:built[- ]in|default)\s+)?(?:prompt[- ]injection|response[- ]scanning|response\s+scanning|injection|response)(?:\s+detection|\s+and\s+response)?\s+patterns?\b|\b\d+\s+injection\s*(?:\+|[|,)])|\b(?:prompt[- ]injection|response[- ]scanning|response\s+scanning|injection|response)\s*[:(]\s*\d+\s+patterns?\b|\b(?:prompt[- ]injection|response[- ]scanning|response\s+scanning|injection|response)\s+patterns[ \t]*:?[ \t]*\d+\b/gi;
+// Markdown table rows carry the label in the first cell and the bare count in
+// a later one ("| Prompt injection detection | ... | Yes (34 patterns) |").
+const tableCountClaim = /^\|[^|\n]*(?:prompt[- ]injection|response[- ]scanning|response\s+scanning|injection|response)[^|\n]*\|[^\n]*?\b\d+\s+(?:(?:built[- ]in|default)\s+)?patterns?\b/gim;
 
 export function responsePatternClaims(file, source) {
   if (file.startsWith("content/blog/") || file === "content/learn/pipelock-v250-upgrade.md") return [];
   // Preserve newlines for diagnostics while reading across inline markup,
   // wrapped paragraphs, and separate number/label elements in stat cards.
   const prose = source.replace(/<[^>]*>/g, (tag) => tag.replace(/[^\n]/g, " ")).replace(/\*\*|__/g, "");
-  return [...prose.matchAll(countClaim)].map((match) => {
-    const line = prose.slice(0, match.index).split("\n").length;
-    return `${file}:${line}: literal response/injection count; render stats.response_patterns (or omit the count in frontmatter/static copy)`;
-  });
+  const lineOf = (match) => prose.slice(0, match.index).split("\n").length;
+  const lines = [...prose.matchAll(countClaim)].map(lineOf);
+  const proseLines = new Set(lines);
+  for (const match of prose.matchAll(tableCountClaim)) {
+    if (!proseLines.has(lineOf(match))) lines.push(lineOf(match));
+  }
+  return lines.map((line) =>
+    `${file}:${line}: literal response/injection count; render stats.response_patterns (or omit the count in frontmatter/static copy)`);
 }
 
 export function auditResponsePatternCounts(root) {
