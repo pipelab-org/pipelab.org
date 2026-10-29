@@ -1,8 +1,8 @@
 ---
 title: "Browser Shield: Defensive Response Rewriting"
 linkTitle: "Browser Shield"
-subtitle: "Strip page-side probes, hidden traps, and tracking beacons from agent-fetched content."
-description: "Browser Shield strips extension probes, hidden prompt traps, and tracking beacons from agent-fetched HTML and SVG, and reports JavaScript. Signed receipts."
+subtitle: "Remove supported markup traps and tracking elements while preserving existing HTML scripts."
+description: "Browser Shield sanitizes supported HTML and SVG markup before agent delivery. Existing inline scripts and standalone JavaScript stay unchanged."
 date: 2026-05-16
 learn_cat: operator
 level: intro
@@ -12,7 +12,7 @@ tags:
   - receipts
 ---
 
-Browser Shield is a defensive response-rewrite layer. It runs after Pipelock fetches a response and before the agent receives the body. Page-side probes that try to enumerate browser extensions, tracking beacons, and hidden prompt traps get stripped from the response. Every rewrite gets recorded in the action receipt so an operator can audit the intervention later.
+Browser Shield is a defensive response-rewrite layer. It runs after Pipelock fetches a response and before the agent receives the body. It removes supported browser-extension URLs, tracking image elements, prefetch links, and hidden prompt traps outside existing HTML scripts. Existing inline scripts and standalone JavaScript responses keep their original bytes. When receipt emission is configured, rewrites produce signed records you can inspect.
 
 It is opt-in. `browser_shield.enabled` defaults to `false`. The strictness, size limit, and individual rewrite toggles all have safe defaults once enabled.
 
@@ -28,39 +28,40 @@ Forward, intercepted and reverse HTTP paths strip Range and cache-validator requ
 
 Browser Shield only touches content the pipeline can classify as shieldable:
 
-- HTML and XHTML
-- JavaScript (reported, not rewritten)
-- SVG active content
+- HTML and XHTML markup outside existing script elements
+- SVG, subject to complete-body structural validation
+
+Standalone JavaScript receives normal response scanning, but Browser Shield leaves its bytes unchanged. SVG delivery requires structural validation of both the complete input and rewritten body. Active content is refused, and SVG stays refused when Shield is disabled, exempt for the host, or unable to inspect the complete body.
 
 Binary media, PDFs, JSON, and unknown specific content types pass through untouched. The oversize boundary is bounded to actually-shieldable responses, so a large legitimate media payload does not trigger a shield failure.
 
 Within a shieldable response, the rewrites cover:
 
-- **Extension probes.** Page-side JavaScript that enumerates local browser extensions or automation state.
-- **Tracking beacons.** Prefetch-style telemetry not required for rendering agent-visible content.
+- **Extension URLs.** Supported browser-extension URLs outside existing HTML scripts.
+- **Tracking elements.** Supported 1x1 tracking images and prefetch links outside existing scripts.
 - **Hidden agent traps.** Concealed instructions or prompt content positioned to steer an agent reading the page.
-- **SVG active content.** Script-bearing SVG elements that would otherwise execute on render.
-- **Fingerprint shims.** Optional injection that normalizes a small set of fingerprint vectors when enabled.
+- **SVG active content.** The SVG rewrite pipeline removes complete script elements and other supported active markup. Structural validation can refuse the document before it reaches that pipeline.
+- **Fingerprint shims.** Optional HTML shim injection can suppress `sendBeacon` at runtime without rewriting the page's JavaScript. It defaults to off and can break bot-verification checks.
 
-The default tracking-domain list ships with the binary; operators can extend it through `browser_shield.tracking_domains`.
+`browser_shield.tracking_domains` accepts additional exact tracking hostnames. Wildcards are refused at config load.
 
 ## When the shield triggers
 
-The shield runs on response paths where Pipelock buffers the body: fetch, forward, intercept, and reverse. Response injection scanning still runs after shield rewriting on applicable transports, so the agent receives content that has passed both layers.
+The shield runs on response paths where Pipelock buffers the body: fetch, forward, intercept, and reverse. Response scanning is a separate control with its own configuration and action. Injection findings survive Shield rewriting and still follow the configured response action. Shield exemptions skip rewriting only; other response policies still apply.
 
 Oversized shieldable responses follow `oversize_action`:
 
 | Value | Behavior |
 |---|---|
 | `block` | Fail closed. The response is denied. |
-| `warn` | The body returns unchanged. The intervention is recorded as a warning. |
-| `scan_head` | Rewrite the configured prefix only. The receipt records the rewrite as partial. |
+| `warn` | The body returns unchanged. Valid only with `strictness: minimal`; use for short diagnostics. |
+| `scan_head` | Default. Rewrite the configured prefix only: partial shielding leaves the remainder unshielded. The receipt records partial coverage. |
 
 ## Receipts
 
 When receipt signing is enabled, every shield rewrite emits a chained, signed receipt with a `shield` block alongside the usual action fields. The block records:
 
-- Pipeline used: `html`, `javascript`, or `svg`
+- Pipeline used: `html`, `javascript`, or `svg`; `javascript` identifies partial coverage records and never means script bytes were changed
 - Total rewrite count
 - Extension probe rewrites
 - Tracking beacon rewrites
@@ -86,7 +87,7 @@ Minimal opt-in, suitable for a first rollout:
 browser_shield:
   enabled: true
   strictness: minimal
-  oversize_action: warn
+  oversize_action: scan_head
 ```
 
 Production posture once a soak shows stable behavior:
@@ -118,7 +119,7 @@ Explicit non-goals:
 - Impersonating a specific human browser profile
 - Patching every obfuscated anti-automation script
 
-If a page depends on a commercial browser-integrity system for access, configure an allowed human-driven workflow outside the agent path or treat the target as unsupported for automated access. HUMAN and PerimeterX coverage is not on the v2.5 roadmap.
+If a page depends on a commercial browser-integrity system for access, configure an allowed human-driven workflow outside the agent path or treat the target as unsupported for automated access.
 
 ## Rollout
 
@@ -126,7 +127,7 @@ Use a staged rollout rather than turning Browser Shield on fleet-wide at the fai
 
 1. Build and verify the release candidate locally.
 2. Run the synthetic transport canary across fetch, forward, intercept, and reverse paths with receipt signing enabled.
-3. Enable Browser Shield on a small opt-in agent group with `strictness: minimal` and `oversize_action: warn`.
+3. Enable Browser Shield on a small opt-in agent group with `strictness: minimal` and `oversize_action: scan_head`.
 4. Monitor shield receipts, validator-clearing behavior, adaptive score movement, response scanner deltas, and page breakage.
 5. Move to `strictness: standard` and `oversize_action: block` only after the soak shows stable browsing behavior and no unexpected escalation.
 
@@ -134,7 +135,7 @@ Use a staged rollout rather than turning Browser Shield on fleet-wide at the fai
 
 When `flight_recorder.signing_key_path` is configured, shield receipts land in the flight-recorder directory alongside other action receipts. Each receipt is a chained Ed25519 signature; the published Python and TypeScript verifiers accept the new optional `shield` block without modification.
 
-For receipt format details and verifier links, see [Action Receipt Spec](/learn/action-receipt-spec/).
+For receipt format details and verifier links, see [Action Receipt Spec](/learn/action-receipt-spec/). The [v3.7.1 configuration reference](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/configuration.md#browser-shield) and [production-readiness contract](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/security/browser-shield-production-readiness.md) define the rewrite limits.
 
 ---
 

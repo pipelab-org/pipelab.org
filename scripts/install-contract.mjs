@@ -3,9 +3,11 @@ import path from "node:path";
 import { parse as parseYaml } from "yaml";
 
 // Published contract: the v3.7.0 release README's source-build instructions.
+// OCI contract: v3.7.1 README.md, Installation (Helm chart).
 // data/install.yaml substitutes VERSION; raw machine-readable files do not.
 export const sourceBuildTemplate = "git clone --branch vVERSION --depth 1 https://github.com/pipelab-org/pipelock.git\nmake -C pipelock install";
 export const brewInstallCommand = "brew install luckyPipewrench/tap/pipelock";
+export const helmTemplate = "helm install pipelock oci://ghcr.io/luckypipewrench/charts/pipelock --version VERSION";
 const dockerTemplate = "docker pull ghcr.io/luckypipewrench/pipelock:VERSION";
 export const installationCorrection = "> Installation correction (2026-10-16): The `go install` command below doesn't install current Pipelock releases. Use the [current installation guide](/install/) for a release binary or a source build pinned to the release tag. The original post follows unchanged.";
 
@@ -33,6 +35,7 @@ const normalizeLineEndings = source => source.replace(/\r\n?/g, "\n");
 const readSource = file => normalizeLineEndings(readFileSync(file, "utf8"));
 
 const commandPatterns = [
+  { label: "Helm install", pattern: /\bhelm\s+install\s+pipelock\s+oci:\/\/[^\s`"'<>);&|]+(?:[^\n`]*)/gi },
   { label: "unsupported go install", pattern: /\bgo\s+install\s+(?:\\\s*)?github\.com\/(?:luckypipewrench|pipelab-org)\/pipelock(?:\/cmd\/pipelock)?(?:@[^\s`"'<)]+)?/gi },
   { label: "source clone", pattern: /\bgit\s+clone\b[^\n`]*?github\.com\/(?:luckypipewrench|pipelab-org)\/pipelock[^\s`"\'<>);&|]*/gi },
   { label: "source build", pattern: /\bmake\s+(?:-C\s+pipelock\s+)?install\b/gi },
@@ -207,7 +210,7 @@ export function auditInstallData(source) {
   if (!Array.isArray(methods)) return ["data/install.yaml: methods must be an array"];
   const ids = methods.map(method => method?.id);
   if (new Set(ids).size !== ids.length) issues.push("data/install.yaml: duplicate method ids");
-  for (const [id, command] of [["go", sourceBuildTemplate], ["docker", dockerTemplate], ["homebrew", brewInstallCommand]]) {
+  for (const [id, command] of [["go", sourceBuildTemplate], ["docker", dockerTemplate], ["helm", helmTemplate], ["homebrew", brewInstallCommand]]) {
     const method = methods.find(entry => entry?.id === id);
     if (method?.command !== command) issues.push(`data/install.yaml: ${id} must use the supported shared command with its release placeholder`);
   }
@@ -224,6 +227,10 @@ export function auditRawInstallSource(source, version) {
   const issues = [];
   if (!/^\d+\.\d+\.\d+(?:-[\w.-]+)?$/.test(version || "")) return ["missing or invalid configured release version"];
   const expected = sourceBuildTemplate.replace("VERSION", version);
+  const expectedHelm = helmTemplate.replace("VERSION", version);
+  for (const match of commandMatches(source).filter(match => match.label === "Helm install")) {
+    if (match.text !== expectedHelm) issues.push("Helm OCI install does not match the configured release");
+  }
   if (commandMatches(source).some(match => match.label === "unsupported go install")) issues.push("unsupported Go-module installation command");
   for (const section of sections(source)) {
     const matches = commandMatches(section, true);

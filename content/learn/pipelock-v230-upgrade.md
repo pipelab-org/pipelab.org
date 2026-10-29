@@ -113,7 +113,7 @@ Full operator guide: [SSE Streaming Response Scanning](/learn/sse-streaming-resp
 A few v2.2.x edge cases got cleaned up. If your environment depended on any of them, you'll want to know.
 
 - **Dangerous-capability regex no longer flags `runtime`, `runner`, `launcher`, `spawner` nouns.** If your `mcp_tool_scanning` baseline previously included a poisoned-tool false positive on those nouns, drift detection will surface the difference on first run after the upgrade.
-- **Browser shield short-circuits non-HTML media.** Image, audio, video, PDF, and arbitrary binary responses no longer get processed by the shield ceiling. HTML, JS, and SVG remain shielded. Workaround `exempt_domains` entries you added for `generativelanguage.googleapis.com` or similar can be removed.
+- **Browser shield short-circuits non-HTML media.** Image, audio, video, PDF, and arbitrary binary responses no longer get processed by the shield ceiling. HTML, JavaScript, and SVG remain within the shield classification boundary. On current releases, supported HTML and SVG markup can be rewritten; existing JavaScript stays unchanged. See the [Browser Shield guide](/learn/browser-shield/) for current limits. Workaround `exempt_domains` entries you added for `generativelanguage.googleapis.com` or similar can be removed.
 - **DLP coverage downgrades on reload now warn.** A reload that replaces a strong DLP regex with a weaker one under the same name was previously silent. It now surfaces as a reload warning.
 - **SSRF DNS failures stay adaptive-neutral.** Resolver outages no longer push sessions into airlock. Requests still block when DNS cannot be verified; resolver failures no longer accumulate threat evidence.
 

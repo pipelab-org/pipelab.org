@@ -92,6 +92,14 @@ Pipelock runs scanning checks in a deliberate order. Domain blocklist and DLP sc
 
 The URL pipeline first rejects an oversized URL before parsing it. After parsing and hostname canonicalization, it checks: scheme (HTTP and HTTPS only), CRLF injection, path traversal, strict-mode allowlist, domain blocklist, the core SSRF literal-IP floor, SigV4 presigned-URL handling, the core DLP floor, configured DLP, path entropy, subdomain entropy, DNS-based SSRF and rebinding, rate limiting, aggregate data budget, and the final context check. Core and configured DLP run before DNS resolution so attacker-controlled hostnames cannot leak a secret through the lookup itself. Each layer can produce a block, redirect, warn, ask, strip, forward, or allow verdict.
 
+### Browser Shield
+
+Browser Shield is opt-in and sanitizes supported HTML and SVG markup. Existing inline scripts and standalone JavaScript responses keep their original bytes; response scanning follows its own configured policy. SVG delivery requires complete-body structural validation and is refused when Shield cannot validate it. The default oversize action, scan_head, rewrites only a prefix and records partial coverage; the remainder is unshielded. Guide: https://pipelab.org/learn/browser-shield/. Release contract: https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/configuration.md#browser-shield.
+
+### Filesystem Sentinel
+
+Filesystem Sentinel watches configured directories for secrets written to disk. It detects writes after they happen. The default action warns. In subprocess MCP mode, block can terminate the child after an agent-attributed DLP finding; skipped or unreadable files do not create findings. Release contract: https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/guides/filesystem-sentinel.md.
+
 ### Fail-closed defaults
 
 Pipelock blocks traffic when in doubt. Parse errors, scanner timeouts, non-terminal HITL prompts (where the human-in-the-loop neither approves nor denies before the timeout), and context cancellation all default to block rather than allow. The configuration field `enforce` is a boolean that defaults to true; false turns ordinary blocks into warnings, but it is not an observe-only switch: header hard-blocks, unanswerable approval prompts and adaptive-enforcement escalations can still block. The separate `mode` setting accepts `strict`, `balanced` or `audit`. Production deployments are expected to leave `enforce` on.
@@ -194,6 +202,14 @@ docker pull ghcr.io/luckypipewrench/pipelock:latest
 ```
 
 The container registry tags published images by version. Pin to a specific tag in production. The latest stable release tag is published at https://github.com/pipelab-org/pipelock/releases.
+
+### Helm chart (OCI)
+
+```
+helm install pipelock oci://ghcr.io/luckypipewrench/charts/pipelock --version 3.7.1
+```
+
+The tagged chart documentation is https://github.com/pipelab-org/pipelock/blob/v3.7.1/charts/pipelock/README.md.
 
 ### Homebrew
 

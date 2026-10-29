@@ -24,6 +24,8 @@
 
 ## Key reference pages
 
+- [Browser Shield](https://pipelab.org/learn/browser-shield/): Supported HTML and SVG sanitization, unchanged JavaScript bytes, and partial-coverage limits.
+
 - [Agent firewall](https://pipelab.org/agent-firewall/): Canonical definition of an agent firewall vs WAFs, gateways, guardrails, and sandboxes.
 - [MCP security](https://pipelab.org/learn/mcp-security/): Umbrella reference for MCP threat categories and runtime defenses.
 - [MCP proxy](https://pipelab.org/learn/mcp-proxy/): Why MCP needs protocol-aware proxying and what bidirectional inspection scans.

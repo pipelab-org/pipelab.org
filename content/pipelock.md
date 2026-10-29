@@ -78,7 +78,7 @@ faq:
         <span class="product-runbook-index" aria-hidden="true">01</span>
         <div class="product-runbook-copy">
           <h3>Install the binary</h3>
-          <p>Use Go here or choose Docker, Homebrew, or a signed release binary in the <a href="/install/">install guide &rarr;</a></p>
+          <p>Use Go here or choose Docker, Helm (OCI), Homebrew, or a signed release binary in the <a href="/install/">install guide &rarr;</a></p>
         </div>
         <div class="product-runbook-artifact pipelock-command"><button type="button" data-cmd-copy aria-label="Copy the Pipelock install command"><span class="prompt">$ </span><span class="cmd-text">{{< install-cmd go >}}</span></button></div>
       </li>
@@ -106,6 +106,7 @@ faq:
       <a href="/learn/mcp-security/">MCP security checklist</a>
     </nav>
     <p class="pipelock-runbook-release"><span>Current container</span><code>{{< install-cmd docker >}}</code></p>
+    <p class="pipelock-runbook-release"><span>Helm chart (OCI)</span><code>{{< install-cmd helm >}}</code></p>
   </div>
 </section>
 
@@ -126,8 +127,8 @@ faq:
       </div>
       <div class="pipelock-control-body">
         <p>DLP and SSRF run on outbound traffic. Response scanning catches prompt injection before untrusted content reaches the agent.</p>
-        <ul class="pipelock-control-tags"><li>{{< stat key="dlp_patterns" >}} DLP patterns</li><li>Encoding-aware inspection</li><li>Media policy</li><li>Canary tokens</li></ul>
-        <details class="pipelock-control-detail"><summary>Open traffic controls</summary><div><p><strong>Cross-transport DLP.</strong> The same engine scans URLs, headers, request bodies, WebSocket frames, and MCP tool arguments. Cross-request detection catches secrets split across requests.</p><p><strong>Response scanning.</strong> Normalization checks obfuscated prompt injection, control-flow hijacking, and authority assertions before the content reaches the agent.</p><p><strong>Media policy.</strong> Audio and video are blocked by default. JPEG and PNG metadata is stripped. Browser Shield delivers SVG in sanitized form only after structural validation and refuses it otherwise, and SVG stays refused while Shield is off.</p><p><strong>Credential audiences.</strong> On inspected traffic, built-in credential classes are allowed at their provider's published API hosts, on the provider's accepted header or path carriers. Other checks still apply, and plain CONNECT without TLS interception relays opaque bytes that aren't scanned. DNS-over-HTTPS is inspected as DNS, and partial disclosure of a known secret is detected.</p></div></details>
+        <ul class="pipelock-control-tags"><li>{{< stat key="dlp_patterns" >}} DLP patterns</li><li>Encoding-aware inspection</li><li>Media policy</li><li>Canary tokens</li><li><a href="/capabilities/browser-shield/">Browser Shield</a></li></ul>
+        <details class="pipelock-control-detail"><summary>Open traffic controls</summary><div><p><strong>Cross-transport DLP.</strong> The same engine scans URLs, headers, request bodies, WebSocket frames, and MCP tool arguments. Cross-request detection catches secrets split across requests.</p><p><strong>Response scanning.</strong> Normalization checks obfuscated prompt injection, control-flow hijacking, and authority assertions before the content reaches the agent.</p><p><strong>Media policy.</strong> Audio and video are blocked by default. JPEG and PNG metadata is stripped. Browser Shield delivers SVG in sanitized form only after structural validation and refuses it otherwise, and SVG stays refused while Shield is off.</p><p><strong><a href="/capabilities/browser-shield/">Browser Shield.</a></strong> Opt-in rewriting removes supported HTML traps and tracking elements while existing inline scripts and standalone JavaScript keep their bytes unchanged. Response scanning follows its own configured policy. <a href="/learn/browser-shield/">Read the rewrite limits.</a></p><p><strong>Credential audiences.</strong> On inspected traffic, built-in credential classes are allowed at their provider's published API hosts, on the provider's accepted header or path carriers. Other checks still apply, and plain CONNECT without TLS interception relays opaque bytes that aren't scanned. DNS-over-HTTPS is inspected as DNS, and partial disclosure of a known secret is detected.</p></div></details>
       </div>
     </article>
     <article class="pipelock-control-row">
@@ -138,8 +139,8 @@ faq:
       </div>
       <div class="pipelock-control-body">
         <p>Pipelock scans tool descriptions and arguments, applies tool policy before execution, and tracks changes inside a session.</p>
-        <ul class="pipelock-control-tags"><li>Tool policy</li><li>Session binding</li><li>Chain detection</li><li>Binary integrity</li></ul>
-        <details class="pipelock-control-detail"><summary>Open MCP controls</summary><div><p><strong>Tool policy.</strong> Allow, deny, and redirect rules run before execution. Shell-obfuscation checks resolve variable insertion and backtick substitution before matching.</p><p><strong>Session binding.</strong> A SHA-256 baseline tracks tool definitions. Mid-session description changes can alert or block.</p><p><strong>Tool chains.</strong> Subsequence matching finds configured multi-call patterns, while binary integrity verifies the wrapped MCP process before spawn.</p></div></details>
+        <ul class="pipelock-control-tags"><li>Tool policy</li><li>Session binding</li><li>Chain detection</li><li>Binary integrity</li><li><a href="https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/guides/filesystem-sentinel.md" target="_blank" rel="noopener noreferrer">Filesystem Sentinel</a></li></ul>
+        <details class="pipelock-control-detail"><summary>Open MCP controls</summary><div><p><strong>Tool policy.</strong> Allow, deny, and redirect rules run before execution. Shell-obfuscation checks resolve variable insertion and backtick substitution before matching.</p><p><strong>Session binding.</strong> A SHA-256 baseline tracks tool definitions. Mid-session description changes can alert or block.</p><p><strong><a href="https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/guides/filesystem-sentinel.md" target="_blank" rel="noopener noreferrer">Filesystem Sentinel.</a></strong> Watches configured directories for secrets written to disk. It detects writes after they happen. The default action warns; block mode can terminate a wrapped MCP subprocess after an agent-attributed DLP finding.</p><p><strong>Tool chains.</strong> Subsequence matching finds configured multi-call patterns, while binary integrity verifies the wrapped MCP process before spawn.</p></div></details>
       </div>
     </article>
     <article class="pipelock-control-row" id="enforce">

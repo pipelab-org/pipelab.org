@@ -114,6 +114,6 @@ Most agent UX today relies on token streaming. If your security boundary buffers
 
 - [Mediation envelope signing](/learn/mediation-envelope-signing/): cryptographic proof of which policy mediated a streaming response.
 - [Pipelock](/pipelock/): full transport list and v2.3 capability map.
-- [Browser Shield](/learn/browser-shield/): response rewriting for HTML, JavaScript, and SVG before agent delivery.
+- [Browser Shield](/learn/browser-shield/): supported HTML and SVG rewriting before agent delivery; existing JavaScript bytes stay unchanged.
 - [AI Agent Data Redaction](/learn/ai-agent-data-redaction/): request-side counterpart to response-side scanning.
 - [Pipelock v2.3 upgrade guide](/learn/pipelock-v230-upgrade/): how to roll out streaming scanning on an existing install.

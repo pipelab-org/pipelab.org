@@ -1,6 +1,6 @@
 ---
 title: "Browser shield"
-description: "Rewrites proxied HTML and JavaScript to remove configured browser traps and tracking code."
+description: "Browser Shield sanitizes supported HTML and SVG markup. Existing inline scripts and standalone JavaScript responses keep their bytes unchanged."
 type: "capability-detail"
 layout: "single"
 capability: "browser-shield"

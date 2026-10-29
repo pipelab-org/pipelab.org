@@ -25,7 +25,7 @@
         <button class="inst-tab{{ if eq $i 0 }} is-active{{ end }}" type="button" id="inst-tab-{{ $m.id }}"
                 role="tab" tabindex="{{ if eq $i 0 }}0{{ else }}-1{{ end }}" aria-selected="{{ if eq $i 0 }}true{{ else }}false{{ end }}" aria-controls="inst-panel"
                 data-inst-id="{{ $m.id }}" data-inst-label="{{ $m.short_label }}" data-inst-cmd="{{ $m.command }}" data-inst-note="{{ $m.note }}"
-                data-event="install_tab_click" data-event-value="{{ $m.id }}" data-event-placement="install-hero">{{ partial (printf "brands/%s.svg" $m.id) . }} {{ $m.short_label }}</button>
+                data-event="install_tab_click" data-event-value="{{ $m.id }}" data-event-placement="install-hero">{{ if ne $m.id "helm" }}{{ partial (printf "brands/%s.svg" $m.id) . }}{{ end }} {{ $m.short_label }}</button>
         {{ end }}
         <button class="inst-tab" type="button" id="inst-tab-binary"
                 role="tab" tabindex="-1" aria-selected="false" aria-controls="inst-panel"
