@@ -111,7 +111,7 @@ Create or edit files in `content/`. For blog posts, match Josh's established voi
 - External HTML links: must have `target="_blank"`
 - Keyword: check map, no duplicates
 - Run `npm run site:audit` before proposing a PR. Treat failures as real regressions unless proven otherwise.
-- Run BOTH `make preflight` and `npm run site:audit`. Preflight does not invoke the audit, so a green preflight alone does not predict CI.
+- `make preflight` runs `npm run site:audit` along with the tests, build and render checks, and refuses to start without the pinned extended Hugo and the pinned Pipelock verifier (`scripts/install-pipelock-verifier.sh`). Run it from the repository root as a bare `make preflight`.
 
 #### Structured data
 
