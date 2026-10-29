@@ -33,7 +33,12 @@ test("proof chips link to each existing shipped framework guide", () => {
 test("proof chip checks reject missing links and wrong destinations", () => {
   const chip = '<a class="proof-chip" role="listitem" href="/learn/mitre-atlas/">MITRE ATLAS</a>';
   assert.deepEqual(checkProofFrameworkLinks(chip, ["/learn/mitre-atlas/"]), []);
-  for (const invalid of [chip.replace('href="/learn/mitre-atlas/"', 'href="/learn/missing/"'), '<span class="proof-chip" role="listitem">MITRE ATLAS</span>']) {
+  for (const invalid of [
+    chip.replace('href="/learn/mitre-atlas/"', 'href="/learn/missing/"'),
+    '<span class="proof-chip" role="listitem">MITRE ATLAS</span>',
+    chip.replace('href=', 'data-href='),
+    chip + '<a class="proof-chip" role="listitem" href="/learn/pci-dss/">PCI DSS</a>',
+  ]) {
     assert.ok(checkProofFrameworkLinks(invalid, ["/learn/mitre-atlas/"]).length > 0);
   }
 });
@@ -105,6 +110,7 @@ test("documentation source checks reject missing labels, unlinked sources and wr
     claim.replace(`[LLM Top 10](${url})`, url),
     claim.replace("v3.7.1", "main"),
     claim.replace(llmDoc, "docs/owasp-mapping.md"),
+    claim.replace(`[LLM Top 10](${url})`, `<span data-href="${url}">LLM Top 10</span>`),
   ]) assert.ok(checkDocumentedMappingSources(invalid, [llmDoc]).length > 0, invalid);
 });
 

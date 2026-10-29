@@ -27,10 +27,14 @@ export function checkProofFrameworkLinks(html, routes) {
   const chips = [...html.matchAll(/<(a|span)\b([^>]*)class="proof-chip"([^>]*)>(.*?)<\/\1>/gs)];
   const errors = [];
   for (const route of routes) {
-    const matches = chips.filter(([, tag, before, after]) => tag === "a" && new RegExp(`\\bhref="${route}"`).test(before + after));
+    const matches = chips.filter(([, tag, before, after]) => tag === "a" && new RegExp(`(?<![\\w-])href="${route}"`).test(before + after));
     if (matches.length !== 1) errors.push(`expected one framework chip link to ${route}`);
   }
   if (chips.some(([, tag]) => tag !== "a")) errors.push("framework chip is unlinked");
+  for (const [, tag, before, after] of chips) {
+    const href = (before + after).match(/(?<![\w-])href="([^"]*)"/)?.[1];
+    if (tag === "a" && !routes.includes(href)) errors.push(`framework chip links outside the Assess catalog: ${href ?? "no href"}`);
+  }
   return errors;
 }
 
@@ -41,7 +45,7 @@ export function checkDocumentedMappingSources(source, documentPaths) {
   const errors = [];
   if (!/published documentation mappings?/i.test(source)) errors.push("missing published documentation mapping label");
   if (!/\bAssess\b/.test(source)) errors.push("missing separate Assess scope");
-  const links = [...source.matchAll(/(?:\]\(|\bhref=["'])(https:\/\/[^\s)"']+)/g)]
+  const links = [...source.matchAll(/(?:\]\(|(?<![\w-])href=["'])(https:\/\/[^\s)"']+)/g)]
     .map(([, url]) => url.split("#")[0]);
   for (const documentPath of documentPaths) {
     const url = `https://github.com/pipelab-org/pipelock/blob/v3.7.1/${documentPath}`;
