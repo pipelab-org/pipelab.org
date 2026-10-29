@@ -12,7 +12,7 @@
     {{- $match = dict "name" "Pipelock" "color" "#00e5a0" "brand" "pipelock-mark" -}}
   {{- else -}}
     {{- range site.Data.integrations.orbit -}}
-      {{- if and (not $match.name) (eq .name $want) (ne .kind "protocol") -}}{{- $match = . -}}{{- end -}}
+      {{- if and (not $match.name) (eq .name $want) -}}{{- $match = . -}}{{- end -}}
     {{- end -}}
     {{- range site.Data.integrations.rows -}}
       {{- range .items -}}

@@ -523,12 +523,14 @@
     height: 100%;
     overflow: visible;
     z-index: 1;
-    transform: translate3d(0, var(--orbit-rings-parallax, 0), 0);
-    will-change: transform;
   }
 
+  // Only the rings take the scroll parallax. The threads end at the nodes,
+  // which don't move with it, so shifting them would pull every end off its tile.
   .hp-orbit-rings {
     transform-origin: 500px 260px;
+    transform: translate3d(0, var(--orbit-rings-parallax, 0), 0);
+    will-change: transform;
   }
 
   .hp-orbit-ring {
@@ -569,7 +571,9 @@
     stroke: url(#hp-orbit-light);
     stroke-width: 1;
     stroke-linecap: round;
-    opacity: 0.5;
+    // The breathe animation sets the opacity (0.7 to 1). Reduced motion removes
+    // it, so the still level is the middle of that range: the same look, held.
+    opacity: 0.85;
     animation: hp-thread-breathe 7s ease-in-out infinite;
     transition: opacity 0.2s ease, stroke-width 0.2s ease, filter 0.2s ease;
   }
@@ -708,6 +712,7 @@
     &:focus-visible {
       color: var(--text);
       opacity: 1;
+      filter: none;
       z-index: 6 !important;
 
       .hp-orbit-mark {

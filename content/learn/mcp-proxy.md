@@ -135,7 +135,7 @@ Rug-pulls are the most specific attack an MCP proxy has to defend against, becau
 
 Pre-deploy scanners cannot catch this because they only see the first version. A gateway that caches the first handshake cannot catch it either unless it re-scans every subsequent `tools/list` and compares against the previous fingerprint.
 
-Pipelock's MCP proxy does this natively. On every handshake it hashes the full tool definition and stores the fingerprint under the session. On the next handshake it hashes again and compares. If the hash diverges the proxy raises a drift finding and, depending on config, blocks the new version, alerts, or both. The session is the unit of trust, not the install.
+Pipelock's MCP proxy does this natively. On every handshake it hashes the full tool definition and stores the fingerprint under the session. On the next handshake it hashes again and compares. If the hash diverges the proxy checks what changed. A description edit that adds no new risk cue is accepted as the new baseline and logged. A change that adds a new risk cue or changes anything outside the description raises a drift finding and, depending on config, blocks the new version, alerts, or both. The session is the unit of trust, not the install.
 
 ## Integration with existing MCP servers
 

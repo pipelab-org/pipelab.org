@@ -111,7 +111,7 @@ test("homepage rejects malformed selected marks on orbit and rows", async (t) =>
 });
 
 test("title_brand names an integration entry for pages no orbit node links to", async (t) => {
-  const rowsOnly = { orbit: [], rows: [{ label: "Fixture", items: [
+  const rowsOnly = { orbit: [{ name: "Protocol", kind: "protocol", color: "#456def", brand: "mcp", href: "/elsewhere/", x: 10, ypct: 10 }], rows: [{ label: "Fixture", items: [
     { name: "Row Brand", color: "#123abc", brand: "claude", href: "/elsewhere/" },
     { name: "Row Image", color: "#abc123", img: "/images/brands/sure.svg", href: "/elsewhere/" },
   ] }] };
@@ -120,6 +120,7 @@ test("title_brand names an integration entry for pages no orbit node links to", 
     ['title_brand: "Row Image"\n', /data-integration-mark="Row Image"[^>]*><img src="\/preview\/images\/brands\/sure.svg"/],
     ['title_brand: "Pipelock"\n', /data-integration-mark="Pipelock"[^>]*style="color: #00e5a0;"><svg\b/],
     ['title_brand: "claude"\n', /data-integration-mark="claude"[^>]*style="color: #123abc;"><svg\b/],
+    ['title_brand: "Protocol"\n', /data-integration-mark="Protocol"[^>]*style="color: #456def;"><svg\b/],
   ];
   for (const [frontMatter, expected] of cases) {
     await t.test(frontMatter.trim(), (t) => {

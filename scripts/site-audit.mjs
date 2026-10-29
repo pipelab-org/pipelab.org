@@ -1188,6 +1188,17 @@ for (const entry of integrationData.orbit.filter((item) => item.kind !== "protoc
     issues.push(`${route}: integration guide header must render one official mark`);
   }
 }
+// Every learn header that renders an integration mark sets it beside the title.
+for (const [route, page] of pageByRoute) {
+  if (!route.startsWith("/learn/")) continue;
+  const header = page.html.match(/<header\b[^>]*class="learn-article-header"[^>]*>([\s\S]*?)<\/header>/)?.[1] || "";
+  if (header.includes("data-integration-mark=") && !header.includes("learn-article-header-inner--mark-inline")) {
+    issues.push(`${route}: learn header renders an integration mark without the beside-title layout`);
+  }
+  if (header.includes("learn-article-header-inner--mark-inline") && !header.includes("learn-project-mark")) {
+    issues.push(`${route}: learn header uses the beside-title layout without a mark`);
+  }
+}
 
 const homePage = pageByRoute.get("/");
 if (!homePage) {
