@@ -111,11 +111,18 @@
     <aside class="editorial-index-aside" aria-label="Learn index details">
       <div class="editorial-index-aside-sticky">
         {{ with $cfg.release }}
+        {{- /* Version and release post come from params.pipelock_version; the
+               hand-written summary names the minor release it describes, so a
+               new minor without a new summary fails the build. */ -}}
+        {{- $release := partial "release-post.html" . -}}
+        {{- if ne (printf "%v" .minor) $release.minor -}}
+          {{- errorf "data/learn_index.yaml release.summary describes v%v but pipelock_version is v%s: update release.summary and release.minor" .minor site.Params.pipelock_version -}}
+        {{- end }}
         <section class="editorial-index-aside-block editorial-index-aside-block--status">
           <p class="editorial-index-aside-label"><span></span>Latest release</p>
           <p class="editorial-index-aside-value">Pipelock v{{ site.Params.pipelock_version }}</p>
           {{ with .summary }}<p class="editorial-index-aside-copy">{{ . }}</p>{{ end }}
-          {{ with .notes_url }}<a href="{{ . }}"{{ if hasPrefix . "http" }} target="_blank" rel="noopener noreferrer"{{ end }}>Read release notes <span aria-hidden="true">&#8599;</span></a>{{ end }}
+          <a href="{{ $release.url }}">Read release notes <span aria-hidden="true">&#8599;</span></a>
         </section>
         {{ end }}
 
