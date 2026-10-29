@@ -9,7 +9,7 @@ import { parse } from "yaml";
 const countClaim = /\b\d+\s+(?:(?:built[- ]in|default)\s+)?(?:prompt[- ]injection|response[- ]scanning|response\s+scanning|injection|response)(?:\s+detection|\s+and\s+response)?\s+patterns?\b|\b\d+\s+injection\s*(?:\+|[|,)])|\b(?:prompt[- ]injection|response[- ]scanning|response\s+scanning|injection|response)\s*[:(]\s*\d+\s+patterns?\b|\b(?:prompt[- ]injection|response[- ]scanning|response\s+scanning|injection|response)\s+patterns[ \t]*:?[ \t]*\d+\b/gi;
 // Markdown table rows carry the label in the first cell and the bare count in
 // a later one ("| Prompt injection detection | ... | Yes (34 patterns) |").
-const tableCountClaim = /^\|[^|\n]*(?:prompt[- ]injection|response[- ]scanning|response\s+scanning|injection|response)[^|\n]*\|[^\n]*?\b\d+\s+(?:(?:built[- ]in|default)\s+)?patterns?\b/gim;
+const tableCountClaim = /^\|[^|\n]*(?:prompt[- ]injection|response[- ]scanning|response\s+scanning|injection|response)[^|\n]*\|[^\n]*?\b\d+\s+(?:(?:built[- ]in|default)\s+)?patterns?\b|^\|[^|\n]*(?:prompt[- ]injection|response[- ]scanning|response\s+scanning|injection|response)[^|\n]*patterns?[^|\n]*\|(?:[^|\n]*\|)*?[ \t]*\d+[ \t]*\|/gim;
 
 export function responsePatternClaims(file, source) {
   if (file.startsWith("content/blog/") || file === "content/learn/pipelock-v250-upgrade.md") return [];

@@ -25,6 +25,8 @@ test("current response-pattern claims use the shared datum", () => {
       `| Prompt injection detection | Not documented | Yes (${value} patterns, 6-pass) |`,
       `| **Response scanning** | ${value} built-in patterns |`,
       `| Injection | injection (${value} patterns) |`,
+      `| Response-scanning patterns | ${value} |`,
+      `| Feature | Pipelock |\n| Injection patterns | Shipped | ${value} |`,
     ]) {
       for (const file of ["content/learn/example.md", "data/example.yaml", "themes/pipelab/layouts/index.html", "static/llms-full.txt"]) {
         assert.equal(responsePatternClaims(file, claim).length, 1, `${file}: ${claim}`);
@@ -33,7 +35,7 @@ test("current response-pattern claims use the shared datum", () => {
   }
   assert.deepEqual(responsePatternClaims("content/blog/historical.md", "25 injection patterns"), []);
   assert.deepEqual(responsePatternClaims("content/learn/pipelock-v250-upgrade.md", "25 injection patterns"), []);
-  for (const claim of ['{{< stat key="response_patterns" >}} injection patterns', "65 DLP patterns", "6 response-scanning passes", "34% of implementations", "3. Scan inbound traffic for prompt injection patterns\n4. Block unsafe destinations", '| Prompt injection detection | Yes ({{< stat key="response_patterns" >}} patterns, 6-pass) |', "| Credential DLP scanning | Yes (65 patterns) |\n| Prompt injection detection | Yes |"]) {
+  for (const claim of ['{{< stat key="response_patterns" >}} injection patterns', "65 DLP patterns", "6 response-scanning passes", "34% of implementations", "3. Scan inbound traffic for prompt injection patterns\n4. Block unsafe destinations", '| Prompt injection detection | Yes ({{< stat key="response_patterns" >}} patterns, 6-pass) |', "| Credential DLP scanning | Yes (65 patterns) |\n| Prompt injection detection | Yes |", "| DLP patterns | 65 |", "| Response scanning | 6 passes |"]) {
     assert.deepEqual(responsePatternClaims("content/learn/example.md", claim), [], claim);
   }
 });
@@ -44,7 +46,7 @@ test("pricing selector check rejects an injected descendant and distinguishes si
       cwd: root, input: html, encoding: "utf8",
     });
   }
-  const absent = check('<div class="pricing-card"><br><img src="x"></div><article class="pricing-tier">Plan</article><div class="pricing-card pricing-tier">Same node</div><script>"<div class=pricing-card><p class=pricing-tier>"</script>');
+  const absent = check('<div class="pricing-card"><br><img src="x"></div><article class="pricing-tier">Plan</article><div class="pricing-card pricing-tier">Same node</div><script>"<div class=pricing-card><p class=pricing-tier>"</script><div class><span class>Valueless</span></div>');
   assert.equal(absent.status, 0, absent.stderr);
   assert.match(absent.stdout, /0 matching elements/);
   const injected = check('<article class="pricing-card featured"><div><br><span class="pricing-tier extra">Injected</span></div></article>');

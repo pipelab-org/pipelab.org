@@ -18,7 +18,7 @@ class PricingSelector(HTMLParser):
         self.matches = 0
 
     def handle_starttag(self, tag, attrs):
-        classes = set(dict(attrs).get("class", "").split())
+        classes = set((dict(attrs).get("class") or "").split())
         if "pricing-tier" in classes and any("pricing-card" in c for _, c in self.stack):
             self.matches += 1
         if tag not in self.voids:
