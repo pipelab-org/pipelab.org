@@ -7,7 +7,14 @@
 {{ if lt (len $versionParts) 2 }}
   {{ errorf "hero-home: site.Params.pipelock_version %q needs at least MAJOR.MINOR" $version }}
 {{ end }}
-{{ $releasePostURL := printf "/blog/pipelock-v%s%s0-release/" (index $versionParts 0) (index $versionParts 1) }}
+{{ $releasePostPath := printf "/blog/pipelock-v%s%s0-release" (index $versionParts 0) (index $versionParts 1) }}
+{{/* Fail the build rather than ship a hero link to a post that doesn't exist.
+     A missing path returns a placeholder page that is still truthy, so test IsPage. */}}
+{{ $releasePage := site.GetPage $releasePostPath }}
+{{ if not (and $releasePage $releasePage.IsPage) }}
+  {{ errorf "hero-home: no release post at %s for pipelock_version %q" $releasePostPath $version }}
+{{ end }}
+{{ $releasePostURL := printf "%s/" $releasePostPath }}
 {{ $stats := site.Data.stats }}
 {{ $gallery := transform.Unmarshal (readFile "static/playground-replay/gallery.json") }}
 {{ $receiptTotal := 0 }}

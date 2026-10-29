@@ -45,7 +45,7 @@ date: 2026-03-11
 
 Also add a link in `content/learn/_index.md`.
 
-Title marks: a guide the homepage orbit links to shows that integration's logo beside the title automatically. Any other guide can opt in with `title_brand: "<name>"`, naming an orbit or tile-row entry in `data/integrations.yaml` (or `"Pipelock"` for the product mark); an unknown name fails the build. A `project_mark` image sits above the title unless the page also sets `title_mark_inline: true`.
+Title marks: a guide the homepage orbit links to shows that integration's logo beside the title automatically. Any other guide can opt in with `title_brand: "<name>"`, naming an orbit or tile-row entry in `data/integrations.yaml`, a brand mark one of those entries uses (`"cloudflare"` for a Cloudflare product with no entry of its own), or `"Pipelock"` for the product mark; an unknown name fails the build. A `project_mark` image sits above the title unless the page also sets `title_mark_inline: true`.
 
 ## Compare article frontmatter (`content/compare/`)
 

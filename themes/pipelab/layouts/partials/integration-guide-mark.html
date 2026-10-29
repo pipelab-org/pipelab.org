@@ -1,8 +1,8 @@
 {{- /* Reuse the homepage's guide mapping and official assets. A guide the orbit
-       links to gets that entry's mark. Any other page can name an entry with
-       `title_brand: "<name>"` (orbit or tile rows in data/integrations.yaml),
-       so its logo and colour still come from that one file; the reserved name
-       "Pipelock" is the product mark. */ -}}
+       links to gets that entry's mark. Any other page can set `title_brand` to
+       an entry name (orbit or tile rows in data/integrations.yaml) or to a
+       brand mark one of those entries uses, so its logo and colour still come
+       from that one file; the reserved name "Pipelock" is the product mark. */ -}}
 {{- $page := . -}}
 {{- $colorPattern := `^#[0-9A-Fa-f]{6}$` -}}
 {{- $match := dict -}}
@@ -19,8 +19,19 @@
         {{- if and (not $match.name) (eq .name $want) -}}{{- $match = . -}}{{- end -}}
       {{- end -}}
     {{- end -}}
+    {{- /* A page about another product from the same vendor names the brand
+           mark itself (`title_brand: "cloudflare"`), so it doesn't borrow a
+           different product's entry; colour comes from the first entry using it. */ -}}
+    {{- range site.Data.integrations.orbit -}}
+      {{- if and (not $match.name) (eq (printf "%v" .brand) $want) -}}{{- $match = dict "name" $want "color" .color "brand" .brand -}}{{- end -}}
+    {{- end -}}
+    {{- range site.Data.integrations.rows -}}
+      {{- range .items -}}
+        {{- if and (not $match.name) (eq (printf "%v" .brand) $want) -}}{{- $match = dict "name" $want "color" .color "brand" .brand -}}{{- end -}}
+      {{- end -}}
+    {{- end -}}
     {{- if not $match.name -}}
-      {{- errorf "%s: title_brand %q names no integration in data/integrations.yaml" $page.File.Path $want -}}
+      {{- errorf "%s: title_brand %q names no integration or brand mark in data/integrations.yaml" $page.File.Path $want -}}
     {{- end -}}
   {{- end -}}
 {{- else -}}
