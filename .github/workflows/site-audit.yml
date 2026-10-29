@@ -70,8 +70,9 @@ jobs:
         run: npm run site:render-diff
       - name: Install pinned Pipelock verifier
         run: scripts/install-pipelock-verifier.sh
-      # Preflight is separate from site:audit because its git-enumerating guards
-      # must not run on the deploy path, where git may be unavailable.
+      # Preflight includes site:audit. The standalone npm script remains usable
+      # on the deploy path, where preflight's git-enumerating guards cannot run.
       - run: make preflight
-      - run: npm run site:audit
+        env:
+          HUGO_BIN: ${{ steps.hugo-pinned.outputs.binary }}
       - run: npm run site:links -- --fail-on-blocked

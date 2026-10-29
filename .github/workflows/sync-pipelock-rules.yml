@@ -92,7 +92,6 @@ jobs:
         run: |
           npm ci
           make preflight
-          npm run site:audit
           npm run site:links -- --fail-on-blocked
 
       - name: Open or update the synchronization pull request
