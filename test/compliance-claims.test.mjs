@@ -147,3 +147,28 @@ test("links to the AIVSS guide do not call it coverage", () => {
     }
   }
 });
+
+test("restored NIST 800-53 ratings, doc-versus-code disclosures and enterprise source pins stay exact", () => {
+  // NIST SP 800-53 family ratings transcribed from v3.7.1 docs/compliance/nist-800-53.md.
+  const nist = [["AC", "Moderate"], ["AU", "Strong"], ["CA", "Partial"], ["CM", "Moderate"], ["IR", "Moderate"], ["SC", "Strong"], ["SI", "Strong"]];
+  const rows = source("content/learn/compliance-evidence.md").split("\n")
+    .filter(line => /^\| (AC|AU|CA|CM|IR|SC|SI): /.test(line))
+    .map(line => line.split("|").map(cell => cell.trim()))
+    .map(cells => [cells[1].slice(0, 2), cells[2]]);
+  assert.deepEqual(rows, nist);
+  assert.match(source("content/learn/ai-agent-compliance.md"),
+    /NIST SP 800-53 documentation rates AU, SC, and SI Strong; AC, CM, and IR Moderate; and CA Partial\./);
+
+  // Each disclosure must keep both sides: the documentation rating and the Assess source rating it follows.
+  const asi = source("content/learn/owasp-agentic-top10.md");
+  assert.match(asi, /For ASI10 it says \*\*Strong\*\*, while the \[Assess source mapping\]\([^)]*v3\.7\.1\/internal\/report\/compliance\/owasp_agentic\.go\) says \*\*Not covered\*\*/);
+  const hipaa = source("content/learn/hipaa-security-rule.md");
+  assert.match(hipaa, /Transmission Security and ePHI Disclosure Prevention as \*\*Covered\*\*/);
+  assert.match(hipaa, /\[Assess source mapping\]\([^)]*v3\.7\.1\/internal\/report\/compliance\/hipaa\.go\) marks both \*\*Partial\*\*/);
+
+  // Enterprise pills: every Assess and documentation mapping link is pinned to the release, never main.
+  const enterprise = source("themes/pipelab/layouts/enterprise/single.html");
+  const mappingLinks = [...enterprise.matchAll(/pipelock\/blob\/([^/]+)\/(internal\/report\/compliance\/[a-z_0-9]+\.go|docs\/(?:owasp-[a-z0-9-]+-mapping|compliance\/nist-800-53)\.md)/g)];
+  assert.equal(mappingLinks.length, 10, "seven Assess sources and three documentation mappings");
+  for (const [, ref, path] of mappingLinks) assert.equal(ref, "v3.7.1", path);
+});

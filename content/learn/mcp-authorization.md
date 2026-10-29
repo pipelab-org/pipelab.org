@@ -218,7 +218,7 @@ The layers do not step on each other. Aembit issues tokens, agentgateway checks 
 - [Shadow MCP](/learn/shadow-mcp/) covers unauthorized MCP server discovery and enforcement
 - [State of MCP Security 2026](/blog/state-of-mcp-security-2026/) has the incident timeline and control coverage matrix
 - [OWASP MCP Top 10](/learn/owasp-mcp-top10/) maps risk categories to practical controls
-- [Compliance Evidence](/learn/compliance-evidence/) maps agent behavior to SOC 2, EU AI Act, NIST 800-53
+- [Compliance Evidence](/learn/compliance-evidence/) covers the Assess report's SOC 2 and EU AI Act mappings and Pipelock's separate NIST 800-53 documentation mapping
 - [Flight Recorder](/learn/flight-recorder/) is the hash-chained audit log Pipelock writes
 - [Pipelock](/pipelock/) is the runtime proxy that handles content inspection and audit
 - [MCP spec at modelcontextprotocol.io](https://modelcontextprotocol.io/docs/2026-07-28/getting-started/intro) is the source of truth for protocol-level authorization
