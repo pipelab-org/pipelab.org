@@ -113,7 +113,7 @@
         {{ with $cfg.release }}
         <section class="editorial-index-aside-block editorial-index-aside-block--status">
           <p class="editorial-index-aside-label"><span></span>Latest release</p>
-          <p class="editorial-index-aside-value">Pipelock {{ .version }}</p>
+          <p class="editorial-index-aside-value">Pipelock v{{ site.Params.pipelock_version }}</p>
           {{ with .summary }}<p class="editorial-index-aside-copy">{{ . }}</p>{{ end }}
           {{ with .notes_url }}<a href="{{ . }}"{{ if hasPrefix . "http" }} target="_blank" rel="noopener noreferrer"{{ end }}>Read release notes <span aria-hidden="true">&#8599;</span></a>{{ end }}
         </section>

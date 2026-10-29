@@ -1,6 +1,6 @@
 # PipeLab / Pipelock
 
-> Pipelock is an open-source agent firewall for MCP and AI agent egress. Version 3.7.0 adds parallel signed receipt chains, filesystem grants for Linux containment, kernel-observed local MCP identities, and exact destination grants. `pipelock exec` steers cooperative commands through a running proxy; commands can ignore its settings.
+> Pipelock is an open-source agent firewall for MCP and AI agent egress. Pipelock 3.7 (current release 3.7.1) adds parallel signed receipt chains, filesystem grants for Linux containment, kernel-observed local MCP identities, and exact destination grants. `pipelock exec` steers cooperative commands through a running proxy; commands can ignore its settings.
 
 ## Full context
 

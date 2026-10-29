@@ -4,7 +4,7 @@ linkTitle: "Claude Code Security"
 subtitle: "Add an enforcement layer on top of Claude Code: egress inspection, outbound DLP, MCP response scanning, and network containment."
 description: "Claude Code security beyond built-in review. Add egress inspection, outbound DLP, MCP response scanning, and containment you can verify."
 date: 2026-06-13
-lastmod: 2026-10-14
+lastmod: 2026-10-28
 learn_cat: ide
 level: deep
 tags:
@@ -65,6 +65,16 @@ What the built-in controls don't do:
 - Put the whole agent account, including file tools, hooks, and local MCP servers, behind one boundary with no **direct network path** around your controls
 
 Permission prompts gate whether an action runs. They do not look at what the action carries. A WebFetch to an approved domain with a base64-encoded `.env` in the query string passes a domain allowlist and still exfiltrates your secrets. That is the layer Pipelock adds.
+
+### Running the native sandbox alongside Pipelock
+
+Three details on Anthropic's [sandboxing page](https://code.claude.com/docs/en/sandboxing) (read 2026-10-28) decide how the two fit together.
+
+The sandbox allowlist only covers shell commands. Anthropic writes that "allowedDomains doesn't limit WebFetch" and that "Claude's file tools, MCP servers, and hooks run outside it." WebFetch follows permission rules instead, so a `WebFetch(domain:...)` rule is the fetch control and each MCP server needs its own wrapper.
+
+The built-in proxy checks hostnames. It "enforces the allowlist based on the requested hostname and, by default, does not terminate or inspect TLS traffic." To route sandbox traffic through a corporate proxy elsewhere on the network, the page says to set `HTTPS_PROXY`, and "That way, Claude Code's allowlist still applies." Pipelock's forward-proxy setup uses the same variable. Before you count on both layers, send a synthetic request from a sandboxed command and confirm it shows up in Pipelock's log.
+
+The page also offers custom proxy ports, `sandbox.network.httpProxyPort` and `socksProxyPort`, for a proxy you run on the same machine. Once either port applies, Anthropic says "your proxy is responsible for filtering everything sent to it," and Claude Code's allowedDomains, deniedDomains, approval prompts and local-address check stop applying to that traffic. Pipelock's [Claude Code guide](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/guides/claude-code.md) doesn't document running Pipelock in that slot, so this page doesn't recommend it. The documented paths are the hooks, the MCP wrapper and `HTTPS_PROXY` below.
 
 ## The real risks, mapped to 2026 incidents
 

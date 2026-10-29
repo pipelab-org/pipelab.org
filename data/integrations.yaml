@@ -61,7 +61,7 @@ orbit:
         py: 280.8
         delay: 1.4
       - name: "Codex CLI"
-        href: "https://github.com/pipelab-org/pipelock/blob/main/docs/guides/codex.md"
+        href: "/learn/codex-cli-integration/"
         color: "#F4F4F5"
         brand: openai
         x: 37.8

@@ -242,7 +242,8 @@ The rules that are not derivable from an existing file stay here:
 - **Blog:** `date` is mandatory. For a dev.to cross-post, **always set `canonical_url` to pipelab.org.**
   Without it dev.to gets the ranking credit.
 - **Learn:** also add a link in `content/learn/_index.md`, or the guide is orphaned.
-- **Compare:** include FAQPage JSON-LD with 3 Q&As. Use "not documented in public docs" for competitor
+- **Compare:** add frontmatter `faq:` with 2-3 real Q&As, with no Google rich-result expectation (Google
+  stopped showing FAQ rich results on 2026-05-07). Use "not documented in public docs" for competitor
   capabilities, verify DLP and pattern counts live, and keep private competitor notes and planning out of
   this repo entirely.
 - **Make It Leak:** each episode publishes a real, signed Audit Packet captured deterministically through

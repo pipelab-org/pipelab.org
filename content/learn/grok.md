@@ -12,14 +12,14 @@ howto_steps:
   - name: Install Grok first
     text: Install the Grok CLI before exporting HTTPS_PROXY so the installer is not forced through the proxy.
   - name: Start the forward proxy
-    text: Generate a config, raise forward_proxy.idle_timeout_seconds to at least 600, and start pipelock run.
+    text: Generate a config, set forward_proxy.enabled to true, raise forward_proxy.idle_timeout_seconds to at least 600, and start pipelock run.
   - name: Point Grok at Pipelock
     text: Export HTTPS_PROXY and HTTP_PROXY to the listener, then start grok.
   - name: Wrap each MCP server
     text: Add each stdio server through grok mcp add with pipelock mcp proxy as the command. There is no pipelock grok install.
 faq:
   - q: "Does Pipelock ship a pipelock grok install command?"
-    a: "No. Grok Build has no automatic config rewriter. Model API traffic uses the standard HTTPS_PROXY and HTTP_PROXY environment variables. MCP servers are wrapped by hand with pipelock mcp proxy, the same class as Codex manual wrapping."
+    a: "No. Grok Build has no automatic config rewriter. Model API traffic uses the standard HTTPS_PROXY and HTTP_PROXY environment variables. MCP servers are wrapped by hand with pipelock mcp proxy. Codex has pipelock codex install, which rewrites the registered MCP servers it can preserve."
   - q: "Does HTTPS_PROXY scan Grok's prompts and model responses?"
     a: "Only when TLS interception is on and Grok trusts Pipelock's CA in the OS trust store. Without interception, Pipelock sees the CONNECT hostname and can enforce destination policy, but request and response bodies stay encrypted. Grok loads system roots through rustls, so NODE_EXTRA_CA_CERTS does not fix the CLI."
   - q: "How do I wrap a Grok MCP server?"
@@ -83,8 +83,9 @@ Grok SSE idle defaults to 600 seconds. xAI recommends proxy idle timeouts of at 
 
 ```bash
 pipelock generate config --preset balanced -o pipelock.yaml
-# edit pipelock.yaml:
+# edit pipelock.yaml (the balanced preset ships the forward proxy off):
 #   forward_proxy:
+#     enabled: true
 #     idle_timeout_seconds: 600
 pipelock run --config pipelock.yaml
 ```
@@ -113,7 +114,7 @@ For scripts, CI, or `grok agent stdio`, pass `--no-auto-update` so background up
 
 ## Wrap each MCP server
 
-Grok supports MCP via [`grok mcp`](https://docs.x.ai/build/features/mcp-servers). Join the Codex manual class: wrap each stdio server so tool calls and results pass through `pipelock mcp proxy`. MCP stdio wrapping scans JSON-RPC directly and does not need TLS interception.
+Grok supports MCP via [`grok mcp`](https://docs.x.ai/build/features/mcp-servers). Wrap each stdio server by hand so tool calls and results pass through `pipelock mcp proxy`. It's the same pattern as a manual `codex mcp add` wrap, though [Codex](/learn/codex-cli-integration/) also has `pipelock codex install` to do most of it for you. MCP stdio wrapping scans JSON-RPC directly and does not need TLS interception.
 
 Resolve the installed binary once. Homebrew on Apple Silicon typically lands at `/opt/homebrew/bin/pipelock`, not `/usr/local/bin`. Persist absolute paths; Grok user-scope MCP does not depend on later cwd.
 

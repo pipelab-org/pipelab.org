@@ -39,17 +39,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: clamp(1.25rem, 2.5vw, 2.25rem);
+  gap: var(--title-mark-gap);
 }
 
 .project-lockup img {
   width: clamp(76px, 7vw, 104px);
   height: clamp(76px, 7vw, 104px);
   flex: 0 0 auto;
-}
-
-.project-page-bench .project-lockup {
-  gap: clamp(1rem, 2vw, 1.75rem);
 }
 
 .project-page-bench .project-lockup img {
@@ -362,7 +358,7 @@
 
 @media (max-width: 640px) {
   .project-hero { padding-top: 3rem; }
-  .project-lockup { flex-direction: column; gap: 1.1rem; }
+  .project-lockup { flex-direction: column; gap: var(--title-mark-gap); }
   .project-wordmark { white-space: normal; font-size: clamp(2rem, 10vw, 3rem); }
   .project-facts { grid-template-columns: 1fr 1fr; }
   .project-command { align-items: flex-start; flex-direction: column; }

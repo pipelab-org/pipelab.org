@@ -1,7 +1,7 @@
 # PipeLab / Pipelock
 
 PipeLab is the website and company behind Pipelock.
-Pipelock is an open-source agent firewall for MCP and AI agent egress. Version 3.7.0 adds parallel signed receipt chains, filesystem grants for Linux containment, kernel-observed local MCP identities, and exact destination grants. `pipelock exec` steers cooperative commands through a running proxy; commands can ignore its settings.
+Pipelock is an open-source agent firewall for MCP and AI agent egress. Pipelock 3.7 (current release 3.7.1) adds parallel signed receipt chains, filesystem grants for Linux containment, kernel-observed local MCP identities, and exact destination grants. `pipelock exec` steers cooperative commands through a running proxy; commands can ignore its settings.
 Pipelock enforces MCP, HTTP, and WebSocket egress at the network boundary and, once `pipelock init` sets up signing, records signed receipts you can verify offline.
 
 Canonical site:
@@ -181,7 +181,7 @@ Neither emission path can block agent traffic. Emission failures are visible via
 ### Pinned source build (Community)
 
 ```
-git clone --branch v3.7.0 --depth 1 https://github.com/pipelab-org/pipelock.git
+git clone --branch v3.7.1 --depth 1 https://github.com/pipelab-org/pipelock.git
 make -C pipelock install
 ```
 
@@ -211,7 +211,7 @@ For enforced Kubernetes deployments, `pipelock init sidecar --inject-spec <manif
 
 ### As a GitHub Action
 
-The Pipelock repository includes a composite GitHub Action. Use `uses: pipelab-org/pipelock@v3.7.0` or pin it to the full release commit SHA for stricter supply-chain control. The action runs Pipelock in CI against a repository, scanning for AI-agent security risks, credential leaks, unsafe configs, and PR-diff findings. The Pipelock project uses this public action on its own pull requests.
+The Pipelock repository includes a composite GitHub Action. Use `uses: pipelab-org/pipelock@v3.7.1` or pin it to the full release commit SHA for stricter supply-chain control. The action runs Pipelock in CI against a repository, scanning for AI-agent security risks, credential leaks, unsafe configs, and PR-diff findings. The Pipelock project uses this public action on its own pull requests.
 
 ## Licensing
 

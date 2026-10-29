@@ -577,9 +577,9 @@
 
   .hp-orbit-thread.is-active {
     stroke: var(--brand);
-    stroke-width: 2.4px;
-    opacity: 1;
-    filter: drop-shadow(0 0 5px var(--brand));
+    stroke-width: 1.6px;
+    opacity: 0.85;
+    filter: drop-shadow(0 0 2px var(--brand));
     animation: none;
   }
 
@@ -732,9 +732,12 @@
     width: 50px;
     height: 50px;
     border-radius: 14px;
+    // The last layer is the page ground, so the box is opaque: the rings and
+    // threads drawn behind the nodes stop at its edge instead of showing through.
     background:
       radial-gradient(circle at 30% 25%, color-mix(in srgb, var(--brand) 22%, transparent), transparent 60%),
-      linear-gradient(160deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+      linear-gradient(160deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)),
+      var(--bg);
     border: 1px solid color-mix(in srgb, var(--brand) 28%, rgba(255, 255, 255, 0.12));
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55), 0 0 22px color-mix(in srgb, var(--brand) 20%, transparent);
     color: var(--brand);
@@ -758,22 +761,24 @@
     svg { width: 30px; height: 30px; }
   }
 
+  // Dimming uses brightness, not opacity: opacity would let the rings and
+  // threads behind a node show through its box again.
   .hp-orbit-node-outer {
-    opacity: 0.78;
+    filter: brightness(0.82);
 
     .hp-orbit-mark { filter: blur(0.18px); }
   }
 
   .hp-orbit-node.is-behind {
-    opacity: 0.42;
+    filter: brightness(0.5);
   }
 
   .hp-orbit.has-active-node .hp-orbit-node:not(.is-active) {
-    opacity: 0.24;
+    filter: brightness(0.32);
   }
 
   .hp-orbit-node.is-active {
-    opacity: 1;
+    filter: none;
     z-index: 6 !important;
   }
 
@@ -1009,6 +1014,8 @@
     font-size: 0.74rem;
     color: var(--text-dim);
     overflow-wrap: anywhere;
+    // Split a wrapped tool list evenly instead of leaving one tool alone.
+    text-wrap: balance;
   }
 
   .hp-quote-stamp {
@@ -1054,7 +1061,10 @@
 
   .hp-quote-verify {
     max-width: 540px;
-    margin: 1.1rem auto 0;
+    // Clear of the cards' hover lift and shadow, so it reads as its own line.
+    margin: 2rem auto 0;
+    line-height: 1.6;
+    text-wrap: balance;
     text-align: center;
     font-family: var(--font-mono), monospace;
     font-size: 0.82rem;

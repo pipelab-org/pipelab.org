@@ -26,7 +26,6 @@ featured:
   - pipelock-v330-release
 
 release:
-  version: v3.7.0
   summary: "Parallel signed receipt chains, filesystem grants, and verified local MCP services."
   notes_url: /blog/pipelock-v370-release/
 

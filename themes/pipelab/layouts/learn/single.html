@@ -5,7 +5,7 @@
   <div class="reading-progress" aria-hidden="true"><div class="reading-progress-fill"></div></div>
 
 <header class="learn-article-header" data-hero="editorial-article" data-fx="reveal">
-    <div class="learn-article-header-inner">
+    <div class="learn-article-header-inner{{ if .Params.title_mark_inline }} learn-article-header-inner--mark-inline{{ end }}">
       {{ with .Params.project_mark }}<img class="learn-project-mark" src="{{ . }}" alt="{{ $.Title }} logo" aria-hidden="true" width="88" height="88">{{ else }}{{ partial "integration-guide-mark.html" . }}{{ end }}
       {{ with .Params.eyebrow }}<p class="learn-eyebrow">{{ . }}</p>{{ end }}
       <h1{{ if not .Params.disable_title_fx }} data-fx="decrypt"{{ end }}>{{ .Title }}</h1>

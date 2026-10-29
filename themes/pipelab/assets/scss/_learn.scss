@@ -56,7 +56,7 @@
     display: block;
     width: 88px;
     height: 88px;
-    margin: 0 0 1.25rem;
+    margin: 0 0 var(--title-mark-gap);
 
     > svg,
     > img {
@@ -75,6 +75,41 @@
     letter-spacing: var(--tracking-tight);
     color: var(--text);
     margin: 0 0 1rem;
+  }
+
+  // Title mark beside the title instead of above it. Opt in per page with
+  // `title_mark_inline: true`; the gap is the shared --title-mark-gap.
+  .learn-article-header-inner--mark-inline {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: var(--title-mark-gap);
+    align-items: center;
+
+    > * { grid-column: 1 / -1; }
+
+    > .learn-project-mark {
+      grid-column: 1;
+      grid-row: 1;
+      width: clamp(52px, 6vw, 72px);
+      height: clamp(52px, 6vw, 72px);
+      margin: 0;
+    }
+
+    > h1 {
+      grid-column: 2;
+      grid-row: 1;
+      // Centre the icon on the title itself; the space below moves to the
+      // next row so the rhythm under the title is unchanged.
+      margin: 0;
+    }
+
+    > h1 + * { margin-top: 1rem; }
+
+    // With an eyebrow, it takes the first row and the icon and title move down.
+    &:has(> .learn-eyebrow) {
+      > .learn-eyebrow { grid-row: 1; }
+      > .learn-project-mark, > h1 { grid-row: 2; }
+    }
   }
 
   .learn-lead {

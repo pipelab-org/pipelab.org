@@ -17,6 +17,29 @@
     let scrollListening = false;
     const focusedNodes = new Set();
     const pointedNodes = new Set();
+    // A thread stops this far (CSS px) outside the icon box or label, so the
+    // hover scale (1.12) never pulls the box over the line's end.
+    const THREAD_GAP = 6;
+    // Ray entry into a box: the fraction t of the way from (x0,y0) to (x1,y1)
+    // where the segment first touches the box, or Infinity when it misses.
+    const entryT = (x0, y0, x1, y1, bx, by, hw, hh) => {
+      let tMin = 0;
+      let tMax = 1;
+      const axes = [[x0, x1 - x0, bx - hw, bx + hw], [y0, y1 - y0, by - hh, by + hh]];
+      for (const [p, d, lo, hi] of axes) {
+        if (Math.abs(d) < 1e-9) {
+          if (p < lo || p > hi) return Infinity;
+          continue;
+        }
+        let a = (lo - p) / d;
+        let b = (hi - p) / d;
+        if (a > b) [a, b] = [b, a];
+        tMin = Math.max(tMin, a);
+        tMax = Math.min(tMax, b);
+        if (tMin > tMax) return Infinity;
+      }
+      return tMin;
+    };
     const motionAllowed = () =>
       (!reduceMotion || !reduceMotion.matches) && (!desktop || desktop.matches);
     const isPaused = () =>
@@ -85,9 +108,18 @@
         const y = rect.height * parseFloat(getComputedStyle(node).getPropertyValue('--y')) / 100;
         const rx = rect.width * (inner ? 0.19 : 0.4);
         const ry = rect.height * (inner ? 120 / 520 : 215 / 520);
+        const find = (selector) => (typeof node.querySelector === 'function' ? node.querySelector(selector) : null);
+        const mark = find('.hp-orbit-mark');
+        const label = find('.hp-orbit-name');
         planets.push({
           node,
           thread: threads[index],
+          // Layout sizes, unaffected by the transforms that move the node.
+          nodeH: node.offsetHeight || 0,
+          markW: mark ? mark.offsetWidth : 0,
+          markH: mark ? mark.offsetHeight : 0,
+          labelW: label ? label.offsetWidth : 0,
+          labelH: label ? label.offsetHeight : 0,
           rx,
           ry,
           phase: Math.atan2((y - cy) / ry, (x - cx) / rx),
@@ -116,8 +148,20 @@
         planet.node.style.zIndex = behind ? '2' : '3';
         planet.node.style.transform = `translate3d(${x - cx}px, ${y - cy}px, 0) translate(-50%, -50%)`;
         if (planet.thread) {
-          planet.thread.setAttribute('x2', (x / rect.width * 1000).toFixed(2));
-          planet.thread.setAttribute('y2', (y / rect.height * 520).toFixed(2));
+          // Aim at the icon box, which sits above the node's centre, and stop
+          // at whichever of the box or the label the line reaches first.
+          const mx = x;
+          const my = y - planet.nodeH / 2 + planet.markH / 2;
+          const ly = y + planet.nodeH / 2 - planet.labelH / 2;
+          const t = Math.min(
+            entryT(cx, cy, mx, my, mx, my, planet.markW / 2 + THREAD_GAP, planet.markH / 2 + THREAD_GAP),
+            entryT(cx, cy, mx, my, x, ly, planet.labelW / 2 + THREAD_GAP, planet.labelH / 2 + THREAD_GAP),
+          );
+          const k = Number.isFinite(t) ? t : 1;
+          const ex = cx + (mx - cx) * k;
+          const ey = cy + (my - cy) * k;
+          planet.thread.setAttribute('x2', (ex / rect.width * 1000).toFixed(2));
+          planet.thread.setAttribute('y2', (ey / rect.height * 520).toFixed(2));
         }
       });
     };

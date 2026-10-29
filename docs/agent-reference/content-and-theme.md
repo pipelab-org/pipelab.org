@@ -84,6 +84,7 @@ Current templates: `ls themes/pipelab/layouts/`. The ones with distinct responsi
 
 JSON-LD is auto-generated per section: Organization plus WebSite on the home page, BlogPosting on blog,
 TechArticle plus FAQPage on learn and compare, FAQPage on the pipelock page, BreadcrumbList everywhere.
+FAQPage comes from frontmatter `faq:`: write 2-3 real Q&As, with no Google rich-result expectation.
 OG images are auto-selected by section and overridden with `og_image:` in frontmatter.
 
 ### Hero and responsive contracts

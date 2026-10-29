@@ -211,4 +211,4 @@ Generate the key into that path with `pipelock keygen receipt-signing --keystore
 
 ---
 
-See also: [Pi](/learn/pi/) &middot; [Claude Code](/learn/claude-code-hooks/) &middot; [Cursor](/learn/cursor-integration/) &middot; [VS Code](/learn/vscode-integration/) &middot; [Grok Build](/learn/grok/) &middot; [Full documentation](/pipelock/)
+See also: [Pi](/learn/pi/) &middot; [Claude Code](/learn/claude-code-hooks/) &middot; [Cursor](/learn/cursor-integration/) &middot; [VS Code](/learn/vscode-integration/) &middot; [Grok Build](/learn/grok/) &middot; [Codex CLI](/learn/codex-cli-integration/) &middot; [Full documentation](/pipelock/)
