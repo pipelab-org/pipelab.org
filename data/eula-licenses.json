@@ -1,0 +1,18 @@
+{
+  "repository": "https://github.com/pipelab-org/pipelock",
+  "tag": "v3.7.1",
+  "commit": "d6bb0003c1dac00d3b2df8dd1eb1a51ed8cecd6a",
+  "scope_source": "README.md",
+  "licenses": [
+    {
+      "heading": "Apache License 2.0",
+      "source_path": "LICENSE",
+      "sha256": "a129cc8214f5c4bd010af02e3dadccd2fbeb4db434a0159839adeba2f7cba20c"
+    },
+    {
+      "heading": "Elastic License 2.0",
+      "source_path": "enterprise/LICENSE",
+      "sha256": "48255018b41fc0e965b1115af7e6779bc218bb8a6747d561da800d5022622aa2"
+    }
+  ]
+}
