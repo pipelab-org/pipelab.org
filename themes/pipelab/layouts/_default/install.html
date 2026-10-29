@@ -24,7 +24,7 @@
         {{ range $i, $m := $methods }}
         <button class="inst-tab{{ if eq $i 0 }} is-active{{ end }}" type="button" id="inst-tab-{{ $m.id }}"
                 role="tab" tabindex="{{ if eq $i 0 }}0{{ else }}-1{{ end }}" aria-selected="{{ if eq $i 0 }}true{{ else }}false{{ end }}" aria-controls="inst-panel"
-                data-inst-id="{{ $m.id }}" data-inst-label="{{ $m.short_label }}" data-inst-cmd="{{ $m.command }}" data-inst-note="{{ $m.note }}"
+                data-inst-id="{{ $m.id }}" data-inst-label="{{ $m.short_label }}" data-inst-cmd="{{ $m.command }}" data-inst-note="{{ $m.note }}" data-inst-local="{{ $m.local_binary }}"
                 data-event="install_tab_click" data-event-value="{{ $m.id }}" data-event-placement="install-hero">{{ if ne $m.id "helm" }}{{ partial (printf "brands/%s.svg" $m.id) . }}{{ end }} {{ $m.short_label }}</button>
         {{ end }}
         <button class="inst-tab" type="button" id="inst-tab-binary"
@@ -44,7 +44,7 @@
              data-event="install_releases_click" data-event-placement="install-hero">Download v{{ $version }} &rarr;</a>
         </div>
         <div class="inst-term-body" id="inst-method-note"><p>{{ $first.note }}</p></div>
-        <div class="inst-term-foot">
+        <div class="inst-term-foot" id="inst-term-foot"{{ if not $first.local_binary }} hidden{{ end }}>
           <span class="inst-term-check" aria-hidden="true">&#10003;</span> then <code>pipelock --version</code> confirms the build
         </div>
       </div>
@@ -109,6 +109,7 @@
       var noteEl = document.getElementById('inst-method-note');
       var titleEl = document.getElementById('inst-term-title');
       var panelEl = document.getElementById('inst-panel');
+      var footEl = document.getElementById('inst-term-foot');
       function activate(tab) {
         tabs.forEach(function (t) {
           var isMe = t === tab;
@@ -125,6 +126,8 @@
           noteEl.hidden = isBinary || !note;
           noteEl.querySelector('p').textContent = note;
         }
+        // Docker and Helm install no local binary, so `pipelock --version` doesn't apply.
+        if (footEl) footEl.hidden = !isBinary && tab.getAttribute('data-inst-local') === 'false';
         if (titleEl) titleEl.textContent = 'install · ' + (tab.getAttribute('data-inst-label') || '').toLowerCase();
         if (panelEl) panelEl.setAttribute('aria-labelledby', tab.id);
       }

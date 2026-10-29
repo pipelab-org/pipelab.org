@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { stringify } from "yaml";
+import { spawnSync } from "node:child_process";
+import { parse, stringify } from "yaml";
 import { auditInstallContract, auditInstallData, auditRawInstallSource, helmTemplate, installationCorrection } from "../scripts/install-contract.mjs";
 
 // Operator instructions from the release README, independently expressed here.
@@ -494,4 +495,22 @@ test("Helm OCI commands reach product, install, enterprise and raw context", () 
   const current = `## Helm\n${helmTemplate.replace("VERSION", version)}\n`;
   assert.deepEqual(auditRawInstallSource(current, version), []);
   assert.match(auditRawInstallSource(current.replace(version, "latest"), version).join("\n"), /Helm OCI install/);
+});
+
+test("the --version footer shows only for methods that install a local binary", (t) => {
+  const fixture = mkdtempSync(path.join(tmpdir(), "install-local-"));
+  t.after(() => rmSync(fixture, { recursive: true, force: true }));
+  for (const dir of ["content", "data", "layouts/_default", "layouts/partials/install"]) mkdirSync(path.join(fixture, dir), { recursive: true });
+  writeFileSync(path.join(fixture, "hugo.toml"), 'baseURL = "https://example.org/"\n[params]\npipelock_version = "3.7.1"\n');
+  writeFileSync(path.join(fixture, "content/flags.md"), "---\ntitle: Flags\n---\n");
+  writeFileSync(path.join(fixture, "layouts/_default/single.html"), '{{ range partial "install/methods.html" (dict) }}{{ .id }}={{ .local_binary }};{{ end }}');
+  writeFileSync(path.join(fixture, "data/install.yaml"), readFileSync("data/install.yaml", "utf8"));
+  writeFileSync(path.join(fixture, "layouts/partials/install/methods.html"), readFileSync("themes/pipelab/layouts/partials/install/methods.html", "utf8"));
+  const build = spawnSync(process.env.HUGO_BIN || "hugo", ["--source", fixture, "--quiet"], { encoding: "utf8" });
+  assert.equal(build.status, 0, build.stdout + build.stderr);
+  const flags = Object.fromEntries(readFileSync(path.join(fixture, "public/flags/index.html"), "utf8").trim().split(";").filter(Boolean).map(pair => pair.split("=")));
+  assert.deepEqual(flags, { go: "true", docker: "false", helm: "false", homebrew: "true" });
+  const template = readFileSync("themes/pipelab/layouts/_default/install.html", "utf8");
+  assert.match(template, /data-inst-local="\{\{ \$m\.local_binary \}\}"/);
+  assert.match(template, /footEl\.hidden = !isBinary && tab\.getAttribute\('data-inst-local'\) === 'false'/);
 });

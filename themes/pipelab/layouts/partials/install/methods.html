@@ -1,6 +1,8 @@
 {{/* Resolves install methods from data/install.yaml.
 
-     Returns a slice of dicts: id, label, short_label, command — in the published
+     Returns a slice of dicts: id, label, short_label, note, command and
+     local_binary (false only for Docker and Helm, which put no pipelock
+     binary on the machine) — in the published
      order defined by the data file, with VERSION substituted for the configured
      release version.
 
@@ -32,6 +34,7 @@
         "label" .label
         "short_label" (default .label .short_label)
         "note" (default "" .note)
+        "local_binary" (ne .local_binary false)
         "command" (replace .command "VERSION" $version)) -}}
   {{- end -}}
 {{- end -}}
