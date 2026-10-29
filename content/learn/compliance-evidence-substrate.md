@@ -82,7 +82,7 @@ NIST AI 100-1 (the AI Risk Management Framework) defines four core functions: GO
 
 The shipped catalog also includes [SOC 2's five category-level entries](/learn/soc2-trust-services-criteria/), [selected HIPAA Security Rule safeguards](/learn/hipaa-security-rule/), [MITRE ATLAS](/learn/mitre-atlas/), [OWASP MCP Top 10](/learn/owasp-mcp-top10/), and [OWASP Agentic Top 10](/learn/owasp-agentic-top10/). It does not include SOC 2 CC6-CC9 control-level mappings or mappings for ISO/IEC 42001, DORA, or Colorado law.
 
-Colorado's SB25B-004 amended the SB24-205 developer and deployer obligation dates from February 1, 2026 to June 30, 2026. See the [signed amendment, sections 1-2](https://leg.colorado.gov/sites/default/files/2025b_004_signed.pdf) and the [regulatory controls hub](/learn/ai-agent-regulatory-controls/).
+Colorado's [SB25B-004](https://leg.colorado.gov/bills/sb25b-004) moved the SB24-205 obligation dates from February 1, 2026 to June 30, 2026. [SB26-189](https://leg.colorado.gov/bills/sb26-189), signed May 14, 2026, then repealed and reenacted those provisions around automated decision-making technology, with developer documentation duties starting January 1, 2027. See the [regulatory controls hub](/learn/ai-agent-regulatory-controls/).
 
 For the framework-mapped product surface (assess command, signed bundles, SARIF integration), see [AI compliance evidence](/learn/compliance-evidence/). For Article 26 deployer obligations and the six-month retention rule specifically, see [EU AI Act compliance](/learn/eu-ai-act-compliance/). For the framework-by-framework cross-reference (EU AI Act, DORA, NIS2, NIST AI RMF, ISO 42001, Colorado AI Act, SOC 2), see [AI agent regulatory controls hub](/learn/ai-agent-regulatory-controls/).
 

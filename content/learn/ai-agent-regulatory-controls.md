@@ -2,8 +2,8 @@
 title: "AI Agent Regulatory Controls and Evidence Hub"
 linkTitle: "AI Agent Regulatory Controls"
 seoTitle: "AI Agent Regulatory Controls and Evidence Hub"
-subtitle: "How Pipelock evidence supports AI agent obligations under the EU AI Act, DORA, NIS2, NIST AI RMF, ISO/IEC 42001, the Colorado AI Act, SOC 2, and OWASP frameworks."
-description: "How Pipelock evidence maps to AI agent regulatory programs: EU AI Act, DORA, NIS2, Colorado AI Act, NIST AI RMF, ISO 42001, SOC 2, OWASP."
+subtitle: "Which AI agent frameworks have shipped Pipelock Assess mappings (EU AI Act, NIST AI RMF, SOC 2, OWASP) and which are regulatory background (DORA, NIS2, ISO/IEC 42001, Colorado)."
+description: "AI agent regulatory controls: shipped Pipelock Assess mappings for EU AI Act, NIST AI RMF, SOC 2 and OWASP, plus DORA, NIS2, ISO 42001 and Colorado notes."
 date: 2026-05-11
 lastmod: 2026-08-24
 learn_cat: compliance
@@ -25,7 +25,7 @@ faq:
   - q: "When do EU AI Act high-risk obligations apply?"
     a: "Regulation (EU) 2026/1744, the Digital Omnibus on AI, defers stand-alone Annex III high-risk obligations to 2 December 2027 and Annex I embedded-in-product safety-component obligations to 2 August 2028. The European Parliament endorsed it on 16 June 2026, the Council gave final approval on 29 June 2026, and it entered into force on 27 July 2026 after publication in the Official Journal on 24 July 2026."
   - q: "When does the Colorado AI Act apply?"
-    a: "June 30, 2026. The original Colorado AI Act (SB24-205) set an effective date of February 1, 2026. SB25B-004 amended that date to June 30, 2026, giving deployers and developers additional implementation time. The substantive obligations, including the risk-management program requirement, consumer notice rules, and the algorithmic discrimination impact assessment, apply from the amended date."
+    a: "The original Colorado AI Act (SB24-205) set an effective date of February 1, 2026, and SB25B-004 moved it to June 30, 2026. SB26-189, signed May 14, 2026, then repealed and reenacted those provisions around automated decision-making technology (ADMT) used in consequential decisions. Its developer documentation duties and the attorney general's rulemaking deadline fall on January 1, 2027."
   - q: "What is the difference between in force and applies from?"
     a: "Many EU regulations enter into force long before their substantive obligations apply to organizations. DORA entered into force on January 16, 2023 but applied to financial entities only from January 17, 2025. Regulation (EU) 2026/1744 entered into force on 27 July 2026 but defers stand-alone Annex III high-risk obligations to 2 December 2027 and embedded-in-product safety-component obligations to 2 August 2028. Always check the applies-from date for the specific scope you operate under, not just the entry-into-force date."
   - q: "Does Pipelock satisfy DORA?"
@@ -104,7 +104,7 @@ The deeper Article-by-Article mapping lives on the [EU AI Act compliance page](/
 
 **Status:** International voluntary standard published December 2023, certifiable. Specifies requirements for an AI management system (AIMS) within organizations, with a risk-based approach. Annexes provide reference controls and implementation guidance.
 
-Assess v3.7.1 does not include a ISO/IEC 42001 control mapping. The organization owns its program, control design, and evaluation of runtime records.
+Assess v3.7.1 does not include an ISO/IEC 42001 control mapping. The organization owns its program, control design, and evaluation of runtime records.
 
 ### EU Digital Operational Resilience Act (DORA), Regulation (EU) 2022/2554
 
@@ -132,16 +132,17 @@ Assess v3.7.1 does not include a DORA control mapping. The organization owns its
 
 Assess v3.7.1 does not include a NIS2 control mapping. The organization owns its program, control design, and evaluation of runtime records.
 
-### Colorado AI Act, SB24-205 (amended by SB25B-004)
+### Colorado AI Act, SB24-205 (repealed and reenacted by SB26-189) {#colorado-ai-act-sb24-205-amended-by-sb25b-004}
 
-**Sources:** [leg.colorado.gov/bills/sb24-205](https://leg.colorado.gov/bills/sb24-205) (original); [leg.colorado.gov/bills/sb25b-004](https://leg.colorado.gov/bills/sb25b-004) (delay amendment)
+**Sources:** [leg.colorado.gov/bills/sb24-205](https://leg.colorado.gov/bills/sb24-205) (original); [leg.colorado.gov/bills/sb25b-004](https://leg.colorado.gov/bills/sb25b-004) (delay amendment); [leg.colorado.gov/bills/sb26-189](https://leg.colorado.gov/bills/sb26-189) (repeal and reenactment)
 
 **Timeline:**
 
 - Original effective date (per SB24-205): February 1, 2026
-- **Amended effective date (per SB25B-004): June 30, 2026**, the operative date for substantive obligations.
+- SB25B-004 moved that date to June 30, 2026.
+- **SB26-189, signed May 14, 2026, repealed and reenacted those provisions** around automated decision-making technology (ADMT) used in consequential decisions. Developer documentation duties and the attorney general's rulemaking deadline fall on January 1, 2027.
 
-**Scope:** High-risk AI systems deployed in Colorado that influence consequential decisions in employment, education, financial services, healthcare, housing, insurance, legal services, or government. Both developer and deployer obligations.
+**Scope:** Covered ADMT used in consequential decisions about consumers. Both developer and deployer obligations, including point-of-interaction notice, adverse-outcome explanations, and three-year recordkeeping.
 
 Assess v3.7.1 does not include a Colorado control mapping. The organization owns its program, control design, and evaluation of runtime records.
 

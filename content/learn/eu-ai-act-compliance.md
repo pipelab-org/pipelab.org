@@ -162,7 +162,7 @@ Generate signed compliance evidence for your deployment with [`pipelock assess`]
 
 ## Further reading
 
-- [AI Agent Regulatory Controls Hub](/learn/ai-agent-regulatory-controls/): framework-by-framework cross-reference across EU AI Act, DORA, NIS2, NIST AI RMF, ISO 42001, the Colorado AI Act (June 30, 2026 effective date per SB25B-004), SOC 2, and OWASP.
+- [AI Agent Regulatory Controls Hub](/learn/ai-agent-regulatory-controls/): framework-by-framework cross-reference across EU AI Act, DORA, NIS2, NIST AI RMF, ISO 42001, the Colorado AI Act (repealed and reenacted by SB26-189), SOC 2, and OWASP.
 - [What did my agent do?](/learn/what-did-my-agent-do/): single-decision walkthrough with a real signed Article 12 - shaped receipt and a verifier you can run offline.
 - [EU AI Act Runtime Security: A Field Guide](/blog/eu-ai-act-runtime-security/): the runtime control mapping in narrative form, with prEN 18282 context.
 - [Compliance Evidence](/learn/compliance-evidence/): signed assessment bundles for audit.

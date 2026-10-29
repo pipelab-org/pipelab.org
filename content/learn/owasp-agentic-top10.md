@@ -1,8 +1,8 @@
 ---
 title: "OWASP Agentic Top 10: Pipelock Coverage"
 linkTitle: "OWASP Agentic Top 10: Coverage"
-subtitle: "How Pipelock addresses each threat in the OWASP Top 10 for Agentic Applications (2026)."
-description: "Pipelock coverage for all 10 risks in the OWASP Top 10 for Agentic Applications 2026 (ASI01-ASI10), with per-threat assessment."
+subtitle: "How Pipelock's shipped Assess mapping rates each threat in the OWASP Top 10 for Agentic Applications (2026)."
+description: "OWASP Top 10 for Agentic Applications 2026 (ASI01-ASI10) in Pipelock's shipped mapping: four risks covered, five partial, one not covered, with limits."
 date: 2026-03-12
 faq:
   - q: "What is the OWASP Top 10 for Agentic Applications?"
