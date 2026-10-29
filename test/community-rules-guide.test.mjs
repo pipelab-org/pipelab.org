@@ -19,3 +19,15 @@ test("community guide separates bundle totals from loaded rules and preserves th
   assert.match(guide, /strict mode[^.\n]*rules\.allow_degraded: true/);
   assert.doesNotMatch(guide, /You can override this|deduplicated by name|no longer load implicitly/);
 });
+
+test("community guide describes the injection rules the served bundle ships", () => {
+  const guide = read("content/learn/community-rules.md");
+  const bundle = parse(read("static/rules/pipelock-community/bundle.yaml"));
+  const summary = /^\*\*Response injection patterns:\*\*(.*)$/m.exec(guide)[1];
+  assert.doesNotMatch(summary, /invisible Unicode|cross-agent/i, "no served injection rule covers these");
+  const languages = bundle.rules
+    .filter(rule => rule.type === "injection" && / Core Override$/.test(rule.name))
+    .map(rule => rule.name.replace(/ Core Override$/, ""));
+  assert.ok(languages.length > 0);
+  for (const language of languages) assert.match(summary, new RegExp(`\\b${language}\\b`));
+});

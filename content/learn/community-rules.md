@@ -30,7 +30,7 @@ The `pipelock-community` bundle ships 28 rules across three categories:
 
 **MCP tool poisoning detection:** Patterns that flag suspicious tool descriptions containing hidden instructions, data exfiltration commands, or prompt injection payloads. Rules scoped to `scan_field: description` scan the tool description and description fields nested in its input schema. Built-in tool scanning still covers other agent-visible fields.
 
-**Response injection patterns:** Additional prompt injection signatures for response scanning, covering techniques like invisible Unicode injection and cross-agent instruction leaking.
+**Response injection patterns:** Additional prompt injection signatures for response scanning, covering fake system tags and section delimiters, instructions hidden in HTML comments or invisible HTML elements, commands to call MCP tools or send data to HTTP endpoints, and override attempts in Chinese, French, German, and Spanish.
 
 The published bundle contains stable and experimental rules. By default, `rules.include_experimental: false` skips experimental rules and `rules.min_confidence: medium` filters lower-confidence rules, so the installed total is not the active count. Check `pipelock rules status` for loaded counts.
 
