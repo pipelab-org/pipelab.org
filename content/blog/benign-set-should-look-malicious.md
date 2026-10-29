@@ -46,6 +46,8 @@ Here is the shape of a hard-negative table. Every row is benign, and every row l
 | A base64 image data URI | A long high-entropy blob | It decodes to an inline PNG | Does it decode to an image, or to a key or a command? |
 | A UUID in a URL path | A long random-looking string | It's a resource id | Is the entropy in a credential position or an id position? |
 
+> Clarification (2026-10-29): quotes and code fences do not make untrusted content safe. A malicious source controls its own formatting. These examples belong in a policy-labeled test set, but formatting alone must not grant an exemption from scanning or blocking.
+
 None of this is rare. This is where a rule earns its keep or gets uninstalled.
 
 ## Build your own set
