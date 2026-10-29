@@ -106,3 +106,54 @@ test("hidden orbit resumes with finite thread coordinates when it becomes visibl
     assert.equal(Number.isFinite(Number(thread.getAttribute("y2"))), true);
   }
 });
+
+test("thread re-measures a mark that had no size at first layout and stops outside it", () => {
+  let animationCallback;
+  let intersectionCallback;
+  const attributes = new Map();
+  const thread = { classList: fakeClassList(), setAttribute: (name, value) => attributes.set(name, value) };
+  const mark = { offsetWidth: 0, offsetHeight: 0 };
+  const label = { offsetWidth: 0, offsetHeight: 0 };
+  const node = {
+    x: "86.3%", y: "67.4%", classList: fakeClassList(), style: {}, offsetHeight: 0,
+    addEventListener() {},
+    querySelector: (selector) => selector === ".hp-orbit-mark" ? mark : selector === ".hp-orbit-name" ? label : null,
+  };
+  const orbit = {
+    classList: fakeClassList(),
+    style: { setProperty() {} },
+    querySelectorAll: (selector) => selector === ".hp-orbit-node" ? [node] : selector === ".hp-orbit-thread" ? [thread] : [],
+    getBoundingClientRect: () => ({ width: 1000, height: 520, top: 0 }),
+  };
+  const context = {
+    document: { querySelectorAll: (selector) => selector === ".hp-orbit" ? [orbit] : [] },
+    window: {
+      matchMedia: (query) => ({ matches: !query.includes("prefers-reduced-motion"), addEventListener() {} }),
+      scrollY: 0, addEventListener() {}, removeEventListener() {},
+    },
+    getComputedStyle: (el) => ({ getPropertyValue: (property) => property === "--x" ? el.x : el.y }),
+    performance: { now: () => 100 },
+    requestAnimationFrame(callback) { animationCallback = callback; return 1; },
+    cancelAnimationFrame() { animationCallback = undefined; },
+    ResizeObserver: class { observe() {} },
+    IntersectionObserver: class { constructor(callback) { intersectionCallback = callback; } observe() {} },
+  };
+  context.window.ResizeObserver = context.ResizeObserver;
+  context.window.IntersectionObserver = context.IntersectionObserver;
+  vm.runInNewContext(source, context);
+  intersectionCallback([{ isIntersecting: true }]);
+
+  // Layout arrives after the first measurement.
+  Object.assign(mark, { offsetWidth: 50, offsetHeight: 50 });
+  Object.assign(label, { offsetWidth: 60, offsetHeight: 16 });
+  node.offsetHeight = 80;
+  animationCallback(200);
+
+  const [dx, dy] = node.style.transform.match(/translate3d\(([-\d.e]+)px, ([-\d.e]+)px/).slice(1).map(Number);
+  const markX = 500 + dx;
+  const markY = 260 + dy - 80 / 2 + 50 / 2;
+  const ex = Number(attributes.get("x2"));
+  const ey = Number(attributes.get("y2"));
+  const outside = Math.abs(ex - markX) >= 25 - 0.01 || Math.abs(ey - markY) >= 25 - 0.01;
+  assert.ok(outside, `thread end (${ex}, ${ey}) is inside the mark box centred at (${markX}, ${markY})`);
+});

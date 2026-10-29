@@ -114,6 +114,8 @@
         planets.push({
           node,
           thread: threads[index],
+          mark,
+          label,
           // Layout sizes, unaffected by the transforms that move the node.
           nodeH: node.offsetHeight || 0,
           markW: mark ? mark.offsetWidth : 0,
@@ -148,6 +150,17 @@
         planet.node.style.zIndex = behind ? '2' : '3';
         planet.node.style.transform = `translate3d(${x - cx}px, ${y - cy}px, 0) translate(-50%, -50%)`;
         if (planet.thread) {
+          // A box measured before layout (late fonts or styles) reads 0; measure
+          // it again once it has a size instead of clipping against nothing.
+          if (planet.mark && !(planet.markW && planet.markH)) {
+            planet.nodeH = planet.node.offsetHeight || 0;
+            planet.markW = planet.mark.offsetWidth;
+            planet.markH = planet.mark.offsetHeight;
+          }
+          if (planet.label && !(planet.labelW && planet.labelH)) {
+            planet.labelW = planet.label.offsetWidth;
+            planet.labelH = planet.label.offsetHeight;
+          }
           // Aim at the icon box, which sits above the node's centre, and stop
           // at whichever of the box or the label the line reaches first.
           const mx = x;
