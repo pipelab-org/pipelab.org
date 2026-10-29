@@ -1,8 +1,8 @@
 ---
 title: "OWASP Agentic AI Threats: Pipelock Coverage"
 linkTitle: "OWASP Agentic AI Threats: Coverage"
-subtitle: "The OWASP Agentic AI Threats taxonomy, with the boundary of Pipelock Assess mappings stated explicitly."
-description: "OWASP Agentic AI Threats explained: the 15-threat taxonomy and its scope. Pipelock Assess v3.7.1 does not ship mappings for this framework."
+subtitle: "Published Pipelock documentation ratings for OWASP Agentic AI Threats and Mitigations, separate from Assess report mappings."
+description: "OWASP Agentic AI Threats coverage from Pipelock's published v3.7.1 documentation mapping: T1-T15 ratings, recognized gaps, and Assess limits."
 date: 2026-03-12
 faq:
   - q: "What is the OWASP Agentic AI Threats framework?"
@@ -16,27 +16,29 @@ tags:
 ---
 The [OWASP Agentic AI Threats and Mitigations](https://genai.owasp.org/resource/agentic-ai-threats-and-mitigations/) framework is the broadest of OWASP's three AI security lists, covering 15 threats. It goes deeper than the [Agentic Top 10](/learn/owasp-agentic-top10/) (which focuses on the top risks) and the [LLM Top 10](/learn/owasp-llm-top10/) (which focuses on model-level risks).
 
-Pipelock Assess v3.7.1 does not include an Agentic AI Threats control mapping. Its shipped OWASP mappings are [MCP Top 10](/learn/owasp-mcp-top10/) and [Agentic Top 10](/learn/owasp-agentic-top10/). Use those pages for product coverage and limits.
+Pipelock's [published documentation mapping at v3.7.1](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/owasp-agentic-top15-mapping.md) rates the OWASP Agentic AI Threats and Mitigations categories as shown below. These documentation ratings describe product capabilities and limits; they aren't guarantees of prevention or compliance certification. Pipelock Assess v3.7.1 does not include this framework in its report catalog. Its shipped OWASP report mappings are [MCP Top 10](/learn/owasp-mcp-top10/) and [Agentic Top 10](/learn/owasp-agentic-top10/).
 
-## Threat categories {#coverage-at-a-glance}
+## Published documentation mapping {#coverage-at-a-glance}
 
-| #  |  Threat |
-| --- | -------- |
-| T1  |  Memory Poisoning |
-| T2  |  Tool Misuse |
-| T3  |  Privilege Compromise |
-| T4  |  Resource Overload |
-| T5  |  Cascading Hallucination Attacks |
-| T6  |  Intent Breaking & Goal Manipulation |
-| T7  |  Misaligned & Deceptive Behaviors |
-| T8  |  Repudiation & Untraceability |
-| T9  |  Identity Spoofing & Impersonation |
-| T10  |  Overwhelming Human-in-the-Loop |
-| T11  |  Unexpected RCE and Code Attacks |
-| T12  |  Agent Communication Poisoning |
-| T13  |  Rogue Agents in Multi-Agent Systems |
-| T14  |  Human Attacks on Multi-Agent Systems |
-| T15  |  Human Manipulation |
+The documentation marks T10 as a recognized gap on the roadmap, and T5 and T15 as out of scope. These entries do not describe shipped coverage.
+
+| ID | Threat | Documentation rating | Documentation status |
+|---|---|---|---|
+| T1 | Memory Poisoning | Strong | Shipped |
+| T2 | Tool Misuse | Strong | Shipped |
+| T3 | Privilege Compromise | Strong | Shipped |
+| T4 | Resource Overload | Partial | Shipped |
+| T5 | Cascading Hallucination Attacks | Out of scope | Out of scope |
+| T6 | Intent Breaking & Goal Manipulation | Moderate | Shipped |
+| T7 | Misaligned & Deceptive Behaviors | Strong | Shipped |
+| T8 | Repudiation & Untraceability | Strong | Shipped |
+| T9 | Identity Spoofing & Impersonation | Partial | Shipped |
+| T10 | Overwhelming Human-in-the-Loop | Recognized gap | Roadmap |
+| T11 | Unexpected RCE and Code Attacks | Moderate | Shipped |
+| T12 | Agent Communication Poisoning | Strong | Shipped |
+| T13 | Rogue Agents in Multi-Agent Systems | Strong | Shipped |
+| T14 | Human Attacks on Multi-Agent Systems | Partial | Shipped |
+| T15 | Human Manipulation | Out of scope | Out of scope |
 
 ## T1: Memory Poisoning
 

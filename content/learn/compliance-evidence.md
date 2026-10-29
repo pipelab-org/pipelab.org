@@ -49,6 +49,22 @@ AI agent compliance evidence should connect each runtime action to a control, a 
 
 The catalog includes partial and not-covered entries. An entry is not a certification or a claim of complete framework coverage. NIST SP 800-53 is not included in the Assess v3.7.1 catalog.
 
+### Separate NIST SP 800-53 documentation mapping
+
+Pipelock's [published documentation mapping at v3.7.1](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/compliance/nist-800-53.md) rates selected NIST SP 800-53 Rev. 5 control families as follows. These are documentation ratings, separate from the Assess report statuses above.
+
+| Control family | Documentation rating |
+|---|---|
+| AC: Access Control | Moderate |
+| AU: Audit and Accountability | Strong |
+| CA: Assessment, Authorization | Partial |
+| CM: Configuration Management | Moderate |
+| IR: Incident Response | Moderate |
+| SC: System and Communications | Strong |
+| SI: System and Information Integrity | Strong |
+
+The document limits its scope to selected agent runtime controls. It does not cover full-lifecycle system authorization, identity management, physical security, or personnel security, and it does not constitute compliance certification.
+
 ## Generating Evidence with `pipelock assess`
 
 The `pipelock assess` command orchestrates four security primitives into a reproducible evidence bundle, Ed25519-signed by default:

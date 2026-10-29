@@ -14,7 +14,7 @@ faq:
   - q: "Which tools cover the OWASP MCP Top 10 risks?"
     a: "No single tool covers all ten risks. Pre-deploy scanners catch tool poisoning and supply chain issues at install time. Runtime proxies inspect tool calls and responses while the agent runs and catch rug-pulls, command injection, and prompt injection via contextual payloads. Identity gateways handle authentication and scope enforcement. Audit log platforms cover the telemetry gap. Network allowlists and MCP gateways add policy at the routing layer. A defensible MCP deployment combines four to six of these categories so each tool covers a different row of the matrix."
   - q: "Does Pipelock cover the OWASP MCP Top 10?"
-    a: "Pipelock covers the runtime inspection rows: tool poisoning, prompt injection through tool responses, credential leaks, context oversharing, and part of command-injection defense. Its shipped mapping marks audit and telemetry covered, and shadow MCP partial: local discovery does not enforce an organization-wide registry or approval workflow. It does not replace an identity gateway for authentication, authorization, token lifecycle, or per-tool scopes."
+    a: "The Assess v3.7.1 mapping marks eight categories covered and two partial: MCP07 (authentication and authorization) and MCP09 (shadow MCP servers). Covered entries include command injection and execution, audit and telemetry, and context injection and oversharing. These statuses describe product controls, not complete prevention of each risk. Organization-wide identity governance, server registry, and approval workflows remain deployment responsibilities."
 learn_cat: compliance
 level: ref
 tags:

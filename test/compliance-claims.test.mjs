@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";
 import test from "node:test";
-import { checkMappingRows, checkProofFrameworkLinks } from "../scripts/compliance-claims.mjs";
+import { checkMappingRows, checkProofFrameworkLinks, checkDocumentedMappingSources } from "../scripts/compliance-claims.mjs";
 
 const snapshot = JSON.parse(readFileSync(new URL("./fixtures/assess-compliance-v3.7.1.json", import.meta.url)));
 const source = file => readFileSync(new URL(`../${file}`, import.meta.url), "utf8");
@@ -36,4 +36,74 @@ test("proof chip checks reject missing links and wrong destinations", () => {
   for (const invalid of [chip.replace('href="/learn/mitre-atlas/"', 'href="/learn/missing/"'), '<span class="proof-chip" role="listitem">MITRE ATLAS</span>']) {
     assert.ok(checkProofFrameworkLinks(invalid, ["/learn/mitre-atlas/"]).length > 0);
   }
+});
+
+// Sources: v3.7.1 docs/owasp-llm-top10-mapping.md (LLM01-10),
+// docs/owasp-agentic-top15-mapping.md (T1-T15), and
+// docs/compliance/nist-800-53.md. These are documentation mappings,
+// not additional entries in the Assess fixture's framework catalog.
+const llmDoc = "docs/owasp-llm-top10-mapping.md";
+const threatsDoc = "docs/owasp-agentic-top15-mapping.md";
+const nistDoc = "docs/compliance/nist-800-53.md";
+const documentationClaims = [
+  ["content/learn/owasp-llm-top10.md", [llmDoc]],
+  ["content/learn/owasp-agentic-threats.md", [threatsDoc]],
+  ["content/learn/owasp-aivss-coverage.md", ["docs/owasp-mapping.md", threatsDoc]],
+  ["content/learn/owasp-agentic-top10.md", ["docs/owasp-mapping.md"]],
+  ["content/learn/hipaa-security-rule.md", ["docs/compliance/assess-mapping.md"]],
+  ["content/learn/ai-agent-compliance.md", [llmDoc, threatsDoc, nistDoc]],
+  ["content/learn/compliance-evidence.md", [nistDoc]],
+  ["content/learn/ai-agent-regulatory-controls.md", [llmDoc, threatsDoc]],
+  ...["pipelock-vs-runlayer", "pipelock-vs-prisma-airs", "pipelock-vs-microsoft-agent-governance-toolkit", "pipelock-vs-lakera-guard", "agent-firewall-vs-ai-security-platform"]
+    .map(page => [`content/compare/${page}.md`, [llmDoc, threatsDoc, nistDoc]]),
+  ["static/llms-full.txt", [llmDoc, threatsDoc, nistDoc]],
+  ["themes/pipelab/layouts/enterprise/single.html", [llmDoc, threatsDoc, nistDoc]],
+];
+
+for (const [page, documents] of documentationClaims) {
+  test(`${page} separates documentation mappings from Assess and links release sources`, () => {
+    assert.deepEqual(checkDocumentedMappingSources(source(page), documents), []);
+    assert.doesNotMatch(source(page), /OWASP Agentic Top 15/);
+  });
+}
+
+test("documentation tables retain the published ratings, shipped status and gaps", () => {
+  // Values transcribed from the v3.7.1 source tables named above.
+  const tables = [
+    ["owasp-llm-top10", "LLM", [
+      ["Strong", "Shipped"], ["Strong", "Shipped"], ["Partial", "Shipped"], ["N/A", "Out of scope"],
+      ["Moderate", "Shipped"], ["Strong", "Shipped"], ["Moderate", "Shipped"], ["N/A", "Out of scope"],
+      ["N/A", "Out of scope"], ["Partial", "Shipped"],
+    ]],
+    ["owasp-agentic-threats", "T", [
+      ["Strong", "Shipped"], ["Strong", "Shipped"], ["Strong", "Shipped"], ["Partial", "Shipped"],
+      ["Out of scope", "Out of scope"], ["Moderate", "Shipped"], ["Strong", "Shipped"], ["Strong", "Shipped"],
+      ["Partial", "Shipped"], ["Recognized gap", "Roadmap"], ["Moderate", "Shipped"], ["Strong", "Shipped"],
+      ["Strong", "Shipped"], ["Partial", "Shipped"], ["Out of scope", "Out of scope"],
+    ]],
+  ];
+  for (const [page, prefix, ratings] of tables) {
+    const rows = source(`content/learn/${page}.md`).split("\n")
+      .filter(line => new RegExp(`^\\| ${prefix}\\d+ \\|`).test(line))
+      .map(line => line.split("|").map(cell => cell.trim()))
+      .map(cells => [cells[1], cells[3], cells[4]]);
+    const expected = ratings.map(([rating, status], i) => [
+      `${prefix}${prefix === "LLM" ? String(i + 1).padStart(2, "0") : i + 1}`, rating, status,
+    ]);
+    assert.deepEqual(rows, expected, page);
+  }
+});
+
+test("documentation source checks reject missing labels, unlinked sources and wrong document or release", () => {
+  const url = `https://github.com/pipelab-org/pipelock/blob/v3.7.1/${llmDoc}`;
+  const claim = `Published documentation mapping: [LLM Top 10](${url}). Separate from Assess.`;
+  assert.deepEqual(checkDocumentedMappingSources(claim, [llmDoc]), []);
+  assert.deepEqual(checkDocumentedMappingSources(claim.replace(`[LLM Top 10](${url})`, `<a href="${url}#summary">LLM Top 10</a>`), [llmDoc]), []);
+  for (const invalid of [
+    claim.replace("Published documentation mapping", "Framework coverage"),
+    claim.replace("Assess", "reports"),
+    claim.replace(`[LLM Top 10](${url})`, url),
+    claim.replace("v3.7.1", "main"),
+    claim.replace(llmDoc, "docs/owasp-mapping.md"),
+  ]) assert.ok(checkDocumentedMappingSources(invalid, [llmDoc]).length > 0, invalid);
 });

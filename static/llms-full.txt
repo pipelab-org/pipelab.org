@@ -263,7 +263,11 @@ Both Pipelock Assess tiers produce an Ed25519-signed manifest by default at fina
 
 ### Compliance mapping
 
-Pipelock detection categories map to several public frameworks. The mapping is published in the project repository and updated each release. Frameworks covered include OWASP MCP Top 10, OWASP Agentic AI Top 10, OWASP LLM Top 10, MITRE ATLAS, NIST AI RMF, NIST 800-53, EU AI Act Article 26 deployer obligations, and SOC 2 Trust Services Criteria.
+Pipelock Assess v3.7.1 report mappings cover OWASP MCP Top 10, OWASP Agentic Top 10, MITRE ATLAS, EU AI Act, NIST AI RMF, HIPAA Security Rule, and SOC 2 Trust Services Criteria. These static product mappings describe controls and limits; they are not compliance certification.
+
+Separate published documentation mappings at v3.7.1 cover [OWASP LLM Top 10](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/owasp-llm-top10-mapping.md), [OWASP Agentic AI Threats and Mitigations](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/owasp-agentic-top15-mapping.md) (T1-T15), and [NIST 800-53](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/compliance/nist-800-53.md). These are not Assess report frameworks.
+
+The [Agentic Top 10 documentation](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/owasp-mapping.md) rates ASI10 Strong, while the [Assess source](https://github.com/pipelab-org/pipelock/blob/v3.7.1/internal/report/compliance/owasp_agentic.go) marks it Not covered. The [assess-mapping document](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/compliance/assess-mapping.md) lists HIPAA Transmission Security and ePHI Disclosure Prevention Covered, while the [source](https://github.com/pipelab-org/pipelock/blob/v3.7.1/internal/report/compliance/hipaa.go) marks both Partial; the site follows the source statuses.
 
 ## Comparison context
 

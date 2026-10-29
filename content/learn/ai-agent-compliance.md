@@ -57,9 +57,11 @@ Different frameworks ask for different things. The shipped Assess catalog includ
 | **NIST AI RMF** 1.0 | GOVERN and MAP (partial), MEASURE and MANAGE (covered) | Audit emission, discovery, simulation, assessment, and runtime controls |
 | **OWASP Agentic Top 10** | Goal hijack, tool misuse, supply chain, privilege abuse, rogue agents | Scanner results, tool policy logs, injection detection records |
 
-NIST SP 800-53 Rev. 5 is not included in the Assess v3.7.1 catalog. The catalog also includes MITRE ATLAS and selected HIPAA Security Rule safeguards. Each mapping states the product contribution and its limits.
+The Assess v3.7.1 catalog also includes MITRE ATLAS and selected HIPAA Security Rule safeguards. Separate published documentation mappings cover [OWASP LLM Top 10](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/owasp-llm-top10-mapping.md), [OWASP Agentic AI Threats and Mitigations](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/owasp-agentic-top15-mapping.md), and [NIST SP 800-53 Rev. 5](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/compliance/nist-800-53.md). These three frameworks are not Assess report mappings.
 
-If you need a scoring model for how runtime controls change agentic risk, see [OWASP AIVSS Coverage](/learn/owasp-aivss-coverage/).
+The NIST SP 800-53 documentation rates AU, SC, and SI Strong; AC, CM, and IR Moderate; and CA Partial. The document limits its scope to selected runtime controls and does not constitute compliance certification.
+
+For scoring context and the limits of Pipelock evidence, see [OWASP AIVSS Scoring Context](/learn/owasp-aivss-coverage/).
 
 For detailed framework-specific mappings, see [Compliance Evidence](/learn/compliance-evidence/), [EU AI Act Compliance](/learn/eu-ai-act-compliance/), [MITRE ATLAS Coverage](/learn/mitre-atlas/), [NIST AI RMF Coverage](/learn/nist-ai-rmf/), [HIPAA Security Rule Coverage](/learn/hipaa-security-rule/), and [SOC 2 Criteria Mapping](/learn/soc2-trust-services-criteria/).
 

@@ -1,6 +1,6 @@
 ---
-title: "OWASP AIVSS: Pipelock Agent Risk Coverage"
-linkTitle: "OWASP AIVSS Coverage"
+title: "OWASP AIVSS: Scoring Context and Pipelock Evidence"
+linkTitle: "OWASP AIVSS Scoring Context"
 subtitle: "AIVSS scoring context and the boundary of Pipelock Assess framework mappings."
 description: "OWASP AIVSS scoring context: risk amplification and mitigation factors. Pipelock Assess v3.7.1 does not ship an AIVSS mapping or score reduction."
 date: 2026-03-19
@@ -17,6 +17,12 @@ tags:
 [OWASP AIVSS](https://aivss.owasp.org/) (AI Vulnerability Scoring System) scores security vulnerabilities in agentic AI systems. It extends CVSS v4.0 with 10 factors that measure how agent autonomy, tool use, and persistence amplify the blast radius of technical vulnerabilities.
 
 Version 0.8 was released March 19, 2026. The review board includes Jason Clinton (Deputy CISO, Anthropic), Rob Joyce (ex-NSA, advisor to OpenAI), and Martin Stanley (NIST AI RMF lead). RSAC 2026 presentation: March 23.
+
+## Published documentation and Assess scope
+
+The [published documentation mapping for OWASP Agentic Top 10 at v3.7.1](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/owasp-mapping.md) points to this page as AIVSS coverage for all 10 Agentic AI Core Security Risks. That cross-reference does not supply an AIVSS control matrix or a calculated score reduction. The [OWASP Agentic AI Threats and Mitigations documentation mapping](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/owasp-agentic-top15-mapping.md) rates T1-T15, a separate taxonomy. Neither is an AIVSS mapping in the Assess report.
+
+Use the documented [LLM Top 10](/learn/owasp-llm-top10/) and [Agentic AI Threats](/learn/owasp-agentic-threats/) ratings as product evidence within their stated limits. A deployment-specific AIVSS score needs separate validation; this page makes no Pipelock score-reduction claim.
 
 ## The Mitigation Factor
 

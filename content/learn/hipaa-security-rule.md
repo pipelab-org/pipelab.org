@@ -23,6 +23,8 @@ Pipelock maps selected HIPAA Security Rule controls that a network proxy can enf
 
 Physical safeguards are outside this mapping. Physical security for the host running Pipelock remains the operator's responsibility. The same applies to business agreements, workforce procedures, and other organizational controls.
 
+The [published documentation mapping at v3.7.1](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/compliance/assess-mapping.md#hipaa-security-rule-added-2026-05) lists Transmission Security and ePHI Disclosure Prevention as **Covered**. The [Assess source mapping](https://github.com/pipelab-org/pipelock/blob/v3.7.1/internal/report/compliance/hipaa.go) marks both **Partial**. This page follows the source. Encrypted-destination policy and workload-specific PHI patterns remain deployment responsibilities.
+
 ## Safeguard mapping
 
 | ID | Safeguard | Status | Pipelock mapping | Limit |

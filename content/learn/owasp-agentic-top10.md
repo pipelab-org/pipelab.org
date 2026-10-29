@@ -22,6 +22,8 @@ The [OWASP Agentic Top 10 (2026)](https://genai.owasp.org/resource/owasp-top-10-
 
 Assess v3.7.1 maps all ten categories: four covered, five partial, and one not covered. These statuses describe the listed product controls, not complete prevention of each risk.
 
+Pipelock's [published documentation mapping at v3.7.1](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/owasp-mapping.md) uses a separate Strong/Moderate/Partial rating scale. For ASI10 it says **Strong**, while the [Assess source mapping](https://github.com/pipelab-org/pipelock/blob/v3.7.1/internal/report/compliance/owasp_agentic.go) says **Not covered**. This page follows the Assess source. Discovery identifies local unprotected MCP servers; external runtimes and shadow deployments require organization-level controls. Other documentation ratings also differ from the report statuses, so the two scales aren't equivalent.
+
 ## Coverage at a glance
 
 | ID | Threat | Status | Pipelock mapping | Limit |

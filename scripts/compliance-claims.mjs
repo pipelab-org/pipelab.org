@@ -33,3 +33,19 @@ export function checkProofFrameworkLinks(html, routes) {
   if (chips.some(([, tag]) => tag !== "a")) errors.push("framework chip is unlinked");
   return errors;
 }
+
+// Documentation ratings have a different source and scale from Assess statuses.
+// The caller names the documents supporting its claims; this check enforces
+// attribution and release-pinned links, not the meaning of coverage prose.
+export function checkDocumentedMappingSources(source, documentPaths) {
+  const errors = [];
+  if (!/published documentation mappings?/i.test(source)) errors.push("missing published documentation mapping label");
+  if (!/\bAssess\b/.test(source)) errors.push("missing separate Assess scope");
+  const links = [...source.matchAll(/(?:\]\(|\bhref=["'])(https:\/\/[^\s)"']+)/g)]
+    .map(([, url]) => url.split("#")[0]);
+  for (const documentPath of documentPaths) {
+    const url = `https://github.com/pipelab-org/pipelock/blob/v3.7.1/${documentPath}`;
+    if (!links.includes(url)) errors.push(`missing documentation source link: ${url}`);
+  }
+  return errors;
+}

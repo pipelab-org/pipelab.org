@@ -81,7 +81,7 @@ Runlayer describes a platform fee based on deployment size, with no per-seat cha
 | **MCP catalog** | No | Yes, 18,000+ per the site |
 | **Shadow AI discovery** | No | Yes |
 | **Signed receipts** | With an enabled flight recorder, recorder directory and signing key, Pipelock can emit signed receipts for covered mediated decisions. Emission is best-effort by default; receipts can be verified offline against a trusted operator public key. | Audit logs and exports; its audit-log page says "All logs are tamper-proof." An offline signed-receipt format wasn't found on the audit-log and ToolGuard pages checked on 2026-10-14. |
-| **Compliance** | OWASP, NIST 800-53, and EU AI Act mappings | SOC 2, HIPAA, GDPR advertised |
+| **Compliance mappings** | Assess report: [OWASP MCP Top 10](/learn/owasp-mcp-top10/), EU AI Act; published documentation mappings: [OWASP Agentic AI Threats and Mitigations](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/owasp-agentic-top15-mapping.md), [OWASP LLM Top 10](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/owasp-llm-top10-mapping.md), [NIST 800-53](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/compliance/nist-800-53.md) | SOC 2, HIPAA, GDPR advertised |
 | **Source availability** | Apache-2.0 core; Enterprise under ELv2 | Closed source |
 | **Pricing** | Free core; paid tiers published | Platform fee based on deployment size; no per-seat charges or dollar amount in the cited description |
 

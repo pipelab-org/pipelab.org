@@ -120,7 +120,7 @@ Pipelock is a runtime network security layer. It does not cover:
 
 Pipelock is one component of a compliance stack. Use it alongside model governance tools (Credo AI, Holistic AI) and organizational processes.
 
-## NIST AI RMF Crosswalk
+## Separate NIST AI RMF mapping
 
 The shipped NIST AI RMF mapping is separate from the EU AI Act mapping. GOVERN and MAP are partial; MEASURE and MANAGE are covered. It does not define a function-to-article crosswalk. See [NIST AI RMF coverage](/learn/nist-ai-rmf/) for the product evidence and limits.
 

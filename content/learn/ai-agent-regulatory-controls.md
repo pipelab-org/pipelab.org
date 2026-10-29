@@ -31,7 +31,7 @@ faq:
   - q: "Does Pipelock satisfy DORA?"
     a: "No. Assess v3.7.1 has no DORA control mapping. The financial entity owns its ICT risk management, incident reporting, testing, and recovery program."
   - q: "Which OWASP frameworks does Pipelock map to?"
-    a: "Assess v3.7.1 includes OWASP MCP Top 10 and OWASP Agentic Top 10. The LLM Top 10, Agentic Threats taxonomy, and AIVSS pages provide framework context; they are not shipped Assess mappings."
+    a: "Assess v3.7.1 includes OWASP MCP Top 10 and OWASP Agentic Top 10. Separate published documentation mappings cover LLM Top 10 and OWASP Agentic AI Threats and Mitigations. AIVSS provides scoring context. None of these three is an Assess report mapping."
 ---
 
 Most AI agent compliance writing collapses into one of two shapes: a vendor that claims to "solve" a framework, or a legal-summary blog post with no product story. Both are useless to the buyer who actually has to ship.
@@ -162,15 +162,15 @@ Assess v3.7.1 does not include a Colorado control mapping. The organization owns
 
 ### OWASP frameworks
 
-Two OWASP frameworks have shipped Assess mappings: [MCP Top 10](/learn/owasp-mcp-top10/) and [Agentic Top 10](/learn/owasp-agentic-top10/). The other pages below provide framework context:
+Two OWASP frameworks have shipped Assess mappings: [MCP Top 10](/learn/owasp-mcp-top10/) and [Agentic Top 10](/learn/owasp-agentic-top10/). Separate published documentation mappings cover [LLM Top 10](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/owasp-llm-top10-mapping.md) and [OWASP Agentic AI Threats and Mitigations](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/owasp-agentic-top15-mapping.md). AIVSS provides scoring context. The guides below keep those sources and scopes separate:
 
 - [OWASP Top 10 for LLM Applications](/learn/owasp-llm-top10/)
 - [OWASP Top 10 for MCP](/learn/owasp-mcp-top10/)
 - [OWASP Agentic Top 10](/learn/owasp-agentic-top10/)
 - [OWASP Agentic Threats taxonomy](/learn/owasp-agentic-threats/)
-- [OWASP AIVSS coverage](/learn/owasp-aivss-coverage/)
+- [OWASP AIVSS scoring context](/learn/owasp-aivss-coverage/)
 
-OWASP frameworks are community-driven, not regulatory. They are widely cited inside enterprise risk programs and increasingly referenced in procurement questionnaires. Only the MCP and Agentic Top 10 pages describe shipped Assess mappings; this hub links to the wider framework context.
+OWASP frameworks are community-driven, not regulatory. They are widely cited inside enterprise risk programs and increasingly referenced in procurement questionnaires. Only MCP and Agentic Top 10 have shipped Assess mappings; LLM Top 10 and Agentic AI Threats and Mitigations have separate documentation ratings. This hub links to each guide's evidence and limits.
 
 ### Frameworks NOT in detailed scope on this page
 

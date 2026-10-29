@@ -1,8 +1,8 @@
 ---
 title: "OWASP LLM Top 10: Pipelock Coverage"
 linkTitle: "OWASP LLM Top 10: Coverage"
-subtitle: "The OWASP Top 10 for LLM Applications (2025), with the boundary of Pipelock Assess mappings stated explicitly."
-description: "OWASP LLM Top 10 risks explained, from prompt injection to misinformation. Pipelock Assess v3.7.1 does not ship mappings for this framework."
+subtitle: "Published Pipelock documentation ratings for the OWASP Top 10 for LLM Applications (2025), separate from Assess report mappings."
+description: "OWASP LLM Top 10 coverage from Pipelock's published v3.7.1 documentation mapping, with ratings, out-of-scope risks, and Assess report limits."
 date: 2026-03-12
 learn_cat: compliance
 level: ref
@@ -13,22 +13,24 @@ tags:
 ---
 The [OWASP LLM Top 10 (2025)](https://genai.owasp.org/resource/owasp-top-10-for-llm-applications-2025/) is the most widely referenced framework for LLM security risks. It covers everything from prompt injection to misinformation, spanning model-level and application-level threats.
 
-Pipelock Assess v3.7.1 does not include an LLM Top 10 control mapping. Its shipped OWASP mappings are [MCP Top 10](/learn/owasp-mcp-top10/) and [Agentic Top 10](/learn/owasp-agentic-top10/). Use those pages for product coverage and limits.
+Pipelock's [published documentation mapping at v3.7.1](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/owasp-llm-top10-mapping.md) rates LLM Top 10 threats as shown below. These documentation ratings describe product capabilities and limits; they aren't guarantees of prevention or compliance certification. Pipelock Assess v3.7.1 does not include this framework in its report catalog. Its shipped OWASP report mappings are [MCP Top 10](/learn/owasp-mcp-top10/) and [Agentic Top 10](/learn/owasp-agentic-top10/).
 
-## Threat categories {#coverage-at-a-glance}
+## Published documentation mapping {#coverage-at-a-glance}
 
-| #  |  Threat |
-| --- | -------- |
-| LLM01  |  Prompt Injection |
-| LLM02  |  Sensitive Information Disclosure |
-| LLM03  |  Supply Chain Vulnerabilities |
-| LLM04  |  Data and Model Poisoning |
-| LLM05  |  Improper Output Handling |
-| LLM06  |  Excessive Agency |
-| LLM07  |  System Prompt Leakage |
-| LLM08  |  Vector and Embedding Weaknesses |
-| LLM09  |  Misinformation |
-| LLM10  |  Unbounded Consumption |
+The documentation rates seven of ten categories Strong, Moderate, or Partial; three are out of scope.
+
+| ID | Threat | Documentation rating | Documentation status |
+|---|---|---|---|
+| LLM01 | Prompt Injection | Strong | Shipped |
+| LLM02 | Sensitive Information Disclosure | Strong | Shipped |
+| LLM03 | Supply Chain Vulnerabilities | Partial | Shipped |
+| LLM04 | Data and Model Poisoning | N/A | Out of scope |
+| LLM05 | Improper Output Handling | Moderate | Shipped |
+| LLM06 | Excessive Agency | Strong | Shipped |
+| LLM07 | System Prompt Leakage | Moderate | Shipped |
+| LLM08 | Vector and Embedding Weaknesses | N/A | Out of scope |
+| LLM09 | Misinformation | N/A | Out of scope |
+| LLM10 | Unbounded Consumption | Partial | Shipped |
 
 ## LLM01: Prompt Injection {#llm01-prompt-injection-strong}
 
