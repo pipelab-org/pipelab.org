@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, readdirSync } from "node:fs";
 import test from "node:test";
 import { checkMappingRows, checkProofFrameworkLinks, checkDocumentedMappingSources } from "../scripts/compliance-claims.mjs";
 
@@ -106,4 +106,44 @@ test("documentation source checks reject missing labels, unlinked sources and wr
     claim.replace("v3.7.1", "main"),
     claim.replace(llmDoc, "docs/owasp-mapping.md"),
   ]) assert.ok(checkDocumentedMappingSources(invalid, [llmDoc]).length > 0, invalid);
+});
+
+// Framework names from the v3.7.1 Assess catalog (internal/report/compliance/coverage.go
+// and each framework's Name field). Every copy of the "Assess report" list must name all
+// of them, or a comparison row reads as a capability gap the product does not have.
+const assessCatalog = ["OWASP MCP Top 10", "OWASP Agentic Top 10", "MITRE ATLAS", "EU AI Act", "NIST AI RMF", "HIPAA Security Rule", "SOC 2"];
+const compareTables = ["pipelock-vs-runlayer", "pipelock-vs-prisma-airs", "pipelock-vs-microsoft-agent-governance-toolkit", "pipelock-vs-lakera-guard"];
+
+test("every copy of the Assess report list names the whole shipped catalog", () => {
+  const copies = compareTables.map(page => {
+    const text = source(`content/compare/${page}.md`);
+    const cell = text.match(/Assess report: (.*?); published documentation mappings/);
+    assert.ok(cell, `${page}: Assess report cell not found`);
+    return [page, cell[1]];
+  });
+  const llms = source("static/llms-full.txt").match(/Pipelock Assess v3\.7\.1 report mappings cover ([^.]*)\./);
+  assert.ok(llms, "llms-full.txt: Assess report sentence not found");
+  copies.push(["llms-full.txt", llms[1]]);
+  const pills = source("themes/pipelab/layouts/enterprise/single.html").match(/Assess report mappings \(v3\.7\.1\)([\s\S]*?)Published documentation mappings/);
+  assert.ok(pills, "enterprise: Assess pill block not found");
+  copies.push(["enterprise", pills[1]]);
+  for (const [where, list] of copies) {
+    for (const name of assessCatalog) assert.ok(list.includes(name), `${where}: Assess list omits ${name}`);
+  }
+});
+
+test("Runlayer's advertised badges stay under a Compliance row, not a mappings row", () => {
+  // Its cited sources describe SOC 2, HIPAA and GDPR badges, which are attestations.
+  const row = source("content/compare/pipelock-vs-runlayer.md").split("\n").find(line => line.includes("SOC 2, HIPAA, GDPR advertised"));
+  assert.ok(row, "Runlayer compliance row not found");
+  assert.match(row, /^\| \*\*Compliance\*\* \|/);
+});
+
+test("links to the AIVSS guide do not call it coverage", () => {
+  const files = readdirSync(new URL("../content/", import.meta.url), { recursive: true }).filter(file => file.endsWith(".md"));
+  for (const file of files) {
+    for (const [, text] of source(`content/${file}`).matchAll(/\[([^\]]+)\]\(\/learn\/owasp-aivss-coverage\/\)/g)) {
+      assert.doesNotMatch(text, /coverage/i, `content/${file}: AIVSS link text "${text}"`);
+    }
+  }
 });
