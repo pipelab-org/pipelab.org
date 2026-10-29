@@ -9,6 +9,8 @@ tags: ["ai-security", "pipelock", "claude-mythos"]
 blog_cat: "mcp"
 ---
 
+> Installation note (2026-10-29): The install commands below are from when this post was written. Current install methods for every platform are in the [installation guide](/install/). The original post follows unchanged.
+
 Anthropic just announced [Claude Mythos](https://www.anthropic.com/glasswing), a model that autonomously discovers zero-day vulnerabilities. It found a 27-year-old OpenBSD bug. A 16-year-old FFmpeg flaw. Linux kernel privilege escalation chains. Thousands of zero-days across every major OS and browser, many of them critical.
 
 They're giving it to AWS, Apple, Cisco, Google, Microsoft, and NVIDIA through Project Glasswing to help fix these bugs before attackers find them. Good. The world needs that.

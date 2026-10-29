@@ -8,6 +8,8 @@ tags: ["ai-security", "data-exfiltration", "dns", "dlp"]
 blog_cat: "technical"
 ---
 
+> Installation note (2026-10-29): The install commands below are from when this post was written. Current install methods for every platform are in the [installation guide](/install/). The original post follows unchanged.
+
 DNS exfiltration from AI agents is easier than you think. Your coding agent has an Anthropic API key in its environment. A prompt injection tells it to make an HTTP request to `sk-ant-XXXXX.attacker.com`.
 
 The agent's HTTP client resolves the hostname first. That DNS query hits the attacker's nameserver. The secret is in the subdomain. It's gone before the HTTP request even starts.

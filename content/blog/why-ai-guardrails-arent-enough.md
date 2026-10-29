@@ -9,6 +9,8 @@ tags: ["ai-security", "guardrails", "agent-security", "pipelock"]
 blog_cat: "technical"
 ---
 
+> Installation note (2026-10-29): The install commands below are from when this post was written. Current install methods for every platform are in the [installation guide](/install/). The original post follows unchanged.
+
 If you have spent any time reading about AI security in the last two years, you have been told to add guardrails. Every model provider ships them. Every security vendor sells them. Every compliance checklist asks about them. The advice is so universal that most teams assume adding a guardrail is the answer.
 
 It is part of the answer. It is not the whole answer.

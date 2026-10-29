@@ -9,6 +9,8 @@ tags: ["ai-security", "pipelock", "dlp", "exfiltration"]
 blog_cat: "technical"
 ---
 
+> Installation note (2026-10-29): The install commands below are from when this post was written. Current install methods for every platform are in the [installation guide](/install/). The original post follows unchanged.
+
 A prompt injection tells your agent to send an AWS key to an external endpoint. Your DLP scanner catches it. Good.
 
 Now the injection gets smarter:
