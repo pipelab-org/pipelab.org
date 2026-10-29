@@ -40,7 +40,7 @@ Within a shieldable response, the rewrites cover:
 - **Extension URLs.** Supported browser-extension URLs outside existing HTML scripts.
 - **Tracking elements.** Supported 1x1 tracking images and prefetch links outside existing scripts.
 - **Hidden agent traps.** Concealed instructions or prompt content positioned to steer an agent reading the page.
-- **SVG active content.** The SVG rewrite pipeline removes complete script elements and other supported active markup. Structural validation can refuse the document before it reaches that pipeline.
+- **SVG active content.** Pipelock delivers SVG only after validating the whole document. An SVG containing a script, `foreignObject`, embedded frame, event handler or other active markup is refused (`403`, block reason `media_policy`), and the rewritten output is validated again before delivery.
 - **Fingerprint shims.** Optional HTML shim injection can suppress `sendBeacon` at runtime without rewriting the page's JavaScript. It defaults to off and can break bot-verification checks.
 
 `browser_shield.tracking_domains` accepts additional exact tracking hostnames. Wildcards are refused at config load.
