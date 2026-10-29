@@ -29,9 +29,12 @@ function main() {
   console.log(`preflight prerequisites: Hugo ${pinned} extended; Pipelock verifier ${version}`);
 
   const env = { ...process.env, HUGO_BIN: hugoBin };
+  // GNU Make supplies its own executable through $(MAKE), preserving recursive
+  // invocation semantics instead of resolving another Make from PATH.
+  const makeBin = process.argv[2] || "make";
   const steps = [
-    ["make", "check-brand"],
-    ["make", "check-rules-sync"],
+    [makeBin, "check-brand"],
+    [makeBin, "check-rules-sync"],
     ["npm", "test"],
     [hugoBin, "--gc", "--minify"],
     ["npm", "run", "site:corpus-counts"],

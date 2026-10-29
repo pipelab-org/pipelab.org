@@ -1,12 +1,11 @@
 import assert from "node:assert/strict";
-import { execFileSync, spawnSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
 import { chmodSync, cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
 const repoRoot = process.cwd();
-const makeBin = execFileSync("sh", ["-c", "command -v make"], { encoding: "utf8" }).trim();
 const hugoVersion = readFileSync(".hugo-version", "utf8").trim();
 const verifierVersion = readFileSync("scripts/pipelock-verifier-pin.env", "utf8").match(/^PIPELAB_VERIFIER_VERSION=(\S+)$/m)[1];
 
@@ -29,9 +28,13 @@ function fixture(t) {
   const setVerifier = output => executable(verifier, `printf '%s\\n' '${output}'`);
   setHugo(`hugo v${hugoVersion}+extended linux/amd64`);
   setVerifier(`pipelock-verifier ${verifierVersion} (fixture)`);
-  executable(path.join(bin, "make"), 'printf "step make %s\\n" "$*"');
+  const recursiveMake = path.join(root, "recursive-make");
+  executable(recursiveMake, 'printf "step make %s\\n" "$*"');
+  executable(path.join(bin, "make"), 'echo "unexpected Make from PATH" >&2; exit 64');
   executable(path.join(bin, "npm"), 'printf "step npm %s\\n" "$*"; if [ "$*" = "run site:audit" ]; then exit "${AUDIT_STATUS:-0}"; fi');
-  const run = (extra = {}) => spawnSync(makeBin, ["preflight"], {
+  // Exercise only the runner with stub commands. Launching another full
+  // preflight here would nest whole-repository work inside the real preflight.
+  const run = (extra = {}) => spawnSync(process.execPath, ["scripts/preflight.mjs", recursiveMake], {
     cwd: root, encoding: "utf8", timeout: 15_000,
     env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, HUGO_BIN: hugo, HUGO_PINNED: "", ...extra },
   });
@@ -39,6 +42,7 @@ function fixture(t) {
 }
 
 test("bare preflight builds with pinned Hugo, runs audit and propagates its failure", t => {
+  assert.match(readFileSync("Makefile", "utf8"), /^preflight:\n\tnode scripts\/preflight\.mjs "\$\(MAKE\)"$/m);
   const f = fixture(t);
   const pass = f.run();
   assert.equal(pass.status, 0, pass.stderr);

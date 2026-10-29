@@ -12,4 +12,4 @@ check-rules-sync:
 	bash scripts/test-sync-pipelock-rules.sh
 
 preflight:
-	node scripts/preflight.mjs
+	node scripts/preflight.mjs "$(MAKE)"
