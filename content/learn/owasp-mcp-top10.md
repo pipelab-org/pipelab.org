@@ -99,7 +99,7 @@ The practical control set is direct: scan `tools/list`, scan `tools/call` argume
 | MCP03: Tool Poisoning | Tool description scanning plus session baselines for changed tool definitions | Pre-deploy review of new MCP servers |
 | MCP04: Supply Chain Attacks & Dependency Tampering | Runtime drift detection and DLP backstop if a compromised server tries to exfiltrate | Package provenance, signatures, dependency scanning |
 | MCP05: Command Injection & Execution | Tool argument scanning for command-injection patterns before the server receives input | Server-side input validation and sandboxing |
-| MCP06: Prompt Injection via Contextual Payloads | 34 injection and response patterns with 6-pass normalization on tool descriptions and responses | Model-side guardrails and tight tool scopes |
+| MCP06: Prompt Injection via Contextual Payloads | {{< stat key="response_patterns" >}} injection and response patterns with 6-pass normalization on tool descriptions and responses | Model-side guardrails and tight tool scopes |
 | MCP07: Insufficient Authentication & Authorization | Decision logs can show who called what when identity is supplied upstream | Identity gateway, OAuth, mTLS, scopes |
 | MCP08: Lack of Audit and Telemetry | Flight recorder, hash chains, structured decisions, and signed receipts when a signing key is configured | SIEM retention, review cadence, incident sign-off |
 | MCP09: Shadow MCP Servers | MCP config discovery and runtime evidence of servers the agent actually contacts | Asset inventory and CI policy for unapproved servers |

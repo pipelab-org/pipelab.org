@@ -16,7 +16,7 @@ howto_steps:
     text: Run pipelock discover or pipelock verify-install to confirm the wrapped MCP path is active.
 faq:
   - q: "What does Pipelock's JetBrains integration do?"
-    a: "Pipelock wraps Junie MCP server configurations in ~/.junie/mcp/mcp.json through its MCP proxy. Every tool call, tool response, and tool description is scanned bidirectionally for credential leaks (65 DLP patterns), prompt injection (34 patterns with 6-pass normalization), and tool poisoning (full-schema inspection). Works with IntelliJ IDEA, PyCharm, WebStorm, GoLand, and any JetBrains IDE that uses Junie."
+    a: "Pipelock wraps Junie MCP server configurations in ~/.junie/mcp/mcp.json through its MCP proxy. Every tool call, tool response, and tool description is scanned bidirectionally for credential leaks (65 DLP patterns), prompt injection (response-scanning patterns with 6-pass normalization), and tool poisoning (full-schema inspection). Works with IntelliJ IDEA, PyCharm, WebStorm, GoLand, and any JetBrains IDE that uses Junie."
   - q: "How do I install Pipelock for JetBrains IDEs?"
     a: "Run 'pipelock jetbrains install' after installing the pipelock binary from a pinned source build or Homebrew as documented at https://pipelab.org/install/. The command rewrites Junie's mcp.json to route each server through pipelock's MCP proxy. Restart the IDE to activate. Use 'pipelock jetbrains remove' to restore the original configuration from the preserved _pipelock metadata."
   - q: "Does Pipelock emit signed evidence for JetBrains MCP traffic?"

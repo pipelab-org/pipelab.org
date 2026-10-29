@@ -12,7 +12,7 @@ tags:
   - detection
 ---
 
-Pipelock ships with 65 built-in DLP patterns and 29 response scanning patterns. Pipelock detection rules from the community extend that with additional patterns maintained outside the release cycle.
+Pipelock ships with 65 built-in DLP patterns and {{< stat key="response_patterns" >}} response scanning patterns. Pipelock detection rules from the community extend that with additional patterns maintained outside the release cycle.
 
 ## Install
 

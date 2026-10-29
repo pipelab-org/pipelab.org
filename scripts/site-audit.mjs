@@ -12,6 +12,7 @@ import { auditInstallContract } from "./install-contract.mjs";
 import { isBlockedExternalLink } from "./external-link-policy.mjs";
 import { auditDemoVersions } from "./historical-artifacts.mjs";
 import { probeHugoVersion, readPinnedVersion } from "./hugo-pin.mjs";
+import { auditResponsePatternCounts } from "./response-pattern-audit.mjs";
 
 const repoRoot = process.cwd();
 const publicDir = path.join(repoRoot, "public");
@@ -120,6 +121,14 @@ if (!skipBuild) {
 if (!existsSync(publicDir)) {
   console.error("public/ does not exist. Run `hugo --gc` first.");
   process.exit(1);
+}
+
+issues.push(...auditResponsePatternCounts(repoRoot));
+const pricingCounter = spawnSync("python3", ["scripts/pricing-counter-audit.py", publicDir], {
+  cwd: repoRoot, encoding: "utf8",
+});
+if (pricingCounter.status !== 0) {
+  issues.push(`pricing counter: ${pricingCounter.error?.message || pricingCounter.stderr || pricingCounter.stdout}`);
 }
 
 const analyticsSource = readFileSync(path.join(repoRoot, "static/playground/demo/analytics.js"), "utf8");
@@ -859,8 +868,8 @@ for (const staleBackground of ["afw-hero-bg", "inst-hero-bg"]) {
     issues.push(`brand standards: ${staleBackground} must not restore a page-specific hero background`);
   }
 }
-if (/^\.pricing-tier::before\s*\{/m.test(pricingStyleSource)) {
-  issues.push("pricing cards: legacy tier-name counters must stay scoped to .pricing-card");
+if (/\.pricing-tier::before\s*\{/m.test(pricingStyleSource)) {
+  issues.push("pricing cards: retired tier-name counter styles must not return");
 }
 if (/\.pricing-promise\s*\{[\s\S]{0,800}?content:\s*['"]◆['"]/.test(pricingStyleSource)) {
   issues.push("pricing page: retired center-connector diamond must not return");

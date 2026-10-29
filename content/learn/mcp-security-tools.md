@@ -72,7 +72,7 @@ Runtime proxies intercept MCP traffic while the agent runs. They scan tool calls
 
 ### Pipelock
 
-[Pipelock](/pipelock/) wraps MCP server commands and routes all JSON-RPC traffic through a scanning pipeline. It inspects tool descriptions for poisoning (34 injection patterns plus 9 tool-specific checks), tool arguments for credential leaks (65 DLP patterns), and tool responses for prompt injection. Fingerprints descriptions with SHA-256 to detect rug-pull attacks. Also proxies HTTP and WebSocket traffic in the same binary, so you get MCP scanning and egress inspection in one tool. Open source, single Go binary, self-hosted.
+[Pipelock](/pipelock/) wraps MCP server commands and routes all JSON-RPC traffic through a scanning pipeline. It inspects tool descriptions for poisoning ({{< stat key="response_patterns" >}} injection patterns plus 9 tool-specific checks), tool arguments for credential leaks (65 DLP patterns), and tool responses for prompt injection. Fingerprints descriptions with SHA-256 to detect rug-pull attacks. Also proxies HTTP and WebSocket traffic in the same binary, so you get MCP scanning and egress inspection in one tool. Open source, single Go binary, self-hosted.
 
 ### Promptfoo
 
