@@ -5,7 +5,6 @@ subtitle: "Put Pipelock in front of Codex's MCP servers and proxy-aware commands
 description: "Codex CLI security guide. Wrap Codex MCP servers with pipelock codex install, route proxy-aware commands through Pipelock, and see what each layer covers."
 date: 2026-10-28
 learn_cat: operator
-title_mark_inline: true
 level: intro
 howto_steps:
   - name: Install Pipelock

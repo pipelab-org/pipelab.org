@@ -1,5 +1,6 @@
 ---
 title: "The Pipelock Operator Console"
+title_brand: "Pipelock"
 linkTitle: "Operator Console"
 seoTitle: "Pipelock Operator Console for AI Agents"
 subtitle: "See what your agents did, inspect the signed evidence, and read your fleet state — with a console that is honest about the limits of what it can prove."

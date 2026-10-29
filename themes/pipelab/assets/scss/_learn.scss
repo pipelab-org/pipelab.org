@@ -105,6 +105,12 @@
 
     > h1 + * { margin-top: 1rem; }
 
+    // Phone titles wrap to many lines; a centred icon would float mid-title,
+    // so it sits level with the first line instead.
+    @media (max-width: $bp-two-col-stack) {
+      > .learn-project-mark { align-self: start; }
+    }
+
     // With an eyebrow, it takes the first row and the icon and title move down.
     &:has(> .learn-eyebrow) {
       > .learn-eyebrow { grid-row: 1; }

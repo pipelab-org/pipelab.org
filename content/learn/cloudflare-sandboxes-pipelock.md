@@ -1,5 +1,6 @@
 ---
 title: "Cloudflare Sandboxes and Pipelock: Two-Layer Egress Control for AI Agents"
+title_brand: "Cloudflare Sandboxes"
 linkTitle: "Cloudflare Sandboxes + Pipelock"
 subtitle: "Infrastructure isolation handles where agents connect. Content inspection handles what they send. Both layers exist because neither is sufficient alone."
 description: "Cloudflare Sandboxes provides agent isolation and domain filtering. Pipelock adds content scanning for credentials, injection, and tool poisoning."

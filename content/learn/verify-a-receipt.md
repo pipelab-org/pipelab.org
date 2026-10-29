@@ -1,5 +1,6 @@
 ---
 title: "Verify a Pipelock Receipt: Copy-Paste Demo"
+title_brand: "Pipelock"
 linkTitle: "Verify a Receipt"
 seoTitle: "Verify a Pipelock Receipt: Signed Evidence Demo"
 subtitle: "Receipts or it didn't happen. Pull a signed receipt from the public conformance corpus, run the verifier, watch it pass. Tamper one byte, watch it fail."

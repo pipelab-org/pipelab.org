@@ -1,5 +1,6 @@
 ---
 title: "Securing Claude Code Against Secret Exfiltration"
+title_brand: "Claude Code"
 linkTitle: "Claude Code Secret Exfiltration"
 seoTitle: "Securing Claude Code: Secret Exfiltration Defenses"
 description: "How Claude Code can leak credentials through tool calls, MCP servers, and shell, plus the runtime defenses that catch each path before traffic leaves."

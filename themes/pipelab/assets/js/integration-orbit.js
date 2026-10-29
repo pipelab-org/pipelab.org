@@ -17,8 +17,8 @@
     let scrollListening = false;
     const focusedNodes = new Set();
     const pointedNodes = new Set();
-    // A thread stops this far (CSS px) outside the icon box or label, so the
-    // hover scale (1.12) never pulls the box over the line's end.
+    // A thread stops this far (CSS px) outside the icon box or label: past the
+    // tile's 5px dark ring, and clear of the hover lift (2px up, scale 1.06).
     const THREAD_GAP = 6;
     // Ray entry into a box: the fraction t of the way from (x0,y0) to (x1,y1)
     // where the segment first touches the box, or Infinity when it misses.

@@ -83,114 +83,105 @@ orbit:
         color: "#F4F4F5"
         # Source: https://github.com/continuedev/continue/blob/main/extensions/vscode/media/icon.png
         img: "/images/brands/continue.png"
-        x: 20.1
-        ypct: 22.5
-        px: 201.3
-        py: 117
+        x: 21.2
+        ypct: 21.3
+        px: 212.3
+        py: 110.6
         delay: 2.4
       - name: "MCP"
         href: "/learn/mcp-security/"
         color: "#F4F4F5"
         brand: mcp
         kind: protocol
-        x: 35.9
-        ypct: 11.3
-        px: 359.2
-        py: 58.8
+        x: 39
+        ypct: 10.3
+        px: 389.7
+        py: 53.3
         delay: 2.8
       - name: "Cline"
         href: "https://github.com/pipelab-org/pipelock/blob/main/docs/guides/cline.md"
         color: "#F4F4F5"
         brand: cline
-        x: 54.9
-        ypct: 9
-        px: 549.3
-        py: 46.6
+        x: 59.7
+        ypct: 9.9
+        px: 596.8
+        py: 51.4
         delay: 3.2
       - name: "OpenCode"
         href: "https://github.com/pipelab-org/pipelock/blob/main/docs/guides/opencode.md"
         color: "#F4F4F5"
         brand: opencode
-        x: 72.8
-        ypct: 16
-        px: 728.1
-        py: 83.4
+        x: 77.8
+        ypct: 20.3
+        px: 777.9
+        py: 105.3
         delay: 3.5
       - name: "LangGraph"
         href: "https://github.com/pipelab-org/pipelock/blob/main/docs/guides/langgraph.md"
         color: "#7FC8FF"
         brand: langchain
-        x: 85.5
-        ypct: 30.9
-        px: 854.7
-        py: 160.6
+        x: 88.5
+        ypct: 38.6
+        px: 884.5
+        py: 200.7
         delay: 3.9
       - name: "CrewAI"
         href: "https://github.com/pipelab-org/pipelock/blob/main/docs/guides/crewai.md"
         color: "#FF5A50"
         brand: crewai
-        x: 90
-        ypct: 50.1
-        px: 900
-        py: 260.6
+        x: 88.8
+        ypct: 60
+        px: 888.1
+        py: 312
         delay: 4.2
       - name: "Google ADK"
         href: "https://github.com/pipelab-org/pipelock/blob/main/docs/guides/google-adk.md"
         color: "#4285F4"
         brand: google
-        x: 85.4
-        ypct: 69.3
-        px: 853.7
-        py: 360.4
+        x: 78.8
+        ypct: 78.7
+        px: 787.7
+        py: 409.4
         delay: 4.6
       - name: "AutoGen"
         href: "https://github.com/pipelab-org/pipelock/blob/main/docs/guides/autogen.md"
         color: "#F4F4F5"
         brand: autogen
-        x: 72.6
-        ypct: 84.1
-        px: 726.3
-        py: 437.3
+        x: 61
+        ypct: 89.7
+        px: 610.3
+        py: 466.7
         delay: 4.9
-      - name: "OpenAI Agents"
-        href: "https://github.com/pipelab-org/pipelock/blob/main/docs/guides/openai-agents.md"
-        color: "#F4F4F5"
-        brand: openai
-        x: 54.7
-        ypct: 91.1
-        px: 547.1
-        py: 473.5
-        delay: 5.3
       - name: "Hermes"
         href: "/learn/hermes-integration/"
         color: "#F4F4F5"
         # Source: https://github.com/NousResearch/hermes-agent/blob/main/apps/desktop/public/apple-touch-icon.png
         img: "/images/brands/hermes.png"
         img_small: "/images/brands/hermes-56.png"
-        x: 35.7
-        ypct: 88.6
-        px: 357.2
-        py: 460.8
-        delay: 5.6
+        x: 40.3
+        ypct: 90.1
+        px: 403.2
+        py: 468.6
+        delay: 5.3
       - name: "Grok"
         href: "/learn/grok/"
         color: "#F4F4F5"
         brand: grok
-        x: 20
-        ypct: 77.3
-        px: 199.9
-        py: 402.1
-        delay: 5.9
+        x: 22.2
+        ypct: 79.7
+        px: 222.1
+        py: 414.7
+        delay: 5.6
       - name: "Pi"
         href: "/learn/pi/"
         color: "#4D9ABF"
         # Source: the official mark embedded in https://pi.dev/ (svg.pi-logo-mark), cropped to its bounds.
         brand: pi
-        x: 11.1
-        ypct: 59.8
-        px: 111.4
-        py: 310.9
-        delay: 6.3
+        x: 11.5
+        ypct: 61.4
+        px: 115.5
+        py: 319.3
+        delay: 5.9
 rows:
   - label: "Runs where your agents run"
     items:

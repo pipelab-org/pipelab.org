@@ -1,5 +1,6 @@
 ---
 title: "Self-Hosted Sure with Pipelock: Secure AI Assistant Egress"
+title_brand: "Sure"
 linkTitle: "Self-Hosted Sure + Pipelock"
 subtitle: "Sure ships Pipelock as a first-class Helm chart component. A forward proxy and MCP reverse proxy gate assistant traffic."
 description: "Self-hosted Sure guide for enabling Pipelock in Helm, gating external AI assistant egress, and validating the chart guard."
