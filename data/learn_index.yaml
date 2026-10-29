@@ -40,11 +40,9 @@ start_here:
   - agent-egress-security
   - compliance-evidence
 
-# Latest release block in the right sidebar. Update when a new pipelock
-# release ships. The Hugo template falls back to .Site.Params.pipelock_version
-# if this block is missing.
+# Latest release block in the right sidebar. The version and release-notes link
+# come from params.pipelock_version in hugo.toml. Update summary and minor
+# together when a new minor release ships; a mismatch fails the build.
 release:
-  version: "v3.7.0"
-  date: 2026-10-14
+  minor: "3.7"
   summary: "Parallel receipts, filesystem grants, local MCP identity, and upgrade actions"
-  notes_url: /blog/pipelock-v370-release/

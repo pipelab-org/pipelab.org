@@ -159,3 +159,8 @@ see the [AARP claims dictionary](/learn/aarp-claims-dictionary/). For the doctri
 behind what these receipts do and do not claim, see [what Pipelock claims and does
 not](/learn/non-bypass-doctrine/) and the [known limitations
 register](/learn/known-limitations/).
+
+Key custody is the question to ask of any signed agent evidence. The
+[mediator receipts post](/blog/independent-attestation-mediator-receipts/) walks
+through why the party holding the signing key decides whether a receipt is
+evidence or a self-report.

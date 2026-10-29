@@ -72,6 +72,7 @@ Use the filter and search at the top of the page to narrow the list, or jump str
 ### Operator
 
 - [Hermes Integration](/learn/hermes-integration/)
+- [Codex CLI Security](/learn/codex-cli-integration/)
 - [Grok Build Security](/learn/grok/)
 - [Pi Security](/learn/pi/)
 - [Contain an AI Agent on Linux](/learn/pipelock-contain-guide/)

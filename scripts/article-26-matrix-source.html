@@ -31,7 +31,8 @@
   td { padding: 5pt 6pt; border-bottom: 1px solid #e2e8ee; vertical-align: top; }
   td.par { font-weight: 600; color: #0d3b66; white-space: nowrap; }
   tr:nth-child(even) td { background: #f7f9fb; }
-  pre { background: #f1f4f8; border: 1px solid #d8dee6; border-radius: 3pt; padding: 7pt 9pt; font-family: "Menlo", "Consolas", monospace; font-size: 8pt; line-height: 1.32; overflow: hidden; white-space: pre-wrap; word-break: break-word; }
+  pre { background: #f1f4f8; border: 1px solid #d8dee6; border-radius: 3pt; padding: 7pt 9pt; font-family: "Menlo", "Consolas", "Noto Sans Mono", monospace; font-size: 8pt; line-height: 1.32; overflow: hidden; white-space: pre-wrap; word-break: break-word; }
+  code { font-family: "Menlo", "Consolas", "Noto Sans Mono", monospace; }
   .note { background: #fff8e6; border-left: 3pt solid #d4a017; padding: 6pt 9pt; margin: 6pt 0; font-size: 8.8pt; }
   .note strong { color: #8a5a00; }
   .footer { margin-top: 12pt; padding-top: 8pt; border-top: 1px solid #c8d2dc; font-size: 8pt; color: #4a5567; }
@@ -101,14 +102,12 @@
 <p>Minimal emit configuration paired with a retention-controlled sink:</p>
 
 <pre>emit:
-  sinks:
-    - type: webhook
-      url: https://logs.example.invalid/ingest
-      min_severity: info
-    - type: syslog
-      address: syslog.example.invalid:514
-      protocol: udp
-      min_severity: info
+  webhook:
+    url: https://logs.example.invalid/ingest
+    min_severity: info
+  syslog:
+    address: udp://syslog.example.invalid:514
+    min_severity: info
 
 # Pair with one of these on the storage side, set to >= 6 months:
 #   - AWS S3 + Object Lock (compliance mode) with 6-month retention rule

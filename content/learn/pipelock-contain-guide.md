@@ -79,7 +79,7 @@ Add `--dry-run` first to print the planned steps without changing anything. Each
 
 Before touching the host, install runs `pipelock check` from the binary it is about to install against the config it is about to install. If that binary can parse the config but can't enforce it, for example named `agents.<profile>` entries on a build without agent profiles, install refuses before it replaces anything.
 
-After updating to v3.7.0, run `sudo pipelock contain install` with the new binary to refresh managed units and wrappers, then restart existing agent services and sessions. A binary swap alone doesn't update the mounts of a running agent. See the [v3.7 upgrade guide](/learn/pipelock-v370-upgrade/); the [v3.6 upgrade guide](/learn/pipelock-v360-upgrade/) retains the earlier private-network-namespace migration.
+After upgrading to v3.7.1, for example with `sudo pipelock contain upgrade --version v3.7.1` (see Upgrade below), run `sudo pipelock contain install` with the new binary to refresh managed units and wrappers. `contain upgrade` replaces and re-pins the binary but doesn't rewrite them. Then restart existing agent services and sessions. A binary swap alone doesn't update the mounts of a running agent. See the [v3.7 upgrade guide](/learn/pipelock-v370-upgrade/); the [v3.6 upgrade guide](/learn/pipelock-v360-upgrade/) retains the earlier private-network-namespace migration.
 
 ## Register a tool
 
@@ -211,7 +211,7 @@ Both exit 0 when everything passes, 1 on a failure, and 2 when a check was skipp
 
 ```bash
 sudo pipelock contain upgrade
-sudo pipelock contain upgrade --version v3.7.0
+sudo pipelock contain upgrade --version v3.7.1
 ```
 
 Upgrade validates the managed config, downloads and verifies the release through the deployed binary, re-pins the integrity hash, restarts the service and runs `contain verify`. Any failure after the binary is replaced triggers rollback attempts for the binary and its pin. Exit 0 means every probe passed, 1 means it failed, and 2 is a precondition error. After a failure, read any rollback errors and verify the resulting binary and service state.

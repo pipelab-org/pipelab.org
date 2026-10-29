@@ -22,6 +22,10 @@ $bp-two-col-stack: 640px;
 :root {
   --bp-mobile: #{$bp-mobile};
 
+  // One gap between a title mark (logo or icon) and its title, beside it or
+  // above it, on every page that shows one.
+  --title-mark-gap: 1.5rem;
+
   // ── Surfaces (LOCKED) ──────────────────────────────────────
   --bg: #09090b;
   --bg-card: rgba(255, 255, 255, 0.04);

@@ -169,14 +169,12 @@ A minimal emit configuration:
 
 ```yaml
 emit:
-  sinks:
-    - type: webhook
-      url: https://logs.example.invalid/ingest
-      min_severity: info
-    - type: syslog
-      address: syslog.example.invalid:514
-      protocol: udp
-      min_severity: info
+  webhook:
+    url: https://logs.example.invalid/ingest
+    min_severity: info
+  syslog:
+    address: udp://syslog.example.invalid:514
+    min_severity: info
 ```
 
 Pair with S3 Object Lock, Loki retention policy, or SIEM lifecycle rules set to at least 6 months. The logs are a product output; the retention period is your deployment decision.

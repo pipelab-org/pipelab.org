@@ -1,7 +1,8 @@
 {{/* Shared homepage hero — single source of truth.
      Rendered on / (index.html) and /buildhop/ so the two never drift. */}}
 {{ $version := site.Params.pipelock_version | default "" }}
-{{ $releasePostURL := printf "/blog/pipelock-v%s-release/" (replace $version "." "") }}
+{{/* A patch release such as 3.7.1 links to its minor release post. */}}
+{{ $releasePostURL := (partial "release-post.html" .).url }}
 {{ $stats := site.Data.stats }}
 {{ $gallery := transform.Unmarshal (readFile "static/playground-replay/gallery.json") }}
 {{ $receiptTotal := 0 }}

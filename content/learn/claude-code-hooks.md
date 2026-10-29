@@ -1,5 +1,6 @@
 ---
 title: "Pipelock Hooks for Claude Code: Setup Guide"
+title_brand: "Claude Code"
 linkTitle: "Claude Code Hooks"
 subtitle: "One command to scan Bash, WebFetch, Write, Edit, and MCP tool calls before they execute."
 description: "Install Pipelock hooks for Claude Code in one command. Scans Bash, WebFetch, Write, Edit, and MCP tool calls for credential leaks and injection."

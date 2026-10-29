@@ -16,9 +16,12 @@ jobs:
       INDEXNOW_KEY_LOCATION: https://pipelab.org/bd2aa46ad5df4155a5f847081c21637f.txt
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - id: hugo-version
+        name: Read authoritative Hugo version
+        run: echo "version=$(tr -d '\n' < .hugo-version)" >> "$GITHUB_OUTPUT"
       - uses: peaceiris/actions-hugo@2752ce1d29631191ea3f27c23495fa06139a5b78 # v3
         with:
-          hugo-version: 'latest'
+          hugo-version: ${{ steps.hugo-version.outputs.version }}
           extended: true
       - run: hugo --gc --minify
       - name: Build IndexNow payload from sitemap
@@ -45,8 +48,23 @@ jobs:
             '{host: $host, key: $key, keyLocation: $keyLocation, urlList: $urlList}' > payload.json
       - name: Submit sitemap URLs to IndexNow
         run: |
-          curl --fail-with-body \
+          # IndexNow accepts a submission with 200 or 202. Any other status,
+          # including a redirect, means the URLs were not accepted, so the
+          # job fails instead of reporting success. This matches the
+          # 200/202 rule in scripts/indexnow-submit.mjs.
+          status=$(curl --silent --show-error \
+            --max-time 60 \
+            --output indexnow-response.txt \
+            --write-out '%{http_code}' \
             --request POST \
             --url https://api.indexnow.org/IndexNow \
             --header 'Content-Type: application/json; charset=utf-8' \
-            --data @payload.json
+            --data @payload.json)
+          echo "IndexNow responded with HTTP $status"
+          case "$status" in
+            200|202) ;;
+            *)
+              cat indexnow-response.txt
+              exit 1
+              ;;
+          esac

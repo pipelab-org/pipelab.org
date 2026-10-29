@@ -1,0 +1,18 @@
+{{- /* The release post for site.Params.pipelock_version. Posts exist per minor
+       release, so 3.7.1 resolves to /blog/pipelock-v370-release/. Returns the
+       post's path (with trailing slash) and the MAJOR.MINOR it covers. Fails
+       the build on a malformed version or a missing post, so no page links a
+       release post that doesn't exist. A missing path returns a placeholder
+       page that is still truthy, hence the IsPage check. */ -}}
+{{- $version := site.Params.pipelock_version | default "" -}}
+{{- $parts := split $version "." -}}
+{{- if lt (len $parts) 2 -}}
+  {{- errorf "release-post: site.Params.pipelock_version %q needs at least MAJOR.MINOR" $version -}}
+{{- end -}}
+{{- $minor := printf "%s.%s" (index $parts 0) (index $parts 1) -}}
+{{- $path := printf "/blog/pipelock-v%s%s0-release" (index $parts 0) (index $parts 1) -}}
+{{- $page := site.GetPage $path -}}
+{{- if not (and $page $page.IsPage) -}}
+  {{- errorf "release-post: no release post at %s for pipelock_version %q" $path $version -}}
+{{- end -}}
+{{- return (dict "url" (printf "%s/" $path) "minor" $minor) -}}

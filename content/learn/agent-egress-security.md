@@ -209,6 +209,7 @@ Three Make It Leak cases show these leak paths end to end, each with the blocked
 ## Further reading
 
 - [AI Egress Proxy](/learn/ai-egress-proxy/) : the single control point this guide describes, covered as a standalone AI egress proxy
+- [Webhook vs Egress](/blog/webhook-vs-egress-ai-agent-security/) : webhook-based runtime monitoring and egress firewalls catch different agent attacks
 - [Denial of Wallet](/learn/denial-of-wallet/) : AI agent budget abuse and subject-keyed cost control
 - [AI Agent Security Categories](/learn/ai-agent-security-categories/) : map of the six product categories selling themselves as agent security
 - [What is an agent firewall?](/agent-firewall/) : architecture overview including capability separation

@@ -25,10 +25,12 @@ featured:
   - pipelock-v360-release
   - pipelock-v330-release
 
+# Latest release block in the sidebar. The version and release-notes link come
+# from params.pipelock_version in hugo.toml. Update summary and minor together
+# when a new minor release ships; a mismatch fails the build.
 release:
-  version: v3.7.0
+  minor: "3.7"
   summary: "Parallel signed receipt chains, filesystem grants, and verified local MCP services."
-  notes_url: /blog/pipelock-v370-release/
 
 subscribe:
   - label: dev.to mirror

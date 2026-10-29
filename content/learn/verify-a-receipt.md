@@ -1,5 +1,6 @@
 ---
 title: "Verify a Pipelock Receipt: Copy-Paste Demo"
+title_brand: "Pipelock"
 linkTitle: "Verify a Receipt"
 seoTitle: "Verify a Pipelock Receipt: Signed Evidence Demo"
 subtitle: "Receipts or it didn't happen. Pull a signed receipt from the public conformance corpus, run the verifier, watch it pass. Tamper one byte, watch it fail."
@@ -50,8 +51,8 @@ For [parallel receipt chains](/learn/parallel-receipt-chains/), keep the complet
 
 The Pipelock verifier is available as the built-in CLI, a standalone Go binary, and TypeScript, Rust, and Python ports. Choose the exit contract for the command you run:
 
-- Built-in `pipelock verify-receipt` v3.7.0: `0` valid, `1` invalid, malformed or refused, and `2` usage or configuration error. Chain mode also exits `3` for an intact prefix whose end isn't proven.
-- Standalone Go v3.7.0, TypeScript 0.6.5 and Rust 0.6.5: `0` valid, `1` invalid, `2` runtime error, `64` usage error, and `3` for an intact chain prefix whose end isn't proven. `--allow-prefix` accepts that prefix with exit `0` while retaining its incomplete-end label.
+- Built-in `pipelock verify-receipt` v3.7.1: `0` valid, `1` invalid, malformed or refused, and `2` for a configuration error or a usage error the command checks itself. A missing argument or unknown flag is rejected before the command runs and exits `1`. Chain mode also exits `3` for an intact prefix whose end isn't proven.
+- Standalone Go v3.7.1, TypeScript 0.6.5 and Rust 0.6.5: `0` valid, `1` invalid, `2` runtime error, `64` usage error, and `3` for an intact chain prefix whose end isn't proven. `--allow-prefix` accepts that prefix with exit `0` while retaining its incomplete-end label.
 - Python `pipelock-verify` 0.4.1: `0` for valid receipts or chain linkage, `1` for verification failure, and `2` for argument errors. It has no end-proof state and can exit `0` when a chain's tail is missing. Its success doesn't establish run completeness or whole-group validity.
 
 | Binary | Source | What it covers |

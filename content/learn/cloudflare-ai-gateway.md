@@ -1,5 +1,6 @@
 ---
 title: "Cloudflare AI Gateway: Pricing, Features, Limits & Alternatives (2026)"
+title_brand: "cloudflare"
 linkTitle: "Cloudflare AI Gateway"
 seoTitle: "Cloudflare AI Gateway: Free Tier, Pricing & Limits"
 subtitle: "Edge-hosted observability, caching, and content scanning for LLM API traffic, with the boundary it does not cross."

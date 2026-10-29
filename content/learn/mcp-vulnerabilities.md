@@ -1,6 +1,7 @@
 ---
 title: "MCP Vulnerabilities: Known Risks and Defenses"
 linkTitle: "MCP Vulnerabilities"
+seoTitle: "MCP Vulnerabilities and Security Risks (2026)"
 subtitle: "Every MCP attack vector in one place, with runtime defenses for each."
 description: "MCP vulnerabilities mapped: tool poisoning, rug-pulls, credential theft, SSRF, prompt injection, session hijacking. Runtime defenses for each risk."
 date: 2026-04-07

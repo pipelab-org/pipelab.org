@@ -119,9 +119,10 @@ For an enterprise with many teams: start with governance to get visibility, then
 
 ## Further reading
 
-- [Best AI Agent Security Tools 2026](/blog/best-ai-agent-security-tools-2026/): 25 options mapped by security boundary, with strengths, trade-offs, and a decision framework
+- [Best AI Agent Security Tools 2026](/blog/best-ai-agent-security-tools-2026/): 24 options mapped by security boundary, with strengths, trade-offs, and a decision framework
 - [AI Agent Security](/learn/ai-agent-security/): the three security layers explained
 - [AI Runtime Security](/learn/ai-runtime-security/): model, agent, and infrastructure runtime controls by layer
+- [Webhook vs Egress](/blog/webhook-vs-egress-ai-agent-security/): where webhook-based runtime monitoring and network egress firewalls each fit
 - [Generative AI Firewall](/learn/generative-ai-firewall/): the adjacent vendor category for prompt, completion, and agent traffic inspection
 - [MCP Security Tools](/learn/mcp-security-tools/): focused comparison of MCP-specific tools
 - [MCP Proxy](/learn/mcp-proxy/): how Pipelock's MCP scanning proxy works
