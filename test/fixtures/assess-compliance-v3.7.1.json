@@ -1,0 +1,417 @@
+{
+  "source_repository": "https://github.com/pipelab-org/pipelock",
+  "source_ref": "v3.7.1",
+  "source_commit": "d6bb0003c1dac00d3b2df8dd1eb1a51ed8cecd6a",
+  "checked": "2026-10-29",
+  "frameworks": [
+    {
+      "source_path": "internal/report/compliance/owasp_mcp.go",
+      "source_sha256": "81e09e9c015d8af6585642d994930a1b62c6b493de9da46bf974a7f40a777810",
+      "page": "content/learn/owasp-mcp-top10.md",
+      "controls": [
+        {
+          "id": "MCP01",
+          "name": "Token Mismanagement & Secret Exposure",
+          "status": "Covered",
+          "line": 15
+        },
+        {
+          "id": "MCP02",
+          "name": "Privilege Escalation via Scope Creep",
+          "status": "Covered",
+          "line": 22
+        },
+        {
+          "id": "MCP03",
+          "name": "Tool Poisoning",
+          "status": "Covered",
+          "line": 29
+        },
+        {
+          "id": "MCP04",
+          "name": "Software Supply Chain Attacks & Dependency Tampering",
+          "status": "Covered",
+          "line": 36
+        },
+        {
+          "id": "MCP05",
+          "name": "Command Injection & Execution",
+          "status": "Covered",
+          "line": 43
+        },
+        {
+          "id": "MCP06",
+          "name": "Prompt Injection via Contextual Payloads",
+          "status": "Covered",
+          "line": 50
+        },
+        {
+          "id": "MCP07",
+          "name": "Insufficient Authentication & Authorization",
+          "status": "Partial",
+          "line": 57
+        },
+        {
+          "id": "MCP08",
+          "name": "Lack of Audit and Telemetry",
+          "status": "Covered",
+          "line": 65
+        },
+        {
+          "id": "MCP09",
+          "name": "Shadow MCP Servers",
+          "status": "Partial",
+          "line": 72
+        },
+        {
+          "id": "MCP10",
+          "name": "Context Injection & Over-Sharing",
+          "status": "Covered",
+          "line": 80
+        }
+      ]
+    },
+    {
+      "source_path": "internal/report/compliance/owasp_agentic.go",
+      "source_sha256": "65f3f76a864e82520ad2b5fb6efbcb18cf6d9670a0e3b63d01f2e138699a4abb",
+      "page": "content/learn/owasp-agentic-top10.md",
+      "controls": [
+        {
+          "id": "ASI01",
+          "name": "Agent Goal Hijack",
+          "status": "Covered",
+          "line": 15
+        },
+        {
+          "id": "ASI02",
+          "name": "Tool Misuse and Exploitation",
+          "status": "Covered",
+          "line": 22
+        },
+        {
+          "id": "ASI03",
+          "name": "Identity and Privilege Abuse",
+          "status": "Partial",
+          "line": 29
+        },
+        {
+          "id": "ASI04",
+          "name": "Agentic Supply Chain Vulnerabilities",
+          "status": "Covered",
+          "line": 37
+        },
+        {
+          "id": "ASI05",
+          "name": "Unexpected Code Execution (RCE)",
+          "status": "Covered",
+          "line": 44
+        },
+        {
+          "id": "ASI06",
+          "name": "Memory & Context Poisoning",
+          "status": "Partial",
+          "line": 51
+        },
+        {
+          "id": "ASI07",
+          "name": "Insecure Inter-Agent Communication",
+          "status": "Partial",
+          "line": 60
+        },
+        {
+          "id": "ASI08",
+          "name": "Cascading Failures",
+          "status": "Partial",
+          "line": 69
+        },
+        {
+          "id": "ASI09",
+          "name": "Human-Agent Trust Exploitation",
+          "status": "Partial",
+          "line": 77
+        },
+        {
+          "id": "ASI10",
+          "name": "Rogue Agents",
+          "status": "Not covered",
+          "line": 85
+        }
+      ]
+    },
+    {
+      "source_path": "internal/report/compliance/atlas.go",
+      "source_sha256": "df1d4f1027e42247751ee41b70fa009425705260755b98519ed72588d2236a1e",
+      "page": "content/learn/mitre-atlas.md",
+      "controls": [
+        {
+          "id": "ATLAS01",
+          "name": "Gather RAG-Indexed Targets",
+          "status": "Covered",
+          "line": 16
+        },
+        {
+          "id": "ATLAS02",
+          "name": "Discover LLM System Information",
+          "status": "Covered",
+          "line": 23
+        },
+        {
+          "id": "ATLAS03",
+          "name": "Special Character Sets",
+          "status": "Covered",
+          "line": 30
+        },
+        {
+          "id": "ATLAS04",
+          "name": "System Instruction Keywords",
+          "status": "Covered",
+          "line": 37
+        },
+        {
+          "id": "ATLAS05",
+          "name": "LLM Prompt Crafting",
+          "status": "Covered",
+          "line": 44
+        },
+        {
+          "id": "ATLAS06",
+          "name": "Retrieval Content Crafting",
+          "status": "Covered",
+          "line": 51
+        },
+        {
+          "id": "ATLAS07",
+          "name": "RAG Poisoning",
+          "status": "Partial",
+          "line": 58
+        },
+        {
+          "id": "ATLAS08",
+          "name": "LLM Prompt Obfuscation",
+          "status": "Covered",
+          "line": 66
+        },
+        {
+          "id": "ATLAS09",
+          "name": "LLM Trusted Output Components Manipulation",
+          "status": "Partial",
+          "line": 73
+        },
+        {
+          "id": "ATLAS10",
+          "name": "Citation Manipulation",
+          "status": "Partial",
+          "line": 81
+        },
+        {
+          "id": "ATLAS11",
+          "name": "False RAG Entry Injection",
+          "status": "Partial",
+          "line": 89
+        },
+        {
+          "id": "ATLAS12",
+          "name": "Data-Structure Injection",
+          "status": "Covered",
+          "line": 97
+        },
+        {
+          "id": "ATLAS13",
+          "name": "Structured Self-Modeling",
+          "status": "Covered",
+          "line": 104
+        },
+        {
+          "id": "ATLAS14",
+          "name": "Agent Backdoor Persistence",
+          "status": "Partial",
+          "line": 111
+        }
+      ]
+    },
+    {
+      "source_path": "internal/report/compliance/eu_ai_act.go",
+      "source_sha256": "5b7596bf5689c9b3e64edb44cf9a2f7a4aab3a9e34d52cb727ae4b156b001d1f",
+      "page": "content/learn/eu-ai-act-compliance.md",
+      "controls": [
+        {
+          "id": "A12",
+          "name": "Article 12 - Record-Keeping",
+          "status": "Covered",
+          "line": 16
+        },
+        {
+          "id": "A13",
+          "name": "Article 13 - Transparency and Instructions",
+          "status": "Partial",
+          "line": 23
+        },
+        {
+          "id": "A14",
+          "name": "Article 14 - Human Oversight",
+          "status": "Covered",
+          "line": 31
+        },
+        {
+          "id": "A26",
+          "name": "Article 26 - Deployer Monitoring",
+          "status": "Covered",
+          "line": 38
+        }
+      ]
+    },
+    {
+      "source_path": "internal/report/compliance/nist_ai_rmf.go",
+      "source_sha256": "28a829b5dc06d25a5ba9d2eba989890ea8743464209b7f7d235fd082b558814b",
+      "page": "content/learn/nist-ai-rmf.md",
+      "controls": [
+        {
+          "id": "GOVERN",
+          "name": "Govern",
+          "status": "Partial",
+          "line": 21
+        },
+        {
+          "id": "MAP",
+          "name": "Map",
+          "status": "Partial",
+          "line": 29
+        },
+        {
+          "id": "MEASURE",
+          "name": "Measure",
+          "status": "Covered",
+          "line": 37
+        },
+        {
+          "id": "MANAGE",
+          "name": "Manage",
+          "status": "Covered",
+          "line": 44
+        },
+        {
+          "id": "GENAI_DATA",
+          "name": "Generative AI: Data Privacy",
+          "status": "Covered",
+          "line": 51
+        },
+        {
+          "id": "GENAI_INTEGRITY",
+          "name": "Generative AI: Information Integrity",
+          "status": "Covered",
+          "line": 58
+        },
+        {
+          "id": "GENAI_PROVENANCE",
+          "name": "Generative AI: Provenance",
+          "status": "Partial",
+          "line": 65
+        },
+        {
+          "id": "GENAI_HARMFUL",
+          "name": "Generative AI: Harmful Bias",
+          "status": "Not covered",
+          "line": 73
+        }
+      ]
+    },
+    {
+      "source_path": "internal/report/compliance/hipaa.go",
+      "source_sha256": "033d8312fc572e50a8292e61f2cdf92b51d14de3809449e2b935265b46b58d66",
+      "page": "content/learn/hipaa-security-rule.md",
+      "controls": [
+        {
+          "id": "AC",
+          "name": "Access Control (164.312(a))",
+          "status": "Covered",
+          "line": 25
+        },
+        {
+          "id": "AUDIT",
+          "name": "Audit Controls (164.312(b))",
+          "status": "Covered",
+          "line": 32
+        },
+        {
+          "id": "INTEGRITY",
+          "name": "Integrity (164.312(c))",
+          "status": "Covered",
+          "line": 39
+        },
+        {
+          "id": "AUTH",
+          "name": "Person or Entity Authentication (164.312(d))",
+          "status": "Partial",
+          "line": 46
+        },
+        {
+          "id": "TRANS_SEC",
+          "name": "Transmission Security (164.312(e))",
+          "status": "Partial",
+          "line": 54
+        },
+        {
+          "id": "EPHI_DLP",
+          "name": "ePHI Disclosure Prevention",
+          "status": "Partial",
+          "line": 62
+        },
+        {
+          "id": "BAA",
+          "name": "Business Associate Agreement",
+          "status": "Not covered",
+          "line": 70
+        },
+        {
+          "id": "WORKFORCE",
+          "name": "Workforce Security (164.308(a)(3))",
+          "status": "Not covered",
+          "line": 78
+        },
+        {
+          "id": "CONTINGENCY",
+          "name": "Contingency Plan (164.308(a)(7))",
+          "status": "Partial",
+          "line": 86
+        }
+      ]
+    },
+    {
+      "source_path": "internal/report/compliance/soc2.go",
+      "source_sha256": "e9742a1cf5fff2c4645eb9a3cf24307c798b79b85a8545bcc1a534991fe33f2b",
+      "page": "content/learn/soc2-trust-services-criteria.md",
+      "controls": [
+        {
+          "id": "SEC",
+          "name": "Security",
+          "status": "Covered",
+          "line": 15
+        },
+        {
+          "id": "AVA",
+          "name": "Availability",
+          "status": "Partial",
+          "line": 22
+        },
+        {
+          "id": "PI",
+          "name": "Processing Integrity",
+          "status": "Covered",
+          "line": 30
+        },
+        {
+          "id": "CONF",
+          "name": "Confidentiality",
+          "status": "Covered",
+          "line": 37
+        },
+        {
+          "id": "PRIV",
+          "name": "Privacy",
+          "status": "Partial",
+          "line": 44
+        }
+      ]
+    }
+  ]
+}

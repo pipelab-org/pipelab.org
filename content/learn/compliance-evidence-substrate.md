@@ -21,9 +21,9 @@ faq:
   - q: "What does 'evidence substrate' mean for procurement teams?"
     a: "It means Pipelock generates the underlying signed records (action receipts, scanner verdicts, audit packets, control point metadata) that compliance frameworks ask for, but the procurement team still owns retention policy, review cadence, risk acceptance, and formal sign-off. Pipelock supplies the records. The organization runs the program."
   - q: "Which EU AI Act articles does Pipelock evidence map to?"
-    a: "Article 12 specifically: automatic event recording, traceability, operational monitoring, risk event detection, and control-point specificity. Pipelock does not address Article 9 risk management process, Article 10 training data governance, Article 14 human oversight at the workflow level, or Article 43 conformity assessment. Those need additional controls and process around the evidence."
+    a: "Assess v3.7.1 maps Articles 12, 13, 14, and 26. Article 13 is partial; provider-facing instructions remain deployment-specific. These mappings support evidence review and do not replace a compliance program."
   - q: "How does Pipelock map to NIST AI RMF?"
-    a: "Pipelock generates evidence aligned with all four core functions: GOVERN (policy hash plus posture capsule), MAP (audit packet plus session metadata), MEASURE (scanner verdict plus benchmark and conformance results), and MANAGE (kill switch, fail-closed verdicts, and HITL approvals). Auditors and risk teams can pull this evidence directly into their NIST RMF documentation."
+    a: "The shipped mapping marks GOVERN and MAP as partial, MEASURE and MANAGE as covered. Audit emission and signed bundles support GOVERN; discovery, audit, and assessment support MAP; simulation, assessment, metrics, and the flight recorder support MEASURE; proxy policy, kill switch, adaptive enforcement, and live-lock contracts support MANAGE."
 ---
 
 [Pipelock](/pipelock/) is not a compliance product. It is an evidence substrate for AI-agent operations: it records what an agent tried to do, which control point observed it, which policy applied, what verdict was reached, and whether the evidence can be verified later.
@@ -65,36 +65,24 @@ Regulation (EU) 2024/1689 Article 12 requires high-risk AI systems to technicall
 
 Pipelock generates evidence for each of those obligations. Pipelock does not satisfy the obligation by itself; the deployer still owns retention policy (Article 26 specifies a six-month minimum), review cadence, risk acceptance, and formal documentation.
 
-| Article 12 requirement | Compliance need | Pipelock primitive | Evidence produced |
-|---|---|---|---|
-| Automatic event recording over system lifetime | Machine-action event logging | Action receipt + flight recorder | Timestamped action record with verdict, target, policy hash, scanner layer |
-| Traceability appropriate to intended purpose | Traceability of agent operations | Hash-chained audit log + receipt hash | Ordered event chain, receipt hash, signature metadata |
-| Support monitoring of operation | Operational monitoring | Scanner verdict + metrics + session manifest | Allow/block/warn counts, finding class, session posture |
-| Help identify situations that may result in risk | Risk event detection | DLP, prompt-injection, SSRF, MCP tool-poison findings | Reason code, severity, scanner, normalized finding class |
-| Appropriate to system design | Control-point specificity | control_point metadata | Whether decision came from HTTP proxy, MCP proxy, WebSocket, CI action, sidecar |
+The shipped A12 mapping names the flight recorder and attestation: replayable records and signed manifests support record-keeping. Assess does not separately map each Article 12 sub-requirement. See the [EU AI Act mapping](/learn/eu-ai-act-compliance/) for all four shipped article entries.
 
 ## NIST AI RMF mapping
 
 NIST AI 100-1 (the AI Risk Management Framework) defines four core functions: GOVERN, MAP, MEASURE, MANAGE. Pipelock evidence supports each function. The framework itself is a process and governance structure that Pipelock evidence feeds into; Pipelock does not implement the framework.
 
-| NIST AI RMF function | Compliance need | Pipelock primitive | Evidence produced |
+| Function | Status | Pipelock mapping | Limit |
 |---|---|---|---|
-| GOVERN | Policy, accountability, risk process evidence | Policy hash + posture capsule | Which policy was active; whether runtime posture matched expected policy |
-| MAP | Context and use-case characterization | Audit Packet + session metadata | Agent identity, target service, transport, action class, deployment context |
-| MEASURE | Risk analysis and tracking | Scanner verdict + benchmark/conformance results | Detection class, severity, false-positive notes, conformance case references |
-| MANAGE | Risk response and control operation | Kill switch + fail-closed verdicts + HITL approvals | Block/allow/ask decision, override record, recovery/termination event |
+| GOVERN | Partial | Audit emission, tamper-evident flight recorder, and signed attestation bundles supply the artifacts a governance program records against AI RMF Govern outcomes. | Governance roles, RACI, and policy approval workflows live with the operator. |
+| MAP | Partial | Discover enumerates MCP servers and their protection state; audit and assess produce a per-deployment posture map of what is reachable, what is contained, and what is unprotected. | Stakeholder identification and impact classification remain process steps. |
+| MEASURE | Covered | Simulate scenarios produce repeatable detection-coverage measurements; assess scores per-deployment posture across 4 weighted sections; Prometheus metrics and the flight recorder provide ongoing operational measurement. |  |
+| MANAGE | Covered | Forward proxy and MCP tool policy enforce per-agent action limits; kill switch and adaptive enforcement contain in-progress incidents; live-lock contracts gate drift from a promoted baseline. |  |
 
 ## Other framework alignments
 
-Pipelock evidence also feeds into:
+The shipped catalog also includes [SOC 2's five category-level entries](/learn/soc2-trust-services-criteria/), [selected HIPAA Security Rule safeguards](/learn/hipaa-security-rule/), [MITRE ATLAS](/learn/mitre-atlas/), [OWASP MCP Top 10](/learn/owasp-mcp-top10/), and [OWASP Agentic Top 10](/learn/owasp-agentic-top10/). It does not include SOC 2 CC6-CC9 control-level mappings or mappings for ISO/IEC 42001, DORA, or Colorado law.
 
-- **ISO/IEC 42001** AI management system documentation (operational records and management review evidence)
-- **SOC 2** Common Criteria around system operations, change management, and incident response (CC7-CC9)
-- **DORA (Regulation (EU) 2022/2554)** for financial entities. Audit packets provide supporting evidence for ICT third-party risk management under Article 28 and for the digital operational resilience testing program and ICT-tool testing described in Articles 24-25 when AI agents touch financial systems.
-- **HIPAA technical safeguards** (45 CFR §164.312) for AI agents that touch protected health information. Audit packets can support audit-control and integrity evidence for covered entities and business associates, alongside the policies and procedures HIPAA requires.
-- **Colorado AI Act (SB 24-205)** for high-risk AI systems used in consequential decisions in Colorado. Audit packets can support the documentation, impact-assessment, and risk-management records expected of developers and deployers for obligations that apply on and after February 1, 2026.
-- **OWASP Agentic Top 10** mappings — see the [agent egress security](/learn/agent-egress-security/) and [MCP security](/learn/mcp-security/) learn pages for control coverage.
-- **MITRE ATLAS** adversarial ML threat techniques, particularly reconnaissance, discovery, and exfiltration coverage.
+Colorado's SB25B-004 amended the SB24-205 developer and deployer obligation dates from February 1, 2026 to June 30, 2026. See the [signed amendment, sections 1-2](https://leg.colorado.gov/sites/default/files/2025b_004_signed.pdf) and the [regulatory controls hub](/learn/ai-agent-regulatory-controls/).
 
 For the framework-mapped product surface (assess command, signed bundles, SARIF integration), see [AI compliance evidence](/learn/compliance-evidence/). For Article 26 deployer obligations and the six-month retention rule specifically, see [EU AI Act compliance](/learn/eu-ai-act-compliance/). For the framework-by-framework cross-reference (EU AI Act, DORA, NIS2, NIST AI RMF, ISO 42001, Colorado AI Act, SOC 2), see [AI agent regulatory controls hub](/learn/ai-agent-regulatory-controls/).
 
@@ -121,7 +109,7 @@ Verification only requires an Ed25519 public key and a small reference verifier.
 
 **Auditors pulling evidence for an attestation engagement** can request audit packets per agent-run, validate the signature chain with the open-source verifier, and treat the packet as the underlying record for an Article 12 logging assertion or an SOC 2 control test. The packet bundles its own verifier output, scanner config snapshot, and posture metadata, so an auditor can verify a packet in an isolated environment with no network access (`--offline` mode).
 
-**Legal counsel building defensible records for AI agent operations** can rely on the chain-linked structure of action receipts to detect post-hoc tampering: any modification to an event in the chain breaks the hash linkage and the verifier reports it as invalid, naming the exact sequence number at which the chain breaks. Hash-chained records support integrity, audit-control, and tamper-evidence arguments under EU AI Act Article 12, DORA Article 28, and HIPAA §164.312 when paired with the organization's retention, access-control, and review procedures.
+**Legal counsel building defensible records for AI agent operations** can rely on the chain-linked structure of action receipts to detect post-hoc tampering: any modification to an event in the chain breaks the hash linkage and the verifier reports it as invalid, naming the exact sequence number at which the chain breaks. The shipped catalog maps record-keeping to EU AI Act Article 12 and audit-control and integrity evidence to selected HIPAA §164.312 safeguards. Retention, access control, and review procedures remain with the organization.
 
 In each case, the procurement, audit, or legal team owns the program that wraps the evidence. Pipelock supplies the records.
 
@@ -148,3 +136,5 @@ In each case, the procurement, audit, or legal team owns the program that wraps 
 - [Compliance evidence overview](/learn/compliance-evidence/): the product surface.
 
 [Back to Pipelock](/pipelock/) | [Verifiable egress control](/learn/verifiable-egress-control/) | [Agent action receipts](/learn/agent-action-receipts/) | [Action receipt spec](/learn/action-receipt-spec/) | [Verify a receipt](/learn/verify-a-receipt/) | [Regulatory controls hub](/learn/ai-agent-regulatory-controls/) | [What did my agent do?](/learn/what-did-my-agent-do/) | [Compliance evidence overview](/learn/compliance-evidence/)
+
+- [Assess v3.7.1 framework catalog](https://github.com/pipelab-org/pipelock/blob/v3.7.1/internal/report/compliance/coverage.go): the shipped framework list.

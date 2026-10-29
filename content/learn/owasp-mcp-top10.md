@@ -14,7 +14,7 @@ faq:
   - q: "Which tools cover the OWASP MCP Top 10 risks?"
     a: "No single tool covers all ten risks. Pre-deploy scanners catch tool poisoning and supply chain issues at install time. Runtime proxies inspect tool calls and responses while the agent runs and catch rug-pulls, command injection, and prompt injection via contextual payloads. Identity gateways handle authentication and scope enforcement. Audit log platforms cover the telemetry gap. Network allowlists and MCP gateways add policy at the routing layer. A defensible MCP deployment combines four to six of these categories so each tool covers a different row of the matrix."
   - q: "Does Pipelock cover the OWASP MCP Top 10?"
-    a: "Pipelock covers the runtime inspection rows: tool poisoning, prompt injection through tool responses, credential leaks, context oversharing, and part of command-injection defense. It partially supports audit and shadow-MCP evidence through the flight recorder, discovery, and signed receipts when a signing key is configured. It does not replace an identity gateway for authentication, authorization, token lifecycle, or per-tool scopes."
+    a: "Pipelock covers the runtime inspection rows: tool poisoning, prompt injection through tool responses, credential leaks, context oversharing, and part of command-injection defense. Its shipped mapping marks audit and telemetry covered, and shadow MCP partial: local discovery does not enforce an organization-wide registry or approval workflow. It does not replace an identity gateway for authentication, authorization, token lifecycle, or per-tool scopes."
 learn_cat: compliance
 level: ref
 tags:
@@ -92,18 +92,20 @@ The practical control set is direct: scan `tools/list`, scan `tools/call` argume
 
 ## Pipelock coverage by MCP01-MCP10
 
-| OWASP MCP risk | Pipelock control | Remaining owner |
-|---|---|---|
-| MCP01: Token Mismanagement & Secret Exposure | DLP scanning with 65 credential patterns across normalized and decoded tool payloads | Token issuance, rotation, and scope design |
-| MCP02: Privilege Escalation via Scope Creep | Tool policy, per-agent configuration, and audit evidence for unexpected tool use | OAuth scopes and tool-level authorization |
-| MCP03: Tool Poisoning | Tool description scanning plus session baselines for changed tool definitions | Pre-deploy review of new MCP servers |
-| MCP04: Supply Chain Attacks & Dependency Tampering | Runtime drift detection and DLP backstop if a compromised server tries to exfiltrate | Package provenance, signatures, dependency scanning |
-| MCP05: Command Injection & Execution | Tool argument scanning for command-injection patterns before the server receives input | Server-side input validation and sandboxing |
-| MCP06: Prompt Injection via Contextual Payloads | {{< stat key="response_patterns" >}} injection and response patterns with 6-pass normalization on tool descriptions and responses | Model-side guardrails and tight tool scopes |
-| MCP07: Insufficient Authentication & Authorization | Decision logs can show who called what when identity is supplied upstream | Identity gateway, OAuth, mTLS, scopes |
-| MCP08: Lack of Audit and Telemetry | Flight recorder, hash chains, structured decisions, and signed receipts when a signing key is configured | SIEM retention, review cadence, incident sign-off |
-| MCP09: Shadow MCP Servers | MCP config discovery and runtime evidence of servers the agent actually contacts | Asset inventory and CI policy for unapproved servers |
-| MCP10: Context Injection & Over-Sharing | Response scanning, DLP, redaction controls, and block or strip actions before the agent reads the payload | Server-side field minimization and tenant isolation |
+Assess v3.7.1 uses the following statuses for the product controls it contributes. Covered does not mean that every instance of a risk is prevented.
+
+| ID | Risk | Status | Pipelock mapping | Limit |
+|---|---|---|---|---|
+| MCP01 | Token Mismanagement & Secret Exposure | Covered | DLP scanners and canary tokens detect secrets in outbound text, URLs, and environment leaks. |  |
+| MCP02 | Privilege Escalation via Scope Creep | Covered | Agent profiles, session profiling, and tool policy rules constrain privilege expansion. |  |
+| MCP03 | Tool Poisoning | Covered | Tool scanning detects poisoned descriptions, provenance verifies signatures, baseline detects drift. |  |
+| MCP04 | Software Supply Chain Attacks & Dependency Tampering | Covered | Binary integrity verifies subprocess hashes, tool provenance verifies Ed25519/Sigstore signatures. |  |
+| MCP05 | Command Injection & Execution | Covered | Tool policy blocks dangerous tool calls, sandbox contains subprocess execution. |  |
+| MCP06 | Prompt Injection via Contextual Payloads | Covered | Bidirectional MCP scanning with 6-pass normalization detects injection in responses and tool args. |  |
+| MCP07 | Insufficient Authentication & Authorization | Partial | Agent profiles enforce per-agent policy, session binding pins tool inventories. | Org-wide authentication and authorization governance is a deployment concern. |
+| MCP08 | Lack of Audit and Telemetry | Covered | Flight recorder produces hash-chained evidence, emit delivers to webhook/syslog/OTLP, Prometheus metrics. |  |
+| MCP09 | Shadow MCP Servers | Partial | Discovery surfaces unprotected MCP servers on the system. | Org-wide registry and approval workflow for MCP servers is not enforced by the proxy. |
+| MCP10 | Context Injection & Over-Sharing | Covered | Bidirectional scanning detects context injection, flight recorder provides forensic evidence. |  |
 
 ## MCP01: Token Mismanagement & Secret Exposure
 
@@ -113,9 +115,9 @@ The defenses are layered. At the identity layer, you want short-lived tokens wit
 
 Pipelock contributes the inspection piece. Its DLP engine carries 65 credential patterns at the time of writing and checks normalized text plus decoded variants such as URL-encoded, base64, hex, base32, and dot-collapsed forms before matching. If a credential appears in a tool argument, the proxy strips or blocks the request based on the configured action. That covers the runtime side. For provisioning and rotation you still need an identity gateway. See [MCP Authorization](/learn/mcp-authorization/) for the auth half of the story.
 
-## MCP02 and MCP03: Tool poisoning and rug-pulls
+## MCP03: Tool poisoning and rug-pulls
 
-The OWASP framework lists tool poisoning under MCP03, but rug-pull attacks (where descriptions change mid-session after a clean install) live next door to MCP02 scope creep. Both categories share a defense pattern.
+The shipped MCP03 mapping names tool scanning, provenance verification, and behavioral baselines for poisoned descriptions and drift.
 
 Static scanners catch poisoning at install time. They pull tool descriptions, run them through pattern matchers and LLM classifiers, and flag suspicious instructions before the agent connects. That stops the obvious cases. What it does not stop is a server that serves clean descriptions to the scanner and poisoned descriptions later, or a server that updates its tool definitions during an active session.
 
@@ -129,7 +131,7 @@ MCP servers ship as packages. Most install through npm or pip with no signature 
 
 The defenses are pre-deploy and runtime. Pre-deploy means dependency scanning, package signature verification, and reproducible builds. Tools like Trivy, Snyk, and Socket cover the dependency tree. A pre-deploy MCP scanner adds tool-level inspection on top of dependency scanning.
 
-Runtime means tool description fingerprinting (catches the moment a server starts behaving differently after an update) and DLP scanning on outbound traffic (catches exfiltration even if the bad code slipped through). Pipelock covers the runtime half. For the dependency half, pair it with a package scanner that runs in CI before any new MCP server enters production.
+The shipped MCP04 mapping names MCP binary-integrity checks for subprocess hashes and tool-provenance verification for Ed25519/Sigstore signatures. For the dependency half, pair it with a package scanner that runs in CI before any new MCP server enters production.
 
 ## MCP05: Command injection in MCP servers
 
@@ -171,13 +173,13 @@ Shadow MCP is the unauthorized half of the agent's attack surface. Developers in
 
 Detection happens at five layers: codebase scan for mcp.json and MCP package dependencies, IDE config inspection, runtime network monitoring, process monitoring for spawned MCP subprocesses, and CI pipeline audit. Routing every MCP session through a proxy adds a sixth layer because the proxy logs every server the agent actually contacts.
 
-The full reference for how shadow MCP happens, how to find it, and how to enforce policy at runtime is at [Shadow MCP](/learn/shadow-mcp/). Pipelock contributes runtime detection through the proxy. It does not replace a CI scanning step that catches new servers before they ship.
+The full reference is [Shadow MCP](/learn/shadow-mcp/). The shipped MCP09 mapping names discovery of unprotected MCP servers on the local system. An organization-wide registry and approval workflow remain outside proxy enforcement.
 
 ## MCP10: Context injection and oversharing
 
 The last category covers what happens when sensitive data leaks across users, sessions, or agents through shared context. A multi-tenant MCP server returns the wrong customer's data because session boundaries are loose. A shared memory entry written by one agent gets read by another. An over-privileged tool returns more fields than the agent needs and the extras enter the model's context window forever.
 
-The defenses are field-level access controls on the server, scope enforcement at the identity gateway, and DLP scanning on responses at the proxy layer. Pipelock contributes the response scanning. If a tool response contains data the agent should not see (credentials, customer records that match a redaction rule, internal system identifiers), the proxy can strip or block before the agent reads it.
+The shipped MCP10 mapping names bidirectional scanning for context injection and the flight recorder for forensic evidence. Field-level access controls, scope enforcement, and tenant isolation still belong to the server and identity layer.
 
 The harder version of this problem is detecting that data has been over-shared without knowing what "too much" means in advance. That is a server design problem, not a runtime one. Get your MCP servers to return only the fields the agent's task requires, then use the proxy as a backstop for the rest.
 
@@ -202,7 +204,7 @@ This handles the core risks for a team that has not yet centralized identity. Yo
 
 Every row of the matrix has a covering tool. The audit platform reinforces every row. This is the configuration most enterprises end up at after they take the framework seriously.
 
-**Pipelock honest scoping for this matrix:** runtime proxy column. Strong on inspection (MCP03, MCP05, MCP06, MCP10). Partial on telemetry (MCP08, the flight recorder is solid but does not replace a SIEM). Partial on shadow MCP (MCP09, runtime detection only, not codebase scan). No on identity work (MCP01, MCP02, MCP07). If you only deploy Pipelock, you have covered roughly half of the OWASP MCP Top 10 in full and another quarter in part. The other quarter needs different tools. Read [MCP Security Tools](/learn/mcp-security-tools/) for the other categories you need.
+**Shipped Pipelock mapping:** eight entries are covered; MCP07 (authentication and authorization) and MCP09 (shadow MCP) are partial. These statuses name product contributions, not complete prevention. Organization-wide identity governance, server approval, package review, and SIEM retention remain separate controls. Read [MCP Security Tools](/learn/mcp-security-tools/) for the surrounding tool categories.
 
 ## Getting started with OWASP MCP Top 10 mitigation
 
@@ -240,3 +242,4 @@ The first cuts are fast. Order matters because some controls reduce the cost of 
 - [What is an Agent Firewall?](/agent-firewall/)
 - [MCP specification](https://modelcontextprotocol.io/docs/2026-07-28/getting-started/intro)
 - [Vulnerable MCP Project](https://vulnerablemcp.info/)
+- [Shipped mapping (Pipelock v3.7.1)](https://github.com/pipelab-org/pipelock/blob/v3.7.1/internal/report/compliance/owasp_mcp.go): control IDs, status, evidence, and limitations.

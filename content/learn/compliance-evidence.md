@@ -6,7 +6,7 @@ related:
   - compliance-evidence-substrate
   - agent-evidence-detection-integration
 subtitle: "OWASP, NIST, EU AI Act, SOC 2, mapped and proven."
-description: "AI compliance evidence from Pipelock. Maps runtime controls to five frameworks and generates signed bundles. SARIF integrates with GitHub Code Scanning."
+description: "AI compliance evidence from Pipelock. Maps runtime controls to seven frameworks and generates signed bundles. SARIF integrates with GitHub Code Scanning."
 date: 2026-03-29
 learn_cat: compliance
 level: ref
@@ -22,7 +22,7 @@ faq:
 
 The deploying operator holds the signing key, so a receipt proves what the boundary decided and that the keyholder signed it, not that the operator is honest. Operator-independent evidence requires external transparency-log anchoring with `pipelock anchor receipts --backend rekor` and pinned Rekor log keys; the local anchor backend is not operator-independent.
 
-Pipelock generates AI compliance evidence through structured mappings between its runtime security controls and five external frameworks. These are control mappings with evidence generation, not compliance certifications. They document which controls Pipelock addresses and what evidence the product can emit.
+Pipelock generates AI compliance evidence through structured mappings between its runtime security controls and seven external frameworks. These are control mappings with evidence generation, not compliance certifications. They document which controls Pipelock addresses and what evidence the product can emit.
 
 ## AI agent compliance evidence answer
 
@@ -39,21 +39,15 @@ AI agent compliance evidence should connect each runtime action to a control, a 
 
 | Framework | Scope | Controls Mapped |
 |-----------|-------|-----------------|
-| [OWASP MCP Top 10](/learn/mcp-security/) | MCP protocol security risks | 10 controls (MCP01-MCP10) |
+| [OWASP MCP Top 10](/learn/owasp-mcp-top10/) | MCP protocol security risks | 10 controls (MCP01-MCP10) |
 | [OWASP Agentic Top 10](/learn/owasp-agentic-top10/) | AI agent application risks | 10 controls (ASI01-ASI10) |
-| MITRE ATLAS | Adversarial ML threat techniques | Reconnaissance, discovery, exfiltration techniques |
+| [MITRE ATLAS](/learn/mitre-atlas/) | Adversarial ML threat techniques | 14 mapping entries (ATLAS01-ATLAS14) |
 | [EU AI Act](/learn/eu-ai-act-compliance/) | Articles 12, 13, 14, 26 | Record-keeping, transparency, human oversight, deployer monitoring |
-| SOC 2 Trust Services Criteria | Security, availability, processing integrity, confidentiality, privacy | 5 criteria (SEC, AVA, PI, CONF, PRIV) |
+| [SOC 2 Trust Services Criteria](/learn/soc2-trust-services-criteria/) | Security, availability, processing integrity, confidentiality, privacy | 5 criteria (SEC, AVA, PI, CONF, PRIV) |
+| [NIST AI RMF](/learn/nist-ai-rmf/) | Core functions and Generative AI profile | 8 entries, including harmful bias as not covered |
+| [HIPAA Security Rule](/learn/hipaa-security-rule/) | Selected technical and administrative safeguards | 9 entries, including BAA and workforce security as not covered |
 
-In addition, Pipelock maps to **NIST SP 800-53 Rev. 5** across 7 control families:
-
-- **AC** -- Access Control (tool policy, per-agent profiles, sandbox)
-- **AU** -- Audit and Accountability (structured events, SARIF, OTLP)
-- **CA** -- Assessment, Authorization, and Monitoring (continuous monitoring)
-- **CM** -- Configuration Management (audit score, hot reload validation)
-- **IR** -- Incident Response (kill switch, emit pipeline, flight recorder)
-- **SC** -- System and Communications Protection (DLP, capability separation, TLS)
-- **SI** -- System and Information Integrity (scanner pipeline, binary integrity)
+The catalog includes partial and not-covered entries. An entry is not a certification or a claim of complete framework coverage. NIST SP 800-53 is not included in the Assess v3.7.1 catalog.
 
 ## Generating Evidence with `pipelock assess`
 
@@ -108,3 +102,5 @@ Unlicensed users get a signed summary projection: grade, section scores, and top
 For procurement, audit, and legal-team framing of Pipelock as evidence substrate inside an existing compliance program (rather than as a compliance product), see [Compliance Evidence Substrate](/learn/compliance-evidence-substrate/). For a framework-by-framework view across EU AI Act, DORA, NIS2, NIST AI RMF, ISO 42001, the Colorado AI Act, SOC 2, and OWASP, see the [AI Agent Regulatory Controls hub](/learn/ai-agent-regulatory-controls/). To walk through a single decision end-to-end with a real signed receipt and verifier output, see [What did my agent do?](/learn/what-did-my-agent-do/).
 
 [Back to Pipelock](/pipelock/) | [Proof](/proof/) | [Generate signed reports with Assess](/assess/)
+
+- [Assess v3.7.1 framework catalog](https://github.com/pipelab-org/pipelock/blob/v3.7.1/internal/report/compliance/coverage.go): the shipped framework list.

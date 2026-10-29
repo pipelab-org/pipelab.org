@@ -21,7 +21,7 @@ faq:
 
 Pipelock maps fourteen MITRE ATLAS techniques. The mapping is specific to runtime controls and the evidence the product produces. It is not a claim of ATLAS-wide coverage.
 
-Each row below comes from Pipelock's built-in compliance mapping. "Covered" names a direct product mapping. "Partial" names a product contribution and the remaining gap.
+Each row below comes from Pipelock's built-in compliance mapping. ATLAS01-ATLAS14 are Pipelock mapping IDs, not MITRE AML technique identifiers. "Covered" names a direct product mapping. "Partial" names a product contribution and the remaining gap.
 
 ## Technique mapping
 
@@ -59,3 +59,4 @@ For the product's broader evidence model, read [Compliance Evidence Substrate](/
 - [MITRE ATLAS](https://atlas.mitre.org/): the framework source.
 - [AI compliance evidence](/learn/compliance-evidence/): Pipelock assessment and evidence bundles.
 - [Compliance Evidence Substrate](/learn/compliance-evidence-substrate/): what Pipelock evidence proves and does not prove.
+- [Shipped mapping (Pipelock v3.7.1)](https://github.com/pipelab-org/pipelock/blob/v3.7.1/internal/report/compliance/atlas.go): control IDs, status, evidence, and limitations.

@@ -48,16 +48,16 @@ Agents introduce risks that do not exist in traditional software:
 
 ## Framework Mappings
 
-Different frameworks ask for different things. Here is what each one requires for agents:
+Different frameworks ask for different things. The shipped Assess catalog includes the following framework entries:
 
 | Framework | Agent-Relevant Requirements | Evidence Type |
 |-----------|---------------------------|---------------|
 | **SOC 2** (TSC) | Access controls, monitoring, data confidentiality, processing integrity | Audit logs, policy configs, incident records |
-| **EU AI Act** (Art. 9, 12, 14, 15) | Risk management, automatic event logging, human oversight, cybersecurity | Structured logs, override records, fail-closed evidence |
-| **NIST 800-53** Rev. 5 | AC (access control), AU (audit), CM (config management), SI (system integrity) | Per-family control evidence, continuous monitoring data |
+| **EU AI Act** (Art. 12, 13, 14, 26) | Record-keeping, transparency (partial), human oversight, deployer monitoring | Replayable records, signed manifests, assessment reports |
+| **NIST AI RMF** 1.0 | GOVERN and MAP (partial), MEASURE and MANAGE (covered) | Audit emission, discovery, simulation, assessment, and runtime controls |
 | **OWASP Agentic Top 10** | Goal hijack, tool misuse, supply chain, privilege abuse, rogue agents | Scanner results, tool policy logs, injection detection records |
 
-SOC 2 auditors want to see that you know what your agents access and that you restrict it. The EU AI Act wants automatic logging and a stop button. NIST 800-53 maps to specific control families. OWASP gives you a threat checklist to test against.
+NIST SP 800-53 Rev. 5 is not included in the Assess v3.7.1 catalog. The catalog also includes MITRE ATLAS and selected HIPAA Security Rule safeguards. Each mapping states the product contribution and its limits.
 
 If you need a scoring model for how runtime controls change agentic risk, see [OWASP AIVSS Coverage](/learn/owasp-aivss-coverage/).
 
@@ -103,7 +103,7 @@ Pipelock is an open-source AI agent firewall that sits between agents and the ne
 
 **Signed assessment reports.** `pipelock assess` runs attack simulations, scores your config, verifies your installation, and discovers unprotected MCP servers. The output is a signed evidence bundle with framework-specific control mappings. Generate reports for auditors with a single command. See [Assess](/assess/).
 
-**OWASP coverage.** Pipelock maps to all 10 categories in the [OWASP Agentic Top 10](/learn/owasp-agentic-top10/). Scanner layers are mapped to specific threat categories so you can show auditors exactly which control addresses which risk.
+**OWASP coverage.** The shipped [OWASP Agentic Top 10 mapping](/learn/owasp-agentic-top10/) marks four categories covered, five partial, and one not covered. The mapping names the evidence and limits for each entry.
 
 **Runtime enforcement.** Domain allowlists, DLP scanning, MCP tool policy, SSRF protection, prompt injection detection, rate limiting, and human-in-the-loop approval. Controls are active at runtime, not applied after the fact.
 
@@ -120,3 +120,5 @@ Pipelock is an open-source AI agent firewall that sits between agents and the ne
 - [Assess](/assess/): Generate signed compliance reports
 - [Pipelock](/pipelock/): Product overview and installation
 - [GitHub](https://github.com/pipelab-org/pipelock): Source code and documentation
+
+- [Assess v3.7.1 framework catalog](https://github.com/pipelab-org/pipelock/blob/v3.7.1/internal/report/compliance/coverage.go): the shipped framework list.

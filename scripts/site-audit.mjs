@@ -8,6 +8,8 @@ import path from "node:path";
 import { parse as parseToml } from "smol-toml";
 import { parse as parseYaml } from "yaml";
 
+import { checkProofFrameworkLinks } from "./compliance-claims.mjs";
+
 import { auditInstallContract } from "./install-contract.mjs";
 import { isBlockedExternalLink } from "./external-link-policy.mjs";
 import { auditDemoVersions } from "./historical-artifacts.mjs";
@@ -438,6 +440,12 @@ const proofPage = pageByRoute.get("/proof/");
 if (!proofPage) {
   issues.push("/proof/: recorded-decision page did not render");
 } else {
+  const mappingSnapshot = JSON.parse(readFileSync(path.join(repoRoot, "test/fixtures/assess-compliance-v3.7.1.json"), "utf8"));
+  const frameworkRoutes = mappingSnapshot.frameworks.map(({ page }) => page.replace(/^content/, "").replace(/\.md$/, "/"));
+  issues.push(...checkProofFrameworkLinks(proofPage.html, frameworkRoutes).map(issue => `/proof/: ${issue}`));
+  for (const route of frameworkRoutes) {
+    if (!pageByRoute.has(route)) issues.push(`/proof/: framework guide did not render: ${route}`);
+  }
   const deckMatch = proofPage.html.match(/<script\s+type="application\/json"\s+data-pseq-scenes>([\s\S]*?)<\/script>/i);
   if (!deckMatch) {
     issues.push("/proof/: recorded-decision deck data is missing");

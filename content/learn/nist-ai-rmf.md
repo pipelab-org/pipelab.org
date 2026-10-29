@@ -34,12 +34,12 @@ The mapping includes the four core functions and four Generative AI rows. Covere
 
 ## Generative AI mapping
 
-| Area | Status | Pipelock mapping | Limit |
-|------|--------|------------------|-------|
-| Data privacy | Covered | Class-preserving redaction protects PII and PHI in provider payloads. DLP, request-body scanning, and address and seed-phrase detectors prevent inadvertent disclosure to upstream models. | |
-| Information integrity | Covered | Response scanning catches prompt injection in tool results. MCP tool scanning and session binding detect poisoned descriptions and rug-pull drift. Browser Shield strips DOM traps from fetched pages. | |
-| Provenance | Partial | The mediation envelope signs outbound mediated requests. The flight recorder produces tamper-evident decision evidence. The MCP binary-integrity manifest binds tool execution to a known binary. | Pipelock attests its own mediation, not an upstream model's training-data lineage. |
-| Harmful bias | Not covered | | Bias evaluation belongs to model selection and red-team programs upstream of network mediation. |
+| ID | Area | Status | Pipelock mapping | Limit |
+|----|------|--------|------------------|-------|
+| GENAI_DATA | Data privacy | Covered | Class-preserving redaction protects PII and PHI in provider payloads. DLP, request-body scanning, and address and seed-phrase detectors prevent inadvertent disclosure to upstream models. | |
+| GENAI_INTEGRITY | Information integrity | Covered | Response scanning catches prompt injection in tool results. MCP tool scanning and session binding detect poisoned descriptions and rug-pull drift. Browser Shield strips DOM traps from fetched pages. | |
+| GENAI_PROVENANCE | Provenance | Partial | The mediation envelope signs outbound mediated requests. The flight recorder produces tamper-evident decision evidence. The MCP binary-integrity manifest binds tool execution to a known binary. | Pipelock attests its own mediation, not an upstream model's training-data lineage. |
+| GENAI_HARMFUL | Harmful bias | Not covered | | Bias evaluation belongs to model selection and red-team programs upstream of network mediation. |
 
 ## What the mapping does not claim
 
@@ -58,3 +58,4 @@ Read [Compliance Evidence Substrate](/learn/compliance-evidence-substrate/) for 
 - [NIST AI Risk Management Framework](https://www.nist.gov/itl/ai-risk-management-framework): the framework source.
 - [AI compliance evidence](/learn/compliance-evidence/): Pipelock assessment and evidence bundles.
 - [Compliance Evidence Substrate](/learn/compliance-evidence-substrate/): scope and evidence limits.
+- [Shipped mapping (Pipelock v3.7.1)](https://github.com/pipelab-org/pipelock/blob/v3.7.1/internal/report/compliance/nist_ai_rmf.go): control IDs, status, evidence, and limitations.
