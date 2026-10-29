@@ -86,6 +86,8 @@ test("Hugo renders the shared pattern datum and follows the published result poi
   assert.ok(html.includes(`Pipelock v${record.tool_version}`));
   assert.ok(html.includes(`?record=${pointer.candidate_sha256}`));
   assert.match(html, /Historical measurement/);
+  // The heading names the measured version, so a historical score never reads as the current release.
+  assert.ok(html.includes(`Latest published result: Pipelock v${record.tool_version}</h2>`));
   // A new pointer selects a different immutable record, not the old score or
   // the current product version. This fixture is local and never published.
   const nextPointer = { ...pointer, candidate_sha256: "a".repeat(64), tool_version: "3.7.1" };
@@ -97,6 +99,8 @@ test("Hugo renders the shared pattern datum and follows the published result poi
   const next = render(nextPointer, nextRecord, stats + 1);
   assert.match(next, /75.00% containment/);
   assert.match(next, /12.50% false-positive rate/);
+  assert.ok(next.includes("Latest published result: Pipelock v3.7.1</h2>"));
+  assert.doesNotMatch(next, /Historical measurement/);
   assert.ok(next.includes(`${stats + 1} response-scanning patterns`));
   assert.ok(next.includes(`?record=${nextPointer.candidate_sha256}`));
   assert.doesNotMatch(next, /Historical measurement/);

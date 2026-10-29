@@ -11,7 +11,7 @@
 {{- end -}}
 {{- $scores := $record.scores.full -}}
 <section class="page-content" aria-labelledby="bench-published-result-title">
-  <h2 id="bench-published-result-title">Latest published Pipelock result</h2>
+  <h2 id="bench-published-result-title">Latest published result: Pipelock v{{ $record.tool_version }}</h2>
   <p><strong>{{ printf "%.2f%%" (mul $scores.containment 100) }} containment</strong> ({{ $record.metric_counts.full.containment.numerator }}/{{ $record.metric_counts.full.containment.denominator }} block-expected cases), with a <strong>{{ printf "%.2f%%" (mul $scores.false_positive_rate 100) }} false-positive rate</strong> ({{ $record.metric_counts.full.false_positive_rate.numerator }}/{{ $record.metric_counts.full.false_positive_rate.denominator }} allow-expected controls).</p>
   <p>First-party run of Pipelock v{{ $record.tool_version }}, recorded {{ time.Format "2006-01-02" $record.generated_at }}, across {{ $record.case_count.total }} logical cases.{{ if ne $record.tool_version site.Params.pipelock_version }} Historical measurement: this result does not measure Pipelock v{{ site.Params.pipelock_version }}.{{ end }} It covers the benchmark configuration and corpus pinned in the record.</p>
   <p><a href="/gauntlet/results/?record={{ $pointer.candidate_sha256 }}">Inspect the result and failures</a> · <a href="/gauntlet/evidence/{{ strings.TrimPrefix "./" $pointer.record_path }}">Read the published record</a></p>
