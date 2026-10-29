@@ -120,10 +120,10 @@ It does not replace Sure application hardening, database access controls, Kubern
 
 ## Going further
 
-The full Pipelock options surface (trusted domains, MCP tool redirect profiles, ingress, ServiceMonitor, extraConfig escape hatches) lives in the chart README:
+The full Pipelock options surface (trusted domains, MCP tool redirect profiles, ingress, ServiceMonitor, extraConfig escape hatches) lives in the chart README. The Pipelock image pin is in the chart's values file:
 
-- [Sure chart image pin, verified 2026-10-29](https://github.com/we-promise/sure/blob/69f2d485c53440cc177a3eabecf7567f6b99df6f/charts/sure/values.yaml#L509-L514)
 - [Sure chart README, Pipelock section](https://github.com/we-promise/sure/blob/main/charts/sure/README.md#pipelock-ai-agent-security-proxy)
+- [Sure chart values, Pipelock image pin (verified 2026-10-29)](https://github.com/we-promise/sure/blob/69f2d485c53440cc177a3eabecf7567f6b99df6f/charts/sure/values.yaml#L509-L514)
 - [Sure product site](https://sure.am/)
 - [Sure documentation site](https://docs.sure.am)
 - [Pipelock on GitHub](https://github.com/pipelab-org/pipelock) for the firewall itself
