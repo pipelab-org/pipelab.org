@@ -7,6 +7,9 @@ boundaries. Preserve published blog bodies and check comparative claims against
 cited sources. Trace template changes through article, section, and product pages;
 check conversion links and generated metadata. Workflow changes must keep immutable
 pins, limited credentials, and failure results distinct from completed reviews.
+Discover candidate failures before deciding which to report, and check each one
+against the templates, routes, workflows, and pages that actually use the changed
+code. Missing context alone is not a finding; say what remains unknown.
 """
 
 [ignore]
