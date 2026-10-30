@@ -164,7 +164,7 @@ The most durable reason to solve shadow MCP is not fear of an attacker. It is th
 
 **Tool descriptions fingerprinted to catch rug-pulls.** The proxy fingerprints tool definitions with SHA-256 on first sight. Mid-session description changes produce a diff and trigger the configured action. Approved vendors ship silent updates too.
 
-**Bidirectional content scanning catches bad behavior from approved servers.** Pipelock scans tool arguments for credentials using 65 DLP patterns and tool responses for 34 injection patterns. Tool descriptions are scanned by both the injection patterns and a separate set of tool-specific poisoning checks (rug-pull detection, exfiltration directives, cross-tool manipulation). The scanners normalize text and decode encoded variants on each path so leetspeak, homoglyphs, zero-width characters, and encoded payloads are harder to hide. Approved is not the same as trusted.
+**Bidirectional content scanning catches bad behavior from approved servers.** Pipelock scans tool arguments for credentials using 65 DLP patterns and tool responses for {{< stat key="response_patterns" >}} injection patterns. Tool descriptions are scanned by both the injection patterns and a separate set of tool-specific poisoning checks (rug-pull detection, exfiltration directives, cross-tool manipulation). The scanners normalize text and decode encoded variants on each path so leetspeak, homoglyphs, zero-width characters, and encoded payloads are harder to hide. Approved is not the same as trusted.
 
 Pipelock doesn't replace the review work. It replaces the guessing work. You still decide which servers to approve. Pipelock makes sure the decision is enforced and the evidence exists.
 

@@ -53,7 +53,7 @@ Pipelock is a focused tool you run. Prisma AIRS is a platform you buy.
 | **Red teaming** | No | Yes |
 | **Model scanning** | No | Yes |
 | **Signed receipts** | Yes, Ed25519, verifiable offline | Enterprise audit and reporting |
-| **Compliance mappings** | OWASP MCP Top 10, OWASP Agentic Top 15, OWASP LLM Top 10, NIST 800-53, EU AI Act | Enterprise compliance reporting |
+| **Compliance mappings** | Assess report: [OWASP MCP Top 10](/learn/owasp-mcp-top10/), [OWASP Agentic Top 10](/learn/owasp-agentic-top10/), [MITRE ATLAS](/learn/mitre-atlas/), [EU AI Act](/learn/eu-ai-act-compliance/), [NIST AI RMF](/learn/nist-ai-rmf/), [HIPAA Security Rule](/learn/hipaa-security-rule/), [SOC 2](/learn/soc2-trust-services-criteria/); published documentation mappings: [OWASP Agentic AI Threats and Mitigations](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/owasp-agentic-top15-mapping.md), [OWASP LLM Top 10](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/owasp-llm-top10-mapping.md), [NIST 800-53](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/compliance/nist-800-53.md) | Enterprise compliance reporting |
 | **Integration with a broader stack** | Standalone | Palo Alto Networks product family |
 | **Source availability** | Apache-2.0 core; Enterprise under ELv2 | Closed source |
 | **Pricing** | Free core; paid tiers published | No public price list found |

@@ -12,10 +12,4 @@ check-rules-sync:
 	bash scripts/test-sync-pipelock-rules.sh
 
 preflight:
-	$(MAKE) check-brand
-	$(MAKE) check-rules-sync
-	npm test
-	npm run site:build
-	npm run site:corpus-counts
-	npm run site:version-claims
-	npm run site:render-diff
+	node scripts/preflight.mjs "$(MAKE)"

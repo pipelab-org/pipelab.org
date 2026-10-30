@@ -74,7 +74,7 @@ The platform question is about shape, not quality. Broad and managed, or narrow 
 
 **Discovery and inventory.** Which agents, MCP servers, and AI applications exist across the organization. A firewall sees only the traffic routed through it.
 
-**Posture and reporting.** Dashboards, compliance reports, and a vendor to hand an auditor. Pipelock maps its controls to OWASP, NIST 800-53, and the EU AI Act, and can emit signed receipts when configured, but it is not a reporting product.
+**Posture and reporting.** Dashboards, compliance reports, and a vendor to hand an auditor. Pipelock Assess reports include OWASP MCP Top 10, OWASP Agentic Top 10, and EU AI Act mappings. Separate published documentation mappings cover [OWASP LLM Top 10](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/owasp-llm-top10-mapping.md), [OWASP Agentic AI Threats and Mitigations](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/owasp-agentic-top15-mapping.md), and [NIST 800-53](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/compliance/nist-800-53.md). Pipelock can emit signed receipts when configured; it does not replace an organization's compliance program.
 
 **Red teaming and model scanning.** Platform components that test agents and models before and during deployment. Out of a firewall's scope.
 

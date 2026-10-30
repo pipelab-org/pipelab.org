@@ -40,7 +40,7 @@ function harness(mode = 'replay') {
   const node = (id) => { if (!nodes.has(id)) nodes.set(id, new Element()); return nodes.get(id); };
   const context = vm.createContext({
     document: { readyState: 'loading', getElementById: node, createElement: () => new Element(), createTextNode: (s) => Object.assign(new Element(), { textContent: s }), querySelectorAll: () => [], addEventListener() {}, body: new Element() },
-    window: {}, localStorage: { setItem() {}, getItem() { return null; } },
+    window: {}, navigator: { platform: 'Linux', userAgent: 'Linux' }, localStorage: { setItem() {}, getItem() { return null; } },
     setTimeout: (fn) => { timers.set(++timerID, fn); return timerID; }, clearTimeout: (id) => timers.delete(id),
     fetch: async () => ({ ok: true, headers: { get() { return ''; } }, arrayBuffer: async () => new ArrayBuffer(1) }),
     Uint8Array, TextEncoder, URL, console,
@@ -51,6 +51,7 @@ function harness(mode = 'replay') {
   vm.runInContext(live, context);
   const replay = source('viewer.js').replace(/main\(\)\.catch\([^\n]+\);\s*$/, '');
   vm.runInContext(replay, context);
+  const buildVerifier = vm.runInContext('buildVerifier', context);
   // Mode switching is real; unrelated chat construction has no bearing on verification.
   vm.runInContext(`DATA = { checks: ['signature', 'binding'], run_id: 'replay' }; ['fillWatermark', 'showIntro', 'buildChat', 'buildAgent', 'buildDecisions', 'buildChecks', 'buildVerifier', 'goTo'].forEach(name => { globalThis[name] = () => {}; });`, context);
   context.window.PipelockLive.start = () => context.window.liveTest.reset();
@@ -65,7 +66,7 @@ function harness(mode = 'replay') {
   const verifyStaticBundle = context.window.pipelockVerifyStaticBundle;
   setResult(valid);
   const run = () => mode === 'live' ? context.window.liveTest.run() : vm.runInContext('runReplayBrowserVerify()', context);
-  return { node, context, run, setResult, valid, verifyStaticBundle, timers, flushTimers() { for (const [id, fn] of timers) { timers.delete(id); fn(); } } };
+  return { node, context, run, buildVerifier, setResult, valid, verifyStaticBundle, timers, flushTimers() { for (const [id, fn] of timers) { timers.delete(id); fn(); } } };
 }
 
 function noSuccess(h) {
@@ -231,14 +232,50 @@ test('probe: a healthy live API enables the Live tab', async () => {
   assert.equal(soon.hidden, true);
 });
 
-// The live and replay views each show the published key fingerprint visitors
-// compare against; a drift between the two copies would show two different keys.
-test('both views display the same published key fingerprint', () => {
-  const live = source('viewer-live.js').match(/const PUBLISHED_KEY_FP = "([^"]+)";/);
-  const replay = source('viewer.js').match(/var REPLAY_PUBLISHED_KEY_FP = "([^"]+)";/);
-  assert.ok(live && replay, 'both fingerprint constants must be present');
-  assert.match(live[1], /^[0-9a-f]{8}…[0-9a-f]{8}$/);
-  assert.equal(replay[1], live[1]);
+// The public manual verification command owns the full signing key. Compare
+// actual viewer text and downloadable launchers with that value, not JS constants.
+test('displayed fingerprints and all kit launchers match the published signing key', async () => {
+  const template = readFileSync('themes/pipelab/layouts/playground/list.html', 'utf8');
+  const keys = [...template.matchAll(/--key ([0-9a-f]{64})(?=\s|<)/g)];
+  assert.equal(keys.length, 1, 'one public signing-key source in the manual command');
+  const key = keys[0][1];
+  const fingerprint = key.slice(0, 8) + '…' + key.slice(-8);
+  const displayed = template.match(/published key <b>([^<]+)<\/b>/);
+  assert.ok(displayed, 'template must display its signing-key fingerprint');
+  assert.equal(displayed[1].replace('...', '…'), 'ed25519:' + fingerprint);
+
+  const replay = harness('replay');
+  replay.buildVerifier();
+  assert.equal(replay.node('fp').textContent, 'ed25519:' + fingerprint);
+  const foot = (node) => node.children.find(child => child.className === 'vd-foot')?.children[0]?.textContent;
+  await replay.run();
+  assert.equal(foot(replay.node('replayBrowserVerifyResult')), 'published key ' + fingerprint);
+
+  const live = harness('live');
+  let checkingText;
+  live.context.window.pipelockVerifyBundle = () => {
+    checkingText = live.node('browserVerifyResult').textContent;
+    return live.valid;
+  };
+  await live.run();
+  assert.equal(checkingText, 'Checking signatures against the published key ' + fingerprint + '…');
+  assert.equal(foot(live.node('browserVerifyResult')), 'published key ' + fingerprint);
+
+  // Python's ZIP reader checks the shipped archives without executing any kit
+  // binary or introducing a second ZIP parser into the site test suite.
+  for (const [os, launcher] of [['linux', 'verify.sh'], ['macos', 'Verify.command'], ['windows', 'Verify.bat']]) {
+    const archive = `static/playground/demo/kits/pipelock-verify-${os}.zip`;
+    const prefix = `pipelock-live-verify-${os}/`;
+    const files = JSON.parse(execFileSync('python3', ['-c',
+      'import json,sys,zipfile\nwith zipfile.ZipFile(sys.argv[1]) as z:\n print(json.dumps([z.read(p).decode("utf-8") for p in sys.argv[2:]]))',
+      archive, prefix + launcher, prefix + 'app/run/verifier.txt',
+    ], { encoding: 'utf8', timeout: 10_000 }));
+    for (const [index, text] of files.entries()) {
+      const embedded = [...text.matchAll(/(?:--orchestrator-key|trust_root:) ([^\s]+)/g)];
+      assert.ok(embedded.length > 0, `${os} ${index === 0 ? launcher : 'verifier.txt'} must embed the published key`);
+      for (const match of embedded) assert.equal(match[1], key, `${os} ${launcher} published key`);
+    }
+  }
 });
 
 test('live: broker session text cannot claim browser verification', async () => {

@@ -92,6 +92,14 @@ Pipelock runs scanning checks in a deliberate order. Domain blocklist and DLP sc
 
 The URL pipeline first rejects an oversized URL before parsing it. After parsing and hostname canonicalization, it checks: scheme (HTTP and HTTPS only), CRLF injection, path traversal, strict-mode allowlist, domain blocklist, the core SSRF literal-IP floor, SigV4 presigned-URL handling, the core DLP floor, configured DLP, path entropy, subdomain entropy, DNS-based SSRF and rebinding, rate limiting, aggregate data budget, and the final context check. Core and configured DLP run before DNS resolution so attacker-controlled hostnames cannot leak a secret through the lookup itself. Each layer can produce a block, redirect, warn, ask, strip, forward, or allow verdict.
 
+### Browser Shield
+
+Browser Shield is opt-in and sanitizes supported HTML and SVG markup. Existing inline scripts and standalone JavaScript responses keep their original bytes; response scanning follows its own configured policy. SVG delivery requires complete-body structural validation and is refused when Shield cannot validate it. The default oversize action, scan_head, rewrites only a prefix and records partial coverage; the remainder is unshielded. Guide: https://pipelab.org/learn/browser-shield/. Release contract: https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/configuration.md#browser-shield.
+
+### Filesystem Sentinel
+
+Filesystem Sentinel watches configured directories for secrets written to disk. It detects writes after they happen. The default action warns. In subprocess MCP mode, block can terminate the child after an agent-attributed DLP finding; skipped or unreadable files do not create findings. Release contract: https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/guides/filesystem-sentinel.md.
+
 ### Fail-closed defaults
 
 Pipelock blocks traffic when in doubt. Parse errors, scanner timeouts, non-terminal HITL prompts (where the human-in-the-loop neither approves nor denies before the timeout), and context cancellation all default to block rather than allow. The configuration field `enforce` is a boolean that defaults to true; false turns ordinary blocks into warnings, but it is not an observe-only switch: header hard-blocks, unanswerable approval prompts and adaptive-enforcement escalations can still block. The separate `mode` setting accepts `strict`, `balanced` or `audit`. Production deployments are expected to leave `enforce` on.
@@ -195,6 +203,14 @@ docker pull ghcr.io/luckypipewrench/pipelock:latest
 
 The container registry tags published images by version. Pin to a specific tag in production. The latest stable release tag is published at https://github.com/pipelab-org/pipelock/releases.
 
+### Helm chart (OCI)
+
+```
+helm install pipelock oci://ghcr.io/luckypipewrench/charts/pipelock --version 3.7.1
+```
+
+The tagged chart documentation is https://github.com/pipelab-org/pipelock/blob/v3.7.1/charts/pipelock/README.md.
+
 ### Homebrew
 
 ```
@@ -247,7 +263,11 @@ Both Pipelock Assess tiers produce an Ed25519-signed manifest by default at fina
 
 ### Compliance mapping
 
-Pipelock detection categories map to several public frameworks. The mapping is published in the project repository and updated each release. Frameworks covered include OWASP MCP Top 10, OWASP Agentic AI Top 10, OWASP LLM Top 10, MITRE ATLAS, NIST AI RMF, NIST 800-53, EU AI Act Article 26 deployer obligations, and SOC 2 Trust Services Criteria.
+Pipelock Assess v3.7.1 report mappings cover OWASP MCP Top 10, OWASP Agentic Top 10, MITRE ATLAS, EU AI Act, NIST AI RMF, HIPAA Security Rule, and SOC 2 Trust Services Criteria. These static product mappings describe controls and limits; they are not compliance certification.
+
+Separate published documentation mappings at v3.7.1 cover [OWASP LLM Top 10](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/owasp-llm-top10-mapping.md), [OWASP Agentic AI Threats and Mitigations](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/owasp-agentic-top15-mapping.md) (T1-T15), and [NIST 800-53](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/compliance/nist-800-53.md). These are not Assess report frameworks.
+
+The [Agentic Top 10 documentation](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/owasp-mapping.md) rates ASI10 Strong, while the [Assess source](https://github.com/pipelab-org/pipelock/blob/v3.7.1/internal/report/compliance/owasp_agentic.go) marks it Not covered. The [assess-mapping document](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/compliance/assess-mapping.md) lists HIPAA Transmission Security and ePHI Disclosure Prevention Covered, while the [source](https://github.com/pipelab-org/pipelock/blob/v3.7.1/internal/report/compliance/hipaa.go) marks both Partial; the site follows the source statuses.
 
 ## Comparison context
 

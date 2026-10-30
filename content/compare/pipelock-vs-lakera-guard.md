@@ -57,14 +57,14 @@ Pipelock inspects traffic the agent routes through it. Lakera classifies content
 | **WebSocket frame scanning** | Mediated WebSocket frames | Not a proxy; screens content the application submits |
 | **MCP awareness** | Mediated tool descriptions, arguments, and responses | Screens submitted tool calls and separately submitted tool definitions; drift detection not documented |
 | **Credential scanning (DLP)** | 65 built-in patterns with encoding normalization on routed traffic | Data-leakage classification on submitted content |
-| **Prompt injection detection** | Deterministic patterns with multi-pass normalization | Model-based classifier |
+| **Response scanning** | {{< stat key="response_patterns" >}} built-in response-scanning patterns with multi-pass normalization on mediated responses | Model-based classifier for submitted content |
 | **Tool poisoning and rug-pull detection** | Mediated tool-description scanning and drift detection | Tool-definition screening is documented; drift detection is not documented |
 | **SSRF and private-IP blocking** | Mediated destination checks before DNS resolution | Not documented |
 | **Latency claim** | Scan latency around a millisecond on the mediated path | "Delivering sub-50 ms runtime latency", per the product page |
 | **Integration call** | None; the agent's proxy setting or host containment routes traffic through it | One POST to `/v2/guard` per interaction, returning a `flagged` boolean and an optional per-guardrail breakdown |
 | **Observe-only mode** | Audit mode and per-scanner warn actions | Detect mode per project, which forces `flagged` to false while logging |
 | **Per-decision evidence** | Signed receipts when configured, plus a hash-chained flight recorder; verifiable offline | Verdict in the API response; the application logs it; a results endpoint for historical analysis |
-| **Compliance mappings** | OWASP MCP Top 10, OWASP Agentic Top 15, OWASP LLM Top 10, NIST 800-53, EU AI Act | Framework coverage page in the docs |
+| **Compliance mappings** | Assess report: [OWASP MCP Top 10](/learn/owasp-mcp-top10/), [OWASP Agentic Top 10](/learn/owasp-agentic-top10/), [MITRE ATLAS](/learn/mitre-atlas/), [EU AI Act](/learn/eu-ai-act-compliance/), [NIST AI RMF](/learn/nist-ai-rmf/), [HIPAA Security Rule](/learn/hipaa-security-rule/), [SOC 2](/learn/soc2-trust-services-criteria/); published documentation mappings: [OWASP Agentic AI Threats and Mitigations](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/owasp-agentic-top15-mapping.md), [OWASP LLM Top 10](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/owasp-llm-top10-mapping.md), [NIST 800-53](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/compliance/nist-800-53.md) | Framework coverage page in the docs |
 | **Process sandbox** | Landlock, seccomp, and network namespaces on Linux | No |
 | **Source availability** | Apache-2.0 core; Enterprise under ELv2 | Closed source |
 | **Self-hosted** | Yes, standard deployment | Enterprise license required |

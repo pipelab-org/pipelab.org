@@ -112,7 +112,7 @@ Each layer fails differently. A Cloudflare-only deployment built around host con
 | TLS interception | Yes (per-instance CA) | Yes | Yes | Yes |
 | Credential injection / secret rewriting | Yes | Yes | No | Yes (Cloudflare layer) |
 | Credential DLP scanning | Not documented as built-in | Not documented | Yes (65 patterns) | Yes (Pipelock layer) |
-| Prompt injection detection | Not documented as built-in | Not documented | Yes (34 patterns, 6-pass) | Yes (Pipelock layer) |
+| Prompt injection detection | Not documented as built-in | Not documented | Yes ({{< stat key="response_patterns" >}} patterns, 6-pass) | Yes (Pipelock layer) |
 | MCP tool poisoning / rug-pull | Not documented as built-in | Not documented | Yes | Yes (Pipelock layer) |
 | SSRF / private IP protections | Custom via outbound handlers | Not documented | Yes (DNS-level) | Yes (both layers) |
 | Tamper-evident audit | Not documented | Not documented | Yes (flight recorder) | Yes (Pipelock layer) |

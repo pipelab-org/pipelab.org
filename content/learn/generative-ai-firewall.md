@@ -116,7 +116,7 @@ The architecture is capability separation. The agent has API keys and shell acce
 
 Scanning covers:
 
-- **Prompt injection** in HTTP response bodies, MCP tool responses, and tool descriptions. 34 injection patterns plus the 6-pass normalization pipeline.
+- **Prompt injection** in HTTP response bodies, MCP tool responses, and tool descriptions. {{< stat key="response_patterns" >}} injection patterns plus the 6-pass normalization pipeline.
 - **Secret exfiltration** in request URLs, headers, and bodies. 65 DLP patterns covering major cloud providers, payment rails, messaging platforms, and observability vendors.
 - **SSRF and DNS rebinding** in outbound destinations (IMDS protection, private CIDRs, metadata endpoints).
 - **MCP tool poisoning and rug-pulls** through baseline tool inventories per session.

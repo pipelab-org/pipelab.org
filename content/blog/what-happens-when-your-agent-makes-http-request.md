@@ -9,6 +9,8 @@ tags: ["ai-security", "pipelock", "mcp", "agent-security"]
 blog_cat: "technical"
 ---
 
+> Installation note (2026-10-29): The install commands below are from when this post was written. Current install methods for every platform are in the [installation guide](/install/). The original post follows unchanged.
+
 You gave your AI agent access to your codebase, your terminal, and probably a few API keys. It works. It ships features, writes tests, deploys infrastructure. And every time it does something useful, it makes HTTP requests you never look at.
 
 That's the part nobody's thinking about.

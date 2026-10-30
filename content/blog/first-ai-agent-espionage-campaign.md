@@ -9,6 +9,8 @@ tags: ["ai-security", "prompt-injection", "agent-firewall"]
 blog_cat: "industry"
 ---
 
+> Installation note (2026-10-29): The install commands below are from when this post was written. Current install methods for every platform are in the [installation guide](/install/). The original post follows unchanged.
+
 *The first AI agent espionage campaign is here. The attack you've been warned about finally happened.*
 
 ---

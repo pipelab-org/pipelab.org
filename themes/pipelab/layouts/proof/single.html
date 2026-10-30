@@ -173,18 +173,14 @@
       <div class="fx-exhibit-claims">
       <ul class="proof-claim-list">
         <li><strong>{{ $stats.compliance_frameworks }} compliance frameworks</strong> mapped:
-          {{/* Chips with a shipped guide link to it. The three without one stay
-               unlinked on purpose: a chip pointing at nothing is worse than no
-               link, and their missing public mappings are tracked for the
-               compliance-content audit. */}}
           <span class="proof-chip-row" role="list">
             <a class="proof-chip" role="listitem" href="/learn/owasp-mcp-top10/">OWASP MCP Top&nbsp;10</a>
             <a class="proof-chip" role="listitem" href="/learn/owasp-agentic-top10/">Agentic Top&nbsp;10</a>
-            <span class="proof-chip" role="listitem">MITRE ATLAS</span>
+            <a class="proof-chip" role="listitem" href="/learn/mitre-atlas/">MITRE ATLAS</a>
             <a class="proof-chip" role="listitem" href="/learn/eu-ai-act-compliance/">EU AI&nbsp;Act</a>
-            <span class="proof-chip" role="listitem">NIST AI&nbsp;RMF</span>
-            <span class="proof-chip" role="listitem">HIPAA</span>
-            <a class="proof-chip" role="listitem" href="/learn/ai-agent-compliance/#framework-mappings">SOC&nbsp;2</a>
+            <a class="proof-chip" role="listitem" href="/learn/nist-ai-rmf/">NIST AI&nbsp;RMF</a>
+            <a class="proof-chip" role="listitem" href="/learn/hipaa-security-rule/">HIPAA</a>
+            <a class="proof-chip" role="listitem" href="/learn/soc2-trust-services-criteria/">SOC&nbsp;2</a>
           </span>
         </li>
         <li><strong>Ed25519-signed bundles</strong> are tamper-evident. Demo bundles verify against the Pipelock demo key; customer bundles verify against the deployment's pinned key.</li>

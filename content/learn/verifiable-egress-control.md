@@ -89,8 +89,8 @@ local anchor backend is not operator-independent.
   in the [control-layer map](/learn/agent-security-control-layers/) is
   one of four lanes. Each lane covers a different threat class.
 - **Not a replacement for compliance certification.** Verifiable egress
-  control maps to specific evidence requirements in SOC 2, HIPAA, and
-  PCI engagements. It does not certify a control environment. A
+  control supplies evidence for the [published SOC 2](/learn/soc2-trust-services-criteria/)
+  and [HIPAA mappings](/learn/hipaa-security-rule/). It does not certify a control environment. A
   vendor with this control still needs a compliance program.
 - **Not vendor-locked.** Format, schema, conformance corpus, and five
   verifier surfaces are public. Other vendors can emit and

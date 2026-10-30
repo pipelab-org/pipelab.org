@@ -166,8 +166,7 @@ Pipelock receipts are not a compliance certificate. They are an evidence substra
 
 - EU AI Act Article 12 automatic event recording capability and Article 26(5) deployer monitoring.
 - NIST AI RMF MEASURE and MANAGE functions (control evidence and post-action review).
-- DORA Article 17 ICT-related incident-management evidence trails for financial entities deploying AI agents.
-- SOC 2 CC7 System Operations and CC8 Change Management evidence at the agent-decision level.
+- SOC 2 Processing Integrity, where the shipped mapping names recorded evidence, attestation, and signing.
 - Internal incident response: "what did the agent attempt at 02:11 UTC last Tuesday."
 
 **Receipts do not replace:**
@@ -176,7 +175,7 @@ Pipelock receipts are not a compliance certificate. They are an evidence substra
 - Article 9 risk management process or Article 14 organizational human oversight design.
 - Penetration testing, threat modeling, or governance programs.
 
-The [AI agent regulatory controls hub](/learn/ai-agent-regulatory-controls/) maps the receipt artifact across every framework Pipelock supports.
+The [AI agent regulatory controls hub](/learn/ai-agent-regulatory-controls/) separates shipped Assess mappings from regulatory background.
 
 ## Where these receipts come from in production
 

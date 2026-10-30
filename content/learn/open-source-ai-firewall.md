@@ -95,7 +95,7 @@ Seven open source projects address AI agent security. They solve different probl
 
 | Tool | Layer | Language | Content Scanning | MCP Support | Deployment |
 |------|-------|----------|-----------------|-------------|------------|
-| [Pipelock](/pipelock/) | Network proxy | Go | DLP (65 patterns), injection (34 patterns), SSRF, encoding evasion (6-pass normalization) | Bidirectional (stdio, HTTP, WebSocket) with tool poisoning + rug-pull detection | Single binary, Docker, K8s companion proxy |
+| [Pipelock](/pipelock/) | Network proxy | Go | DLP (65 patterns), response scanning ({{< stat key="response_patterns" >}} patterns), SSRF, encoding evasion (6-pass normalization) | Bidirectional (stdio, HTTP, WebSocket) with tool poisoning + rug-pull detection | Single binary, Docker, K8s companion proxy |
 | [LlamaFirewall](https://github.com/meta-llama/PurpleLlama/tree/main/LlamaFirewall) | Inference | Python | PromptGuard classifier, AlignmentCheck, CodeShield | Not documented in public docs | Python library |
 | [NeMo Guardrails](https://github.com/NVIDIA-NeMo/Guardrails) | Inference | Python | Colang-based dialog policy, topical control | Not documented in public docs | Python library |
 | [Trylon Gateway](https://github.com/trylonai/gateway) | Gateway | Python | Self-hosted firewall for LLM apps | Gateway routing | Container |

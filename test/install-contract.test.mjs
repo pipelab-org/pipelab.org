@@ -3,8 +3,9 @@ import assert from "node:assert/strict";
 import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { stringify } from "yaml";
-import { auditInstallContract, auditInstallData, auditRawInstallSource, installationCorrection } from "../scripts/install-contract.mjs";
+import { spawnSync } from "node:child_process";
+import { parse, stringify } from "yaml";
+import { auditInstallContract, auditInstallData, auditRawInstallSource, helmTemplate, installationCorrection } from "../scripts/install-contract.mjs";
 
 // Operator instructions from the release README, independently expressed here.
 const clone = "git clone --branch v3.7.0 --depth 1 https://github.com/pipelab-org/pipelock.git";
@@ -15,6 +16,7 @@ const raw = `## Installation\n### Source\n\`\`\`bash\n${clone}\n${build}\n\`\`\`
 const data = () => ({ methods: [
   { id: "go", label: "Source (Go)", note: "Requires Go 1.26+, Git, and Make. Community build only.", command: `${clone.replace("3.7.0", "VERSION")}\n${build}` },
   { id: "docker", command: "docker pull ghcr.io/luckypipewrench/pipelock:VERSION" },
+  { id: "helm", command: "helm install pipelock oci://ghcr.io/luckypipewrench/charts/pipelock --version VERSION" },
   { id: "homebrew", command: brew },
 ] });
 
@@ -38,6 +40,9 @@ for (const [name, mutate] of [
   ["duplicate method", value => { value.methods.push(value.methods[0]); }],
   ["Homebrew first", value => { value.methods.reverse(); }],
   ["missing build prerequisites", value => { delete value.methods[0].note; }],
+  ["missing Helm", value => { value.methods.splice(2, 1); }],
+  ["unpinned Helm", value => { value.methods[2].command = value.methods[2].command.replace("VERSION", "latest"); }],
+  ["wrong Helm registry", value => { value.methods[2].command = value.methods[2].command.replace("luckypipewrench", "pipelab-org"); }],
   ["unpinned Docker", value => { value.methods[1].command = value.methods[1].command.replace("VERSION", "latest"); }],
 ]) {
   test(`shared source rejects ${name}`, () => {
@@ -476,4 +481,36 @@ test("an HTML block of type 7 may follow any block that leaves no paragraph open
     writeFileSync(f.guide, `---\ntitle: Current\n---\n${before}\n<custom-tag>\n${unpinned}\n---\nmake install\n`);
     assert.deepEqual(f.audit(), [], JSON.stringify(before));
   }
+});
+
+// v3.7.1 README.md, Helm chart installation. Each publishing surface consumes
+// the shared command; machine-readable raw text must carry the same version.
+test("Helm OCI commands reach product, install, enterprise and raw context", () => {
+  const read = file => readFileSync(new URL(`../${file}`, import.meta.url), "utf8");
+  assert.match(read("content/pipelock.md"), /install-cmd helm/);
+  assert.match(read("content/enterprise.md"), /install-block "helm"/);
+  assert.match(read("themes/pipelab/layouts/_default/install.html"), /range \$i, \$m := \$methods/);
+  const version = /^pipelock_version = "([^"]+)"$/m.exec(read("hugo.toml"))[1];
+  assert.ok(read("static/llms-full.txt").includes(helmTemplate.replace("VERSION", version)));
+  const current = `## Helm\n${helmTemplate.replace("VERSION", version)}\n`;
+  assert.deepEqual(auditRawInstallSource(current, version), []);
+  assert.match(auditRawInstallSource(current.replace(version, "latest"), version).join("\n"), /Helm OCI install/);
+});
+
+test("the --version footer shows only for methods that install a local binary", (t) => {
+  const fixture = mkdtempSync(path.join(tmpdir(), "install-local-"));
+  t.after(() => rmSync(fixture, { recursive: true, force: true }));
+  for (const dir of ["content", "data", "layouts/_default", "layouts/partials/install"]) mkdirSync(path.join(fixture, dir), { recursive: true });
+  writeFileSync(path.join(fixture, "hugo.toml"), 'baseURL = "https://example.org/"\n[params]\npipelock_version = "3.7.1"\n');
+  writeFileSync(path.join(fixture, "content/flags.md"), "---\ntitle: Flags\n---\n");
+  writeFileSync(path.join(fixture, "layouts/_default/single.html"), '{{ range partial "install/methods.html" (dict) }}{{ .id }}={{ .local_binary }};{{ end }}');
+  writeFileSync(path.join(fixture, "data/install.yaml"), readFileSync("data/install.yaml", "utf8"));
+  writeFileSync(path.join(fixture, "layouts/partials/install/methods.html"), readFileSync("themes/pipelab/layouts/partials/install/methods.html", "utf8"));
+  const build = spawnSync(process.env.HUGO_BIN || "hugo", ["--source", fixture, "--quiet"], { encoding: "utf8" });
+  assert.equal(build.status, 0, build.stdout + build.stderr);
+  const flags = Object.fromEntries(readFileSync(path.join(fixture, "public/flags/index.html"), "utf8").trim().split(";").filter(Boolean).map(pair => pair.split("=")));
+  assert.deepEqual(flags, { go: "true", docker: "false", helm: "false", homebrew: "true" });
+  const template = readFileSync("themes/pipelab/layouts/_default/install.html", "utf8");
+  assert.match(template, /data-inst-local="\{\{ \$m\.local_binary \}\}"/);
+  assert.match(template, /footEl\.hidden = !isBinary && tab\.getAttribute\('data-inst-local'\) === 'false'/);
 });

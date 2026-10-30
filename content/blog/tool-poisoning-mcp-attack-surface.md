@@ -9,6 +9,8 @@ tags: ["ai-security", "pipelock"]
 blog_cat: "mcp"
 ---
 
+> Installation note (2026-10-29): The install commands below are from when this post was written. Current install methods for every platform are in the [installation guide](/install/). The original post follows unchanged.
+
 MCP tool poisoning starts with a simple fact: tool descriptions are text. When your agent calls `tools/list`, the server returns JSON with a `description` field for each tool. That text goes directly into the LLM's context window. The model reads it, reasons about it, and follows instructions it finds there.
 
 A malicious MCP server puts instructions in descriptions. Your agent follows them. No prompt injection in fetched content needed. The tool definition itself is the attack surface.

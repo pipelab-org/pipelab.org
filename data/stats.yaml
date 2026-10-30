@@ -11,7 +11,13 @@ product_verified_date: "2026-10-14"
 dlp_patterns: 65
 simulate_scenarios: 30
 presets: 7
+# Defaults().ResponseScanning.Patterns at v3.7.1, not a count of all possible
+# prompt injections. Count the named entries in internal/config/defaults.go
+# lines 420-478 (the same slice counted by internal/config/stats_test.go).
 response_patterns: 34
+response_patterns_source_tag: "v3.7.1"
+response_patterns_source_commit: "d6bb0003c1dac00d3b2df8dd1eb1a51ed8cecd6a"
+response_patterns_source_path: "internal/config/defaults.go"
 # Published GitHub releases observed on 2026-10-16, including v3.7.0.
 releases: 51
 # Committed Agent Egress Bench snapshot. Deliberately updated by PR, never by a

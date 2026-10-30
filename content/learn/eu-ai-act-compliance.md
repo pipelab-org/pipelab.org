@@ -2,7 +2,7 @@
 title: "EU AI Act Compliance: Article 26 Deployer Obligations and 6-Month Log Retention"
 linkTitle: "EU AI Act Compliance"
 seoTitle: "EU AI Act Article 26(6): 6-Month Log Retention"
-subtitle: "Article 26 deployer duties including the 6-month log retention floor, plus runtime controls for Articles 9, 14, and 15. Regulation (EU) 2026/1744 defers stand-alone Annex III high-risk obligations to 2 December 2027."
+subtitle: "Article 26 deployer duties including the 6-month log retention floor, plus shipped Assess mappings for Articles 12, 13, 14, and 26. Regulation (EU) 2026/1744 defers stand-alone Annex III high-risk obligations to 2 December 2027."
 description: "EU AI Act Article 26(6): deployers of high-risk AI must keep automatically generated logs for at least six months. Who keeps them and how agents comply."
 date: 2026-03-07
 lastmod: 2026-08-24
@@ -10,7 +10,7 @@ faq:
   - q: "Does the EU AI Act apply to AI coding agents?"
     a: "AI coding agents are not explicitly listed in Annex III of the EU AI Act. However, agents writing software for medical devices, critical infrastructure, or employment systems may be classified as safety components of high-risk systems. Organizations in regulated sectors often choose to comply with Articles 9, 12-15 as a risk management best practice, regardless of formal classification."
   - q: "What EU AI Act articles does Pipelock help with?"
-    a: "Pipelock maps to six articles: Article 9 (risk management via fixed-order scanning and capability separation), Article 12 (record-keeping via structured audit logs and Prometheus metrics), Article 13 (transparency via documented capabilities and limitations), Article 14 (human oversight via HITL terminal approval and kill switch), Article 15 (cybersecurity via DLP scanning, SSRF protection, and fail-closed architecture), and Article 26 (deployer monitoring via health endpoints and structured logs)."
+    a: "Assess v3.7.1 maps four articles: Article 12 (record-keeping), Article 13 (transparency, partial), Article 14 (human oversight), and Article 26 (deployer monitoring). Articles 9 and 15 are not included in that shipped catalog."
   - q: "When do EU AI Act high-risk obligations apply?"
     a: "Regulation (EU) 2026/1744, the Digital Omnibus on AI, amends the AI Act, Regulation (EU) 2024/1689. It was published in the Official Journal on 24 July 2026 and entered into force on 27 July 2026. It defers stand-alone Annex III high-risk obligations to 2 December 2027 and Annex I embedded-in-product safety-component obligations to 2 August 2028. The European Parliament endorsed the amendment on 16 June 2026 and the Council gave final approval on 29 June 2026."
   - q: "Is Pipelock a complete EU AI Act compliance solution?"
@@ -39,23 +39,13 @@ Article 12 is the provider-side record-keeping design duty: a high-risk AI syste
 
 Pipelock generates runtime evidence for those duties. The deployer still owns retention policy, review workflow, incident sign-off, and legal sufficiency.
 
-| Duty | Who owns it | Minimum retention | Where Pipelock fits |
-|---|---|---|---|
-| Article 12: automatic event logging | Provider (design-time) | Capability must exist | Pipelock emits structured JSON event logs for every request, decision, and scanner verdict; capability is built in. |
-| Article 26(6): keep the logs | Deployer (runtime) | At least 6 months | Pipelock's flight recorder writes to disk; signed receipts add hash chaining and Ed25519 signatures when receipt signing is enabled. Ship logs to S3, GCS, SIEM, or any retention-controlled store. |
-| Article 19: provider log retention | Provider (post-market) | At least 6 months where logs are under provider control | Same pipeline; the provider's retention store is separate from the deployer's. |
-| Article 26(5): monitoring + reporting risks and incidents | Deployer (runtime) | Continuous | Pipelock health endpoint, kill switch, structured logs surface incident triggers in real time. |
-| Sector law and data protection overrides | Deployer (runtime) | Longer or otherwise adjusted when applicable | Same pipeline; configure retention to match the longest applicable rule. |
-
-Below: how each runtime article (9, 12, 14, 15, 26) maps to specific Pipelock controls, with audit-log shapes, configuration examples, and the current high-risk timeline. Regulation (EU) 2026/1744, the Digital Omnibus on AI, amends Regulation (EU) 2024/1689. It was published in the Official Journal on 24 July 2026 and entered into force on 27 July 2026. It defers stand-alone Annex III high-risk obligations to 2 December 2027 and Annex I embedded-in-product safety-component obligations to 2 August 2028.
+Below are the shipped Assess mappings for Articles 12, 13, 14, and 26, followed by deployer obligations and the current high-risk timeline. Regulation (EU) 2026/1744, the Digital Omnibus on AI, amends Regulation (EU) 2024/1689. It was published in the Official Journal on 24 July 2026 and entered into force on 27 July 2026. It defers stand-alone Annex III high-risk obligations to 2 December 2027 and Annex I embedded-in-product safety-component obligations to 2 August 2028.
 
 ## Background
 
-Regulation (EU) 2026/1744, the Digital Omnibus on AI, is the first major amendment to the AI Act, Regulation (EU) 2024/1689. The European Parliament endorsed it on 16 June 2026 and the Council gave final approval on 29 June 2026. It was published in the Official Journal on 24 July 2026 and entered into force on 27 July 2026. The amendment defers stand-alone Annex III high-risk obligations to 2 December 2027 and Annex I embedded-in-product safety-component obligations to 2 August 2028. Article 26 sets twelve paragraphs of deployer duty. This page covers the runtime-facing ones (paragraphs 1, 2, 4, 5, 6) and links them to specific Pipelock controls.
+Regulation (EU) 2026/1744, the Digital Omnibus on AI, is the first major amendment to the AI Act, Regulation (EU) 2024/1689. The European Parliament endorsed it on 16 June 2026 and the Council gave final approval on 29 June 2026. It was published in the Official Journal on 24 July 2026 and entered into force on 27 July 2026. The amendment defers stand-alone Annex III high-risk obligations to 2 December 2027 and Annex I embedded-in-product safety-component obligations to 2 August 2028. Article 26 sets twelve paragraphs of deployer duty. This page summarizes the runtime-facing ones (paragraphs 1, 2, 4, 5, 6). The shipped catalog maps Article 26 as a whole.
 
-Most compliance tools focus on model governance (training data, bias, documentation). None of them cover what happens when your AI agent makes HTTP requests, calls MCP tools, or tries to exfiltrate secrets at runtime.
-
-Pipelock fills that gap. It sits between your AI agent and the network. MCP proxy mode scans tool arguments and responses bidirectionally. Fetch proxy mode scans fetched response content and URL parameters. Forward proxy mode (CONNECT) filters by hostname, with optional TLS interception for full body inspection. The controls it enforces map directly to EU AI Act articles.
+Pipelock sits between your AI agent and the network. MCP proxy mode scans tool arguments and responses bidirectionally. Fetch proxy mode scans fetched response content and URL parameters. Forward proxy mode (CONNECT) filters by hostname, with optional TLS interception for full body inspection. The shipped Assess mappings below identify the controls and evidence it contributes.
 
 ## What Gets Enforced (current text)
 
@@ -69,75 +59,16 @@ Pipelock fills that gap. It sits between your AI agent and the network. MCP prox
 
 Industry estimates put conformity assessment at 8-14 months. If you haven't started planning, now is the time.
 
-## How Pipelock Maps to Each Article
+## Shipped Assess article mappings {#how-pipelock-maps-to-each-article}
 
-### Article 9: Risk Management
+Assess v3.7.1 includes the four entries below. Covered is the catalog status for a product contribution; it does not establish legal compliance. Articles 9 and 15 are not catalog entries.
 
-Article 9 requires identifying, analyzing, and mitigating risks through design and continuous monitoring.
-
-Pipelock's architecture is the mitigation: **capability separation**. The agent holds secrets but has no network access. The proxy has network access but no secrets. This eliminates network-based credential exfiltration by design, not by policy.
-
-On top of that, the fixed-order scanner pipeline classifies risks at runtime:
-
-| Scanner Layer | Risk Category |
-|--------------|---------------|
-| Domain blocklist | Known malicious destinations |
-| DLP (65 credential patterns) | Secret exfiltration |
-| SSRF protection | Internal infrastructure probing |
-| Rate limiting | Abuse and resource exhaustion |
-| Entropy analysis | Encoded or obfuscated data exfiltration |
-| MCP scanning | Tool poisoning and injection |
-
-Every scan decision is logged. Every threshold is configurable. Hot-reload (fsnotify + SIGHUP) lets you update policies without restarting.
-
-### Article 12: Record-Keeping
-
-Article 12 requires automatic event logging that identifies risk situations and supports post-market monitoring.
-
-Pipelock logs every request as structured JSON. Event shapes vary by type:
-
-```json
-{
-  "event": "blocked",
-  "method": "GET",
-  "url": "https://api.example.com/data",
-  "scanner": "dlp",
-  "reason": "dlp_aws_access_key",
-  "client_ip": "127.0.0.1",
-  "request_id": "abc123"
-}
-```
-
-Blocked events include scanner and reason. Allowed events add status code, size, and duration. Forward logs to your SIEM via webhook or syslog (both built in). Prometheus metrics (`/metrics`) and a ready-to-import Grafana dashboard provide real-time monitoring.
-
-In multi-agent deployments, run separate pipelock instances per agent with distinct log files for per-agent traceability.
-
-### Article 14: Human Oversight
-
-Article 14 requires the ability to understand system operation, detect anomalies, override outputs, and intervene with a "stop button."
-
-Pipelock provides four mechanisms:
-
-1. **HITL approval** (`action: ask`): flagged requests pause the agent and present a terminal prompt. The operator approves, denies, or strips sensitive content. Timeout defaults to deny (fail-closed).
-
-2. **Kill switch**: six independent activation sources. Any one active blocks all traffic. The API runs on a dedicated port so agents cannot self-deactivate.
-
-3. **Config modes**: `audit` (log only), `balanced` (default), `strict` (aggressive blocking). Map directly to different risk tolerances per Art. 14(3).
-
-4. **Prometheus + Grafana**: real-time visibility into what agents are doing, which requests are blocked, and why.
-
-### Article 15: Cybersecurity and Resilience
-
-Article 15 requires protection against unauthorized alteration, adversarial attacks, confidentiality breaches, and fail-safe behavior.
-
-| Art. 15 Requirement | Pipelock Control |
-|---------------------|-----------------|
-| Adversarial examples (Art. 15(5)) | Content scanning with NFKC normalization, zero-width stripping, case-insensitive matching |
-| Confidentiality attacks (Art. 15(5)) | DLP scanning (65 credential patterns), env leak detection (raw + base64 + hex), entropy analysis |
-| Data poisoning (Art. 15(5)) | File integrity monitoring (SHA256 manifests), Ed25519 signing, response injection scanning |
-| Unauthorized alteration (Art. 15(5)) | Capability separation prevents agent manipulation into exfiltrating data |
-| Fail-safe mechanisms (Art. 15(4)) | Fail-closed architecture: scan error, HITL timeout, parse failure, DNS error all default to block |
-| Resilience to faults (Art. 15(4)) | DNS rebinding protection, IPv4-mapped IPv6 normalization, TLS interception with cert cache |
+| ID | Article | Status | Pipelock mapping | Limit |
+|---|---|---|---|---|
+| A12 | Article 12 - Record-Keeping | Covered | Replayable records and signed manifests support record-keeping. |  |
+| A13 | Article 13 - Transparency and Instructions | Partial | Reports and badges surface operational posture, but user instructions are deployment-specific. | Provider-facing documentation is only partly represented in the binary. |
+| A14 | Article 14 - Human Oversight | Covered | Human-in-the-loop approvals and dry-run testing support oversight. |  |
+| A26 | Article 26 - Deployer Monitoring | Covered | Assess outputs and recorded telemetry support deployer monitoring obligations. |  |
 
 ### Article 26: Deployer Obligations and 6-Month Log Retention
 
@@ -159,11 +90,7 @@ Article 26 sets out the deployer's runtime duties for high-risk AI systems. This
 
 Pipelock provides the evidence source, not the compliance program. It records runtime decisions, emits metrics, and can sign receipt chains when a signing key is configured. The deployer decides where logs live, how long they stay, who reviews them, and who signs off.
 
-| Deployer duty | Pipelock contribution | Deployer still owns |
-|---|---|---|
-| Art. 26(5) monitoring | Prometheus metrics at `/metrics`, `/health` and `/ready` endpoints, structured JSON audit log for every request, hardcoded event severity taxonomy, configurable `min_severity` emission threshold, webhook + syslog sinks to SIEM | Choosing which events meet "serious incident" threshold for provider/authority notification, defining escalation runbooks, operating the SIEM |
-| Art. 26(6) log content | Structured JSON lines with stable field names (URL, method, scanner, reason, client IP, session ID, timestamp), queryable with standard tools, exportable in any direction, no vendor-locked binary format | **The 6-month retention period itself.** Pipelock emits logs to the sinks you configure; it does not enforce storage duration. Ship logs to S3 with Object Lock, Loki with retention policy, Splunk, or an equivalent long-term store set to at least 6 months. |
-| Art. 26(1) instruction-compliant use | Deployment guidance in `docs/deployment.md`, posture-verify CLI with score model and CI gate, configuration validation at startup | Operating within the documented deployment profile, training staff on approved configurations |
+The shipped A26 mapping names Assess outputs, the flight recorder, and audit emission as support for deployer monitoring. It does not separately map Article 26's individual paragraphs or enforce a retention period.
 
 A minimal emit configuration:
 
@@ -193,18 +120,9 @@ Pipelock is a runtime network security layer. It does not cover:
 
 Pipelock is one component of a compliance stack. Use it alongside model governance tools (Credo AI, Holistic AI) and organizational processes.
 
-## NIST AI RMF Crosswalk
+## Separate NIST AI RMF mapping
 
-Pipelock's controls also map to the [NIST AI Risk Management Framework 1.0](https://www.nist.gov/itl/ai-risk-management-framework):
-
-| NIST Function | Pipelock Features | EU AI Act Cross-Reference |
-|--------------|-------------------|--------------------------|
-| GOVERN | Capability separation, fail-closed design, per-instance isolation | Art. 9, 14 |
-| MAP | Fixed-order risk classification, config presets for risk tolerance | Art. 9 |
-| MEASURE | Prometheus metrics, structured audit logs, alerting | Art. 12, 15 |
-| MANAGE | HITL override, kill switch, hot-reload, MCP scanning | Art. 14, 15 |
-
-The full mapping with subcategory-level detail is in the [EU AI Act Compliance Mapping](https://github.com/pipelab-org/pipelock/blob/main/docs/compliance/eu-ai-act-mapping.md) document.
+The shipped NIST AI RMF mapping is separate from the EU AI Act mapping. GOVERN and MAP are partial; MEASURE and MANAGE are covered. It does not define a function-to-article crosswalk. See [NIST AI RMF coverage](/learn/nist-ai-rmf/) for the product evidence and limits.
 
 ## Enforcement Timeline
 
@@ -244,11 +162,12 @@ Generate signed compliance evidence for your deployment with [`pipelock assess`]
 
 ## Further reading
 
-- [AI Agent Regulatory Controls Hub](/learn/ai-agent-regulatory-controls/): framework-by-framework cross-reference across EU AI Act, DORA, NIS2, NIST AI RMF, ISO 42001, the Colorado AI Act (June 30, 2026 effective date per SB25B-004), SOC 2, and OWASP.
+- [AI Agent Regulatory Controls Hub](/learn/ai-agent-regulatory-controls/): framework-by-framework cross-reference across EU AI Act, DORA, NIS2, NIST AI RMF, ISO 42001, the Colorado AI Act (repealed and reenacted by SB26-189), SOC 2, and OWASP.
 - [What did my agent do?](/learn/what-did-my-agent-do/): single-decision walkthrough with a real signed Article 12 - shaped receipt and a verifier you can run offline.
 - [EU AI Act Runtime Security: A Field Guide](/blog/eu-ai-act-runtime-security/): the runtime control mapping in narrative form, with prEN 18282 context.
 - [Compliance Evidence](/learn/compliance-evidence/): signed assessment bundles for audit.
 - [Compliance Evidence Substrate](/learn/compliance-evidence-substrate/): procurement, audit, and legal framing of Pipelock as evidence substrate inside an existing program.
 - [AI Agent Compliance](/learn/ai-agent-compliance/): the broader compliance landscape across SOC 2, ISO 27001, and NIST AI RMF.
 - [OWASP MCP Top 10 Coverage](/learn/owasp-mcp-top10/): runtime defenses mapped to the community threat list.
-- [Agent Firewall](/agent-firewall/): the architecture pattern Articles 9 and 15 lean on.
+- [Agent Firewall](/agent-firewall/): network and tool boundary architecture.
+- [Shipped mapping (Pipelock v3.7.1)](https://github.com/pipelab-org/pipelock/blob/v3.7.1/internal/report/compliance/eu_ai_act.go): control IDs, status, evidence, and limitations.

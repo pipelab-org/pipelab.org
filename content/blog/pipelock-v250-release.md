@@ -18,6 +18,8 @@ faq:
     a: "Run pipelock check, then pipelock doctor or pipelock verify-install against the live deployment path. Review federation actor format before enabling v2.5 against legacy peers."
 ---
 
+> v3.7.0 clarification (2026-10-29): the Scanner and audit hardening section below describes v2.5.0. Do not treat educational framing, quotation marks or code fences as a trust boundary. For v3.7.0, the [false-positive tuning guide](https://github.com/pipelab-org/pipelock/blob/v3.7.0/docs/false-positive-tuning.md) describes operator-declared exceptions for a named host and core response pattern. Those exceptions retain the finding and its evidence; they withhold that finding's block. The original post follows unchanged.
+
 v2.4.0 turned observed agent behavior into enforceable policy. v2.5.0 turns the evidence and deployment boundary around that policy into something operators can install, verify, and hand to a third party.
 
 The release adds Audit Packet v0, first-party verifier SDKs, a standalone verifier CLI, host containment lifecycle commands, strict-default federation, MCP integrity manifests, Kubernetes launcher contracts, new IDE installers, scanner hardening, and release-chain cleanup.

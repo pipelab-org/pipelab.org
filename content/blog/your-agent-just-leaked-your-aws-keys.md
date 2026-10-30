@@ -9,6 +9,8 @@ tags: ["ai-security", "data-exfiltration", "dlp", "pipelock"]
 blog_cat: "opsec"
 ---
 
+> Installation note (2026-10-29): The install commands below are from when this post was written. Current install methods for every platform are in the [installation guide](/install/). The original post follows unchanged.
+
 Your AI coding agent has your AWS keys in its environment. It makes HTTP requests. A prompt injection buried in a tool response tells it to include those keys in the next outbound request.
 
 No malware. No exploit kit. Just text.

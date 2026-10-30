@@ -121,7 +121,7 @@ A tool returns content that contains hidden instructions targeting the agent. Th
 
 The canonical public demonstration is Invariant Labs' [GitHub MCP exploit](https://invariantlabs.ai/blog/mcp-github-vulnerability). The widely used GitHub MCP server (reported at around 14,000 stars at disclosure) was hijacked through a malicious GitHub Issue. When the agent read the issue, it followed embedded instructions and exfiltrated contents from private repositories the user had authorized. Tool descriptions were clean. The poisoning sat in the data the tool returned.
 
-**Defense.** Pipelock scans tool response content for 34 injection patterns through six sequential response-scanning passes: normalized text, invisible-with-space retry, leetspeak, optional-whitespace variants, vowel-folded variants, and base64/hex decode. Patterns cover jailbreak attempts, authority assertions, credential solicitation, and state manipulation in English, Chinese, Japanese, and Korean. Treat inbound tool output as untrusted the way a browser treats HTML.
+**Defense.** Pipelock scans tool response content for {{< stat key="response_patterns" >}} injection patterns through six sequential response-scanning passes: normalized text, invisible-with-space retry, leetspeak, optional-whitespace variants, vowel-folded variants, and base64/hex decode. Patterns cover jailbreak attempts, authority assertions, credential solicitation, and state manipulation in English, Chinese, Japanese, and Korean. Treat inbound tool output as untrusted the way a browser treats HTML.
 
 ## Shadow MCP and inventory gaps
 

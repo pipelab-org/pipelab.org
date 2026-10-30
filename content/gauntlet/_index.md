@@ -13,6 +13,8 @@ hide_list: true
 
 This page carries Pipelock's own Agent Egress Bench runs, disclosed as first-party evidence. It is not a ranking and it does not score other tools. Anyone can run the same corpus against any target and publish what they find, including a result that reflects badly on Pipelock, with no notice or approval. The [results-use and attribution policy](https://github.com/pipelab-org/agent-egress-bench/blob/main/docs/RESULTS-USE.md) defines the labels to use and the facts to publish beside a score, and the [launch write-up](/blog/pipelock-gauntlet-public-benchmark/) explains why the scores are published this way.
 
+{{< bench-published-result >}}
+
 {{< bench-summary >}}
 
 This tests the security tool, not the agent. [View the scoring methodology.](https://github.com/pipelab-org/agent-egress-bench/blob/main/docs/gauntlet.md)

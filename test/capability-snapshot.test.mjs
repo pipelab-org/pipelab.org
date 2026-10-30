@@ -773,3 +773,25 @@ test("release promotion keeps the manifest digest when the tagged bytes are unch
     /capability snapshot does not match the release tag/,
   );
 });
+
+// v3.7.1 docs/configuration.md, Browser Shield; shield_test.go
+// TestHTMLPreservesInlineJavaScriptWhileStrippingElements and TestJSPipeline_PreservesMinifiedBundleByteForByte.
+test("Browser Shield copy preserves the JavaScript and partial-coverage boundaries", () => {
+  const detail = readFileSync(new URL("../content/capability-browser-shield.md", import.meta.url), "utf8");
+  const guide = readFileSync(new URL("../content/learn/browser-shield.md", import.meta.url), "utf8");
+  assert.match(detail, /HTML and SVG/);
+  assert.match(detail, /JavaScript[^.\n]*unchanged/);
+  assert.doesNotMatch(detail, /rewrites proxied HTML and JavaScript/i);
+  assert.doesNotMatch(guide, /Page-side JavaScript that enumerates/i);
+  assert.match(guide, /inline scripts and standalone JavaScript[^.\n]*original bytes/);
+  assert.match(guide, /SVG[^.\n]*structural validation/);
+  assert.match(guide, /Response scanning is a separate control/);
+  assert.match(guide, /`scan_head`[^\n]*partial shielding[^\n]*remainder[^\n]*unshielded/);
+});
+
+test("product control links expose Browser Shield and the existing Filesystem Sentinel guide", () => {
+  const product = readFileSync(new URL("../content/pipelock.md", import.meta.url), "utf8");
+  assert.match(product, /href="\/capabilities\/browser-shield\/">Browser Shield/);
+  assert.match(product, /href="https:\/\/github.com\/pipelab-org\/pipelock\/blob\/v3\.7\.1\/docs\/guides\/filesystem-sentinel\.md"[^>]*>Filesystem Sentinel/);
+  assert.ok(Object.values(capabilityReferences.capabilities).flat().some(reference => reference.path === "docs/guides/filesystem-sentinel.md"));
+});

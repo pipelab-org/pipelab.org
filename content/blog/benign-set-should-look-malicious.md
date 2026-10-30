@@ -9,6 +9,8 @@ tags: ["detection-engineering", "false-positives", "ai-security", "benchmarking"
 blog_cat: "technical"
 ---
 
+> Clarification (2026-10-29): quotes and code fences do not make untrusted content safe. A malicious source controls its own formatting. The examples in the table below belong in a policy-labeled test set, but formatting alone must not grant an exemption from scanning or blocking. The original post follows unchanged.
+
 A 0.1% false-positive rate against clean traffic means nothing. The test proved a detector can ignore a health-check ping and a plain JSON API call. Nobody was worried about those. The traffic that trips a real detector is the stuff that looks like an attack and isn't one, and if your benign test set has none of that in it, your false-positive rate is a participation trophy.
 
 I write detections for AI agent egress, so I see this a lot. An agent reads a security advisory that quotes a prompt-injection string. It calls a scanner whose tool description lists SQL injection, XSS, and SSRF. A tutorial it pastes has AWS's own fake key in it, `AKIAIOSFODNN7EXAMPLE`. A log it summarizes says "token expired" and "401 unauthorized" a few hundred times. Normal work, all of it, covered in the exact features a naive rule is built to catch.

@@ -48,18 +48,20 @@ Agents introduce risks that do not exist in traditional software:
 
 ## Framework Mappings
 
-Different frameworks ask for different things. Here is what each one requires for agents:
+Different frameworks ask for different things. The shipped Assess catalog includes the following framework entries:
 
 | Framework | Agent-Relevant Requirements | Evidence Type |
 |-----------|---------------------------|---------------|
 | **SOC 2** (TSC) | Access controls, monitoring, data confidentiality, processing integrity | Audit logs, policy configs, incident records |
-| **EU AI Act** (Art. 9, 12, 14, 15) | Risk management, automatic event logging, human oversight, cybersecurity | Structured logs, override records, fail-closed evidence |
-| **NIST 800-53** Rev. 5 | AC (access control), AU (audit), CM (config management), SI (system integrity) | Per-family control evidence, continuous monitoring data |
+| **EU AI Act** (Art. 12, 13, 14, 26) | Record-keeping, transparency (partial), human oversight, deployer monitoring | Replayable records, signed manifests, assessment reports |
+| **NIST AI RMF** 1.0 | GOVERN and MAP (partial), MEASURE and MANAGE (covered) | Audit emission, discovery, simulation, assessment, and runtime controls |
 | **OWASP Agentic Top 10** | Goal hijack, tool misuse, supply chain, privilege abuse, rogue agents | Scanner results, tool policy logs, injection detection records |
 
-SOC 2 auditors want to see that you know what your agents access and that you restrict it. The EU AI Act wants automatic logging and a stop button. NIST 800-53 maps to specific control families. OWASP gives you a threat checklist to test against.
+The Assess v3.7.1 catalog also includes MITRE ATLAS and selected HIPAA Security Rule safeguards. Separate published documentation mappings cover [OWASP LLM Top 10](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/owasp-llm-top10-mapping.md), [OWASP Agentic AI Threats and Mitigations](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/owasp-agentic-top15-mapping.md), and [NIST SP 800-53 Rev. 5](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/compliance/nist-800-53.md). These three frameworks are not Assess report mappings.
 
-If you need a scoring model for how runtime controls change agentic risk, see [OWASP AIVSS Coverage](/learn/owasp-aivss-coverage/).
+The NIST SP 800-53 documentation rates AU, SC, and SI Strong; AC, CM, and IR Moderate; and CA Partial. The document limits its scope to selected runtime controls and does not constitute compliance certification.
+
+For scoring context and the limits of Pipelock evidence, see [OWASP AIVSS Scoring Context](/learn/owasp-aivss-coverage/).
 
 For detailed framework-specific mappings, see [Compliance Evidence](/learn/compliance-evidence/), [EU AI Act Compliance](/learn/eu-ai-act-compliance/), [MITRE ATLAS Coverage](/learn/mitre-atlas/), [NIST AI RMF Coverage](/learn/nist-ai-rmf/), [HIPAA Security Rule Coverage](/learn/hipaa-security-rule/), and [SOC 2 Criteria Mapping](/learn/soc2-trust-services-criteria/).
 
@@ -103,7 +105,7 @@ Pipelock is an open-source AI agent firewall that sits between agents and the ne
 
 **Signed assessment reports.** `pipelock assess` runs attack simulations, scores your config, verifies your installation, and discovers unprotected MCP servers. The output is a signed evidence bundle with framework-specific control mappings. Generate reports for auditors with a single command. See [Assess](/assess/).
 
-**OWASP coverage.** Pipelock maps to all 10 categories in the [OWASP Agentic Top 10](/learn/owasp-agentic-top10/). Scanner layers are mapped to specific threat categories so you can show auditors exactly which control addresses which risk.
+**OWASP coverage.** The shipped [OWASP Agentic Top 10 mapping](/learn/owasp-agentic-top10/) marks four categories covered, five partial, and one not covered. The mapping names the evidence and limits for each entry.
 
 **Runtime enforcement.** Domain allowlists, DLP scanning, MCP tool policy, SSRF protection, prompt injection detection, rate limiting, and human-in-the-loop approval. Controls are active at runtime, not applied after the fact.
 
@@ -120,3 +122,5 @@ Pipelock is an open-source AI agent firewall that sits between agents and the ne
 - [Assess](/assess/): Generate signed compliance reports
 - [Pipelock](/pipelock/): Product overview and installation
 - [GitHub](https://github.com/pipelab-org/pipelock): Source code and documentation
+
+- [Assess v3.7.1 framework catalog](https://github.com/pipelab-org/pipelock/blob/v3.7.1/internal/report/compliance/coverage.go): the shipped framework list.

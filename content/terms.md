@@ -41,7 +41,7 @@ By purchasing a Pipelock subscription, you represent that:
 
 ## Licensing
 
-Pipelock's core code is licensed under Apache 2.0. The `enterprise/` directory is licensed under ELv2 (source-available, not open-source). You may not provide enterprise-licensed code as a managed service or remove license-key enforcement. The full license texts are included in the repository.
+Pipelock's core code is licensed under Apache 2.0. The `enterprise/` directory is licensed under ELv2 (source-available, not open-source). You may not provide enterprise-licensed code as a managed service or remove license-key enforcement. The full license texts are included in the repository and reproduced on the [Pipelock EULA page](/eula/).
 
 Paid plans are activated by Ed25519-signed license tokens. Each token encodes your licensed scope and expiration. The token is verified locally by the binary. There is no phone-home, no activation server, and no telemetry.
 

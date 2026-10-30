@@ -490,7 +490,7 @@ Until that migration lands, v1 remains the canonical format for proxy action rec
 * **End-to-end demo**: [What did my agent do?](/learn/what-did-my-agent-do/), request, bad response, verdict, signed receipt, verifier output.
 * **Procurement rubric**: [Agent Security Tool Profiles](/learn/agent-security-tool-profiles/), the five-dimension receipt-scoring rubric and the procurement question a published profile answers.
 * **How other evidence tools compare**: [Pipelock vs agent evidence tools](/compare/pipelock-vs-agent-evidence-tools/) and [Pipelock vs Attested Intelligence](/compare/pipelock-vs-attested-intelligence/), receipt format, verifier, key custody, and recorder position side by side.
-* **Regulatory mapping**: [AI Agent Regulatory Controls Hub](/learn/ai-agent-regulatory-controls/), receipts mapped to EU AI Act, DORA, NIS2, NIST AI RMF, ISO 42001, Colorado AI Act, SOC 2.
+* **Regulatory mapping**: [AI Agent Regulatory Controls Hub](/learn/ai-agent-regulatory-controls/), shipped Assess mappings for EU AI Act, NIST AI RMF, and SOC 2, with DORA, NIS2, ISO 42001, and Colorado as regulatory background.
 
 Report spec bugs or clarification requests at
 <https://github.com/pipelab-org/pipelock/issues>.

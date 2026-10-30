@@ -29,7 +29,15 @@ methods:
   - id: docker
     label: Docker
     short_label: Docker
+    local_binary: false
     command: docker pull ghcr.io/luckypipewrench/pipelock:VERSION
+
+  - id: helm
+    label: Helm (OCI)
+    short_label: Helm (OCI)
+    note: "Kubernetes deployment. The chart version follows the Pipelock release."
+    local_binary: false
+    command: helm install pipelock oci://ghcr.io/luckypipewrench/charts/pipelock --version VERSION
 
   - id: homebrew
     label: Homebrew (macOS / Linux)

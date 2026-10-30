@@ -105,7 +105,7 @@ These tools are strongest at the model boundary and weakest at the network and t
 
 These sit between the agent and its tools, inspecting the JSON-RPC traffic that drives MCP and similar protocols.
 
-- **[Pipelock](/pipelock/).** Open-source agent firewall written in Go (Apache-2.0 core; Enterprise features under ELv2). Wraps MCP servers in stdio, streamable HTTP, and HTTP reverse proxy modes. Scans tool arguments for credentials, scans tool responses for injection, detects tool poisoning and rug-pull, and enforces pre-execution tool policy. Ships 65 DLP patterns and 34 injection patterns with a 6-pass normalization pipeline that handles encoding evasion.
+- **[Pipelock](/pipelock/).** Open-source agent firewall written in Go (Apache-2.0 core; Enterprise features under ELv2). Wraps MCP servers in stdio, streamable HTTP, and HTTP reverse proxy modes. Scans tool arguments for credentials, scans tool responses for injection, detects tool poisoning and rug-pull, and enforces pre-execution tool policy. Ships 65 DLP patterns and {{< stat key="response_patterns" >}} injection patterns with a 6-pass normalization pipeline that handles encoding evasion.
 - **Snyk agent-scan proxy mode.** Public documentation describes an MCP proxy capability; specific detection coverage is not documented in a form this page can cite with confidence.
 - **[mcp-context-protector](https://github.com/trailofbits/mcp-context-protector).** Trail of Bits' server-side MCP wrapper that enforces prompt injection and context manipulation defenses at the tool server rather than at the client proxy.
 
@@ -136,7 +136,7 @@ These vendors publish "AI runtime security" as a category label. Verifying exact
 Pipelock is an open-source agent firewall that runs at the proxy layer (Apache-2.0 core; Enterprise features under ELv2). It covers runtime content inspection for agent and MCP traffic:
 
 - **DLP scanning.** 65 credential patterns covering AWS, GCP, GitHub, GitLab, Slack, Stripe, SendGrid, JWT, private keys, and generic high-entropy strings. Patterns are encoding-aware: base64, hex, URL encoding, and common obfuscations are decoded before matching.
-- **Injection detection.** 34 injection patterns with a 6-pass normalization pipeline covering Unicode normalization, invisible character stripping, leetspeak folding, vowel folding, optional-whitespace variants, and base64/hex decode recursion.
+- **Injection detection.** {{< stat key="response_patterns" >}} injection patterns with a 6-pass normalization pipeline covering Unicode normalization, invisible character stripping, leetspeak folding, vowel folding, optional-whitespace variants, and base64/hex decode recursion.
 - **MCP tool scanning.** Pre-execution tool policy with allow/deny/redirect rules, shell obfuscation detection, rug-pull drift detection against a session baseline, and session binding that pins the tool inventory.
 - **Egress controls.** SSRF protection with private IP blocking, cloud metadata endpoint blocking, and DNS rebinding defense. Rate limiting and per-domain data budgets.
 - **Audit evidence.** Tamper-evident flight recorder with hash-chained JSONL events and Ed25519 signed checkpoints. Structured logs for SIEM ingestion.

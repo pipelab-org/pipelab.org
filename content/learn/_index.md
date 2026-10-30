@@ -59,7 +59,7 @@ Use the filter and search at the top of the page to narrow the list, or jump str
 - [Coverage Certificates](/learn/coverage-certificates/)
 - [OWASP MCP Top 10](/learn/owasp-mcp-top10/)
 - [OWASP Agentic Top 10: Coverage](/learn/owasp-agentic-top10/)
-- [OWASP AIVSS Coverage](/learn/owasp-aivss-coverage/)
+- [OWASP AIVSS Scoring Context](/learn/owasp-aivss-coverage/)
 - [OWASP LLM Top 10: Coverage](/learn/owasp-llm-top10/)
 - [OWASP Agentic AI Threats: Coverage](/learn/owasp-agentic-threats/)
 - [SlowMist Coverage](/learn/slowmist-mcp-security-coverage/)

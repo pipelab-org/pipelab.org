@@ -240,7 +240,7 @@ Run every option through every question. Use "not documented in public docs" whe
 
 ## MCP gateway and Pipelock together
 
-Pipelock is a scanning proxy, not a routing gateway. It focuses on content inspection: tool descriptions, tool arguments, and tool responses, scanned bidirectionally with 6-pass normalization against 65 credential patterns, 34 injection patterns, and 9 tool-specific poisoning checks. It wraps MCP servers with one command:
+Pipelock is a scanning proxy, not a routing gateway. It focuses on content inspection: tool descriptions, tool arguments, and tool responses, scanned bidirectionally with 6-pass normalization against 65 credential patterns, {{< stat key="response_patterns" >}} injection patterns, and 9 tool-specific poisoning checks. It wraps MCP servers with one command:
 
 ```bash
 pipelock mcp proxy --config pipelock.yaml -- npx @modelcontextprotocol/server-filesystem /tmp

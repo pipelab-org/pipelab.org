@@ -12,6 +12,14 @@ type: enterprise
 lastmod: 2026-08-08
 ---
 
+## Install on Kubernetes
+
+Deploy Pipelock with the published Helm chart from the OCI registry. The chart version follows the Pipelock release.
+
+{{< install-block "helm" >}}
+
+See the [tagged chart documentation](https://github.com/pipelab-org/pipelock/blob/v3.7.1/charts/pipelock/README.md) for chart values and the [install guide](/install/) for source builds, Docker, Homebrew, and release binaries.
+
 ## More on Pipelock
 
 - [Pipelock](/pipelock/)
