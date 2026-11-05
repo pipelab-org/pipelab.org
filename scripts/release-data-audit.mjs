@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { isScalar, parseDocument, visit } from "yaml";
 import { auditHistoricalArtifact, HISTORICAL_ELIGIBLE_PATHS, HISTORICAL_GAUNTLET_POINTER, loadHistoricalArtifacts } from "./historical-artifacts.mjs";
 
 export function auditReleaseData(root, version, historical = loadHistoricalArtifacts(root, HISTORICAL_ELIGIBLE_PATHS)) {
@@ -36,10 +37,18 @@ export function auditReleaseData(root, version, historical = loadHistoricalArtif
     return [["verifier version", pins.get("PIPELAB_VERIFIER_VERSION")]];
   });
   check(".github/workflows/sync-pipelock-rules.yml", source => {
+    const workflow = parseDocument(source);
+    if (workflow.errors.length) throw new Error(`invalid workflow YAML: ${workflow.errors[0].message}`);
+    const counts = new Map([["PIPELOCK_VERSION", 0], ["PIPELOCK_SHA256", 0]]);
+    visit(workflow, {
+      Pair(_key, pair) {
+        if (isScalar(pair.key) && counts.has(pair.key.value)) counts.set(pair.key.value, counts.get(pair.key.value) + 1);
+      },
+    });
     const pin = key => {
-      const values = [...source.matchAll(new RegExp(`^\\s+${key}:\\s*(\\S+)\\s*$`, "gm"))].map(match => match[1]);
-      if (values.length !== 1) throw new Error(`require exactly one ${key} pin`);
-      return values[0];
+      const value = workflow.getIn(["jobs", "sync", "env", key]);
+      if (counts.get(key) !== 1 || typeof value !== "string" || !value) throw new Error(`require exactly one ${key} pin in jobs.sync.env`);
+      return value;
     };
     if (!/^[0-9a-f]{64}$/.test(pin("PIPELOCK_SHA256"))) throw new Error("malformed PIPELOCK_SHA256");
     return [["rules sync Pipelock version", pin("PIPELOCK_VERSION")]];
