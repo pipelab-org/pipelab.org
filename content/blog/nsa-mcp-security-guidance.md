@@ -37,7 +37,7 @@ The CSI lists nine recommendations. The ones that map cleanly to a runtime proxy
 | Constrain and sandbox tool execution | Linux containment with Landlock, seccomp, and network namespaces for wrapped processes |
 | Detailed audit logs feeding into SIEM | Structured logs, event emission, webhooks, syslog, and signed action receipts where configured |
 
-The honest version of that table is harder. Filtering proxy plus DLP catches anything that flows through Pipelock. It does not catch what flows around Pipelock. If the deployment doesn't block raw egress with NetworkPolicy or container network rules, the agent can route past the firewall. Capability separation is a deployment property. The binary alone doesn't enforce it.
+Filtering proxy plus DLP inspects supported traffic that flows through Pipelock. It does not inspect traffic that flows around it. Proxy scanning covers traffic routed through Pipelock. On supported Linux setups, `pipelock contain` can also block direct egress using a private network namespace, nftables, and managed identities when configured and its live restrictions are verified. This does not provide automatic whole-host coverage; filesystem confinement is a separate setting. Other deployments can enforce a boundary using NetworkPolicy or container network rules.
 
 Sandbox coverage is OS-dependent. Linux has the strongest path today; macOS sandboxing exists with different constraints. Tool name collision detection catches drift after first observation, not malicious registry resolution at the moment of first lookup. Indirect prompt injection scanning catches pattern-matchable cases, not every paraphrase or semantic-equivalence attack.
 

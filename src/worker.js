@@ -297,12 +297,8 @@ async function verifyTurnstile(token, secret, remoteIp) {
 }
 
 async function sendContactEmail(env, fields, meta) {
-  // Default TO: luckypipe@pipelab.org. pipelab.org's MX is ProtonMail and we
-  // don't want to take it over with Cloudflare Email Routing. Override via
-  // CONTACT_TO_EMAIL secret if you ever set up an alias like contact@.
-  // Default FROM: contact@mail.pipelab.org. Resend verifies the mail.
-  // subdomain, not the apex (apex MX belongs to Proton). FROM must be on a
-  // verified domain or Resend rejects.
+  // CONTACT_TO_EMAIL and CONTACT_FROM_EMAIL override the public defaults.
+  // The sender must be on a domain verified by the mail delivery provider.
   const to = env.CONTACT_TO_EMAIL || "luckypipe@pipelab.org";
   const from = env.CONTACT_FROM_EMAIL || "PipeLab Contact <contact@mail.pipelab.org>";
   const subject = `[${fields.reason}] ${fields.name}`;

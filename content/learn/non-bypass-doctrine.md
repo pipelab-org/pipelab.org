@@ -2,7 +2,7 @@
 title: "What Pipelock Claims, and What It Doesn't"
 linkTitle: "What Pipelock Claims and Doesn't"
 subtitle: "Pipelock never claims it cannot be bypassed. Here is exactly what it does claim, and why the honest version is the stronger one."
-description: "Pipelock never claims non-bypass. It claims deterministic scanning of mediated traffic, containment as deployment guidance, and signed evidence."
+description: "Pipelock scans routed traffic, supports Linux containment with live verification, and signs mediated decisions. These do not prove that no bypass occurred."
 date: 2026-06-13
 lastmod: 2026-08-08
 learn_cat: concepts
@@ -13,12 +13,12 @@ tags:
   - concepts
 faq:
   - q: "Does Pipelock claim it cannot be bypassed?"
-    a: "No. Pipelock never claims non-bypass and never reports that no bypass occurred. Any control on the traffic path can be bypassed, and a vendor that claims otherwise is the one to distrust. Pipelock claims three specific things: deterministic scanning of mediated traffic, kernel containment as deployment guidance backed by a shipped self-test, and a signed receipt set that makes the mediated fraction of traffic measurable."
+    a: "No. Pipelock does not report that no bypass occurred. Proxy scanning covers routed traffic. Supported Linux containment can block direct egress when configured and its live restrictions are verified. Signed receipts describe mediated decisions; they do not prove complete traffic coverage or the absence of bypass."
   - q: "If it can be bypassed, what is the point?"
     a: "Bypassability is the argument for an evidence layer, not against the other controls. Prevention and detection reduce risk on the traffic Pipelock sees. Containment raises the cost of going around it. Evidence then makes the mediated fraction measurable, so instead of trusting that nothing got through, you can see what actually crossed and what was never observed. That is a stronger position for a risk or audit buyer than an unverifiable non-bypass claim."
   - q: "What does a verified receipt chain actually prove?"
     a: "A verified chain proves the included mediated decisions were signed by the mediator and untampered. It does not prove session completeness, that no event was missed, that the agent was sandboxed, or that traffic could not bypass Pipelock. The prompts and responses shown alongside receipts are unsigned playback metadata; only the receipt chain of decisions is signed. Pipelock renders that statement verbatim on every surface that shows a receipt chain."
-  - q: "How is containment verified if it is not binary-enforced?"
+  - q: "How is the configured containment boundary verified?"
     a: "Containment is enforced by how you deploy the agent (container networking, host containment, network policy), not by the Pipelock binary on its own. Pipelock ships a self-test, the egress canary in 'pipelock contain verify', that attempts to reach the network from the contained account while bypassing the proxy and confirms the attempt is blocked. The control is the deployment's; the test that it actually holds is built into the binary."
   - q: "What is AARP and how is it different from CSA AARM?"
     a: "AARP, the Agent Action Receipt Profile, is Pipelock's appraisal layer. It sits alongside a frozen receipt and reports what a verifier could cryptographically confirm versus what the producer only claimed, and it never emits a 'trusted' or 'safe' verdict. CSA AARM is a separate, external taxonomy from the Cloud Security Alliance that Pipelock's action and side-effect vocabulary aligns to. They are different things: AARP is Pipelock's profile, AARM is an industry taxonomy. Do not conflate them."
@@ -33,7 +33,7 @@ The skeptical line about runtime security is that every sandbox can be escaped, 
 Three things, stated precisely:
 
 1. **Deterministic scanning of mediated traffic.** Traffic that passes through Pipelock is scanned by a fixed pipeline: DLP, prompt-injection, SSRF, and tool-policy checks that produce the same verdict on the same input every time. This is enforced by the binary, on the fraction of traffic it mediates.
-2. **Kernel containment as deployment guidance, with a shipped self-test.** Pipelock does not isolate the agent process by itself. You enforce containment with container networking, host containment, or network policy. The binary ships an egress canary in `pipelock contain verify` that attempts to reach the network from the contained account while deliberately bypassing the proxy, and confirms the attempt is denied. The containment is yours; the proof it holds is built in.
+2. **Kernel containment on supported setups, with live verification.** Proxy scanning covers traffic routed through Pipelock. On supported Linux setups, `pipelock contain` can also block direct egress using a private network namespace, nftables, and managed identities when configured and its live restrictions are verified. This does not provide automatic whole-host coverage; filesystem confinement is a separate setting. `pipelock contain verify` checks the managed boundary, including direct-egress denial with a reachable operator control. A pass is an observation of the configured deployment, not proof that no bypass ever occurred.
 3. **A receipt set that makes the mediated fraction measurable.** Mediated decisions can emit signed receipts that verify offline against a pinned key. That turns "assume the sandbox fails" into a measurable question: of the actions we observed, what fraction did we mediate, and what was never seen. The completeness metric is the technical answer to "prove what actually crossed."
 
 ## What Pipelock does not claim

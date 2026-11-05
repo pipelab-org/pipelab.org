@@ -5,7 +5,7 @@
   "version" site.Params.pipelock_version
   "license" (dict "core" "Apache-2.0" "enterprise" "Elastic-2.0")
   "transports" (slice "HTTP" "WebSocket" "MCP")
-  "scope" "Inspection applies to mediated traffic. Direct egress prevention requires deployment isolation and network controls."
+  "scope" "Inspection applies to traffic routed through Pipelock. Supported Linux containment can also block direct egress when configured and its live restrictions are verified; platform and deployment limits apply."
   "install" ("pipelock/#install" | absURL)
   "verification" ("proof/" | absURL)
   "pricing" ("pricing/" | absURL)

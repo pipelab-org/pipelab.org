@@ -82,7 +82,7 @@ Dialog policies (NeMo Guardrails' Colang language), topic allowlists, output sch
 
 The attack is an AI agent that has been compromised (through injection, tool poisoning, or a malicious MCP server) and is now trying to exfiltrate data through HTTP requests, DNS queries, or tool calls. Input and output scanning at the model layer miss this. The exfiltration happens at the network layer, after the model produced its output.
 
-Egress control inspects outbound agent traffic. It scans URLs for encoded secrets, headers and bodies for credential leaks, DNS queries for suspicious lookups, MCP tool calls for policy violations. Pipelock focuses here because the capability-separation architecture (agent has secrets but no direct network, proxy has network but no agent secrets) makes egress inspection structurally resistant to injection attacks on the agent itself. See [MCP Security](/learn/mcp-security/) for the MCP-specific attack surface.
+Egress control inspects outbound agent traffic. It scans URLs for encoded secrets, headers and bodies for credential leaks, DNS queries for suspicious lookups, MCP tool calls for policy violations. Pipelock focuses here because capability separation puts egress policy outside the agent process when deployment controls enforce the boundary. The proxy may retain sensitive values for leak detection and needs its own protection. See [MCP Security](/learn/mcp-security/) for the MCP-specific attack surface.
 
 ## Vendor landscape
 
@@ -112,7 +112,7 @@ The category has a dozen serious players, with different origins and different s
 
 Pipelock is an open-source agent firewall and a single Go binary (Apache-2.0 core; Enterprise features under ELv2). It addresses the same threat class as a generative AI firewall but from a different direction. Rather than protecting an LLM API from malicious users, Pipelock protects an AI agent from the internet and from compromised tools.
 
-The architecture is capability separation. The agent has API keys and shell access but no direct network. Pipelock has the network but no agent secrets. All HTTP, WebSocket, and MCP traffic routes through Pipelock, which scans it before it leaves the machine or before it reaches the agent.
+The architecture is capability separation. In an enforced deployment, the agent has no direct internet access and supported traffic goes through Pipelock. When enabled, leak detection reads selected values from the proxy process environment and any configured `dlp.secrets_file`, retaining them in memory for matching. Treat the proxy process and those inputs as sensitive.
 
 Scanning covers:
 

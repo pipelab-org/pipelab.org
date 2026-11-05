@@ -378,10 +378,7 @@ specific decision. It does NOT prove:
   requires external transparency-log anchoring with `pipelock anchor receipts --backend rekor`
   and pinned Rekor log keys; the local anchor backend is not operator-independent.
 
-The evidentiary value of a receipt depends on **capability separation**: the
-agent must not have access to the mediator's signing key. Pipelock's
-architecture enforces this (the agent has no network access, the proxy has
-no agent secrets), but the deployment has to preserve that boundary.
+The evidentiary value of a receipt depends on **capability separation**: the agent must not have access to the mediator's signing key. Deployment controls must preserve that boundary. The proxy can separately retain sensitive values for leak detection; those values are not its receipt-signing authority.
 
 ## EvidenceReceipt v2 (v2.4)
 

@@ -55,7 +55,7 @@ These are not theoretical gaps. The cooperation problem is the architectural sha
 
 ## What network-egress firewalls see
 
-A network-egress firewall sits between the agent and the network. The agent process holds API keys and credentials. It runs without direct internet access. The proxy holds network access and no agent secrets. When deployment is correct, direct egress is blocked and every outbound request from the agent crosses the proxy. Every response comes back through it.
+A network-egress firewall sits between the agent and the network. The agent process holds its API keys and credentials. When deployment controls block direct egress, the proxy mediates the agent's supported network traffic. The proxy can hold sensitive values for leak detection, so its process and inputs also need protection.
 
 The useful pattern is separation of duties: the component being checked is not also the component enforcing the check or producing the evidence.
 

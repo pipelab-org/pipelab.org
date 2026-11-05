@@ -11,12 +11,10 @@
 // DEVELOPMENT tool: it never runs in CI and ships nothing into the build, so a
 // snapshot can never be mistaken for live data by a reader.
 //
-//   node scripts/dev-preview.mjs --hugo 1316 --port 1318 \
-//     --snapshot ~/.cache/pipelab-api-snapshot
-//
-// Refresh the snapshot with:
-//   curl --proxy http://127.0.0.1:8888 https://pipelab.org/api/results \
-//     -o <snapshot>/results.json
+// node scripts/dev-preview.mjs --hugo 1316 --port 1318 --snapshot ./api-snapshot
+// The snapshot directory contains results.json and results/<id>.json files.
+// Supply a snapshot captured for this development task. This tool doesn't
+// configure a network proxy or download a snapshot.
 
 import http from 'node:http';
 import https from 'node:https';

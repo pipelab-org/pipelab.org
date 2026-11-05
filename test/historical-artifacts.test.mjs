@@ -25,7 +25,7 @@ function entry(overrides = {}) {
     sha256: SHA,
     reason: "Signed demo produced with 3.6.0",
     classified: "2026-10-14",
-    approved_by: "Josh, 2026-10-14",
+    approved_by: "Maintainer review, 2026-10-14",
     ...overrides,
   };
 }

@@ -7,12 +7,10 @@
 //   of the theme. Mirrors the /proof/, /enterprise/, /assess/,
 //   /about/ namespacing pattern.
 //
-//   Token discipline: every var() resolves to a token defined in
-//   _variables.scss. Phantom tokens from the prototype (--accent-border,
-//   --bg-elevated, --radius-md, --radius-pill, --t-base, --t-mid,
-//   --text-inverse, --shadow-button, --font-display, --border-strong)
-//   replaced with literal values matching the patterns shipped in
-//   /proof/, /enterprise/, /assess/, /about/.
+//   Every var() must resolve to a custom property defined in
+//   _variables.scss; undefined properties cause browsers to discard the
+//   affected declarations. Use literal values, as /proof/, /enterprise/,
+//   /assess/, and /about/ do, where no shared token exists.
 // ============================================================
 
 .home-product {

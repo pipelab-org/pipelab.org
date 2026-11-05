@@ -1,16 +1,13 @@
 {{ define "main" }}
 {{/* Bespoke /contact/ template — overrides _default/single.html.
 
-     Form-primary translation of Claude Design's "Contact v2.html" prototype.
      The form remains the primary call to action. Direct email and the
      GitHub security-advisory route sit beside it; social handles live in
      the markdown body link list and global footer. Visitors who skip the form
      can find them there.
 
-     The form POSTs to /api/contact on the same Cloudflare Worker, where
-     it's verified by Turnstile and delivered to contact@pipelab.org via
-     Resend. Cloudflare Email Routing forwards contact@ to
-     luckypipe@pipelab.org.
+     The form posts to `/api/contact`, where the Worker validates Turnstile and
+     sends the message through the configured mail provider.
 
      Markdown body still renders {{ .Content }} so the markdown alternate
      output and the audit's inbound-link counter pick up the link list at

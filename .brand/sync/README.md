@@ -17,24 +17,16 @@ Reference SCSS form of the brand tokens. The live Hugo theme uses CSS custom pro
 | `$fs-stat` | `1.75rem` (28px) | stat numerics |
 | `$fs-display` | `3.25rem` (52px) | wordmark, featured display |
 
-## Locked-current decisions
+## Shared brand tokens
 
-These values are canonical. Do not change without a brand review:
+Compare proposed token changes with the live theme and explain their effect in the pull request.
 
 - `$accent: #00e5a0` (Pipelock teal)
 - `$bg: #09090b` and `$bg-elevated: #0e0e11` (near-black ramp)
 - `$purple: #7c3aed` (hero radial companion only)
 - Wordmark stays two-tone (`Pipe`-slate, brand-accent on the second syllable)
-- Hero stays particles plus radial
+- The homepage uses the interactive receipt constellation. Standard and rich branded heroes use the shared static constellation field; editorial and utility pages use the plain dark background.
 
-## Verification after sync
+## Checking reference updates
 
-If you ever migrate the live theme from CSS custom properties to SCSS variables (or vice versa), verify:
-
-1. `hugo server` runs clean, no SCSS compile errors
-2. Hero h1 reads at 36px (down from the prior 51px)
-3. Card titles at 20px
-4. Body copy at 16px
-5. Stat labels at 12px
-6. The `.hero-tagline` pattern renders below h1 in uppercase letterspaced slate
-7. Stats strip shows 5 columns (Layers, DLP, Attacks, Deps, Binary)
+Compare values with `themes/pipelab/assets/scss/_variables.scss` and shared behavior with `_brand-standards.scss`. Reference SCSS isn't a drop-in replacement for the theme's CSS custom properties. Run `make preflight` for site changes and inspect affected pages at the viewport sizes listed in `AGENTS.md`. Check the actual rendered heading, card, body, and label styles; a base token doesn't guarantee that every component uses that size.

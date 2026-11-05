@@ -146,9 +146,9 @@ The MCP proxy applies several scanning layers beyond the URL-level checks the HT
 
 ## Architecture and trust model
 
-Pipelock enforces a capability-separation architecture. The agent runs in the privileged zone with secrets but no direct network access. Pipelock runs in the network zone with no agent secrets but full network access. The agent's only path to the internet is through pipelock.
+Pipelock supports capability separation. In an enforced deployment, the agent has no direct network egress and sends supported traffic through Pipelock. When enabled, leak detection reads selected values from the proxy process environment and any configured `dlp.secrets_file`, retaining them in memory for matching. Treat the proxy process and those inputs as sensitive.
 
-This separation is deployment-enforced, not binary-enforced. The pipelock binary holds no agent secrets by design, but the operator must configure user separation, container boundaries, or network policies to make the separation real. Pipelock the binary alone does not block an agent from making direct network calls if the operator did not arrange the network topology to require pipelock as the egress path.
+Proxy scanning covers traffic routed through Pipelock. On supported Linux setups, `pipelock contain` can also block direct egress using a private network namespace, nftables, and managed identities when configured and its live restrictions are verified. This does not provide automatic whole-host coverage; filesystem confinement is a separate setting. Operators must configure and verify the chosen network boundary and protect the proxy process and its inputs.
 
 Documentation for production deployment shapes is at https://github.com/pipelab-org/pipelock under `docs/`.
 

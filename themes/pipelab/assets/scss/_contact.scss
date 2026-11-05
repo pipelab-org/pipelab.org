@@ -2,17 +2,9 @@
 //   /contact/ : form-primary page
 //   ------------------------------------------------------------
 //   Used by themes/pipelab/layouts/contact/single.html only.
-//   Translation of Claude Design's "Contact v2.html" prototype.
-//   Every selector compiles as a descendant of .contact-product so
-//   class names cannot collide with the rest of the theme. The
-//   prototype used generic names like .field, .input, .pill, .btn
-//   that would otherwise step on site-wide styles.
-//
-//   Token discipline: only var() calls for tokens defined in
-//   _variables.scss. Phantom tokens from the prototype's tokens.css
-//   (--accent-border, --bg-elevated, --border-strong, --danger,
-//   --radius-md, --t-base, etc.) are inlined as literals so the
-//   theme variables file stays the single source of truth.
+// Scope contact-page selectors under .contact-product to avoid global collisions.
+// Reference CSS custom properties defined in _variables.scss; use literal values
+// for component-specific styles that do not have a shared token.
 // ============================================================
 
 .contact-product {

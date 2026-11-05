@@ -28,11 +28,11 @@ faq:
   - q: "How do I secure MCP servers in Claude Code?"
     a: "Wrap each server through 'pipelock mcp proxy'. The proxy scans server responses for prompt injection before they reach the context window, checks tool descriptions for poisoning and rug-pull drift, and applies pre-execution allow and deny rules to tool calls. This works on stdio and HTTP/SSE transports. Hooks scan the tool call going out, the proxy scans the response coming back, so use both."
   - q: "Does Pipelock store my Claude Code API keys?"
-    a: "No. Pipelock holds no agent secrets by design. The agent environment keeps the keys and should have no direct network egress. Pipelock has network egress and must never hold agent secrets. It reads local environment variables only to detect when a secret is about to leak, which is detection, not storage. If a proxy ever needs your keys to work, the architecture is wrong."
+    a: "Pipelock can handle credentials. Leak detection reads selected values from the proxy process environment and any configured secrets file into memory for matching. Supported MCP setup commands can also save configured authentication headers in private sidecar files. Give the proxy only the access its configured functions need and protect those inputs."
   - q: "What does 'pipelock claude setup' install?"
     a: "It writes PreToolUse hooks into Claude Code's settings.json. The hooks intercept Bash commands, WebFetch URLs, Write and Edit file operations, and every MCP tool call, then run each through the scanning pipeline before execution. Blocked actions return a clear reason to both you and the agent. Run 'pipelock claude remove' to take them back out."
   - q: "Can Pipelock catch every exfiltration attempt?"
-    a: "No, and any tool that claims otherwise is lying. Pipelock covers traffic that goes through it. It scans 65 DLP patterns, entropy, and injection across visible URLs, headers, bodies, MCP arguments, and responses. Known gaps are channels it does not mediate, semantically novel injection, very slow exfiltration, and parser differentials in deeply nested structures. Blocking direct egress that bypasses the proxy is deployment guidance, enforced by containment, not by the binary alone."
+    a: "Pipelock covers traffic routed through it and the OS restrictions of its configured containment modes. Inspection depends on supported, visible traffic; unmediated channels, novel injection, slow leaks, and parsing limits remain gaps. On supported Linux setups, contain can block direct egress when configured and its live restrictions are verified. It does not automatically protect every process or prove no bypass occurred."
   - q: "How do I verify the controls actually work?"
     a: "Run 'pipelock verify-install --config' with the path to your config. It starts a temporary proxy and runs 15 synthetic checks: 12 scanner and local checks, covering fetch-path DLP, CONNECT blocklist enforcement, MCP input and injection scanning, tool policy, and WebSocket destination blocking, and 3 direct-egress probes that only apply inside a container or pod. A pass shows the scanner works with that config. It doesn't prove Claude uses your running proxy. On a managed Linux install, 'sudo pipelock contain verify' checks the host containment boundary. 'pipelock preflight' separately scans committed Claude Code config for five classes of poisoned settings."
   - q: "Does securing Claude Code slow it down?"
@@ -131,7 +131,7 @@ sudo pipelock contain install
 sudo pipelock contain verify
 ```
 
-This is the difference between policy and enforcement. Hooks and the proxy only help if traffic goes through them. Host containment installs the agent under a separate account and uses kernel network controls to force that account through the proxy. Without it, "use the proxy" is a request a child process can ignore. With it, there is no direct egress path for the contained agent account. Containment is deployment-enforced, not a property of the binary on its own, so the [enterprise deployment notes](/enterprise/) matter here.
+Hooks and the proxy help only with the operations they mediate. Proxy scanning covers traffic routed through Pipelock. On supported Linux setups, `pipelock contain` can also block direct egress using a private network namespace, nftables, and managed identities when configured and its live restrictions are verified. This does not provide automatic whole-host coverage; filesystem confinement is a separate setting. Without a configured boundary, tools can ignore proxy settings. See the [containment guide](/learn/pipelock-contain-guide/) for setup and limits.
 
 If you also run Claude Code's native sandbox, know where it steps aside. Commands matching `excludedCommands` run outside it. Claude can retry a failed command unsandboxed unless `allowUnsandboxedCommands` is `false`. Where the sandbox can't start, because a dependency is missing or the platform is native Windows, Claude Code runs commands unsandboxed unless `failIfUnavailable` is `true`. Those are settings to review for your deployment, and none of them change the host containment boundary around the agent account.
 
@@ -143,7 +143,7 @@ If you also run Claude Code's native sandbox, know where it steps aside. Command
 - Wrap every MCP server through `pipelock mcp proxy`, including local stdio servers.
 - Turn on request body scanning, not only URL scanning. Exfiltration hides in POST bodies.
 - Contain the agent account so it has no direct egress path around the proxy.
-- Keep agent secrets in the agent environment, never in the proxy.
+- Give the proxy only the access its configured functions need. Protect the selected environment values, configured secret files, and any private MCP authentication-header sidecars it uses.
 - Scan committed `.claude/` config with `pipelock preflight` in CI before a poisoned hook lands.
 - Start in observe-first mode, review the would-be blocks, then enforce. See [progressive enforcement](/learn/progressive-enforcement/).
 - Run `pipelock verify-install --config` against your config, and `sudo pipelock contain verify` on managed Linux hosts, after every change.

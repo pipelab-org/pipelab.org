@@ -74,7 +74,7 @@ The common thread: identity in, a decision out, and in the identity products a s
 
 **The wrong actor.** An agent with no grant for a tool is refused before any request exists. Pipelock has tool policy in config but no notion of the user behind the agent.
 
-**Over-broad credentials.** Scoped, short-lived tokens and downscoping through token exchange shrink what a compromised agent can do. Pipelock holds no credentials by design.
+**Over-broad credentials.** Scoped, short-lived tokens and downscoping through token exchange shrink what a compromised agent can do. Pipelock mediates credential-bearing traffic and can retain selected environment and configured secret-file values in memory for leak detection.
 
 **Revocation.** Pull a grant and the authorization layer stops approving new calls for it; Cerbos advertises revoking permissions in seconds. A firewall enforces policy on traffic, not on identity.
 

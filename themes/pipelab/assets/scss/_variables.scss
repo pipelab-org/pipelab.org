@@ -51,8 +51,7 @@ $bp-two-col-stack: 640px;
   --font-body: 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
-  // ── Type scale (DOC v1.0 — adopted) ────────────────────────
-  // Path A migrates the hero only. Path B migrates the rest.
+  // Shared type scale.
   --fs-caption: 0.75rem;     // 12px — captions, meta
   --fs-code:    0.875rem;    // 14px — code, eyebrow body
   --fs-tagline: 0.875rem;    // 14px, "AGENT SECURITY"

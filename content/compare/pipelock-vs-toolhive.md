@@ -55,7 +55,7 @@ ToolHive answers how a server runs, what it may reach, and who may call it. Pipe
 | **Architecture** | Network proxy, single self-hosted Go binary | Container runtime and proxy for MCP servers; CLI, desktop app, Kubernetes operator |
 | **What it covers** | HTTP, HTTPS CONNECT (payloads only with TLS interception on), WebSocket, MCP stdio and HTTP, A2A | MCP servers it runs or proxies |
 | **Container isolation** | No; process-level sandbox instead | Yes, per server, minimal permission file |
-| **Secrets** | Holds none by design | Encrypted secrets management; no local credentials in the server container |
+| **Secrets** | Can retain selected environment and configured secret-file values in memory for leak detection; some MCP installers persist configured headers in private sidecars | Encrypted secrets management; no local credentials in the server container |
 | **Network control** | Domain policy plus content scanning | Network isolation and access filtering per server |
 | **Identity and access** | Tool policy via config | Per-request identity and access policy with an auth source |
 | **Registry and provenance** | No | Registry, provenance verification, server signing |

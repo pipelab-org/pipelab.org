@@ -51,7 +51,7 @@ An agent firewall is a runtime enforcement layer that sits between an AI agent a
 
 ```
 Agent (has secrets, no direct network)
-  --> Agent Firewall proxy (no secrets, has network) --> Internet / remote services
+  --> Agent Firewall proxy (policy-controlled egress; sensitive DLP data) --> Internet / remote services
   --> MCP wrapper (pipelock mcp proxy -- ./mcp-server) --> local stdio MCP server subprocess
 ```
 
@@ -60,7 +60,7 @@ Agent (has secrets, no direct network)
   <figcaption>The enforceable boundary comes from routing or containment. The scanner then inspects the mediated traffic.</figcaption>
 </figure>
 
-The key property is **enforced capability separation**: the agent process has credentials but no direct network access; the firewall has network access but no credentials. This only works when the agent physically cannot bypass the proxy. Setting `HTTPS_PROXY` is a starting point, but an injection could unset it. Real enforcement requires network isolation (container networking, iptables, or namespace rules). For stdio MCP servers, coverage means configuring the agent to launch the server through `pipelock mcp proxy`; that is mediated wrapping, not ambient interception.
+The key property is **enforced capability separation**: the agent process has credentials but no direct network access; the firewall mediates network access and may retain sensitive values for leak detection. This only works when the agent physically cannot bypass the proxy. Setting `HTTPS_PROXY` is a starting point, but an injection could unset it. Real enforcement requires network isolation, such as supported Linux containment, container networking, or firewall rules. For stdio MCP servers, coverage means configuring the agent to launch the server through `pipelock mcp proxy`; that is mediated wrapping, not ambient interception.
 
 Traditional egress proxies and DLP gateways scan for secrets in outbound traffic, but they were not designed for agent-specific threats: prompt injection in responses that flow back into the model's context, tool description poisoning in MCP, or tool rug-pulls mid-session. An agent firewall combines egress DLP with inbound content scanning and tool integrity checks in a single enforcement point.
 

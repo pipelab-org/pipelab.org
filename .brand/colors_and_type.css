@@ -1,29 +1,14 @@
-/* ============================================================
-   PipeLab / Pipelock - Colors & Type
-   ------------------------------------------------------------
-   v1.1 - 2026-04-26
-   Reconciled against Pipelock Brand Guidelines v1.0 (April 2026).
-
-   LOCKED-CURRENT (doc rejected, design system is canonical):
-     - Accent #00e5a0 teal - NOT doc's #00FFC8 cyan
-     - Background ramp #09090b -> #0e0e11 - NOT doc's navy ramp
-     - Hero treatment: purple radial + particle network - NOT grid overlay
-     - Wordmark: mixed-case two-tone (Pipe-slate / Lab-accent), default tracking
-
-   ADOPTED FROM DOC:
-     - Type scale 36 / 26 / 16 / 14 / 12 (was 51 / 29 / 15 / 13.5 / 13)
-     - "AGENT SECURITY" PipeLab tagline component (Inter Regular, +4px tracking, UC, 14px, slate)
-     - Voice and anti-vocabulary additions from the brand guide
-
-   Sync target: themes/pipelab/assets/scss/_variables.scss
-   ============================================================ */
+/* PipeLab and Pipelock standalone asset tokens.
+   For the Hugo site, themes/pipelab/assets/scss/_variables.scss and
+   _brand-standards.scss are authoritative. This stylesheet is a reference,
+   not a replacement for either theme file. */
 
 @font-face {
   font-family: 'Inter';
   font-style: normal;
   font-weight: 100 900;
   font-display: swap;
-  src: url('./fonts/inter-variable.woff2') format('woff2');
+  src: url('../static/fonts/inter-variable.woff2') format('woff2');
 }
 
 @font-face {
@@ -31,7 +16,7 @@
   font-style: normal;
   font-weight: 100 800;
   font-display: swap;
-  src: url('./fonts/jetbrains-mono-variable.woff2') format('woff2');
+  src: url('../static/fonts/jetbrains-mono-variable.woff2') format('woff2');
 }
 
 :root {
@@ -45,7 +30,7 @@
   --purple: #7c3aed;
   --purple-dim: rgba(124, 58, 237, 0.10);
 
-  /* - Surfaces - LOCKED (near-black, not doc navy) - */
+  /* Surfaces */
   --bg: #09090b;                /* page background */
   --bg-elevated: #0e0e11;       /* terminals, code blocks */
   --bg-card: rgba(255, 255, 255, 0.04);
@@ -74,7 +59,7 @@
   --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
   --font-display: 'JetBrains Mono', 'Fira Code', monospace;  /* headings are mono */
 
-  /* - Type scale - DOC v1.0 (calmed down from old hero-heavy scale) - */
+  /* Type scale */
   --fs-caption: 0.75rem;        /* 12px - caption */
   --fs-code:    0.875rem;       /* 14px - code, CLI, eyebrow body */
   --fs-tagline: 0.875rem;       /* 14px - "AGENT SECURITY" tagline */

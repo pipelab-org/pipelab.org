@@ -64,7 +64,7 @@ Agent traffic has the same shape. A compromised agent exfiltrates data by making
 
 A [scanner pipeline](/learn/mcp-proxy/) running on every outbound request covers most of that shape: DLP scans tool arguments and HTTP bodies for credentials, injection patterns scan responses for prompt injection, SSRF checks block requests to private IPs and cloud metadata endpoints, and rate limiting caps request volume. The proxy sits between the agent and the network. When backed by network isolation (container networking, iptables, or namespace rules), the agent cannot bypass it. Without that isolation, the proxy still scans all traffic routed through it, but enforcement depends on the agent respecting its configuration.
 
-The paper also calls for deep segmentation. When backed by network isolation, the [capability separation](/agent-firewall/) model is a form of segmentation: the agent holds credentials but has no direct network access; the firewall has network access but no credentials. Neither side alone can both access secrets and exfiltrate them.
+The paper also calls for deep segmentation. When backed by network isolation, [capability separation](/agent-firewall/) restricts agent egress to the firewall. Give the firewall only the access its configured functions need and protect any sensitive values it retains for leak detection.
 
 ## Priority Action 9: Build a Deception Capability
 
