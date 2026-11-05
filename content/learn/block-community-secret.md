@@ -51,7 +51,7 @@ The checks print `pipelock_3.7.1_linux_amd64.tar.gz: OK` and `pipelock version 3
 
 ## Install the bundle and send the planted request
 
-Port 8898 must be unused. The loop checks the local proxy's health before sending the request. `/fetch` is Pipelock's explicit HTTP API: curl acts as the requesting client, and the `url` parameter is the outbound destination Pipelock evaluates. This isn't a system-wide proxy installation.
+Port 8898 must be unused. Both local requests use `--noproxy 127.0.0.1`, so a proxy set in your environment can't intercept them. If you interrupt the block, the background proxy keeps running: stop it with `kill "$proxy_pid"` in the same shell before you run the block again. The loop checks the local proxy's health before sending the request. `/fetch` is Pipelock's explicit HTTP API: curl acts as the requesting client, and the `url` parameter is the outbound destination Pipelock evaluates. This isn't a system-wide proxy installation.
 
 ```bash
 ./pipelock rules install pipelock-community
@@ -66,12 +66,12 @@ YAML
 proxy_pid=$!
 trap 'kill -TERM "$proxy_pid" 2>/dev/null || true' EXIT
 for attempt in $(seq 1 50); do
-  if curl -fsS http://127.0.0.1:8898/health > /dev/null; then break; fi
+  if curl --noproxy 127.0.0.1 -fsS http://127.0.0.1:8898/health > /dev/null; then break; fi
   sleep 0.1
 done
 fake_secret="bkua_$(printf 'a%.0s' {1..24})"
 target="https://example.com/?sample=$fake_secret"
-curl -sS --get --data-urlencode "url=$target" --dump-header headers.txt --output response.json http://127.0.0.1:8898/fetch
+curl -sS --get --data-urlencode "url=$target" --dump-header headers.txt --output response.json --noproxy 127.0.0.1 http://127.0.0.1:8898/fetch
 cat headers.txt response.json
 grep -q '^HTTP/1.1 403' headers.txt
 grep -q 'pipelock-community:dlp-buildkite-user-access-token' response.json

@@ -52,7 +52,7 @@ The checks print `pipelock_3.7.1_linux_amd64.tar.gz: OK` and `pipelock version 3
 
 ## Install the verifier, record a block and verify it
 
-Port 8898 must be unused. The key-generation command requires an absolute output path. Keep `receipt-signing.json` private; only `signer.pub` belongs with evidence given to a verifier. This local test gives both processes to one user, so it doesn't demonstrate a protected signing boundary.
+Port 8898 must be unused. Both local requests use `--noproxy 127.0.0.1`, so a proxy set in your environment can't intercept them. If you interrupt the block, the background proxy keeps running: stop it with `kill "$proxy_pid"` in the same shell before you run the block again. The key-generation command requires an absolute output path. Keep `receipt-signing.json` private; only `signer.pub` belongs with evidence given to a verifier. This local test gives both processes to one user, so it doesn't demonstrate a protected signing boundary.
 
 ```bash
 verifier_archive=pipelock-verifier_3.7.1_linux_amd64.tar.gz
@@ -78,12 +78,12 @@ YAML
 proxy_pid=$!
 trap 'kill -TERM "$proxy_pid" 2>/dev/null || true' EXIT
 for attempt in $(seq 1 50); do
-  if curl -fsS http://127.0.0.1:8898/health > /dev/null; then break; fi
+  if curl --noproxy 127.0.0.1 -fsS http://127.0.0.1:8898/health > /dev/null; then break; fi
   sleep 0.1
 done
 fake_secret="$(printf '%s' AKIA IOSFODNN7EXAMPLE)"
 target="https://example.com/?sample=$fake_secret"
-curl -sS --get --data-urlencode "url=$target" --dump-header headers.txt --output response.json http://127.0.0.1:8898/fetch
+curl -sS --get --data-urlencode "url=$target" --dump-header headers.txt --output response.json --noproxy 127.0.0.1 http://127.0.0.1:8898/fetch
 cat headers.txt response.json
 grep -q '^HTTP/1.1 403' headers.txt
 kill -TERM "$proxy_pid"
@@ -137,7 +137,21 @@ The tampered copy prints `CHAIN BROKEN:` followed by its filename, an error cont
 
 ## Verify on another machine
 
-After recording, the standalone verifier only needs local inputs. Transfer `pipelock-verifier`, the complete `evidence/` directory and the trusted public key to an offline machine. Obtain that public key through a channel you trust independently of the evidence sender. The `chain` command above doesn't need a running proxy or network service.
+After recording, the standalone verifier only needs local inputs. Transfer `pipelock-verifier`, the complete `evidence/` directory and the trusted public key to an offline Linux x86-64 machine. For another platform, download that platform's verifier archive from the same release instead and check it against `checksums.txt`. Obtain the public key through a channel you trust independently of the evidence sender. This command was tested on Linux x86-64. In the directory holding those files, run:
+
+```bash
+set -euo pipefail
+chains=(evidence/evidence-*.jsonl)
+test "${#chains[@]}" -eq 1
+if ./pipelock-verifier chain "${chains[0]}" --key signer.pub; then
+  echo 'Expected an unanchored chain end' >&2
+  exit 1
+else
+  test "$?" -eq 3
+fi
+```
+
+It reports the same fields and exits 3 without a running proxy or network service.
 
 For a complete-chain claim, follow the [v3.7.1 verification guide](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/guides/receipt-verification.md) and pin an independently known head with `--expect-head`. Reading the head from the same untrusted evidence isn't independent end proof.
 

@@ -80,8 +80,12 @@ cat clean.json
 grep -q 'Return a greeting' clean.json
 { cat request.json; sleep 1; } | ./pipelock mcp proxy --config pipelock.yaml -- bash ./server.sh poison > blocked.json 2> blocked.log
 cat blocked.json blocked.log
-! grep -q 'id_rsa' blocked.json
-grep -q '"error"' blocked.json
+if grep -q 'id_rsa' blocked.json; then
+  echo 'The private-file path reached the client' >&2
+  exit 1
+fi
+grep -q 'pipelock: tool poisoning detected in tools/list' blocked.json
+grep -q 'File Exfiltration Directive' blocked.log
 ```
 
 ## Check the result
@@ -104,7 +108,7 @@ The proxy log includes:
 pipelock: line 1: tool "hello": Prompt Injection, File Exfiltration Directive
 ```
 
-The final checks require an error and reject the private-file path in the client output. Pipelock logs the findings to stderr; the MCP response is on stdout. The process itself exited 0 in both tests, so process success alone isn't a scan verdict.
+The final checks reject the private-file path in the client output, then require Pipelock's tool-poisoning error and the exfiltration finding in its log. Pipelock logs the findings to stderr; the MCP response is on stdout. The process itself exited 0 in both tests, so process success alone isn't a scan verdict.
 
 ## What this doesn't prove
 
