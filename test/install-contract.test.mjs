@@ -512,5 +512,5 @@ test("the --version footer shows only for methods that install a local binary", 
   assert.deepEqual(flags, { go: "true", docker: "false", helm: "false", homebrew: "true" });
   const template = readFileSync("themes/pipelab/layouts/_default/install.html", "utf8");
   assert.match(template, /data-inst-local="\{\{ \$m\.local_binary \}\}"/);
-  assert.match(template, /footEl\.hidden = !isBinary && tab\.getAttribute\('data-inst-local'\) === 'false'/);
+  assert.match(readFileSync("themes/pipelab/assets/js/install.js", "utf8"), /footEl\.hidden = !isBinary && tab\.getAttribute\('data-inst-local'\) === 'false'/);
 });

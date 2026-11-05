@@ -9,6 +9,7 @@ import { parse as parseToml } from "smol-toml";
 import { parse as parseYaml } from "yaml";
 
 import { checkProofFrameworkLinks } from "./compliance-claims.mjs";
+import { inlineScriptFindings } from "./inline-script-audit.mjs";
 
 import { auditInstallContract } from "./install-contract.mjs";
 import { isBlockedExternalLink } from "./external-link-policy.mjs";
@@ -269,6 +270,10 @@ for (const file of htmlFiles) {
   const indexable = !robots.includes("noindex") && route !== "/404.html";
 
   pageByRoute.set(route, { file, route, html: scrubbedHtml, ids, visibleText, title, description, robots, indexable });
+
+  for (const finding of inlineScriptFindings(scrubbedHtml)) {
+    issues.push(`${route}: ${finding}`);
+  }
 
   if (!title) {
     issues.push(`${route}: missing <title>`);
