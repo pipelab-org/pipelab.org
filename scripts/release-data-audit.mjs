@@ -35,6 +35,15 @@ export function auditReleaseData(root, version, historical = loadHistoricalArtif
     if (pins.size !== schema.size) throw new Error("require one version and SHA-256 archive pin");
     return [["verifier version", pins.get("PIPELAB_VERIFIER_VERSION")]];
   });
+  check(".github/workflows/sync-pipelock-rules.yml", source => {
+    const pin = key => {
+      const values = [...source.matchAll(new RegExp(`^\\s+${key}:\\s*(\\S+)\\s*$`, "gm"))].map(match => match[1]);
+      if (values.length !== 1) throw new Error(`require exactly one ${key} pin`);
+      return values[0];
+    };
+    if (!/^[0-9a-f]{64}$/.test(pin("PIPELOCK_SHA256"))) throw new Error("malformed PIPELOCK_SHA256");
+    return [["rules sync Pipelock version", pin("PIPELOCK_VERSION")]];
+  });
   check(HISTORICAL_GAUNTLET_POINTER, (source, bytes) => {
     const pointer = JSON.parse(source);
     if (pointer.status !== "verified" || pointer.tool !== "pipelock") throw new Error("require verified Pipelock evidence");
