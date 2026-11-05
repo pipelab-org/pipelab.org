@@ -13,7 +13,7 @@ tags:
   - concepts
 faq:
   - q: "What does Pipelock not protect against?"
-    a: "Pipelock is a network and tool proxy, not a sandbox. It does not stop process-level attacks that bypass the proxy, non-HTTP exfiltration through channels it does not mediate, a compromised model, pixel-level steganography, or covert channels like timing and HTTP/2 frame flags. It has partial coverage of semantically novel prompt injection and very slow exfiltration. Each gap has a documented mitigation, usually a deployment control such as container network isolation."
+    a: "Proxy inspection covers supported traffic routed through Pipelock. Supported containment and sandbox modes add OS restrictions under their documented platform and deployment requirements. Unmediated channels, a compromised model, pixel-level steganography, covert channels, semantically novel prompt injection, and very slow exfiltration remain limitations. Each gap has a documented mitigation; configure and verify the boundary your deployment needs. These controls do not establish automatic whole-host coverage or prove that no bypass occurred."
   - q: "Why publish a limitations list at all?"
     a: "Because a security tool that claims full coverage is the one to distrust. A standing public register lets a reviewer see exactly where the boundaries are and decide what residual risk they accept. It is the same reason Pipelock signs evidence instead of asserting non-bypass: verifiable honesty beats an unverifiable guarantee."
   - q: "Does Pipelock catch homoglyphs and field-split secrets?"
