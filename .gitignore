@@ -13,6 +13,7 @@ __pycache__/
 .wrangler/
 .codex
 .pipelock-verifier
+.release-bump-*/
 # Playground browser-verifier WASM build artifacts: built from pipelock
 # (deploy/wasm-verify/build.sh) into the served demo dir at deploy time, never
 # committed (the .wasm is ~10MB; both must match the building Go toolchain).
