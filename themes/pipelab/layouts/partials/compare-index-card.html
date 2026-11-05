@@ -6,7 +6,7 @@
     {{ if eq .key $cat }}{{ $catLabel = .label }}{{ end }}
   {{ end }}
 {{ end }}
-{{ $summary := $page.Params.subtitle | default $page.Description | default "" }}
+{{ $summary := $page.Params.subtitle | default (partial "fact-text.html" $page.Description) | default "" }}
 {{/* Short reviewed stamp: "Sep 2026". The long boundary text lives in the page ledger, not in a pill. */}}
 {{ $meta := "" }}
 {{ with $page.Params.reviewed }}

@@ -113,7 +113,7 @@ The most common MCP failure is also the most basic. Servers ship with API keys h
 
 The defenses are layered. At the identity layer, you want short-lived tokens with explicit scopes, ideally OAuth 2.1 client credentials with rotation. At the inspection layer, you want DLP scanning on every tool argument and response so credentials never reach an outbound server. At the audit layer, you want a log of every credential access so leaks can be retraced.
 
-Pipelock contributes the inspection piece. Its DLP engine carries 65 credential patterns at the time of writing and checks normalized text plus decoded variants such as URL-encoded, base64, hex, base32, and dot-collapsed forms before matching. If a credential appears in a tool argument, the proxy strips or blocks the request based on the configured action. That covers the runtime side. For provisioning and rotation you still need an identity gateway. See [MCP Authorization](/learn/mcp-authorization/) for the auth half of the story.
+Pipelock contributes the inspection piece. Its DLP engine carries {{< stat key="dlp_patterns" >}} credential patterns at the time of writing and checks normalized text plus decoded variants such as URL-encoded, base64, hex, base32, and dot-collapsed forms before matching. If a credential appears in a tool argument, the proxy strips or blocks the request based on the configured action. That covers the runtime side. For provisioning and rotation you still need an identity gateway. See [MCP Authorization](/learn/mcp-authorization/) for the auth half of the story.
 
 ## MCP03: Tool poisoning and rug-pulls
 

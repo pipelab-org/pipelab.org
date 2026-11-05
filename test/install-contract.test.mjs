@@ -79,7 +79,7 @@ function fixture(t) {
     return full;
   };
   write("data/install.yaml", stringify(data()));
-  write("static/llms-full.txt", raw);
+  write("public/llms-full.txt", raw);
   const article = write("content/blog/pipelock-v340-release.md", `---\ntitle: History\n---\n\n${installationCorrection}\n\nOriginal text.\n\`\`\`bash\n${oldCommand}\n\`\`\`\n`);
   const guide = write("content/learn/current.md", '---\ntitle: Current\n---\n{{< install-block >}}\n');
   const template = write("themes/pipelab/layouts/index.html", '{{ partial "install/methods.html" (dict) }}');
@@ -105,7 +105,7 @@ test("the production audit detects drift in current FAQ, body, template and raw 
   assert.deepEqual(f.audit(), []);
   writeFileSync(f.guide, `---\nfaq: "${oldCommand}"\n---\n${clone}\n${build}\n`);
   writeFileSync(f.template, oldCommand);
-  f.write("static/llms-full.txt", raw.replace("3.7.0", "3.6.0"));
+  f.write("public/llms-full.txt", raw.replace("3.7.0", "3.6.0"));
   const issues = f.audit().join("\n");
   assert.match(issues, /frontmatter/);
   assert.match(issues, /hand-written source clone/);
@@ -129,7 +129,7 @@ test("example and benchmark repository clones are not installation commands", t 
 
 test("deleting the raw install section does not evade its current-release requirement", t => {
   const f = fixture(t);
-  f.write("static/llms-full.txt", "# Pipelock\n");
+  f.write("public/llms-full.txt", "# Pipelock\n");
   assert.match(f.audit().join("\n"), /missing current pinned source-build/);
 });
 
@@ -311,7 +311,7 @@ test("CommonMark line endings preserve fences, front matter and exact install pi
   for (const ending of ["\r\n", "\r"]) {
     const convert = source => source.replaceAll("\n", ending);
     assert.deepEqual(auditRawInstallSource(convert(raw), "3.7.0"), []);
-    f.write("static/llms-full.txt", convert(raw));
+    f.write("public/llms-full.txt", convert(raw));
     f.write("data/install.yaml", convert(stringify(data())));
     writeFileSync(f.guide, convert('---\ntitle: Current\n---\n{{< install-block >}}\n'));
     writeFileSync(f.article, convert(`${installationCorrection}\n${oldCommand}\n`));
@@ -491,7 +491,7 @@ test("Helm OCI commands reach product, install, enterprise and raw context", () 
   assert.match(read("content/enterprise.md"), /install-block "helm"/);
   assert.match(read("themes/pipelab/layouts/_default/install.html"), /range \$i, \$m := \$methods/);
   const version = /^pipelock_version = "([^"]+)"$/m.exec(read("hugo.toml"))[1];
-  assert.ok(read("static/llms-full.txt").includes(helmTemplate.replace("VERSION", version)));
+  assert.ok(read("themes/pipelab/layouts/index.llmsfull.txt").includes('{{ partial "machine/install.txt" (dict "id" "helm") }}'));
   const current = `## Helm\n${helmTemplate.replace("VERSION", version)}\n`;
   assert.deepEqual(auditRawInstallSource(current, version), []);
   assert.match(auditRawInstallSource(current.replace(version, "latest"), version).join("\n"), /Helm OCI install/);

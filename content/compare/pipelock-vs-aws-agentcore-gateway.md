@@ -53,7 +53,7 @@ AgentCore Gateway is managed plumbing and authorization inside AWS. Pipelock is 
 | **Tool creation** | No; it inspects tools that exist | Yes, from OpenAPI, Smithy, and Lambda |
 | **Authorization** | Tool policy via config | OAuth ingress and egress; policy evaluation on tool calls |
 | **Model routing** | No | Yes |
-| **Credential scanning (DLP)** | 65 patterns, encoding-aware, on mediated traffic | Not described in the pages read |
+| **Credential scanning (DLP)** | {{< stat key="dlp_patterns" >}} patterns, encoding-aware, on mediated traffic | Not described in the pages read |
 | **Prompt injection detection** | Deterministic patterns with multi-pass normalization on mediated traffic | Not described in the pages read |
 | **Tool poisoning and rug-pull drift** | Fingerprinting and drift detection on mediated MCP traffic | Not described in the pages read |
 | **SSRF protection** | Mediated private-IP, metadata, and DNS rebinding checks | Not described in the pages read |

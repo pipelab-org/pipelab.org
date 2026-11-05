@@ -68,7 +68,7 @@
         <p class="blog-related-cat">{{ $catLabel }}</p>
       {{ end }}
       <p class="blog-related-title">{{ .LinkTitle | default .Title }}</p>
-      {{ with .Description }}<p class="blog-related-desc">{{ . }}</p>{{ end }}
+      {{ with (partial "fact-text.html" .Description) }}<p class="blog-related-desc">{{ . }}</p>{{ end }}
       <p class="blog-related-meta">
         {{ if .ReadingTime }}<span>{{ .ReadingTime }} min</span>{{ end }}
         {{ if not .Date.IsZero }}<span>{{ .Date.Format "Jan 2, 2006" }}</span>{{ end }}

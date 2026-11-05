@@ -40,9 +40,9 @@
   <div class="accordion">
   {{ range $index, $item := . }}
     <details class="accordion-item"{{ if $isPricing }} data-fx="spotlight"{{ end }}{{ if and $isPricing (eq $index 0) }} open{{ end }}>
-      <summary>{{ .q }}</summary>
+      <summary>{{ partial "fact-text.html" .q }}</summary>
       <div class="accordion-body">
-        {{ .a | markdownify }}
+        {{ .a | partial "fact-text.html" | markdownify }}
       </div>
     </details>
   {{ end }}

@@ -9,7 +9,7 @@
   "kind" "learn"
   "cat" $cat
   "catLabel" $catLabel
-  "summary" ($page.Description | default "")
+  "summary" ((partial "fact-text.html" $page.Description) | default "")
   "featured" (.featured | default false)
   "level" ($page.Params.level | default "")
   "tags" ($page.Params.tags | default slice)

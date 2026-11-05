@@ -95,7 +95,7 @@ Seven open source projects address AI agent security. They solve different probl
 
 | Tool | Layer | Language | Content Scanning | MCP Support | Deployment |
 |------|-------|----------|-----------------|-------------|------------|
-| [Pipelock](/pipelock/) | Network proxy | Go | DLP (65 patterns), response scanning ({{< stat key="response_patterns" >}} patterns), SSRF, encoding evasion (6-pass normalization) | Bidirectional (stdio, HTTP, WebSocket) with tool poisoning + rug-pull detection | Single binary, Docker, K8s companion proxy |
+| [Pipelock](/pipelock/) | Network proxy | Go | DLP ({{< stat key="dlp_patterns" >}} patterns), response scanning ({{< stat key="response_patterns" >}} patterns), SSRF, encoding evasion (6-pass normalization) | Bidirectional (stdio, HTTP, WebSocket) with tool poisoning + rug-pull detection | Single binary, Docker, K8s companion proxy |
 | [LlamaFirewall](https://github.com/meta-llama/PurpleLlama/tree/main/LlamaFirewall) | Inference | Python | PromptGuard classifier, AlignmentCheck, CodeShield | Not documented in public docs | Python library |
 | [NeMo Guardrails](https://github.com/NVIDIA-NeMo/Guardrails) | Inference | Python | Colang-based dialog policy, topical control | Not documented in public docs | Python library |
 | [Trylon Gateway](https://github.com/trylonai/gateway) | Gateway | Python | Self-hosted firewall for LLM apps | Gateway routing | Container |
@@ -158,7 +158,7 @@ export HTTPS_PROXY=http://127.0.0.1:8888
 pipelock run
 ```
 
-Pipelock scans mediated traffic for 65 credential patterns, prompt injection (with 6-pass encoding normalization), SSRF, DNS rebinding, and MCP tool poisoning. Every decision lands in the [flight recorder](/learn/flight-recorder/) audit log, and enabling a signing key adds mediator-signed action receipts on top.
+Pipelock scans mediated traffic for {{< stat key="dlp_patterns" >}} credential patterns, prompt injection (with 6-pass encoding normalization), SSRF, DNS rebinding, and MCP tool poisoning. Every decision lands in the [flight recorder](/learn/flight-recorder/) audit log, and enabling a signing key adds mediator-signed action receipts on top.
 
 <div class="hero-buttons" style="margin-top: 2rem;">
   <a href="https://github.com/pipelab-org/pipelock" class="btn btn-primary" data-event="github_click" data-event-placement="guide-body" target="_blank" rel="noopener noreferrer">GitHub</a>

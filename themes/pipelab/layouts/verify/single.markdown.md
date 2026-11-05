@@ -3,7 +3,7 @@
 {{- with .OutputFormats.Get "html" }}
 Canonical URL: {{ .Permalink }}
 {{- end }}
-{{- with .Description }}
+{{- with (partial "fact-text.html" .Description) }}
 Description: {{ . }}
 {{- end }}
 

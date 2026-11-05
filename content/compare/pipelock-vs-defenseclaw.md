@@ -60,7 +60,7 @@ That last point is the update since this page was first written. DefenseClaw sta
 | **MCP scanning** | Runtime, both directions, stdio and HTTP | Pre-run scanning of MCP servers plus runtime tool-call inspection through connectors |
 | **Pre-run scanning of skills and plugins** | No | Yes |
 | **Generated-code scanning** | No | Yes |
-| **Credential scanning (DLP)** | 65 patterns, encoding-aware, environment leak detection | Scanners on prompts, completions, and tool calls |
+| **Credential scanning (DLP)** | {{< stat key="dlp_patterns" >}} patterns, encoding-aware, environment leak detection | Scanners on prompts, completions, and tool calls |
 | **Injection detection** | Deterministic patterns with multi-pass normalization | Scanners plus an optional LLM judge |
 | **Enforcement modes** | Block or warn per control; fail-closed on mediated paths | Observe, action, or action with human approval, per connector |
 | **Policy** | YAML config, hot reload | Policy files, including Rego, plus scanners |

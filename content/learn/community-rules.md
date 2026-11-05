@@ -2,7 +2,7 @@
 title: "Pipelock Detection Rules: Community Collection"
 linkTitle: "Pipelock Detection Rules"
 subtitle: "Signed, versioned detection patterns you can install with one command."
-description: "Pipelock detection rules from the community. 28 signed rules covering DLP patterns, MCP tool poisoning, and prompt injection scanning."
+description: "Pipelock detection rules from the community. {{stat:community_rules}} signed rules covering DLP patterns, MCP tool poisoning, and prompt injection scanning."
 date: 2026-03-19
 learn_cat: operator
 level: intro
@@ -12,7 +12,7 @@ tags:
   - detection
 ---
 
-Pipelock ships with 65 built-in DLP patterns and {{< stat key="response_patterns" >}} response scanning patterns. Pipelock detection rules from the community extend that with additional patterns maintained outside the release cycle.
+Pipelock ships with {{< stat key="dlp_patterns" >}} built-in DLP patterns and {{< stat key="response_patterns" >}} response scanning patterns. Pipelock detection rules from the community extend that with additional patterns maintained outside the release cycle.
 
 ## Install
 
@@ -26,9 +26,9 @@ That's it. Pipelock downloads the signed bundle, verifies the Ed25519 signature 
 
 ## What's Included
 
-The `pipelock-community` bundle ships 28 rules across three categories:
+The `pipelock-community` bundle ships {{< stat key="community_rules" >}} rules across three categories:
 
-**DLP patterns (secret detection):** 1Password service account tokens, Buildkite user tokens, Doppler service tokens, Modal workspace keys and secrets, Perplexity API keys, Pulumi access tokens, Shopify tokens, and Vercel tokens. These extend the 65 built-in patterns with provider-specific formats that change more frequently than the core release cycle.
+**DLP patterns (secret detection):** 1Password service account tokens, Buildkite user tokens, Doppler service tokens, Modal workspace keys and secrets, Perplexity API keys, Pulumi access tokens, Shopify tokens, and Vercel tokens. These extend the {{< stat key="dlp_patterns" >}} built-in patterns with provider-specific formats that change more frequently than the core release cycle.
 
 **MCP tool poisoning detection:** Patterns that flag suspicious tool descriptions containing hidden instructions, data exfiltration commands, or prompt injection payloads. Rules scoped to `scan_field: description` scan the tool description and description fields nested in its input schema. Built-in tool scanning still covers other agent-visible fields.
 

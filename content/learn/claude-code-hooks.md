@@ -17,7 +17,7 @@ howto_steps:
     text: Run pipelock verify-install to confirm the hook path and scanning pipeline are active.
 faq:
   - q: "What does Pipelock's Claude Code integration do?"
-    a: "Pipelock registers PreToolUse hooks with Claude Code that intercept Bash commands, WebFetch URLs, Write and Edit file operations, and all MCP tool calls before they execute. Each action is scanned for credential leaks (65 DLP patterns), prompt injection, and dangerous operations. Blocked actions return a clear explanation to both you and the agent."
+    a: "Pipelock registers PreToolUse hooks with Claude Code that intercept Bash commands, WebFetch URLs, Write and Edit file operations, and all MCP tool calls before they execute. Each action is scanned for credential leaks ({{stat:dlp_patterns}} DLP patterns), prompt injection, and dangerous operations. Blocked actions return a clear explanation to both you and the agent."
   - q: "How do I install Pipelock for Claude Code?"
     a: "Run 'pipelock claude setup' after installing the pipelock binary from a pinned source build or Homebrew as documented at https://pipelab.org/install/. The setup command writes hooks to ~/.claude/settings.json automatically. Restart Claude Code to activate."
   - q: "Can I also wrap MCP servers through Pipelock?"
@@ -71,7 +71,7 @@ The setup command writes hooks to `~/.claude/settings.json` with two matcher gro
 
 The [poisoned MCP tool recipe](/learn/block-poisoned-mcp-tool/) tests the proxy's description-scanning path on a clean Ubuntu machine. It uses a small local fixture and doesn't require a Claude Code installation.
 
-**Credential exfiltration (DLP).** 65 credential patterns covering AWS keys, GitHub tokens, Anthropic/OpenAI API keys, private keys, JWTs, Google OAuth secrets, Slack tokens, financial account numbers, and more. Includes 4 checksum validators (Luhn, mod97, ABA, WIF) for structured formats. Catches secrets in shell commands, URLs, file content, and MCP tool inputs. Handles base64, hex, and URL encoding.
+**Credential exfiltration (DLP).** {{< stat key="dlp_patterns" >}} credential patterns covering AWS keys, GitHub tokens, Anthropic/OpenAI API keys, private keys, JWTs, Google OAuth secrets, Slack tokens, financial account numbers, and more. Includes 4 checksum validators (Luhn, mod97, ABA, WIF) for structured formats. Catches secrets in shell commands, URLs, file content, and MCP tool inputs. Handles base64, hex, and URL encoding.
 
 **Dangerous shell commands.** Reverse shells (`bash -i >& /dev/tcp/...`), destructive operations (`rm -rf /`), force pushes (`git push --force`), disk wipes (`dd if=/dev/zero`), and shell obfuscation techniques (variable expansion, brace expansion, encoded commands).
 

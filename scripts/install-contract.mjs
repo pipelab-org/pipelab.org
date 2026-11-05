@@ -4,7 +4,7 @@ import { parse as parseYaml } from "yaml";
 
 // Published contract: the v3.7.0 release README's source-build instructions.
 // OCI contract: v3.7.1 README.md, Installation (Helm chart).
-// data/install.yaml substitutes VERSION; raw machine-readable files do not.
+// Both HTML and plain-text Hugo outputs consume data/install.yaml.
 export const sourceBuildTemplate = "git clone --branch vVERSION --depth 1 https://github.com/pipelab-org/pipelock.git\nmake -C pipelock install";
 export const brewInstallCommand = "brew install luckyPipewrench/tap/pipelock";
 export const helmTemplate = "helm install pipelock oci://ghcr.io/luckypipewrench/charts/pipelock --version VERSION";
@@ -277,7 +277,7 @@ export function auditInstallContract({ repoRoot, contentFiles, templateFiles, ve
     if (match) issues.push(`${path.relative(repoRoot, file)}: hand-written ${match.label} command in a template; use the shared install partial`);
   }
 
-  for (const file of ["static/llms.txt", "static/llms-full.txt"]) {
+  for (const file of ["public/llms.txt", "public/llms-full.txt"]) {
     const fullPath = path.join(repoRoot, file);
     if (!existsSync(fullPath)) continue;
     const source = readSource(fullPath);

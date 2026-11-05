@@ -72,7 +72,7 @@ Runtime proxies intercept MCP traffic while the agent runs. They scan tool calls
 
 ### Pipelock
 
-[Pipelock](/pipelock/) wraps MCP server commands and routes all JSON-RPC traffic through a scanning pipeline. It inspects tool descriptions for poisoning ({{< stat key="response_patterns" >}} injection patterns plus 9 tool-specific checks), tool arguments for credential leaks (65 DLP patterns), and tool responses for prompt injection. Fingerprints descriptions with SHA-256 to detect rug-pull attacks. Also proxies HTTP and WebSocket traffic in the same binary, so you get MCP scanning and egress inspection in one tool. Open source, single Go binary, self-hosted.
+[Pipelock](/pipelock/) wraps MCP server commands and routes all JSON-RPC traffic through a scanning pipeline. It inspects tool descriptions for poisoning ({{< stat key="response_patterns" >}} injection patterns plus 9 tool-specific checks), tool arguments for credential leaks ({{< stat key="dlp_patterns" >}} DLP patterns), and tool responses for prompt injection. Fingerprints descriptions with SHA-256 to detect rug-pull attacks. Also proxies HTTP and WebSocket traffic in the same binary, so you get MCP scanning and egress inspection in one tool. Open source, single Go binary, self-hosted.
 
 ### Promptfoo
 
@@ -154,7 +154,7 @@ Pipelock is the open-source agent-side option in the runtime lane. Specifically:
 - Runtime MCP proxy that wraps any MCP server (stdio, Streamable HTTP, HTTP reverse proxy) and scans bidirectionally.
 - Tool poisoning detection on `tools/list` responses with rug-pull description-drift detection across the session.
 - Prompt injection detection on `tools/call` results (same 6-pass normalization that protects HTTP responses).
-- DLP scanning on `tools/call` arguments (65 credential patterns, encoded-form coverage).
+- DLP scanning on `tools/call` arguments ({{< stat key="dlp_patterns" >}} credential patterns, encoded-form coverage).
 - Tool policy enforcement (allow / deny / redirect, shell-obfuscation detection on command-shaped arguments).
 - Cross-call chain detection (subsequence matching against the session's tool-call history).
 - Session binding (pins the tool inventory at session start, rejects unknown tools mid-session).

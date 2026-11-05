@@ -1,0 +1,7 @@
+{{- $method := false -}}
+{{- range site.Data.install.methods -}}
+  {{- if eq .id $.id -}}{{- $method = . -}}{{- end -}}
+{{- end -}}
+{{- if not $method -}}{{- errorf "unknown machine install method %q" .id -}}{{- end -}}
+{{- $version := .version | default site.Params.pipelock_version -}}
+{{- replace $method.command "VERSION" $version -}}
