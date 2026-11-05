@@ -15,7 +15,7 @@
   <channel>
     <title>{{ if .IsHome }}{{ site.Title }}{{ else }}{{ printf "%s on %s" .Title site.Title }}{{ end }}</title>
     <link>{{ .Permalink }}</link>
-    <description>{{ with .Description }}{{ . }}{{ else }}{{ site.Params.description }}{{ end }}</description>
+    <description>{{ with (partial "fact-text.html" .Description) }}{{ . }}{{ else }}{{ site.Params.description }}{{ end }}</description>
     <generator>Hugo</generator>
     <language>{{ site.Language.LanguageCode }}</language>
     <lastBuildDate>{{ now.Format "Mon, 02 Jan 2006 15:04:05 -0700" }}</lastBuildDate>
@@ -29,7 +29,7 @@
              It otherwise mirrors Hugo's built-in RSS output: a summary in
              description, and no full-text content:encoded element. */ -}}
       {{- $correction := partial "blog-updates.html" (dict "page" . "format" "rss") -}}
-      {{- $description := printf "%s%s" $correction (or .Summary .Description) -}}
+      {{- $description := printf "%s%s" $correction (or .Summary (partial "fact-text.html" .Description)) -}}
       <item>
         <title>{{ .Title }}</title>
         <link>{{ .Permalink }}</link>

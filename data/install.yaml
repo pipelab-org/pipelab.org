@@ -13,9 +13,8 @@
 # VERSION in a command is substituted with site.Params.pipelock_version at build
 # time, so a release version bump does not need an edit here.
 #
-# The one surface this does NOT reach is static/llms-full.txt, which is served
-# raw and never passes through Hugo. It hard-codes the release tag, so a version
-# bump needs a matching edit there; the same audit fails until it matches.
+# Plain-text machine context uses these same commands. Its Docker example
+# deliberately retains the published latest tag; the other commands use VERSION.
 
 methods:
   - id: go

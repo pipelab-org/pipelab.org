@@ -6,7 +6,7 @@
   {{ $pageTitle := .LinkTitle }}
   {{ with .Params.seoTitle }}{{ $pageTitle = . }}{{ end }}
   {{ $displayTitle := cond .IsHome $pageTitle (printf "%s | %s" $pageTitle .Site.Title) }}
-  {{ $pageDescription := .Description | default .Site.Params.description }}
+  {{ $pageDescription := (partial "fact-text.html" .Description) | default .Site.Params.description }}
   {{ if eq .Type "capability-detail" }}
     {{ $pageDescription = truncate 152 (printf "%s Review its operator surface, availability, source record, and documented limits." $pageDescription) }}
   {{ else if eq .Type "capabilities" }}
@@ -97,7 +97,7 @@
     "@context": "https://schema.org",
     "@type": "BlogPosting",
     "headline": "{{ .Title }}",
-    "description": "{{ with .Description }}{{ . }}{{ else }}{{ .Site.Params.description }}{{ end }}",
+    "description": "{{ with (partial "fact-text.html" .Description) }}{{ . }}{{ else }}{{ .Site.Params.description }}{{ end }}",
     "url": "{{ .Permalink }}",
     {{ if not .Date.IsZero }}"datePublished": "{{ .Date.Format "2006-01-02" }}",
     "dateModified": "{{ .Lastmod.Format "2006-01-02" }}",
@@ -143,7 +143,7 @@
         "@id": {{ (printf "%spipelock/#software" .Site.BaseURL) | jsonify | safeJS }},
         "name": "Pipelock",
         "url": {{ .Permalink | jsonify | safeJS }},
-        "description": {{ (or .Description .Site.Params.description) | jsonify | safeJS }},
+        "description": {{ (or (partial "fact-text.html" .Description) .Site.Params.description) | jsonify | safeJS }},
         "applicationCategory": "SecurityApplication",
         "operatingSystem": "Linux, macOS, Windows",
         "softwareVersion": {{ .Site.Params.pipelock_version | jsonify | safeJS }},
@@ -176,7 +176,7 @@
     "@context": "https://schema.org",
     "@type": "TechArticle",
     "headline": "{{ .Title }}",
-    "description": "{{ with .Description }}{{ . }}{{ else }}{{ .Site.Params.description }}{{ end }}",
+    "description": "{{ with (partial "fact-text.html" .Description) }}{{ . }}{{ else }}{{ .Site.Params.description }}{{ end }}",
     "url": "{{ .Permalink }}",
     "image": {{ $ogImage | jsonify | safeJS }},
     {{ if not .Date.IsZero }}"datePublished": "{{ .Date.Format "2006-01-02" }}",
@@ -231,7 +231,7 @@
     "@context": "https://schema.org",
     "@type": "TechArticle",
     "headline": {{ .Title | jsonify | safeJS }},
-    "description": {{ (or .Description .Site.Params.description) | jsonify | safeJS }},
+    "description": {{ (or (partial "fact-text.html" .Description) .Site.Params.description) | jsonify | safeJS }},
     "url": {{ .Permalink | jsonify | safeJS }},
     {{ if not .Date.IsZero }}"datePublished": "{{ .Date.Format "2006-01-02" }}",
     "dateModified": "{{ .Lastmod.Format "2006-01-02" }}",
@@ -257,7 +257,7 @@
     "@context": "https://schema.org",
     "@type": "TechArticle",
     "headline": {{ .Title | jsonify | safeJS }},
-    "description": {{ (or .Description .Site.Params.description) | jsonify | safeJS }},
+    "description": {{ (or (partial "fact-text.html" .Description) .Site.Params.description) | jsonify | safeJS }},
     "url": {{ .Permalink | jsonify | safeJS }},
     {{ if not .Date.IsZero }}"datePublished": "{{ .Date.Format "2006-01-02" }}",
     "dateModified": "{{ .Lastmod.Format "2006-01-02" }}",
@@ -283,7 +283,7 @@
     "@context": "https://schema.org",
     "@type": "TechArticle",
     "headline": {{ .Title | jsonify | safeJS }},
-    "description": {{ (or .Description .Site.Params.description) | jsonify | safeJS }},
+    "description": {{ (or (partial "fact-text.html" .Description) .Site.Params.description) | jsonify | safeJS }},
     "url": {{ .Permalink | jsonify | safeJS }},
     {{ if not .Date.IsZero }}"datePublished": "{{ .Date.Format "2006-01-02" }}",
     "dateModified": "{{ .Lastmod.Format "2006-01-02" }}",
@@ -304,7 +304,7 @@
   }
   </script>
   {{ else if eq .RelPermalink "/contact/" }}
-  {{ $contactDesc := or .Description .Site.Params.description }}
+  {{ $contactDesc := or (partial "fact-text.html" .Description) .Site.Params.description }}
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -334,7 +334,7 @@
     "@type": "AboutPage",
     "name": "About PipeLab",
     "url": "{{ .Permalink }}",
-    "description": "{{ with .Description }}{{ . }}{{ else }}{{ .Site.Params.description }}{{ end }}",
+    "description": "{{ with (partial "fact-text.html" .Description) }}{{ . }}{{ else }}{{ .Site.Params.description }}{{ end }}",
     "mainEntity": {
       "@type": "Organization",
       "name": "PipeLab",
@@ -382,10 +382,10 @@
       {{ range $i, $item := . }}{{ if $i }},{{ end }}
       {
         "@type": "Question",
-        "name": "{{ $item.q | safeJS }}",
+        "name": "{{ $item.q | partial "fact-text.html" | safeJS }}",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "{{ $item.a | markdownify | plainify | safeJS }}"
+          "text": "{{ $item.a | partial "fact-text.html" | markdownify | plainify | safeJS }}"
         }
       }{{ end }}
     ]
@@ -398,7 +398,7 @@
     "@context": "https://schema.org",
     "@type": "HowTo",
     "name": {{ $.Title | jsonify | safeJS }},
-    "description": {{ (or $.Description $.Site.Params.description) | jsonify | safeJS }},
+    "description": {{ (or (partial "fact-text.html" $.Description) $.Site.Params.description) | jsonify | safeJS }},
     "url": {{ $.Permalink | jsonify | safeJS }},
     "step": [
       {{ range $i, $step := . }}{{ if $i }},{{ end }}
@@ -437,7 +437,7 @@
     "@type": "SoftwareApplication",
     "name": {{ .Title | jsonify | safeJS }},
     "url": {{ .Permalink | jsonify | safeJS }},
-    "description": {{ .Description | jsonify | safeJS }},
+    "description": {{ (partial "fact-text.html" .Description) | jsonify | safeJS }},
     "applicationCategory": "SecurityApplication",
     "operatingSystem": "Any (web browser)",
     "isAccessibleForFree": true,

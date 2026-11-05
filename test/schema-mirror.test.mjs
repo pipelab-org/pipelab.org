@@ -112,7 +112,7 @@ test("schema mirror catalog pins every mirrored byte and preserves upstream iden
 });
 
 test("schema discovery advertises the catalog and immutable revision paths", () => {
-  for (const file of ["static/llms.txt", "static/llms-full.txt"]) {
+  for (const file of ["themes/pipelab/layouts/index.llms.txt", "themes/pipelab/layouts/index.llmsfull.txt"]) {
     assert.ok(readFileSync(path.join(root, file), "utf8").includes("https://pipelab.org/schemas/"), `${file} does not link the schema page`);
   }
   const headers = readFileSync(path.join(root, "static/_headers"), "utf8");

@@ -154,7 +154,7 @@ export function versionsInCurrentClaim(file, line) {
 
   // The llms files are explicit current product summaries, so their unqualified
   // "Version X" wording is a current claim. Other paths must name Pipelock.
-  if (file === "static/llms.txt" || file === "static/llms-full.txt") {
+  if (/^(?:static|public)\/llms(?:-full)?\.txt$/.test(file) || /^themes\/pipelab\/layouts\/index\.llms(?:full)?\.txt$/.test(file)) {
     patterns.push(/\bVersion\s+v?([0-9]+\.[0-9]+(?:\.[0-9]+)?)\b/gi);
   }
 

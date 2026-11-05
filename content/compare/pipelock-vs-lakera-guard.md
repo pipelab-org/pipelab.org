@@ -56,7 +56,7 @@ Pipelock inspects traffic the agent routes through it. Lakera classifies content
 | **HTTP egress scanning** | Mediated HTTP | Not a proxy; screens content the application submits |
 | **WebSocket frame scanning** | Mediated WebSocket frames | Not a proxy; screens content the application submits |
 | **MCP awareness** | Mediated tool descriptions, arguments, and responses | Screens submitted tool calls and separately submitted tool definitions; drift detection not documented |
-| **Credential scanning (DLP)** | 65 built-in patterns with encoding normalization on routed traffic | Data-leakage classification on submitted content |
+| **Credential scanning (DLP)** | {{< stat key="dlp_patterns" >}} built-in patterns with encoding normalization on routed traffic | Data-leakage classification on submitted content |
 | **Response scanning** | {{< stat key="response_patterns" >}} built-in response-scanning patterns with multi-pass normalization on mediated responses | Model-based classifier for submitted content |
 | **Tool poisoning and rug-pull detection** | Mediated tool-description scanning and drift detection | Tool-definition screening is documented; drift detection is not documented |
 | **SSRF and private-IP blocking** | Mediated destination checks before DNS resolution | Not documented |

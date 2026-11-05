@@ -64,7 +64,7 @@ test("Hugo renders the shared pattern datum and follows the published result poi
   writeFileSync(path.join(fixture, "hugo.toml"), 'baseURL = "https://example.org/"\n[params]\npipelock_version = "3.7.1"\n[markup.goldmark.renderer]\nunsafe = true\n');
   writeFileSync(path.join(fixture, "layouts/_default/single.html"), "{{ .Content }}");
   writeFileSync(path.join(fixture, "content/result.md"), '---\ntitle: Result\n---\n{{< stat key="response_patterns" >}} response-scanning patterns\n\n{{< bench-published-result >}}\n');
-  for (const file of ["shortcodes/stat.html", "shortcodes/bench-published-result.html", "partials/bench-published-result.html"]) {
+  for (const file of ["shortcodes/stat.html", "partials/fact-value.html", "shortcodes/bench-published-result.html", "partials/bench-published-result.html"]) {
     cpSync(path.join(root, "themes/pipelab/layouts", file), path.join(fixture, "layouts", file));
   }
   const pointer = JSON.parse(read("static/gauntlet/evidence/latest-verified.json"));

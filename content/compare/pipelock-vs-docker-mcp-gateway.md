@@ -37,7 +37,7 @@ faq:
   - q: "What's the difference between Pipelock and Docker MCP Gateway?"
     a: "Docker MCP Gateway runs each MCP server in its own container with resource limits and network restrictions, fronted by one gateway. Pipelock is a network proxy that scans the content of HTTP requests, MCP tool calls, and WebSocket frames. Docker controls the container. Pipelock scans the traffic."
   - q: "Does Docker MCP Gateway scan for credential leaks or prompt injection?"
-    a: "Its CLI documents a --block-secrets flag, on by default, that blocks secret-shaped content flowing to or from tools, plus --verify-signatures for server images and --block-network for forbidden network access. Prompt-injection or tool-poisoning scanning is not documented. Pipelock's DLP covers 65 credential patterns with encoding normalization and scans responses and tool descriptions for injection and drift."
+    a: "Its CLI documents a --block-secrets flag, on by default, that blocks secret-shaped content flowing to or from tools, plus --verify-signatures for server images and --block-network for forbidden network access. Prompt-injection or tool-poisoning scanning is not documented. Pipelock's DLP covers {{stat:dlp_patterns}} credential patterns with encoding normalization and scans responses and tool descriptions for injection and drift."
   - q: "Can I use Pipelock and Docker MCP Gateway together?"
     a: "Yes. Docker handles isolation, the catalog, profiles, and OAuth. Pipelock handles content scanning. Wrap the gateway's transport with pipelock mcp proxy and both layers apply."
 ---
@@ -56,7 +56,7 @@ Docker gives you container isolation and server management. Pipelock gives you c
 |---------|----------|-------------------|
 | **Architecture** | Network proxy, single binary | Container-isolated MCP gateway |
 | **Runtime dependencies** | None | Docker |
-| **Credential scanning (DLP)** | 65 patterns, encoding-aware, environment leak and entropy checks | `--block-secrets`, on by default, blocks secret-shaped content to and from tools |
+| **Credential scanning (DLP)** | {{< stat key="dlp_patterns" >}} patterns, encoding-aware, environment leak and entropy checks | `--block-secrets`, on by default, blocks secret-shaped content to and from tools |
 | **Prompt injection detection** | Deterministic patterns with multi-pass normalization | Not documented |
 | **Tool poisoning and rug-pull drift** | Fingerprinting and drift detection | Not documented |
 | **SSRF protection** | Private IP, metadata, and DNS rebinding checks | `--block-network` for forbidden network resources |

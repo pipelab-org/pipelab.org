@@ -4,7 +4,7 @@
 {{- with $html }}
 Canonical URL: {{ .Permalink }}
 {{- end }}
-{{- with .Description }}
+{{- with (partial "fact-text.html" .Description) }}
 Description: {{ . }}
 {{- end }}
 {{- with .Params.subtitle }}
@@ -20,6 +20,6 @@ Subtitle: {{ . }}
 
 {{ range .Pages }}
 {{ $pageHTML := .OutputFormats.Get "html" -}}
-- [{{ .Title }}]({{ if $pageHTML }}{{ $pageHTML.Permalink }}{{ else }}{{ .Permalink }}{{ end }}){{ with .Description }}: {{ . }}{{ end }}
+- [{{ .Title }}]({{ if $pageHTML }}{{ $pageHTML.Permalink }}{{ else }}{{ .Permalink }}{{ end }}){{ with (partial "fact-text.html" .Description) }}: {{ . }}{{ end }}
 {{ end }}
 {{ end }}

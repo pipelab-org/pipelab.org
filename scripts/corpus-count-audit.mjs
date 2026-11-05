@@ -2,6 +2,7 @@
 
 import { readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
+import { pathToFileURL } from "node:url";
 
 // This is intentionally a source guard, not a freshness checker. The committed
 // snapshot in data/stats.yaml is the one sanctioned place for live corpus
@@ -17,26 +18,9 @@ const sanctionedPrefixes = ["content/blog/"];
 const countLiteral = /\b\d+(?:\.\d+)?\s+(?:(?:logical\s+)?(?:test\s+)?)?cases?\b|\b\d+\s+(?:block-expected|allow-expected|warn-class)\b|\b\d+\s+categories\b/i;
 const corpusContext = /agent[- ]egress[- ]bench|bench(?:mark)?\s+corpus|public\s+corpus|corpus/i;
 
-const tracked = spawnSync("git", ["ls-files", "-z"], { encoding: "buffer" });
-if (tracked.status !== 0) {
-  console.error("corpus count audit: unable to enumerate tracked files with git ls-files; refusing to skip the guard");
-  process.exit(1);
-}
-
-const findings = [];
-for (const file of tracked.stdout.toString("utf8").split("\0").filter(Boolean)) {
-  if (isSanctioned(file) || !isTextSource(file)) {
-    continue;
-  }
-
-  let source;
-  try {
-    source = readFileSync(file, "utf8");
-  } catch (error) {
-    findings.push(`${file}: unable to read tracked source (${error.message}); refusing to skip corpus-count checks`);
-    continue;
-  }
-
+export function corpusCountClaims(file, source) {
+  if (isSanctioned(file) || !isTextSource(file)) return [];
+  const findings = [];
   const lines = source.split("\n");
   for (let index = 0; index < lines.length; index += 1) {
     if (!countLiteral.test(lines[index])) {
@@ -52,17 +36,46 @@ for (const file of tracked.stdout.toString("utf8").split("\0").filter(Boolean)) 
       `${file}:${index + 1}: direct Agent Egress Bench count literal "${lines[index].trim()}"; remove the literal or render data/stats.yaml through a Hugo template/shortcode. Historical benchmark evidence belongs only in content/blog/.`,
     );
   }
+  return findings;
 }
 
-if (findings.length > 0) {
-  console.error("corpus count audit failed:");
-  for (const finding of findings) {
-    console.error(`- ${finding}`);
+function main() {
+  const tracked = spawnSync("git", ["ls-files", "-z"], { encoding: "buffer" });
+  if (tracked.status !== 0) {
+    console.error("corpus count audit: unable to enumerate tracked files with git ls-files; refusing to skip the guard");
+    process.exit(1);
   }
-  process.exit(1);
+
+  const findings = [];
+  for (const file of tracked.stdout.toString("utf8").split("\0").filter(Boolean)) {
+    if (isSanctioned(file) || !isTextSource(file)) {
+      continue;
+    }
+
+    let source;
+    try {
+      source = readFileSync(file, "utf8");
+    } catch (error) {
+      findings.push(`${file}: unable to read tracked source (${error.message}); refusing to skip corpus-count checks`);
+      continue;
+    }
+
+    findings.push(...corpusCountClaims(file, source));
+  }
+
+  if (findings.length > 0) {
+    console.error("corpus count audit failed:");
+    for (const finding of findings) {
+      console.error(`- ${finding}`);
+    }
+    process.exit(1);
+  }
+
+  console.log("corpus count audit passed: no unsanctioned direct Agent Egress Bench count literals in tracked text sources");
+
 }
 
-console.log("corpus count audit passed: no unsanctioned direct Agent Egress Bench count literals in tracked text sources");
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main();
 
 function isSanctioned(file) {
   return sanctionedPaths.has(file) || sanctionedPrefixes.some((prefix) => file.startsWith(prefix));
