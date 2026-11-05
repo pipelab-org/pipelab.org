@@ -47,6 +47,8 @@ The transmission-security and ePHI rows also have deployment limits. Configure t
 
 ## Use the mapping as evidence
 
+The [synthetic patient-data recipe](/learn/block-synthetic-patient-data/) installs the free signed healthcare bundle and checks a blocked medical record number. It demonstrates one detection case, not HIPAA compliance.
+
 Pipelock's compliance catalog feeds the assessment output and framework summaries. The HIPAA mapping keeps its technical contribution and its limit in the same record.
 
 Read [Compliance Evidence Substrate](/learn/compliance-evidence-substrate/) before using Pipelock evidence in an audit or procurement process. It explains the difference between product evidence and an auditor's attestation.

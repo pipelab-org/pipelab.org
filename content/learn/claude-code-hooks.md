@@ -69,6 +69,8 @@ The setup command writes hooks to `~/.claude/settings.json` with two matcher gro
 
 ## What it blocks
 
+The [poisoned MCP tool recipe](/learn/block-poisoned-mcp-tool/) tests the proxy's description-scanning path on a clean Ubuntu machine. It uses a small local fixture and doesn't require a Claude Code installation.
+
 **Credential exfiltration (DLP).** 65 credential patterns covering AWS keys, GitHub tokens, Anthropic/OpenAI API keys, private keys, JWTs, Google OAuth secrets, Slack tokens, financial account numbers, and more. Includes 4 checksum validators (Luhn, mod97, ABA, WIF) for structured formats. Catches secrets in shell commands, URLs, file content, and MCP tool inputs. Handles base64, hex, and URL encoding.
 
 **Dangerous shell commands.** Reverse shells (`bash -i >& /dev/tcp/...`), destructive operations (`rm -rf /`), force pushes (`git push --force`), disk wipes (`dd if=/dev/zero`), and shell obfuscation techniques (variable expansion, brace expansion, encoded commands).
