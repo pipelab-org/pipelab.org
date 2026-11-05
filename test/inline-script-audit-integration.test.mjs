@@ -18,7 +18,7 @@ test("site audit checks original HTML without stripping comment-like JSON text",
     if (entry.isDirectory()) symlinkSync(source, target, "junction");
     else if (entry.isFile()) cpSync(source, target);
   }
-  const build = spawnSync(process.env.HUGO_BIN || "hugo", ["--destination", path.join(fixture, "public"), "--quiet"], {
+  const build = spawnSync(process.env.HUGO_BIN || "hugo", ["--minify", "--destination", path.join(fixture, "public"), "--quiet"], {
     cwd: root, encoding: "utf8", timeout: 30000,
   });
   assert.ifError(build.error);
