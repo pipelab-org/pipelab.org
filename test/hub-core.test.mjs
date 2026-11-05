@@ -10,15 +10,16 @@ import { parseListing, resolveArtifact, schema, validateListing, validateURL } f
 import { auditHubTemplates } from "../scripts/hub/template-lint.mjs";
 import worker from "../src/worker.js";
 import { createServer } from "node:http";
+import { tmpdir } from "node:os";
 
 const root = path.resolve(import.meta.dirname, "..");
 const read = file => readFileSync(path.join(root, file), "utf8").replaceAll("\r\n", "\n");
 const base = JSON.parse(read("test/hub-fixtures/listing.json"));
 const clone = value => structuredClone(value);
 function temp(t) {
-  const parent = path.join(root, "node_modules/.cache/hub-tests");
-  mkdirSync(parent, { recursive: true });
-  const dir = mkdtempSync(path.join(parent, "run-"));
+  // Match the existing integration-test pattern. Keeping mutable fixtures out
+  // of the checkout also prevents races with tests that enumerate source files.
+  const dir = mkdtempSync(path.join(tmpdir(), "hub-core-"));
   t.after(() => rmSync(dir, { recursive: true, force: true }));
   return dir;
 }
