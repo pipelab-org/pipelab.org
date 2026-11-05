@@ -94,8 +94,7 @@ test("machine guide rendering and audit use the hub visibility switch together",
   assert.equal(result.status, 0, result.stdout + result.stderr);
   assert.doesNotMatch(f.built("llms.txt"), /\/hub\//);
   assert.deepEqual(auditMachineContext(f.dir), []);
-  const config = readFileSync(path.join(f.dir, "hugo.toml"), "utf8");
-  f.write("hugo.toml", config.replace("open = false", "open = true"));
+  f.write("data/hub/launch.toml", "open = true\n");
   result = f.build();
   assert.equal(result.status, 0, result.stdout + result.stderr);
   assert.match(f.built("llms.txt"), /\[PipeLab Hub\]\(https:\/\/pipelab.org\/hub\/\)/);

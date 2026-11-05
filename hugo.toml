@@ -134,10 +134,6 @@ pipelock_version = "3.7.1"
   isPlainText = true
   notAlternative = true
 
-# Hub design section 12.1: only boolean true emits hub-owned outputs.
-[params.hub]
-  open = false
-
 [outputFormats.hubindex]
   mediaType = "application/json"
   baseName = "index"

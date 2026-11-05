@@ -1,11 +1,13 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import test from "node:test";
 import { parse as parseHTML } from "parse5";
 import * as commonmark from "commonmark";
 import { stringify } from "yaml";
+import { parse as parseToml } from "smol-toml";
 import { describeLinks, parseListing, resolveArtifact, schema, validateListing, validateURL } from "../scripts/hub/validate.mjs";
 import { auditHubTemplates } from "../scripts/hub/template-lint.mjs";
 import worker from "../src/worker.js";
@@ -108,18 +110,23 @@ function buildFixture(t) {
   mkdirSync(path.join(dir, "assets/hub/community/example/example-bundle"), { recursive: true });
   writeFileSync(path.join(dir, "assets/hub/community/example/example-bundle/bundle.yaml"), "fixture: exact-byte-download\n");
   writeFileSync(path.join(dir, "assets/hub/community/example/example-bundle/bundle.yaml.sig"), "fixture-signature\n");
-  // Use the real site templates and source content; trim copied static files
-  // only to keep repeated builds cheap. readFile still sees the real source.
-  mkdirSync(path.join(dir, "static"));
-  for (const file of ["rules", "_headers", "robots.txt"]) cpSync(path.join(root, "static", file), path.join(dir, "static", file), { recursive: true });
-  const config = read("hugo.toml").replace(/\[params.hub\]\n\s*open = false\n/, "");
-  const build = (value, listing = base, recordOverrides = {}) => {
+  // Keep a real source root for the repository-file launch switch. Templates
+  // read unchanged public evidence through the symlink; distribute only the
+  // small static control set in these repeated builds.
+  symlinkSync(path.join(root, "static"), path.join(dir, "static"), process.platform === "win32" ? "junction" : "dir");
+  cpSync(path.join(root, "layouts"), path.join(dir, "layouts"), { recursive: true });
+  mkdirSync(path.join(dir, "distribution"));
+  for (const file of ["rules", "_headers", "robots.txt"]) cpSync(path.join(root, "static", file), path.join(dir, "distribution", file), { recursive: true });
+  const config = read("hugo.toml");
+  const build = (value, listing = base, recordOverrides = {}, env = {}) => {
     writeFileSync(path.join(dir, "data/hub/generated/listings.json"), JSON.stringify([{ listing, evidence_present: true, link_hosts: describeLinks(listing.links), ...recordOverrides }]));
-    const overlay = `\ncontentDir = ${JSON.stringify(path.join(dir, "content"))}\nassetDir = ${JSON.stringify(path.join(dir, "assets"))}\ndataDir = ${JSON.stringify(path.join(dir, "data"))}\nstaticDir = ${JSON.stringify(path.join(dir, "static"))}\n`;
+    const overlay = `\nthemesDir = ${JSON.stringify(path.join(root, "themes"))}\ncontentDir = ${JSON.stringify(path.join(dir, "content"))}\nassetDir = ${JSON.stringify(path.join(dir, "assets"))}\ndataDir = ${JSON.stringify(path.join(dir, "data"))}\nstaticDir = ${JSON.stringify(path.join(dir, "distribution"))}\n`;
     // Top-level keys must precede the first TOML table.
-    const selected = value === undefined ? "" : `\n[params.hub]\nopen = ${value}\n`;
-    writeFileSync(path.join(dir, "hugo.toml"), overlay + config + selected);
-    const result = spawnSync(process.env.HUGO_BIN || "hugo", ["--source", root, "--config", path.join(dir, "hugo.toml"), "--destination", path.join(dir, "public"), "--gc", "--cleanDestinationDir"], { encoding: "utf8", timeout: 180_000 });
+    writeFileSync(path.join(dir, "hugo.toml"), overlay + config);
+    const launch = path.join(dir, "data/hub/launch.toml");
+    if (value === null) rmSync(launch, { force: true });
+    else writeFileSync(launch, value === undefined ? "" : `open = ${value}\n`);
+    const result = spawnSync(process.env.HUGO_BIN || "hugo", ["--source", dir, "--config", path.join(dir, "hugo.toml"), "--destination", path.join(dir, "public"), "--clock", "2026-11-05T00:00:00Z", "--gc", "--cleanDestinationDir"], { encoding: "utf8", timeout: 180_000, env: { ...process.env, ...env } });
     return { ...result, output: result.stdout + result.stderr };
   };
   const built = file => readFileSync(path.join(dir, "public", file), "utf8");
@@ -152,6 +159,7 @@ test("real Hugo builds enforce omitted/false closed, true open, and invalid swit
   const origin = await staticServing(t, path.join(f.dir, "public"));
   const hubURL = /\/hub\//;
   const checkClosed = async () => {
+    assert.deepEqual(readFileSync(path.join(f.dir, "public/_headers")), readFileSync(path.join(root, "static/_headers")));
     assert.equal(existsSync(path.join(f.dir, "public/hub")), false);
     assert.equal(existsSync(path.join(f.dir, "public/schemas/pipelab-hub")), false);
     for (const file of walkFiles(path.join(f.dir, "public"))) assert.doesNotMatch(readFileSync(file, "utf8"), hubURL, path.relative(f.dir, file));
@@ -168,7 +176,7 @@ test("real Hugo builds enforce omitted/false closed, true open, and invalid swit
     assert.equal(official.status, 200);
     assert.deepEqual(Buffer.from(await official.arrayBuffer()), readFileSync(path.join(root, "static/rules/pipelock-community/bundle.yaml")));
   };
-  for (const value of [undefined, "false"]) {
+  for (const value of [null, undefined, "false"]) {
     const result = f.build(value); assert.equal(result.status, 0, result.output); await checkClosed();
   }
   const open = f.build("true"); assert.equal(open.status, 0, open.output);
@@ -201,8 +209,61 @@ test("real Hugo builds enforce omitted/false closed, true open, and invalid swit
   for (const value of ['"true"', '"yes"', "1", "0", "[]", "{}", '"false"']) {
     const result = f.build(value);
     assert.notEqual(result.status, 0, value);
-    assert.match(result.output, /params.hub.open must be a boolean/, value);
+    assert.match(result.output, /data\/hub\/launch.toml: open must be a boolean/, value);
   }
+});
+
+test("real Hugo environment overrides cannot open the repository-file hub switch", t => {
+  const f = buildFixture(t);
+  const closed = () => {
+    assert.equal(existsSync(path.join(f.dir, "public/hub")), false);
+    assert.equal(existsSync(path.join(f.dir, "public/schemas/pipelab-hub")), false);
+    const files = walkFiles(path.join(f.dir, "public"));
+    for (const file of files) assert.doesNotMatch(readFileSync(file, "utf8"), /\/hub\//, file);
+    assert.deepEqual(readFileSync(path.join(f.dir, "public/_headers")), readFileSync(path.join(root, "static/_headers")));
+    return Object.fromEntries(files.map(file => {
+      const bytes = readFileSync(file);
+      // rss.xml uses wall-clock `now`, which v0.147.7's --clock does not freeze.
+      // Compare every other byte, including the complete unmodified headers.
+      const stable = file.endsWith(".xml") ? bytes.toString("utf8").replace(/<lastBuildDate>[^<]*<\/lastBuildDate>/g, "<lastBuildDate>BUILD_TIME</lastBuildDate>") : bytes;
+      return [path.relative(path.join(f.dir, "public"), file), createHash("sha256").update(stable).digest("hex")];
+    }));
+  };
+  let result = f.build("false"); assert.equal(result.status, 0, result.output);
+  const expected = closed();
+  // Hugo v0.147.7: configuration/introduction/#environment-variables describes
+  // the prefix and custom delimiter. allconfig/load.go and metadecoders decode
+  // JSON, YAML and TOML maps as well as scalar values.
+  const attempts = [];
+  for (const name of ["HUGO_PARAMS_HUB_OPEN", "HUGOxPARAMSxHUBxOPEN", "HUGOxparamsxhubxopen"]) {
+    for (const value of ["true", "1", "yes"]) attempts.push({ [name]: value });
+  }
+  for (const name of ["HUGO_PARAMS_HUB", "HUGOxPARAMSxHUB"]) {
+    for (const value of [true, "true", 1]) attempts.push({ [name]: JSON.stringify({ open: value }) });
+    for (const value of ["open = true", "open: true"]) attempts.push({ [name]: value });
+  }
+  const params = parseToml(read("hugo.toml")).params;
+  attempts.push({ HUGO_PARAMS: JSON.stringify({ ...params, hub: { open: true } }) });
+  // A configurable data directory must not replace the repository launch file.
+  const alternate = path.join(f.dir, "alternate-data");
+  cpSync(path.join(f.dir, "data"), alternate, { recursive: true });
+  writeFileSync(path.join(alternate, "hub/launch.toml"), "open = true\n");
+  attempts.push({ HUGO_DATADIR: alternate }, { HUGOxDATADIR: alternate });
+  for (const env of attempts) {
+    const label = Object.entries(env).map(([name, value]) => `${name}=${name === "HUGO_PARAMS" ? '{"hub":{"open":true},...existing params}' : value}`).join(", ");
+    result = f.build("false", base, {}, env);
+    assert.equal(result.status, 0, `${label}\n${result.output}`);
+    assert.deepEqual(closed(), expected, label);
+    t.diagnostic(`${label}: exit 0, closed output matches (RSS build timestamp excluded)`);
+  }
+  for (const value of [null, undefined]) {
+    result = f.build(value, base, {}, { HUGO_PARAMS_HUB_OPEN: "true" });
+    assert.equal(result.status, 0, result.output);
+    assert.deepEqual(closed(), expected);
+  }
+  result = f.build("true", base, {}, { HUGO_PARAMS_HUB_OPEN: "false" });
+  assert.equal(result.status, 0, result.output);
+  assert.ok(f.built("hub/index.html").includes("Example recipe"));
 });
 
 test("hub malicious twin retains literal text in HTML, JSON, metadata and CommonMark", t => {

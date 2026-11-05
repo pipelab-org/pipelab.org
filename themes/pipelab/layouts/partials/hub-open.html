@@ -1,11 +1,17 @@
-{{- /* Hub visibility contract (§12.1): omitted/false closed; true open. */ -}}
+{{- /* Read repository bytes, never Hugo's environment-overridable Params/Data.
+      Hub visibility contract (§12.1): omitted/false closed; true open. */ -}}
 {{- $open := false -}}
-{{- with site.Params.hub -}}
-  {{- if isset . "open" -}}
-    {{- if ne (printf "%T" .open) "bool" -}}
-      {{- errorf "params.hub.open must be a boolean" -}}
-    {{- else -}}
-      {{- $open = .open -}}
+{{- $source := "data/hub/launch.toml" -}}
+{{- $raw := os.ReadFile $source -}}
+{{- with $raw -}}
+  {{- $launch := transform.Unmarshal (dict "format" "toml") . -}}
+  {{- with $launch -}}
+    {{- if isset . "open" -}}
+      {{- if ne (printf "%T" .open) "bool" -}}
+        {{- errorf "%s: open must be a boolean" $source -}}
+      {{- else -}}
+        {{- $open = .open -}}
+      {{- end -}}
     {{- end -}}
   {{- end -}}
 {{- end -}}
