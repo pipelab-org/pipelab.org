@@ -10,7 +10,7 @@
 {{ $tags := .tags | default slice }}
 {{ $meta := .meta | default "" }}
 {{ $title := $page.LinkTitle | default $page.Title }}
-{{ $blob := printf "%s %s %s %s %s" $title ($page.Description | default "") $summary $cat (delimit $tags " ") | lower }}
+{{ $blob := printf "%s %s %s %s %s" $title ((partial "fact-text.html" $page.Description) | default "") $summary $cat (delimit $tags " ") | lower }}
 
 <a class="editorial-index-card editorial-index-card--{{ if $featured }}featured{{ else }}directory{{ end }} editorial-index-card--{{ $kind }}"
    href="{{ $page.RelPermalink }}"

@@ -1,0 +1,6 @@
+{{- $release := site.Data.machine_context.release -}}
+{{- $minor := replaceRE `\.[0-9]+$` "" site.Params.pipelock_version -}}
+{{- if ne $release.minor $minor -}}
+  {{- errorf "machine_context.release.minor must match the approved release summary (%s)" $minor -}}
+{{- end -}}
+Pipelock is an open-source agent firewall for MCP and AI agent egress. Pipelock {{ $minor }} (current release {{ site.Params.pipelock_version }}) {{ $release.summary -}}

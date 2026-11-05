@@ -70,7 +70,7 @@ The attack is data exfiltration or unsafe content in the model's response. Somet
 
 Output scanning uses the same toolbox as input filtering plus traditional DLP. Regex libraries catch structured secrets (API keys, SSNs, credit card numbers). Classifiers catch unstructured sensitive content. Content-safety models catch hate, violence, and explicit material.
 
-Pipelock ships with 65 DLP patterns covering AWS, GCP, Stripe, Anthropic, OpenAI, Slack, Discord, Twilio, SendGrid, Sentry, GitHub, GitLab, PyPI, npm, Linear, Notion, and others. The patterns are Apache 2.0 and you can read every one of them. Commercial products typically have larger pattern libraries, machine-learning DLP classifiers, and richer content safety taxonomies, though the exact counts and methods are rarely documented in public docs.
+Pipelock ships with {{< stat key="dlp_patterns" >}} DLP patterns covering AWS, GCP, Stripe, Anthropic, OpenAI, Slack, Discord, Twilio, SendGrid, Sentry, GitHub, GitLab, PyPI, npm, Linear, Notion, and others. The patterns are Apache 2.0 and you can read every one of them. Commercial products typically have larger pattern libraries, machine-learning DLP classifiers, and richer content safety taxonomies, though the exact counts and methods are rarely documented in public docs.
 
 ### Model guardrails
 
@@ -117,7 +117,7 @@ The architecture is capability separation. In an enforced deployment, the agent 
 Scanning covers:
 
 - **Prompt injection** in HTTP response bodies, MCP tool responses, and tool descriptions. {{< stat key="response_patterns" >}} injection patterns plus the 6-pass normalization pipeline.
-- **Secret exfiltration** in request URLs, headers, and bodies. 65 DLP patterns covering major cloud providers, payment rails, messaging platforms, and observability vendors.
+- **Secret exfiltration** in request URLs, headers, and bodies. {{< stat key="dlp_patterns" >}} DLP patterns covering major cloud providers, payment rails, messaging platforms, and observability vendors.
 - **SSRF and DNS rebinding** in outbound destinations (IMDS protection, private CIDRs, metadata endpoints).
 - **MCP tool poisoning and rug-pulls** through baseline tool inventories per session.
 - **Tool policy** enforcement with pre-execution allow, deny, redirect, or human-in-the-loop rules.

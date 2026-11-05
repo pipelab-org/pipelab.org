@@ -17,8 +17,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      PIPELOCK_VERSION: 3.4.0
-      PIPELOCK_SHA256: 37c267a9c7a5472324e3bb07def179e810a5ae7c8e761537ad1e9b2e32e9abac
+      PIPELOCK_VERSION: 3.7.1
+      PIPELOCK_SHA256: 2fdc91c27457cb0dfa15d17f9c94e8a4264cf0824b4f8288304e4425661ebbf5
       RULES_KEY_SHA256: d63673b9fb7546dd5f223dc8df3b39a51eb8298d914fc602ba75c5d22910dd9f
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -44,7 +44,7 @@ jobs:
         run: |
           set -euo pipefail
           archive="pipelock_${PIPELOCK_VERSION}_linux_amd64.tar.gz"
-          release_url="https://github.com/luckyPipewrench/pipelock/releases/download/v${PIPELOCK_VERSION}"
+          release_url="https://github.com/pipelab-org/pipelock/releases/download/v${PIPELOCK_VERSION}"
           curl -fsSLo "/tmp/${archive}" "${release_url}/${archive}"
           printf '%s  %s\n' "$PIPELOCK_SHA256" "/tmp/${archive}" | sha256sum -c -
           tar xzf "/tmp/${archive}" -C /usr/local/bin pipelock

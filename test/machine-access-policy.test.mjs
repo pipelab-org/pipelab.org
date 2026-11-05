@@ -23,7 +23,7 @@ const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 const read = (relative) => readFileSync(path.join(repoRoot, relative), "utf8");
 
 // Every published surface that states the crawler policy in prose.
-const POLICY_PROSE_FILES = ["static/llms.txt", "static/llms-full.txt", "AGENTS.md"];
+const POLICY_PROSE_FILES = ["themes/pipelab/layouts/index.llms.txt", "themes/pipelab/layouts/index.llmsfull.txt", "AGENTS.md"];
 
 const robots = read("static/robots.txt");
 const prose = POLICY_PROSE_FILES.map((file) => [file, read(file)]);

@@ -134,7 +134,7 @@ We will provide you with prompt written notice of any such claim and will reason
 
 ## Termination
 
-You can stop using Pipelock at any time. Cancel your subscription through the Polar customer portal or email us at [luckypipe@pipelab.org](mailto:luckypipe@pipelab.org).
+You can stop using Pipelock at any time. Cancel your subscription through the [Polar customer portal](https://polar.sh/pipelock/portal) or email us at [luckypipe@pipelab.org](mailto:luckypipe@pipelab.org).
 
 We can terminate your license if you violate these terms. If we do, we will tell you why. Community (free) usage under Apache 2.0 is not affected by license termination. Sections that by their nature should survive termination (Disclaimer of Warranties, Limitation of Liability, Indemnification, Governing Law) will survive.
 

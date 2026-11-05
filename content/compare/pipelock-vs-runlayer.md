@@ -73,7 +73,7 @@ Runlayer describes a platform fee based on deployment size, with no per-seat cha
 |---------|----------|----------|
 | **Architecture** | Self-hosted proxy, single binary | Runlayer-hosted or self-hosted control plane with MCP governance and content inspection |
 | **Primary scope** | Content scanning on HTTP, HTTPS CONNECT (payloads only with TLS interception on), WebSocket, and MCP | MCP access governance, catalog, identity, discovery, and scanning of MCP and local tool traffic |
-| **Credential scanning (DLP)** | 65 built-in patterns, encoding-aware, environment leak detection | Credential and PII detection on tool inputs and outputs, with block, mask, or alert actions, per its ToolGuard docs |
+| **Credential scanning (DLP)** | {{< stat key="dlp_patterns" >}} built-in patterns, encoding-aware, environment leak detection | Credential and PII detection on tool inputs and outputs, with block, mask, or alert actions, per its ToolGuard docs |
 | **Prompt injection detection** | Deterministic patterns with multi-pass normalization | ToolGuard classifiers on tool definitions, tool outputs, and input-output intent, per its docs |
 | **Tool poisoning** | Description scanning and rug-pull drift detection | Tool definitions scanned at registration or re-scan, per its docs; its Natoma comparison post also claims rug-pull detection |
 | **SSRF protection** | Private IP, metadata, and DNS rebinding checks | Not documented on the pages checked |

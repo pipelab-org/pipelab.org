@@ -9,7 +9,7 @@
         <img src="{{ .Params.project_mark }}" alt="{{ .Params.project_name | default .Title }} logo" aria-hidden="true" width="96" height="96">
         <h1 class="project-wordmark">{{ $name := .Params.project_name }}{{ $accent := .Params.project_accent }}{{ $before := strings.TrimSpace (strings.TrimSuffix $accent $name) }}{{ with $before }}<span>{{ . }}</span> {{ end }}<em>{{ $accent }}</em></h1>
       </div>
-      <p class="project-lead">{{ .Params.subtitle | default .Description }}</p>
+      <p class="project-lead">{{ .Params.subtitle | default (partial "fact-text.html" .Description) }}</p>
       <div class="hero-buttons project-actions">
         {{ range .Params.project_actions }}
         <a class="btn {{ if .primary }}btn-primary{{ else }}btn-ghost{{ end }}" href="{{ .href }}"{{ if or (hasPrefix .href "https://") (hasPrefix .href "http://") }} target="_blank" rel="noopener noreferrer"{{ end }}>{{ .label }}</a>

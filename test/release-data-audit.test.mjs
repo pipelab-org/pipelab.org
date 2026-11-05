@@ -14,6 +14,7 @@ function fixture(t) {
     "data/pipelock_capabilities.json": JSON.stringify({source: {status: "release", release_version: "3.6.0", ref: "v3.6.0"}}),
     "scripts/pipelock-verifier-pin.env": `PIPELAB_VERIFIER_VERSION=3.6.0\nPIPELAB_VERIFIER_LINUX_AMD64_SHA256=${"a".repeat(64)}\n`,
     "static/gauntlet/evidence/latest-verified.json": JSON.stringify({status: "verified", tool: "pipelock", tool_version: "3.6.0"}),
+    ".github/workflows/sync-pipelock-rules.yml": `jobs:\n  sync:\n    env:\n      PIPELOCK_VERSION: 3.6.0\n      PIPELOCK_SHA256: ${"c".repeat(64)}\n`,
   };
   for (const [file, source] of Object.entries(files)) {
     mkdirSync(dirname(join(root, file)), {recursive: true});
@@ -24,7 +25,7 @@ function fixture(t) {
 
 function historicalFixture(t, overrides = {}) {
   const current = fixture(t);
-  for (const file of ["data/pipelock_capabilities.json", "scripts/pipelock-verifier-pin.env"]) {
+  for (const file of ["data/pipelock_capabilities.json", "scripts/pipelock-verifier-pin.env", ".github/workflows/sync-pipelock-rules.yml"]) {
     writeFileSync(join(current.root, file), current.files[file].replaceAll("3.6.0", "3.7.0"));
   }
   const entry = {
@@ -105,7 +106,53 @@ for (const extra of [
   });
 }
 
-for (const file of ["data/pipelock_capabilities.json", "scripts/pipelock-verifier-pin.env", "static/gauntlet/evidence/latest-verified.json"]) {
+for (const extra of [
+  "      PIPELOCK_VERSION: 3.6.0",
+  `      PIPELOCK_SHA256: ${"d".repeat(64)}`,
+]) {
+  test(`a second rules sync pin cannot pass: ${extra.trim()}`, t => {
+    const {root, files} = fixture(t);
+    const file = ".github/workflows/sync-pipelock-rules.yml";
+    writeFileSync(join(root, file), files[file] + extra + "\n");
+    assert.ok(auditReleaseData(root, "3.6.0").some(finding => finding.startsWith(file)));
+  });
+}
+
+test("a malformed rules sync archive digest cannot pass", t => {
+  const {root, files} = fixture(t);
+  const file = ".github/workflows/sync-pipelock-rules.yml";
+  writeFileSync(join(root, file), files[file].replace("c".repeat(64), "not-a-digest"));
+  assert.match(auditReleaseData(root, "3.6.0").join("\n"), /malformed PIPELOCK_SHA256/);
+});
+
+for (const [name, edit] of [
+  ["pins in a different job", source => source.replace("  sync:", "  diagnostics:")],
+  ["pin text in a block scalar", source => source.replace("    env:", "    run: |")],
+  ["commented-out pins", source => source.replaceAll("      PIPELOCK_", "      # PIPELOCK_")],
+  ["a malformed YAML document", source => source + "invalid: [\n"],
+  ["stale flow-style execution pins with current decoys", source => source.replace("  sync:", `  sync:\n    env: {PIPELOCK_VERSION: 3.5.0, PIPELOCK_SHA256: ${"b".repeat(64)}}\n  diagnostics:`)],
+  ["step-level pin overrides", source => source + `    steps:\n      - run: pipelock --version\n        env: {PIPELOCK_VERSION: 3.5.0, PIPELOCK_SHA256: ${"b".repeat(64)}}\n`],
+]) {
+  test(`rules sync workflow rejects ${name}`, t => {
+    const {root, files} = fixture(t);
+    const file = ".github/workflows/sync-pipelock-rules.yml";
+    writeFileSync(join(root, file), edit(files[file]));
+    assert.ok(auditReleaseData(root, "3.6.0").some(finding => finding.startsWith(file)));
+  });
+}
+
+for (const [name, source] of [
+  ["quoted values and inline comments", `jobs:\n  sync:\n    env:\n      PIPELOCK_VERSION: "3.6.0" # release\n      PIPELOCK_SHA256: '${"c".repeat(64)}' # archive\n`],
+  ["flow-style environment", `jobs:\n  sync:\n    env: {PIPELOCK_VERSION: 3.6.0, PIPELOCK_SHA256: ${"c".repeat(64)}}\n`],
+]) {
+  test(`rules sync workflow accepts ${name}`, t => {
+    const {root} = fixture(t);
+    writeFileSync(join(root, ".github/workflows/sync-pipelock-rules.yml"), source);
+    assert.deepEqual(auditReleaseData(root, "3.6.0"), []);
+  });
+}
+
+for (const file of ["data/pipelock_capabilities.json", "scripts/pipelock-verifier-pin.env", "static/gauntlet/evidence/latest-verified.json", ".github/workflows/sync-pipelock-rules.yml"]) {
   for (const state of ["missing", "malformed", "stale"]) {
     test(`${file}: ${state} cannot pass`, t => {
       const {root, files} = fixture(t);

@@ -49,7 +49,7 @@ They operate at different layers. One watches the wire. The other watches the mo
 | **Layer** | Network: HTTP, WebSocket, MCP proxy | Inference: Python library in the pipeline |
 | **Language** | Go, single binary | Python |
 | **Deployment** | Proxy, sidecar, or standalone | Library imported into your agent code |
-| **Credential scanning (DLP)** | 65 patterns, encoding-aware | No |
+| **Credential scanning (DLP)** | {{< stat key="dlp_patterns" >}} patterns, encoding-aware | No |
 | **Prompt injection detection** | Deterministic patterns with normalization on scanned responses | PromptGuard classifier, model-based |
 | **Chain-of-thought auditing** | No | AlignmentCheck |
 | **Generated-code analysis** | No | CodeShield |
@@ -58,7 +58,7 @@ They operate at different layers. One watches the wire. The other watches the mo
 | **Works with hosted agents** | Yes, proxy setting or MCP wrapping | Needs pipeline access; no hosted-agent integration documented |
 | **Process sandbox** | Landlock, seccomp, and network namespaces on Linux; sandbox-exec on macOS | No |
 | **Signed receipts** | Yes, Ed25519, verifiable offline | No |
-| **Runtime dependencies** | None; 26 direct build dependencies | Python runtime, PyTorch, model weights |
+| **Runtime dependencies** | None; {{< stat key="direct_deps" >}} direct build dependencies | Python runtime, PyTorch, model weights |
 | **License** | Apache-2.0 core; Enterprise under ELv2 | MIT |
 
 ## Where LlamaFirewall is stronger

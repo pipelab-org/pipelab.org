@@ -45,7 +45,7 @@ Pipelock is a focused tool you run. Prisma AIRS is a platform you buy.
 |---------|----------|-------------|
 | **Architecture** | Network proxy, single self-hosted binary | Managed enterprise platform |
 | **Primary scope** | Content scanning on HTTP, HTTPS CONNECT (payloads only with TLS interception on), WebSocket, and MCP | Gateway, agent identity, red teaming, runtime protection, model scanning, posture |
-| **Credential scanning (DLP)** | 65 built-in patterns, encoding-aware, environment leak detection | Runtime data protection, platform feature |
+| **Credential scanning (DLP)** | {{< stat key="dlp_patterns" >}} built-in patterns, encoding-aware, environment leak detection | Runtime data protection, platform feature |
 | **Prompt injection detection** | Deterministic patterns with multi-pass normalization | Runtime injection protection, platform feature |
 | **Tool poisoning and MCP** | Description scanning, drift detection, argument and response inspection | MCP threat detection listed in the product timeline |
 | **SSRF protection** | Private IP, metadata, and DNS rebinding checks | Not documented on the product page |

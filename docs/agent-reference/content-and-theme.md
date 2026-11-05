@@ -127,6 +127,14 @@ Everything under `static/` is copied verbatim, so Hugo will never keep it in syn
 | `static/_headers` | Cloudflare security headers |
 | `static/_redirects` | URL redirects, append-only |
 | `static/robots.txt` | Crawl policy, content signals, sitemap reference |
-| `static/llms.txt` | Short machine-readable site summary |
-| `static/llms-full.txt` | Full machine-readable site summary for agents |
+| `themes/pipelab/layouts/index.llms.txt` | Plain-text home output at `/llms.txt` |
+| `themes/pipelab/layouts/index.llmsfull.txt` | Plain-text home output at `/llms-full.txt` |
 | `static/images/og/` | Section-level OG images |
+
+## Shared count rendering
+
+Body counts use the `stat` shortcode and `data/stats.yaml`. The `community_rules` key reads the number of rules in the served `static/rules/pipelock-community/bundle.yaml`, including experimental rules; it is not the number of active rules in a running binary. Bundle bytes and signatures stay under the verified rule-sync workflow.
+
+Descriptions and FAQ text can use `{{stat:dlp_patterns}}` or `{{stat:community_rules}}`. The shared `fact-text.html` partial resolves these tokens in metadata, visible FAQs, structured data, cards, RSS and Markdown mirrors. Unknown keys and malformed tokens fail the build. These tokens only insert shared facts; they do not execute arbitrary templates.
+
+The two machine-context templates retain approved editorial prose. Their shared release opening and guide list use `data/machine_context.yaml`; a new minor release requires review of that copy. Matching page titles use page metadata. Dated technical citations and the existing Docker `:latest` example retain their published meaning.

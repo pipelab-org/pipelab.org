@@ -1,0 +1,14 @@
+{{- $value := false -}}
+{{- if eq . "community_rules" -}}
+  {{- $bundle := readFile "static/rules/pipelock-community/bundle.yaml" | transform.Unmarshal -}}
+  {{- if or (ne $bundle.name "pipelock-community") (not (reflect.IsSlice $bundle.rules)) (not $bundle.rules) -}}
+    {{- errorf "community_rules requires the served pipelock-community bundle and its rules list" -}}
+  {{- end -}}
+  {{- $value = len $bundle.rules -}}
+{{- else -}}
+  {{- $value = index site.Data.stats . -}}
+{{- end -}}
+{{- if not $value -}}
+  {{- errorf "site fact: no value for %q in data/stats.yaml or the served community bundle" . -}}
+{{- end -}}
+{{- return $value -}}

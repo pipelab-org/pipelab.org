@@ -16,7 +16,7 @@ howto_steps:
     text: Run pipelock verify-install to confirm the MCP proxy path is active.
 faq:
   - q: "What does Pipelock's VS Code integration do?"
-    a: "Pipelock rewrites your .vscode/mcp.json to route all MCP servers through its scanning proxy. Tool arguments are scanned for credential leaks (65 DLP patterns), tool responses are scanned for prompt injection, and tool descriptions are checked for poisoned instructions. All traffic is scanned bidirectionally before it reaches or leaves the MCP server."
+    a: "Pipelock rewrites your .vscode/mcp.json to route all MCP servers through its scanning proxy. Tool arguments are scanned for credential leaks ({{stat:dlp_patterns}} DLP patterns), tool responses are scanned for prompt injection, and tool descriptions are checked for poisoned instructions. All traffic is scanned bidirectionally before it reaches or leaves the MCP server."
   - q: "How do I install Pipelock for VS Code?"
     a: "Run 'pipelock vscode install' after installing the pipelock binary from a pinned source build or Homebrew as documented at https://pipelab.org/install/. The command rewrites .vscode/mcp.json to wrap each MCP server through pipelock's proxy. Restart VS Code to activate."
   - q: "How is VS Code integration different from Claude Code or Cursor?"
@@ -96,7 +96,7 @@ HTTP/SSE servers are automatically converted to stdio wrapping with `--upstream`
 
 ## What it scans
 
-**Tool arguments (outbound).** Scans tool call arguments for credential leaks (65 DLP patterns), prompt injection patterns, and dangerous operations. Catches secrets in any JSON field, including nested objects and arrays.
+**Tool arguments (outbound).** Scans tool call arguments for credential leaks ({{< stat key="dlp_patterns" >}} DLP patterns), prompt injection patterns, and dangerous operations. Catches secrets in any JSON field, including nested objects and arrays.
 
 **Tool responses (inbound).** Scans tool results for prompt injection before they reach the agent. A 6-pass normalization pipeline catches zero-width character evasion, homoglyph substitution, leetspeak encoding, and base64-wrapped payloads.
 
