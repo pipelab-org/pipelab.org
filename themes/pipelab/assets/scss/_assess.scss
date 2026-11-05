@@ -185,12 +185,8 @@
 //   .assess-product so class names cannot collide with the rest
 //   of the theme. Mirrors the /proof/ + /enterprise/ pattern.
 //
-//   Token discipline: only var() calls for tokens defined in
-//   _variables.scss. Everything else is a literal. /enterprise/
-//   shipped with phantom tokens (--accent-border, --bg-overlay-strong,
-//   --backdrop-blur, --t-base, --t-mid, --danger, --warn, --bg-elevated,
-//   --border-strong, --radius-md) that browsers silently dropped;
-//   Codex caught it. Don't repeat it.
+// Use CSS custom properties defined in _variables.scss; undefined properties
+// cause browsers to discard the affected declarations.
 // ============================================================
 
 .assess-product {
@@ -746,10 +742,7 @@
     }
   }
 
-  // Placeholder treatment for the free-summary card. Pipelock does
-  // not ship a screenshot of the free-tier summary page; reusing the
-  // paid screenshot would misrepresent the free output (Codex caught
-  // this in the first review pass).
+  // Keep the free-summary placeholder distinct from paid report screenshots.
   .assess-demo-thumb-placeholder {
     display: flex;
     align-items: center;

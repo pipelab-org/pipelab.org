@@ -19,3 +19,6 @@ __pycache__/
 static/playground/demo/pipelock-verifier.wasm
 static/playground/demo/wasm_exec.js
 static/playground/demo/test-bundle.tar.gz
+
+# Per-user coding-tool permissions
+.claude/settings.local.json

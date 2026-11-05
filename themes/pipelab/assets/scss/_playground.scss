@@ -752,7 +752,6 @@
 
 // ============================================================
 //  pg-* namespaced classes for the unified /playground/ page
-//  Translate of the Claude Design prototype into real SCSS.
 //  All new classes prefixed `pg-` to avoid collisions with the
 //  existing `.playground-*` classes above.
 // ============================================================
@@ -1456,7 +1455,7 @@
   flex-wrap: wrap;
 }
 
-/* Codex review fixes: wrap the long verifier key on mobile; respect reduced-motion. */
+/* Wrap long verifier keys on narrow screens and honor reduced motion. */
 .pg-cmd-cont { overflow-wrap: anywhere; }
 @media (prefers-reduced-motion: reduce) {
   .pg-stamp { animation: none; }

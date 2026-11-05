@@ -1,34 +1,20 @@
-# PipeLab Brand Expert Skill
+# PipeLab brand and design guide
 
-You are a brand expert and senior product designer for **PipeLab** (the company) and **Pipelock** (its open-source agent firewall). You know the design system in this project intimately and apply it ruthlessly.
+This guide covers copy and design for the PipeLab website. It applies to all contributors. PipeLab is the parent brand and website; Pipelock is its agent firewall product.
 
-## Identity rules (non-negotiable)
+The live site uses the tokens in `themes/pipelab/assets/scss/_variables.scss` and the shared rules in `_brand-standards.scss`. Files in `.brand/sync/` and `.brand/colors_and_type.css` are references for other asset work; they do not replace the theme files. Product counts come from `data/stats.yaml`, with its recorded source and date.
 
-- **PipeLab** is the company and the website (`pipelab.org`).
-- **Pipelock** is the product (the binary, the scanner, the firewall).
-- Casing is exact. Never write "Pipelab", "PIPELAB", "PipeLock", or "PIPELOCK" in body copy.
-- The product mark image renders the wordmark in all-caps ("PIPELOCK"), but in prose it is always "Pipelock".
-- "AI" is uppercase. "Open-source" is hyphenated as an adjective. No em dashes anywhere in copy.
-- Speak in second person ("you") to the reader. The product is third person ("Pipelock catches..."). "We" appears only on `/about/`.
-- Pipelock's category descriptor is **"Agent Firewall"**. The PipeLab identity tagline is **"Agent Security"**. Render `AGENT SECURITY` beneath the PipeLab wordmark.
+## Brand identity
 
-## Personality pillars
+- Use **PipeLab** for the parent brand and website and **Pipelock** for the product. Use these spellings in prose, even when an image uses an uppercase wordmark.
+- Use **AI** in uppercase and **open-source** as a compound adjective. Copy uses plain punctuation without em dashes.
+- Address the reader as **you** and describe product behavior in the third person. Company narration belongs on the About page.
+- Use **agent firewall** as the product category. The PipeLab identity tagline is **Agent Security**, rendered as `AGENT SECURITY` beneath its wordmark on identity surfaces.
+- Explain features with public evidence and their coverage limits. Traffic inspection applies to supported traffic mediated by Pipelock; prevention of direct bypass also depends on deployment isolation and egress controls.
 
-1. **Technical and precise.** Engineering-first language, no marketing fluff.
-2. **Transparent and honest.** Open-source core, clear pricing, no vendor lock-in.
-3. **Builder-oriented.** Speaks to developers and security engineers directly.
-4. **Authoritative but approachable.** Deep expertise without gatekeeping.
+## Writing style
 
-## Tone
-
-Terse. Technical. Evidence-led. One-liners are good. Stats are load-bearing. Never write "lots of" when you could write "65 DLP patterns".
-
-### Writing rules
-
-- **Lead with what it does, not what it is.** "Scans HTTP traffic for credential leaks" beats "next-generation security platform."
-- **Use concrete numbers.** "65 DLP patterns" beats "comprehensive detection."
-- **Prefer imperative mood.** "Install. Configure. Protect." matches the CLI-first experience.
-- **No cloud dependency language.** Pipelock runs locally. Avoid "cloud-native," "scalable SaaS," and similar terms.
+Use direct, technical language. Describe what the product does and what the reader can verify. Use sourced measurements where they help, and include the measured version or scope when it matters. Keep the writer's own voice in attributed articles. Do not invent customer names, quotes, features, or performance claims.
 
 ### Anti-vocabulary (forbidden)
 
@@ -50,7 +36,7 @@ No emoji. No exclamation marks. No hype.
 
 When the scanner cannot decide, it drops the request. Call this **fail-closed**, not "closes on failure", not "secure by default".
 
-## Default product sentence (memorize)
+## Default product sentence
 
 > Pipelock sits between AI agents and the internet and blocks secret leaks, unsafe tool traffic, and prompt-injection responses.
 
@@ -59,8 +45,8 @@ When the scanner cannot decide, it drops the request. Call this **fail-closed**,
 - **Scanner pipeline:** fixed security-sensitive order for mediated URL traffic, with DLP before DNS resolution and documented transport-specific limits. Do not publish a fixed layer count; the checks evolve.
 - **DLP:** 65 patterns (AWS, GCP, Stripe, GitHub, JWT, private keys, PII).
 - **Agent Egress Bench:** public adversarial corpus and methodology.
-- **Binary:** single Go binary, Apache 2.0. Do not publish a size claim without measuring the named release artifact and saying whether the figure is compressed or unpacked.
-- **Dependencies:** 27 direct build dependencies, with no separate runtime service or model dependency.
+- **Binary and licensing:** Pipelock ships as a single Go binary. The core uses Apache 2.0; enterprise modules use the Elastic License 2.0. A size claim must identify the measured release artifact and whether it is compressed or unpacked.
+- **Dependencies:** Use `direct_deps` from `data/stats.yaml`; don't keep a second count here. There's no separate runtime service or model dependency.
 - **Capability separation:** Pipelock does not store agent credentials. Preventing direct bypass depends on deployment isolation and egress controls.
 - **Fail-closed:** timeouts, parse failures, and malformed inputs block on mediated enforcement paths. Do not extend this claim to traffic that bypasses Pipelock.
 - **Evidence:** Ed25519-signed decision records and signed YAML rule bundles, hot-reloadable.
@@ -88,21 +74,20 @@ When the scanner cannot decide, it drops the request. Call this **fail-closed**,
 - **Layout:** single column, max-width 1100px, 5rem section padding, sticky nav with backdrop-blur 12px over `rgba(9,9,11,0.85)`.
 - **Hero contracts:** every page template declares one `data-hero` contract. `home` is the interactive homepage; `brand-standard` is a conventional landing page; `brand-rich` is a content-heavy product surface; `editorial-index` and `editorial-article` are quiet reading surfaces; `utility` is a compact task or artifact page. Do not invent a seventh treatment for one page.
 - **Hero field:** `brand-standard` and `brand-rich` use the canonical static `pipelab-constellation.svg` field at one shared opacity. Keep a clear reading zone behind the headline. Do not add page-specific star patterns, opacity modifiers, glow layers, or grid overlays.
-- **Hero sizing:** `brand-standard` uses `min-height: clamp(32rem, 58svh, 37.5rem)` on desktop and becomes content-driven below the tablet breakpoint. It should normally occupy about 65–75% of the post-navigation laptop viewport, leaving the next section's label or heading visible. `brand-rich` remains content-driven because diagrams, controls, or dense facts are real content. Never set a hard height that clips copy or creates an empty screen.
+- **Hero sizing:** Standard branded heroes use `min-height: clamp(32rem, 58svh, 37.5rem)` on desktop and become content-driven below the tablet breakpoint. Rich branded heroes remain content-driven. Both contain identity, one lead, actions, and optional facts; put demos, diagrams, and evidence in adjacent sections. Avoid fixed heights that clip content or leave an empty screen.
 - **Homepage exception:** `home` alone uses the interactive receipt-particle constellation. Do not reuse that animation as decoration on another page. Respect reduced motion and keep all other hero fields static.
 - **Editorial indexes are one shell:** Blog, Learn, and Compare share the same hero height, top alignment, title and lead measures, padding, and background. Their copy and controls below the header may differ.
 - **Long product pages need rhythm:** do not repeat one card primitive for consecutive sections. Alternate only when the content calls for it: capability map, ledger, ordered process, terminal, evidence panel, reference list, or editorial band. Number chips are reserved for sequences whose order matters.
 - **No viewport-width bleed inside scrollable pages:** do not set a content chapter to `width: 100vw`. The scrollbar gutter makes it overflow. Use the shared content rail or a scrollbar-safe auto-width bleed.
 - **Quiet surfaces:** `editorial-index`, `editorial-article`, and `utility` use the plain dark background. Blog, learn, compare, legal, receipts, contact, form, error, and detail pages must not inherit a generated sky or branded field accidentally.
 
-## Workflow when asked for work
+## Applying the design system
 
-1. Always start from the design tokens in `colors_and_type.css` or the Hugo theme `_variables.scss`. Never invent new tokens.
+1. For site changes, use `themes/pipelab/assets/scss/_variables.scss` and `_brand-standards.scss`. `.brand/colors_and_type.css` is a standalone asset reference; don't copy it over the theme stylesheet. Propose additions to the shared token system when existing tokens don't cover a requirement.
 2. Use the assets in the design system or repo (`pipelock-logo.png`, `architecture.svg`, `ecosystem-flywheel.svg`, screenshots, OG images) as imagery. Do not generate new illustrations.
 3. CTAs are short verbs: Install, Get Started Free, GitHub, See Pipelock, Pricing, Claim Founding Pro.
 4. End conversion sections with "Public methodology. Public attack cases. Public Pipelock results."
-5. If a section has no stat, no code block, no screenshot, and no list, delete it.
 
-## When you do not have something
+## Evidence for claims
 
-Ask. Do not fabricate features, customers, logos, or quotes. Do not invent new product names, new pricing tiers, or new categories. The category is **agent firewall**. Do not reach for "AI security platform" or similar.
+Support feature, customer, pricing, and performance claims with public sources. If a claim can't be verified, leave it out or describe the uncertainty in the pull request. Use the existing product names, tiers, and category language.

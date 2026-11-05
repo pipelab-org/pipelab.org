@@ -639,7 +639,7 @@
 }
 
 // ============================================================
-//   /pricing/ — prototype-derived tier stack
+// Pricing tier stack.
 // ============================================================
 
 // Hero: stacked H1 with the third line in accent green.
@@ -999,8 +999,7 @@
   @media (max-width: $bp-tablet) { min-height: 0; }
 }
 
-// Founding urgency — date-only treatment per Codex review.
-// No fake count, no "X / 50 claimed" placeholder.
+// Founding-offer urgency uses the date, without invented availability counts.
 .pricing-urgency {
   background: rgba(0, 229, 160, 0.04);
   border: 1px solid rgba(0, 229, 160, 0.25);
@@ -1035,7 +1034,7 @@
   margin: 0;
 }
 
-// Feature blocks — eyebrow CENTERED, bullet list LEFT-aligned per Codex.
+// Feature blocks center the eyebrow and left-align the list.
 .pricing-feat-block {
   margin: 0 0 1.25rem;
   text-align: left;
@@ -1981,7 +1980,6 @@
 }
 
 
-// Round 5: the report plate had a dead corner right of the grade.
 .assess-report-main {
   display: grid;
   grid-template-columns: auto 1fr;
@@ -2018,8 +2016,6 @@
 }
 
 
-// Round 6: fill the strip's right side with the guarantees as chips, center
-// the report plate's grade row, and give the matrix footnote a real presence.
 
 .pricing-flat-chips {
   list-style: none;
@@ -2051,7 +2047,6 @@
 
 
 
-// Round 7, from Josh's screenshots and this time measured, not eyeballed.
 
 // The 10x marker gets a real band: the digit centered in its own column with
 // air on both sides of the divider, instead of the rule touching the glyph.
@@ -2331,10 +2326,6 @@
   background: rgba(0, 229, 160, 0.02);
 }
 
-// Round 8. The previous "centered" measurement compared edge gaps, which a
-// full-width row satisfies trivially while the grade hugs the left. Stack the
-// grade dead-center and run the meta as a centered chip row under it, so
-// there is no horizontal hole to misjudge at any width.
 .assess-report .assess-report-main {
   flex-direction: column;
   align-items: center;
@@ -2360,8 +2351,7 @@
   margin-top: 0.6rem;
 }
 
-// Round 9. What Josh meant all along: the side-by-side layout stays, and the
-// grade block centers WITHIN its own left region beside the checklist.
+// Center the grade within the left column beside the checklist.
 .assess-report .assess-report-main {
   display: grid;
   grid-template-columns: 1fr auto;

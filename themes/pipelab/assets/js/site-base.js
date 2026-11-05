@@ -282,8 +282,7 @@
       });
     }
 
-    // Clipboard write that also works on plain-HTTP origins (LAN and
-    // tailnet previews), where navigator.clipboard does not exist.
+    // Fall back when the Clipboard API is unavailable on a non-secure origin.
     var writeClipboard = function (text) {
       if (navigator.clipboard && window.isSecureContext) {
         return navigator.clipboard.writeText(text);

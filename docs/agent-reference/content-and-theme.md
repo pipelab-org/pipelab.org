@@ -21,15 +21,16 @@ from an existing file or discover with `ls`.
 title: "Full SEO Title With Keywords"
 linkTitle: "Short Tab Title"          # under 50 chars
 date: 2026-03-11
-author: "Josh Waldrep"
+author: "Writer Full Name"
 summary: "One-liner for list cards."
 description: "SEO meta description, 120-155 chars with keywords."
 tags: ["ai-security", "pipelock"]
 ---
 ```
 
-`date` is mandatory. For a dev.to cross-post, create `<slug>.devto.md` alongside it (gitignored) and
-convert internal links to absolute URLs.
+`date` is mandatory. Set `author:` to the writer's own full name. For a dev.to cross-post, create
+`<slug>.devto.md` beside the article. These files are gitignored. Convert internal links to absolute URLs
+and set the cross-post's `canonical_url` to the original article's complete URL, including its path.
 
 ## Learn guide frontmatter (`content/learn/`)
 
@@ -84,9 +85,10 @@ Current templates: `ls themes/pipelab/layouts/`. The ones with distinct responsi
 `blog/single.html`, `compare/single.html`, `list.html` (section indexes), `gauntlet/results.html`
 (API-driven scoreboard) and `gauntlet/submit.html`.
 
-JSON-LD is auto-generated per section: Organization plus WebSite on the home page, BlogPosting on blog,
-TechArticle plus FAQPage on learn and compare, FAQPage on the pipelock page, BreadcrumbList everywhere.
-FAQPage comes from frontmatter `faq:`: write 2-3 real Q&As, with no Google rich-result expectation.
+`themes/pipelab/layouts/_default/baseof.html` emits Organization and WebSite on the homepage,
+BlogPosting on blog articles, TechArticle on supported article and product routes, and BreadcrumbList
+on pages other than the homepage. FAQPage is emitted when frontmatter contains `faq:`. Write two or
+three useful questions whose answers also appear on the page; don't promise search rich results.
 OG images are auto-selected by section and overridden with `og_image:` in frontmatter.
 
 ### Hero and responsive contracts
@@ -97,7 +99,7 @@ Every H1 template puts one `data-hero` value on the element that forms the real 
 |---|---|
 | `home` | Homepage receipt constellation. This is the only animated hero. |
 | `brand-standard` | Product, project, proof, pricing, and campaign landings. |
-| `brand-rich` | A branded hero with a real demo or installation panel beside the copy. |
+| `brand-rich` | Content-heavy product surfaces. The hero contains identity, one lead, actions, and optional facts; demos, diagrams, and evidence belong in the following sections. |
 | `editorial-index` | Blog, learn, and compare indexes. |
 | `editorial-article` | Articles, guides, comparisons, and episodes. |
 | `utility` | Receipts, forms, contact, errors, and detail pages. |
@@ -112,8 +114,8 @@ Build narrow-first with the breakpoint tokens in `_variables.scss`. Visual chang
 
 ## Footer structure
 
-Four-column sitemap: Product, Learn, Community, Company. One `<nav aria-label="X">` per column, column
-headings are `<span>`, and external links carry `target="_blank" rel="noopener"`.
+`themes/pipelab/layouts/partials/footer.html` owns the footer columns and links. Each link group is a
+labeled `<nav>`, headings use `<span>`, and external links use `target="_blank" rel="noopener noreferrer"`.
 
 ## Static files
 

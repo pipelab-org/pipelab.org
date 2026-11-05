@@ -1,11 +1,10 @@
 #!/bin/bash
-# Re-sync .brand/ files from an exported brand handoff bundle.
-#
-# Usage:
-#   PIPELAB_BRAND_HANDOFF_URL=<url> .brand/sync-from-design.sh [--diff-only]
-#
-# Handoff URLs are short-lived. Keep them in the environment and never commit
-# them to the repo.
+# Optional import of a user-supplied brand reference archive.
+# Usage: PIPELAB_BRAND_HANDOFF_URL=<archive-url> .brand/sync-from-design.sh [--diff-only]
+# The gzip tar archive must contain pipelab-design-system/project/ with
+# SKILL.md, colors_and_type.css, sync/_variables.scss, and sync/README.md.
+# This updates reference files only; it does not update the Hugo theme.
+# Keep temporary download URLs out of committed files.
 
 set -euo pipefail
 
@@ -106,8 +105,8 @@ git diff --stat .brand/ || true
 cat <<EOF
 
 Next steps:
-  1. Review diff above
-  2. If SCSS variables changed, also overwrite themes/pipelab/assets/scss/_variables.scss
-     and follow the checklist in .brand/sync/README.md
-  3. Commit changes to .brand/ on a feature branch
+  1. Review the complete diff for public contributor guidance and factual accuracy.
+  2. Compare reference tokens with themes/pipelab/assets/scss/_variables.scss;
+     don't overwrite the theme with reference SCSS or standalone CSS.
+  3. Run the relevant checks and propose the reviewed changes in a pull request.
 EOF

@@ -1,23 +1,8 @@
 {{ define "main" }}
-{{/* Bespoke home page - replaces the prior themes/pipelab/layouts/index.html.
-
-     Final entry in the page-redesign sequence. Eight bespoke templates
-     now in the theme: proof, pipelock, compare, pricing, enterprise,
-     assess, about, and this home page.
-
-     Variants locked from the prototype's Tweaks panel:
-       heroKind  = particle  (mouse-interactive canvas)
-       capLayout = hybrid    (6 cards + chip cloud)
-       idePattern = tabs     (tabbed terminal)
-       showCNCF  = true      (band visible)
-
-     Vanilla JS only. No React, no Babel, no Tweaks panel chrome.
-     The existing baseof.html JSON-LD branch handles `.IsHome`
-     (Organization + WebSite); no competing JSON-LD branch added here.
-
-     Stats pulled live from data/stats.yaml; version from
-     Site.Params.pipelock_version. Real CLI commands verified against
-     internal/cli/setup/{claude,cursor,vscode,jetbrains}.go. */}}
+{{/* Homepage template. hero-home.html owns the interactive receipt constellation.
+     baseof.html emits the homepage Organization and WebSite JSON-LD.
+     Product metrics come from data/stats.yaml; the product version comes from
+     site.Params.pipelock_version. */}}
 
 {{ $version := site.Params.pipelock_version | default "" }}
 {{ $stats := site.Data.stats }}
