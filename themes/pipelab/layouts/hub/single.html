@@ -21,7 +21,7 @@
   {{ with $l.disclosures.ai_text }}<p class="hub-text" data-hub-field="disclosures.ai_text">{{ . }}</p>{{ end }}
   <p class="hub-text" data-hub-field="disclosures.conflict_of_interest">{{ $l.disclosures.conflict_of_interest }}</p>
   <h2>External links</h2><p>PipeLab doesn't review these external destinations.</p>
-  <ul>{{ range $name, $url := $l.links }}{{ $parsed := urls.Parse $url }}<li><a href="{{ $url }}" target="_blank" rel="ugc nofollow noopener noreferrer"><span>{{ $name }} ({{ $parsed.Host }})</span>: <span data-hub-field="links.{{ $name }}">{{ $url }}</span></a></li>{{ end }}</ul>
+  <ul>{{ range $name, $url := $l.links }}<li><a href="{{ $url }}" target="_blank" rel="ugc nofollow noopener noreferrer"><span>{{ $name }} ({{ partial "hub-link-host.html" (dict "url" $url "name" $name "record" $r) }})</span>: <span data-hub-field="links.{{ $name }}">{{ $url }}</span></a></li>{{ end }}</ul>
   <p><a href="/hub/">All components</a></p>
   {{ partial "page-formats.html" . }}
 </article>

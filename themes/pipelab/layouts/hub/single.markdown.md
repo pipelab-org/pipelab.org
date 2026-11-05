@@ -49,5 +49,5 @@ AI assisted: {{ $l.disclosures.ai_assisted }}
 
 PipeLab doesn't review these external destinations.
 {{ range $name, $url := $l.links }}
-{{ partial "hub-md-label.html" $name }} ({{ partial "hub-md-label.html" (urls.Parse $url).Host }}): {{ partial "hub-md-text.html" $url }}
+{{ partial "hub-md-label.html" $name }} ({{ partial "hub-md-label.html" (partial "hub-link-host.html" (dict "url" $url "name" $name "record" $.Params.hub)) }}): {{ partial "hub-md-text.html" $url }}
 {{ end }}

@@ -6,7 +6,7 @@ import test from "node:test";
 import { parse as parseHTML } from "parse5";
 import * as commonmark from "commonmark";
 import { stringify } from "yaml";
-import { parseListing, resolveArtifact, schema, validateListing, validateURL } from "../scripts/hub/validate.mjs";
+import { describeLinks, parseListing, resolveArtifact, schema, validateListing, validateURL } from "../scripts/hub/validate.mjs";
 import { auditHubTemplates } from "../scripts/hub/template-lint.mjs";
 import worker from "../src/worker.js";
 import { createServer } from "node:http";
@@ -113,8 +113,8 @@ function buildFixture(t) {
   mkdirSync(path.join(dir, "static"));
   for (const file of ["rules", "_headers", "robots.txt"]) cpSync(path.join(root, "static", file), path.join(dir, "static", file), { recursive: true });
   const config = read("hugo.toml").replace(/\[params.hub\]\n\s*open = false\n/, "");
-  const build = (value, listing = base) => {
-    writeFileSync(path.join(dir, "data/hub/generated/listings.json"), JSON.stringify([{ listing, evidence_present: true }]));
+  const build = (value, listing = base, recordOverrides = {}) => {
+    writeFileSync(path.join(dir, "data/hub/generated/listings.json"), JSON.stringify([{ listing, evidence_present: true, link_hosts: describeLinks(listing.links), ...recordOverrides }]));
     const overlay = `\ncontentDir = ${JSON.stringify(path.join(dir, "content"))}\nassetDir = ${JSON.stringify(path.join(dir, "assets"))}\ndataDir = ${JSON.stringify(path.join(dir, "data"))}\nstaticDir = ${JSON.stringify(path.join(dir, "static"))}\n`;
     // Top-level keys must precede the first TOML table.
     const selected = value === undefined ? "" : `\n[params.hub]\nopen = ${value}\n`;
@@ -216,6 +216,7 @@ test("hub malicious twin retains literal text in HTML, JSON, metadata and Common
   malicious.limitations = [payload]; malicious.not_claimed = [payload];
   malicious.evidence.method = payload;
   malicious.disclosures.ai_text = payload; malicious.disclosures.conflict_of_interest = payload;
+  malicious.links.source = "https://xn--bcher-kva.example/source";
   const valid = validateListing(malicious);
   const benign = clone(valid);
   const replaceText = value => typeof value === "string" && value.includes("CANARY") ? "Ordinary fixture text" : Array.isArray(value) ? value.map(replaceText) : value && typeof value === "object" ? Object.fromEntries(Object.entries(value).map(([k,v]) => [k,replaceText(v)])) : value;
@@ -225,6 +226,7 @@ test("hub malicious twin retains literal text in HTML, JSON, metadata and Common
   const twin = f.built(route);
   const second = f.build("true", valid); assert.equal(second.status, 0, second.output);
   const html = f.built(route);
+  assert.ok(html.includes("xn--bcher-kva.example; decoded: bücher.example"));
   assert.deepEqual(shape(html), shape(twin));
   assert.deepEqual(executable(html), executable(twin));
   for (const node of scripts(html)) {
@@ -255,6 +257,7 @@ test("hub malicious twin retains literal text in HTML, JSON, metadata and Common
     if (["softbreak", "linebreak"].includes(event.node.type)) literals.push("\n");
   }
   const serialized = literals.join("");
+  assert.ok(serialized.includes("xn--bcher-kva.example; decoded: bücher.example"));
   for (const text of [valid.title, payload, valid.setup[0].command]) assert.ok(serialized.includes(text), text);
   assert.match(md, /^Source: https:\/\/pipelab.org\/hub\/recipes\/example-recipe\//);
   assert.deepEqual(JSON.parse(f.built("hub/index.json")), { format: 1, items: [{ id: valid.id, type: valid.type, title: valid.title, summary: valid.summary, badge: "none", url: "/hub/recipes/example-recipe/" }] });
@@ -268,6 +271,11 @@ test("hub malicious twin retains literal text in HTML, JSON, metadata and Common
   const headers = f.built("_headers");
   const csp = headers.split("/hub/*\n")[1] || headers.split("\n\n")[0];
   assert.ok(csp); assert.match(csp, /script-src-attr 'none'/); assert.doesNotMatch(csp.match(/script-src [^;]+/)[0], /unsafe-inline/);
+  for (const link_hosts of [{}, { source: { host: "other.example", decoded_host: "other.example" } }]) {
+    const refused = f.build("true", valid, { link_hosts });
+    assert.notEqual(refused.status, 0);
+    assert.match(refused.output, /hub punycode link requires matching decoded host metadata/);
+  }
 });
 
 test("hub descriptions and serializers keep fact tokens literal behind the validator", t => {

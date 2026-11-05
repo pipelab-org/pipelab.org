@@ -21,6 +21,15 @@ export function validateURL(value) {
   return { url: value, host: url.hostname, decodedHost: domainToUnicode(url.hostname), punycode: url.hostname.split(".").some(label => label.startsWith("xn--")) };
 }
 
+// Design §3.6: normalized records carry both host spellings for display and
+// the punycode flag for the admission report. No destination is contacted.
+export function describeLinks(links) {
+  return Object.fromEntries(Object.entries(links).map(([name, value]) => {
+    const { host, decodedHost, punycode } = validateURL(value);
+    return [name, { host, decoded_host: decodedHost, punycode }];
+  }));
+}
+
 export function validateText(value, kind = "prose") {
   // Design §2.3: independent from generated descriptions and the template lint.
   if (value.includes("{{stat:")) throw new Error("site fact tokens are forbidden");
