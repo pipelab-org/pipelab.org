@@ -91,7 +91,7 @@ Validation (v3.7.0): `Config validation: OK`, exit 0, with the warning `agents: 
 
 Only give the agent the keys it uses. Prefer short-lived tokens with automatic rotation, and scope each one to the narrowest set of resources. ISACA: "Never place secrets in prompts. Use a secrets manager and scoped tokens for all credentials." The OWASP cheat sheet asks for "per-tool permission scoping (read-only vs. write, specific resources)."
 
-**What Pipelock does:** it doesn't mint, scope, or rotate tokens. That is your identity provider's and secrets manager's job. It catches a credential leaving the machine: 65 built-in DLP patterns run on URLs, headers, and request bodies (when [request body scanning](https://github.com/pipelab-org/pipelock/blob/v3.7.0/docs/configuration.md#request-body-scanning) is on), and on MCP tool arguments. A short-lived token that leaks is still a leak; DLP and short lifetimes cover different halves of the problem. [Canary tokens](/learn/canary-tokens/) (`pipelock canary`) let you test whether a planted fake credential gets caught.
+**What Pipelock does:** it doesn't mint, scope, or rotate tokens. That is your identity provider's and secrets manager's job. It catches a credential leaving the machine: {{< stat key="dlp_patterns" >}} built-in DLP patterns run on URLs, headers, and request bodies (when [request body scanning](https://github.com/pipelab-org/pipelock/blob/v3.7.0/docs/configuration.md#request-body-scanning) is on), and on MCP tool arguments. A short-lived token that leaks is still a leak; DLP and short lifetimes cover different halves of the problem. [Canary tokens](/learn/canary-tokens/) (`pipelock canary`) let you test whether a planted fake credential gets caught.
 
 ### 3. Run tools and code in a sandbox
 

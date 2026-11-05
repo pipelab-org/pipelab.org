@@ -1,0 +1,9 @@
+{{- $text := . -}}
+{{- range findRE `\{\{stat:[a-z_]+\}\}` $text -}}
+  {{- $key := replaceRE `^\{\{stat:|\}\}$` "" . -}}
+  {{- $text = replace $text . (printf "%v" (partial "fact-value.html" $key)) -}}
+{{- end -}}
+{{- if strings.Contains $text "{{stat:" -}}
+  {{- errorf "invalid site fact token in %q" $text -}}
+{{- end -}}
+{{- return $text -}}

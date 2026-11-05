@@ -129,7 +129,7 @@ pipelock claude setup
 
 [Pipelock](/pipelock/) is an open-source AI egress proxy and agent firewall. It handles HTTP, MCP, and WebSocket traffic in a single binary.
 
-**DLP scanning.** 65 credential patterns with checksum validators. Decodes base64, hex, and URL encoding before matching. Scans environment variable values with Shannon entropy filtering.
+**DLP scanning.** {{< stat key="dlp_patterns" >}} credential patterns with checksum validators. Decodes base64, hex, and URL encoding before matching. Scans environment variable values with Shannon entropy filtering.
 
 **Injection detection.** Multi-pass normalization pipeline scans HTTP responses and MCP tool responses for prompt injection patterns.
 

@@ -9,7 +9,7 @@ faq:
   - q: "What security controls do Cloudflare Sandboxes provide for AI agents?"
     a: "Cloudflare Sandboxes provides container-based isolation, programmable outbound handling via Workers, domain allow/deny controls, HTTPS interception, credential injection at the proxy layer so sandboxed code never sees real secrets, and dynamic egress policies that can change at runtime. Public Cloudflare docs describe programmable traffic handling but not built-in agent-specific detections such as credential DLP, prompt injection scanning, or MCP tool poisoning checks."
   - q: "What does Pipelock add on top of Cloudflare Sandboxes?"
-    a: "Pipelock adds content-layer scanning: DLP credential detection (65 patterns with encoding-aware matching), prompt injection detection in tool responses, MCP tool poisoning and rug-pull detection, SSRF protection, and tamper-evident audit logging. Cloudflare controls where agents connect and how credentials flow. Pipelock controls what is in the traffic that flows through approved connections."
+    a: "Pipelock adds content-layer scanning: DLP credential detection ({{stat:dlp_patterns}} patterns with encoding-aware matching), prompt injection detection in tool responses, MCP tool poisoning and rug-pull detection, SSRF protection, and tamper-evident audit logging. Cloudflare controls where agents connect and how credentials flow. Pipelock controls what is in the traffic that flows through approved connections."
   - q: "Do you need both Cloudflare Sandboxes and Pipelock?"
     a: "It depends on your threat model. If your agents only call trusted first-party APIs with no MCP servers, Cloudflare's domain filtering and credential injection may be sufficient. If your agents call third-party MCP servers, fetch external content, or handle user-provided data, content inspection catches attacks that domain filtering structurally cannot see: poisoned tool descriptions, credential exfiltration through approved endpoints, and injection payloads in tool responses."
 learn_cat: concepts
@@ -111,7 +111,7 @@ Each layer fails differently. A Cloudflare-only deployment built around host con
 | Domain allow/deny | Yes | Yes | Yes | Yes |
 | TLS interception | Yes (per-instance CA) | Yes | Yes | Yes |
 | Credential injection / secret rewriting | Yes | Yes | No | Yes (Cloudflare layer) |
-| Credential DLP scanning | Not documented as built-in | Not documented | Yes (65 patterns) | Yes (Pipelock layer) |
+| Credential DLP scanning | Not documented as built-in | Not documented | Yes ({{< stat key="dlp_patterns" >}} patterns) | Yes (Pipelock layer) |
 | Prompt injection detection | Not documented as built-in | Not documented | Yes ({{< stat key="response_patterns" >}} patterns, 6-pass) | Yes (Pipelock layer) |
 | MCP tool poisoning / rug-pull | Not documented as built-in | Not documented | Yes | Yes (Pipelock layer) |
 | SSRF / private IP protections | Custom via outbound handlers | Not documented | Yes (DNS-level) | Yes (both layers) |

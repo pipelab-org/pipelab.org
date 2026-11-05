@@ -53,7 +53,7 @@ They operate at different layers. NemoClaw controls the execution environment an
 |---------|----------|----------|
 | **Architecture** | Network proxy, single binary | Sandbox orchestrator on top of OpenShell |
 | **Agent support** | Any agent routed through the proxy | OpenClaw, Hermes, LangChain Deep Agents Code |
-| **Credential scanning (DLP)** | 65 patterns, encoding-aware, on mediated traffic | Not described in public materials |
+| **Credential scanning (DLP)** | {{< stat key="dlp_patterns" >}} patterns, encoding-aware, on mediated traffic | Not described in public materials |
 | **Prompt injection detection** | Deterministic patterns with multi-pass normalization on mediated traffic | Not described in public materials |
 | **SSRF protection** | Mediated private-IP, metadata, and DNS rebinding checks | Not described in public materials |
 | **MCP scanning** | Mediated traffic, both directions: tool descriptions, arguments, responses | Not described in public materials |

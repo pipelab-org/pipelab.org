@@ -91,7 +91,7 @@ From the [iron-proxy README](https://github.com/paradigmxyz/iron-proxy#installat
 | **Architecture** | Network proxy, single self-hosted binary | Network proxy, self-hosted Go binary |
 | **Primary scope** | HTTP, HTTPS CONNECT (payloads only with TLS interception on), WebSocket, and MCP content scanning | Domain allowlist, TLS-terminating inspection, boundary secret rewriting |
 | **Domain allowlist** | Yes | Yes, the primary mechanism |
-| **Credential scanning (DLP)** | 65 built-in patterns, encoding-aware, environment leak detection | Boundary rewriting instead: the sandbox never holds real secrets |
+| **Credential scanning (DLP)** | {{< stat key="dlp_patterns" >}} built-in patterns, encoding-aware, environment leak detection | Boundary rewriting instead: the sandbox never holds real secrets |
 | **Prompt injection detection** | Deterministic patterns with multi-pass normalization on scanned responses | LLM Judge policy model on outbound requests, not pattern scanning of responses |
 | **Tool poisoning and rug-pull drift** | Yes | Not documented |
 | **SSRF protection** | Private IP, metadata, and DNS rebinding checks | Not documented in public docs |
@@ -107,7 +107,7 @@ From the [iron-proxy README](https://github.com/paradigmxyz/iron-proxy#installat
 
 ## When to pick Pipelock
 
-**You want content inspection across HTTP, WebSocket, and MCP.** Pipelock scans outbound URLs, headers, and bodies for 65 credential patterns, decoding base64, hex, and URL encoding first, and runs injection patterns through several normalization passes on scanned responses. Tool descriptions and arguments get the same treatment. If your threat model includes a poisoned tool description or a secret hidden in a request body, this is the layer that sees it.
+**You want content inspection across HTTP, WebSocket, and MCP.** Pipelock scans outbound URLs, headers, and bodies for {{< stat key="dlp_patterns" >}} credential patterns, decoding base64, hex, and URL encoding first, and runs injection patterns through several normalization passes on scanned responses. Tool descriptions and arguments get the same treatment. If your threat model includes a poisoned tool description or a secret hidden in a request body, this is the layer that sees it.
 
 **You need MCP content awareness.** Pipelock fingerprints tool descriptions, flags rug-pull drift when a trusted tool changes mid-session, and inspects arguments and responses. iron-proxy's MCP feature decides which tools may run; it does not read what they say.
 

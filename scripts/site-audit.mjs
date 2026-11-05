@@ -3,6 +3,7 @@
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, lstatSync, readFileSync, readdirSync, realpathSync, rmSync } from "node:fs";
+import { auditMachineContext } from "./machine-context-audit.mjs";
 import path from "node:path";
 
 import { parse as parseToml } from "smol-toml";
@@ -968,9 +969,10 @@ for (const file of contentFiles) {
 issues.push(...auditInstallContract({
   repoRoot,
   contentFiles,
-  templateFiles: walk(path.join(repoRoot, "themes", "pipelab", "layouts")).filter(file => /\.(html|xml|md)$/.test(file)),
+  templateFiles: walk(path.join(repoRoot, "themes", "pipelab", "layouts")).filter(file => /\.(html|xml|md|txt)$/.test(file)),
   version: parseToml(readFileSync(path.join(repoRoot, "hugo.toml"), "utf8"))?.params?.pipelock_version,
 }));
+issues.push(...auditMachineContext(repoRoot));
 
 const contentPageByRoute = new Map();
 const inboundContentLinks = new Map();

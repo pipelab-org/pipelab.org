@@ -45,8 +45,5 @@ export function auditResponsePatternCounts(root) {
     }
   }
   for (const directory of ["content", "data", "themes/pipelab/layouts"]) visit(directory);
-  for (const file of ["static/llms.txt", "static/llms-full.txt"]) {
-    findings.push(...responsePatternClaims(file, readFileSync(path.join(root, file), "utf8")));
-  }
   return findings;
 }

@@ -13,7 +13,7 @@
   "kind" "blog"
   "cat" $cat
   "catLabel" ($catLabel | default "Field note")
-  "summary" ($page.Description | default "")
+  "summary" ((partial "fact-text.html" $page.Description) | default "")
   "featured" (.featured | default false)
   "tags" ($page.Params.tags | default slice)
   "meta" $meta

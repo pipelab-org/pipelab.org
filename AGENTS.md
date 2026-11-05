@@ -48,7 +48,7 @@ Set `author:` to the writer's own full name. Preserve existing published bylines
 
 Use **PipeLab** for the site and parent brand and **Pipelock** for the product. Keep product and benchmark claims within their documented scope. Gauntlet results are first-party Pipelock evidence, not evidence of broad market adoption or participation by other vendors. Verify comparative claims against cited public sources; an undocumented capability is not proof that it is absent.
 
-When changing a core positioning page, read `/`, `/pipelock/`, `/proof/`, `/pricing/`, `/enterprise/`, and `/about/` together to keep terminology and proof language consistent. Update `static/llms.txt` and `static/llms-full.txt` in the same pull request when their summaries change. The same applies to summary changes on `/learn/`, `/compare/`, and `/agent-firewall/`.
+When changing a core positioning page, read `/`, `/pipelock/`, `/proof/`, `/pricing/`, `/enterprise/`, and `/about/` together to keep terminology and proof language consistent. Update the machine-context source templates and `data/machine_context.yaml` in the same pull request when their summaries change. The same applies to summary changes on `/learn/`, `/compare/`, and `/agent-firewall/`.
 
 Use shared template primitives before adding page-specific classes. Every H1 template declares one of the hero contracts documented in the content reference. Standard branded heroes use `site-hero`, `brand-field-hero`, and `brand-field-hero-standard`. A hero contains identity, a title or lockup, one lead, actions, and optional facts. Put diagrams, demos, evidence tables, and explainers in adjacent sections.
 
@@ -82,7 +82,7 @@ Maintain redirects in `static/_redirects` using its existing format and preserve
 
 ## Machine access and outputs
 
-The committed crawl policy allows access without vendor-specific training exclusions. Changes to machine access belong in a dedicated pull request explaining the tradeoff. Keep `static/robots.txt`, `static/llms.txt`, `static/llms-full.txt`, and `static/_headers` aligned with the declared policy. Any additional Markdown conversion service must preserve that policy, canonical URLs, and machine-readable content.
+The committed crawl policy allows access without vendor-specific training exclusions. Changes to machine access belong in a dedicated pull request explaining the tradeoff. Keep `static/robots.txt`, the machine-context source templates, and `static/_headers` aligned with the declared policy. Any additional Markdown conversion service must preserve that policy, canonical URLs, and machine-readable content.
 
 Layouts and output-format changes must preserve:
 
@@ -129,5 +129,7 @@ Use a test database for development. Detail-view routing uses the existing redir
 When `params.pipelock_version` changes in `hugo.toml`, follow the evidence-version guide and run `make preflight`. Current capability data, verifier pins, and product summaries must match the declared release. Historical signed artifacts and reviewed Gauntlet measurements keep their own recorded versions under the explicit classification and promotion contracts.
 
 Check version and metric claims in `content/pipelock.md`, pricing and enterprise pages, the homepage, machine-readable summaries, and downloadable artifacts such as `static/enterprise/pipelock-solution-brief.pdf`. The related HTML file is a redirect shim, not a second copy of the brief.
+
+`/llms.txt` and `/llms-full.txt` are plain-text Hugo home outputs from `themes/pipelab/layouts/index.llms.txt` and `index.llmsfull.txt`. Shared release copy and the guide list live in `data/machine_context.yaml`; install commands use `data/install.yaml`. Keep the existing path rules in `static/_headers`.
 
 Everything under `static/` is copied verbatim. Hugo does not synchronize those files with `content/` or `data/`. Update affected unsigned artifacts deliberately, and preserve signed or digest-bound evidence through its documented publication process.

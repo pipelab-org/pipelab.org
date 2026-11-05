@@ -60,7 +60,7 @@ agentgateway answers who may reach what, and routes it. Pipelock answers what is
 | **Authentication** | Not a gateway function | JWT, API keys, OAuth, OIDC browser flows |
 | **Authorization** | Tool policy via config | CEL-based RBAC and MCP authorization per tool, prompt, and resource |
 | **Multi-server routing** | One wrapper per server or upstream | Aggregates many MCP servers behind one endpoint |
-| **Credential scanning (DLP)** | 65 patterns, encoding-aware, environment leak detection | Regex filters and built-in PII detectors in prompt guards |
+| **Credential scanning (DLP)** | {{< stat key="dlp_patterns" >}} patterns, encoding-aware, environment leak detection | Regex filters and built-in PII detectors in prompt guards |
 | **Prompt injection detection** | Deterministic patterns with multi-pass normalization on scanned responses | Moderation-service integrations and custom webhooks |
 | **Tool poisoning and rug-pull drift** | Fingerprinting and drift detection | Not documented |
 | **SSRF protection** | Private IP, metadata, and DNS rebinding checks | Not documented |

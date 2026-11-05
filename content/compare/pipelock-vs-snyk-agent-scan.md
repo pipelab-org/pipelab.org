@@ -56,7 +56,7 @@ Agent Scan checks what is installed before you trust it. Pipelock checks what it
 | **What it examines** | HTTP, WebSocket, and MCP payloads as they flow | Installed harnesses, MCP servers, and skills |
 | **Tool-description poisoning** | Scanned at runtime, fingerprinted, drift flagged | Scanned at scan time |
 | **Rug-pull drift after install** | Detected when a description changes mid-session | Not a runtime function; re-scan to see it |
-| **Credential scanning (DLP)** | 65 patterns, encoding-aware, on live traffic | Sensitive data handling checks on components |
+| **Credential scanning (DLP)** | {{< stat key="dlp_patterns" >}} patterns, encoding-aware, on live traffic | Sensitive data handling checks on components |
 | **Prompt injection** | Deterministic patterns with multi-pass normalization on responses | Injection checks on component content |
 | **Malware patterns in skills** | Not in scope | Yes |
 | **SSRF protection** | Yes | Not in scope |

@@ -50,7 +50,7 @@ faq:
   <div class="pricing-feat-block">
     <p class="pricing-feat-head"><span class="pricing-feat-num">01</span> Detect</p>
     <ul class="pricing-feat-list">
-      <li>Fixed-order scanner pipeline, 65 DLP patterns (keys, tokens, PII)</li>
+      <li>Fixed-order scanner pipeline, {{< stat key="dlp_patterns" >}} DLP patterns (keys, tokens, PII)</li>
       <li>MCP scanning: input, response, and tool poisoning</li>
       <li>Prompt-injection detection across encoding chains</li>
       <li>SSRF, private-IP, and cloud-metadata blocking</li>
@@ -73,7 +73,7 @@ faq:
       <li>Free receipt verifiers: CLI (Go, TypeScript, Rust, Python) and in-browser, no server</li>
       <li>Web evidence viewer: <code>pipelock evidence view</code> renders a session as a self-contained HTML report</li>
       <li>Signed audit reports (HTML, JSON, SARIF)</li>
-      <li>Signed, hot-reloadable rule bundles (28 community rules)</li>
+      <li>Signed, hot-reloadable rule bundles ({{< stat key="community_rules" >}} community rules)</li>
     </ul>
   </div>
   <div class="pricing-feat-block">
@@ -82,7 +82,7 @@ faq:
       <li>Fetch, forward, and WebSocket proxy + MCP (stdio + HTTP)</li>
       <li>TLS interception + cross-request detection</li>
       <li>Process sandbox: Landlock on supported Linux systems; seccomp on Linux/amd64 with kernel support; Seatbelt via sandbox-exec on macOS</li>
-      <li>Core CLI, all 7 presets, Prometheus + OTLP, attack simulation</li>
+      <li>Core CLI, all {{< stat key="presets" >}} presets, Prometheus + OTLP, attack simulation</li>
     </ul>
   </div>
 
@@ -358,7 +358,7 @@ faq:
       <div class="assess-report-main">
         <div>
           <div class="assess-report-grade">A&minus;</div>
-          <p class="assess-report-verdict">PASS &middot; 23 categories</p>
+          <p class="assess-report-verdict">PASS &middot; {{< stat key="assess_config_categories" >}} categories</p>
         </div>
         <ul class="assess-report-meta">
           <li><i>&#10003;</i> signed manifest</li>

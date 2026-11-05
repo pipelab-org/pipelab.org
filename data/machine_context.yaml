@@ -1,0 +1,14 @@
+release:
+  minor: "3.7"
+  summary: "adds parallel signed receipt chains, filesystem grants for Linux containment, kernel-observed local MCP identities, and exact destination grants. `pipelock exec` steers cooperative commands through a running proxy; commands can ignore its settings."
+guides:
+  - label: v3.7 upgrade actions
+    url: learn/pipelock-v370-upgrade/
+  - label: Parallel receipt chains
+    url: learn/parallel-receipt-chains/
+  - label: Cooperative command launch
+    url: learn/pipelock-exec/
+  - label: Verified local MCP services
+    url: learn/verified-local-mcp-services/
+  - label: Exact destination grants
+    url: learn/destination-grants/

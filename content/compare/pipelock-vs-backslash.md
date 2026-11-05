@@ -45,7 +45,7 @@ Pipelock is a binary you run in your own environment and inspect at runtime. Bac
 |---------|----------|--------------------|
 | **Architecture** | Self-hosted single binary on the network path | Vendor platform with endpoint and client integrations |
 | **Primary job** | Runtime inspection of mediated HTTP, WebSocket, and MCP traffic | Pre-install vetting and governance of servers, skills, and plugins |
-| **Credential scanning (DLP)** | 65 built-in patterns, encoding-aware, on mediated traffic | Not described in the public materials read; the site describes an audit trail of MCP communications and agent network access |
+| **Credential scanning (DLP)** | {{< stat key="dlp_patterns" >}} built-in patterns, encoding-aware, on mediated traffic | Not described in the public materials read; the site describes an audit trail of MCP communications and agent network access |
 | **Prompt injection detection** | Deterministic patterns with multi-pass normalization on scanned responses and tool descriptions | Not described in public materials |
 | **Tool poisoning** | Mediated description scanning and rug-pull drift detection | Rates servers and skills before installation |
 | **SSRF protection** | Mediated private-IP, metadata, and DNS rebinding checks | Not described in public materials |

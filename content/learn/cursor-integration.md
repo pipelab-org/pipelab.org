@@ -16,7 +16,7 @@ howto_steps:
     text: Run pipelock verify-install to confirm the integration is wired correctly.
 faq:
   - q: "What does Pipelock's Cursor integration do?"
-    a: "Pipelock registers hooks with Cursor IDE that intercept shell commands, MCP tool calls, and file reads before they execute. Each action is scanned for credential leaks (65 DLP credential patterns), prompt injection, reverse shells, and dangerous operations like rm -rf or git force push. Blocked actions show a clear explanation in Cursor's UI."
+    a: "Pipelock registers hooks with Cursor IDE that intercept shell commands, MCP tool calls, and file reads before they execute. Each action is scanned for credential leaks ({{stat:dlp_patterns}} DLP credential patterns), prompt injection, reverse shells, and dangerous operations like rm -rf or git force push. Blocked actions show a clear explanation in Cursor's UI."
   - q: "How do I install Pipelock for Cursor?"
     a: "Run 'pipelock cursor install' after installing the pipelock binary from a pinned source build or Homebrew as documented at https://pipelab.org/install/. The install command writes hooks.json in your Cursor config directory. Restart Cursor to activate."
   - q: "Does Pipelock work with Cursor's free plan?"
@@ -60,7 +60,7 @@ The agent tries to run a curl command containing a fake AWS access key. Pipelock
 
 ## What it blocks
 
-**Credential exfiltration (DLP).** 65 credential patterns covering AWS keys, GitHub tokens, Anthropic/OpenAI API keys, private keys, JWTs, Google OAuth secrets, Slack tokens, financial account numbers, and more. Includes 4 checksum validators (Luhn, mod97, ABA, WIF) for structured formats. Catches secrets in shell arguments, MCP tool inputs, and file contents. Handles base64, hex, and URL encoding.
+**Credential exfiltration (DLP).** {{< stat key="dlp_patterns" >}} credential patterns covering AWS keys, GitHub tokens, Anthropic/OpenAI API keys, private keys, JWTs, Google OAuth secrets, Slack tokens, financial account numbers, and more. Includes 4 checksum validators (Luhn, mod97, ABA, WIF) for structured formats. Catches secrets in shell arguments, MCP tool inputs, and file contents. Handles base64, hex, and URL encoding.
 
 **Dangerous shell commands.** Reverse shells (`bash -i >& /dev/tcp/...`), destructive operations (`rm -rf /`), force pushes (`git push --force`), disk wipes (`dd if=/dev/zero`), and shell obfuscation techniques (variable expansion, brace expansion, encoded commands).
 

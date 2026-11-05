@@ -179,7 +179,7 @@ When an incident happens, you need to know exactly what the agent sent, where, a
 
 [Pipelock](/pipelock/) implements all five layers:
 
-1. **DLP:** 65 credential patterns (with checksum validators: Luhn, mod97, ABA, WIF), base64/hex/URL decode before scan, environment variable leak detection with Shannon entropy filtering
+1. **DLP:** {{< stat key="dlp_patterns" >}} credential patterns (with checksum validators: Luhn, mod97, ABA, WIF), base64/hex/URL decode before scan, environment variable leak detection with Shannon entropy filtering
 2. **SSRF:** Private IP blocking, metadata endpoint blocking, DNS rebinding protection
 3. **Rate limits:** Per-domain sliding window, configurable data budgets
 4. **Capability separation:** Runs as a proxy. Combined with network isolation, the agent can't bypass it.
