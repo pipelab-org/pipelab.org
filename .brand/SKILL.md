@@ -43,7 +43,7 @@ When the scanner cannot decide, it drops the request. Call this **fail-closed**,
 ## Load-bearing facts
 
 - **Scanner pipeline:** fixed security-sensitive order for mediated URL traffic, with DLP before DNS resolution and documented transport-specific limits. Do not publish a fixed layer count; the checks evolve.
-- **DLP:** 65 patterns (AWS, GCP, Stripe, GitHub, JWT, private keys, PII).
+- **DLP:** Use `dlp_patterns` from `data/stats.yaml` for the count; don't keep a second copy here. Families include cloud and payment provider credentials, GitHub tokens, JWTs, private keys, and PII.
 - **Agent Egress Bench:** public adversarial corpus and methodology.
 - **Binary and licensing:** Pipelock ships as a single Go binary. The core uses Apache 2.0; enterprise modules use the Elastic License 2.0. A size claim must identify the measured release artifact and whether it is compressed or unpacked.
 - **Dependencies:** Use `direct_deps` from `data/stats.yaml`; don't keep a second count here. There's no separate runtime service or model dependency.
