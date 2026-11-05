@@ -271,7 +271,9 @@ for (const file of htmlFiles) {
 
   pageByRoute.set(route, { file, route, html: scrubbedHtml, ids, visibleText, title, description, robots, indexable });
 
-  for (const finding of inlineScriptFindings(scrubbedHtml)) {
+  // A comment opener inside a script data block is raw text, not an HTML
+  // comment. Stripping it first can hide a later executable script.
+  for (const finding of inlineScriptFindings(html)) {
     issues.push(`${route}: ${finding}`);
   }
 
