@@ -55,7 +55,7 @@ function fixture(t) {
     cpSync(path.join(root, file), path.join(dir, destination), { recursive: true });
   };
   for (const file of ["hugo.toml", "data", "static/_headers", "static/rules/pipelock-community/bundle.yaml"]) copy(file);
-  for (const file of ["index.llms.txt", "index.llmsfull.txt", "partials/machine", "partials/fact-value.html", "partials/fact-text.html", "partials/faq.html", "shortcodes/stat.html"]) {
+  for (const file of ["index.llms.txt", "index.llmsfull.txt", "partials/machine", "partials/hub-open.html", "partials/fact-value.html", "partials/fact-text.html", "partials/faq.html", "shortcodes/stat.html"]) {
     copy(`themes/pipelab/layouts/${file}`, `layouts/${file}`);
   }
   // Audits inspect the tracked templates, not a second editable summary copy.
@@ -87,6 +87,24 @@ faq:
   const built = file => readFileSync(path.join(dir, "public", file), "utf8");
   return { dir, write, build, built };
 }
+
+test("machine guide rendering and audit use the hub visibility switch together", t => {
+  const f = fixture(t);
+  let result = f.build();
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.doesNotMatch(f.built("llms.txt"), /\/hub\//);
+  assert.deepEqual(auditMachineContext(f.dir), []);
+  const config = readFileSync(path.join(f.dir, "hugo.toml"), "utf8");
+  f.write("hugo.toml", config.replace("open = false", "open = true"));
+  result = f.build();
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.match(f.built("llms.txt"), /\[PipeLab Hub\]\(https:\/\/pipelab.org\/hub\/\)/);
+  assert.deepEqual(auditMachineContext(f.dir), []);
+  for (const file of ["llms.txt", "llms-full.txt"]) {
+    f.write(`public/${file}`, f.built(file).replace(/^- \[PipeLab Hub\].*\n/m, ""));
+  }
+  assert.equal(auditMachineContext(f.dir).filter(issue => issue.includes("missing approved guide PipeLab Hub")).length, 2);
+});
 
 test("Hugo derives counts, FAQ text, page metadata, release copy and install commands without static copies", t => {
   const f = fixture(t);

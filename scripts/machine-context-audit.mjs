@@ -38,7 +38,7 @@ export function auditMachineContext(root = ".") {
         issues.push(`${file}: must render the shared release introduction`);
       }
       if (!source.includes('{{ partial "machine/guides.txt" . }}')) issues.push(`${file}: must render the approved shared guide list`);
-      for (const guide of editorial.guides) {
+      for (const guide of editorial.guides.filter(guide => !guide.url.startsWith("/hub/") || config.params?.hub?.open === true)) {
         if (!body.includes(`[${guide.label}](${new URL(guide.url, config.baseURL).href})`)) issues.push(`${file}: missing approved guide ${guide.label}`);
       }
       if (/\{\{|\}\}|\bVERSION\b/.test(body)) issues.push(`${file}: unresolved template or fact token`);

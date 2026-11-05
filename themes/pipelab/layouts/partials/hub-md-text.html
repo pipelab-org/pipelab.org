@@ -1,0 +1,9 @@
+{{- /* CommonMark 0.31.2 §§2.4, 4.5. Strip leading whitespace and escape
+     every ASCII punctuation character; never interpret contributor markup. */ -}}
+{{- $lines := slice -}}
+{{- range split . "\n" -}}
+  {{- $line := replaceRE `^\s+` "" . -}}
+  {{- $line = replaceRE "([!\"#$%&'()*+,\\-./:;<=>?@\\[\\]\\\\^_`{|}~])" "\\$1" $line -}}
+  {{- $lines = $lines | append $line -}}
+{{- end -}}
+{{- return (delimit $lines "\n") -}}

@@ -1,0 +1,12 @@
+{{- /* Hub visibility contract (§12.1): omitted/false closed; true open. */ -}}
+{{- $open := false -}}
+{{- with site.Params.hub -}}
+  {{- if isset . "open" -}}
+    {{- if ne (printf "%T" .open) "bool" -}}
+      {{- errorf "params.hub.open must be a boolean" -}}
+    {{- else -}}
+      {{- $open = .open -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- return $open -}}

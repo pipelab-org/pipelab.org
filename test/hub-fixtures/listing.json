@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "type": "recipe",
+  "id": "example-recipe",
+  "title": "Example recipe",
+  "summary": "Read a component's setup instructions and documented limitations.",
+  "maintainer": {"name": "Example maintainer", "github": "example"},
+  "license": "Apache-2.0",
+  "evidence": {"date": "2026-11-05", "pipelock_version": "3.7.1", "method": "Fixture evidence", "artifact": "evidence/example.json"},
+  "setup": [{"text": "Inspect the configuration before starting.", "command": "pipelock run --config <file>"}],
+  "limitations": ["This is a rendering fixture."],
+  "not_claimed": ["No runtime trust is established."],
+  "links": {"source": "https://example.com/source"},
+  "disclosures": {"ai_assisted": false, "ai_text": "Fixture text", "conflict_of_interest": "None declared."},
+  "learn_page": "/learn/mcp-security/"
+}

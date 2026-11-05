@@ -1,5 +1,7 @@
 ## Pipelock v{{ site.Data.machine_context.release.minor }} guides
 
 {{ range site.Data.machine_context.guides -}}
+{{ if or (not (hasPrefix .url "/hub/")) (partial "hub-open.html" .) -}}
 - [{{ .label }}]({{ .url | absURL }})
+{{ end -}}
 {{ end -}}

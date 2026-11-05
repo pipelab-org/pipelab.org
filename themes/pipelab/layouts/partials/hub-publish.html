@@ -1,0 +1,13 @@
+{{- if partial "hub-open.html" . -}}
+  {{- with resources.Get "hub/schema/listing-v1.json" -}}
+    {{- $schema := resources.Copy "schemas/pipelab-hub/listing-v1.json" . -}}
+    {{- $schema.Publish -}}
+  {{- end -}}
+  {{- range resources.Match "hub/community/**" -}}
+    {{- /* Design §§2.3,4.1 O12: publish only the exact signed pair paths. */ -}}
+    {{- if not (findRE `^hub/community/[a-z0-9][a-z0-9-]{1,62}[a-z0-9]/[a-z0-9][a-z0-9-]{1,62}[a-z0-9]/bundle\.yaml(\.sig)?$` (strings.TrimPrefix "/" .Name)) -}}
+      {{- errorf "unexpected community download path" -}}
+    {{- end -}}
+    {{- .Publish -}}
+  {{- end -}}
+{{- end -}}

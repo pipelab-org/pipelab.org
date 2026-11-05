@@ -138,3 +138,13 @@ Body counts use the `stat` shortcode and `data/stats.yaml`. The `community_rules
 Descriptions and FAQ text can use `{{stat:dlp_patterns}}` or `{{stat:community_rules}}`. The shared `fact-text.html` partial resolves these tokens in metadata, visible FAQs, structured data, cards, RSS and Markdown mirrors. Unknown keys and malformed tokens fail the build. These tokens only insert shared facts; they do not execute arbitrary templates.
 
 The two machine-context templates retain approved editorial prose. Their shared release opening and guide list use `data/machine_context.yaml`; a new minor release requires review of that copy. Matching page titles use page metadata. Dated technical citations and the existing Docker `:latest` example retain their published meaning.
+
+## Hub rendering and explicit Markdown mirrors
+
+Cloudflare serves generated static pages directly. The API Worker doesn't negotiate Markdown or convert HTML. Request the explicit `index.md` alternate linked in a page's head; changing the Accept header doesn't select a mirror.
+
+The hub adapter adds pages only when `params.hub.open` is boolean `true`. Omitted or `false` keeps hub-owned pages, mirrors, JSON, community downloads, and the listing schema out of the build. Other values fail the build. Existing official `static/rules/` distribution remains available. Machine guides and the footer use the same switch. Build into a clean destination when changing modes.
+
+`scripts/hub/schema/listing-v1.json` and `scripts/hub/validate.mjs` define the structural, text, and URL contract. The copy in `assets/hub/schema/` must match it byte for byte. This is metadata validation, not signature verification, compatibility assessment, or admission. The later admission pipeline supplies trusted normalized records at `data/hub/generated/listings.json`: an array of `{listing, evidence_present}` objects, with `listing` holding normalized validated metadata. Only confirmed local evidence may set `evidence_present`.
+
+Hub values stay under `Params.hub`; descriptions use fixed text, listing type, and ID. Hub templates escape plain text directly, serialize JSON with `jsonify`, and escape Markdown through dedicated partials. They never run contributor text through Goldmark or the shared fact-token processor. The transitive template lint runs in the site audit. Browser search, verification badges, config assessment, and publication checks belong to their respective pipelines.

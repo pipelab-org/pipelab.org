@@ -1,0 +1,14 @@
+// Shared rail and spacing come from .section; no new viewport breakpoints.
+.hub-page {
+  overflow-wrap: anywhere;
+  header { margin-bottom: 2rem; }
+  h1, .eyebrow { font-family: var(--font-mono), monospace; }
+  .eyebrow { text-transform: uppercase; }
+  h2 { margin-top: 2rem; }
+  pre { max-width: 100%; overflow-x: auto; }
+  // Use the existing 44px action target contract from _gauntlet.scss.
+  a { display: inline-block; min-height: 44px; max-width: 100%; padding-block: .5rem; }
+  .hub-text { white-space: pre-wrap; }
+  .hub-list { padding-left: 1.5rem; }
+  .hub-list li { margin-block: 1.5rem; }
+}
