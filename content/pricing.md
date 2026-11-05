@@ -27,7 +27,7 @@ faq:
   - q: "What's the refund policy?"
     a: "30-day money-back guarantee, no questions asked. Annual plans get prorated refunds after 30 days. All refunds processed through Polar. [Full refund policy](/refund/)."
   - q: "How do I manage my subscription?"
-    a: "Log into the [Polar customer portal](https://polar.sh) to update your payment method, switch plans, download invoices, or cancel. You can also email [luckypipe@pipelab.org](mailto:luckypipe@pipelab.org) and we will handle it for you."
+    a: "Log into the [Polar customer portal](https://polar.sh/pipelock/portal) to update your payment method, switch plans, download invoices, or cancel. You can also email [luckypipe@pipelab.org](mailto:luckypipe@pipelab.org) and we will handle it for you."
 ---
 
 <div class="pricing-plans">
