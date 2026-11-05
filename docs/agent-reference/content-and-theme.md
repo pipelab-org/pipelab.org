@@ -117,6 +117,14 @@ Build narrow-first with the breakpoint tokens in `_variables.scss`. Visual chang
 `themes/pipelab/layouts/partials/footer.html` owns the footer columns and links. Each link group is a
 labeled `<nav>`, headings use `<span>`, and external links use `target="_blank" rel="noopener noreferrer"`.
 
+## Negotiated Markdown
+
+For `GET` and `HEAD` requests accepting `text/markdown`, the Worker first fetches the requested asset. Redirects, errors, and non-HTML assets retain their original responses. Successful HTML pages use the generated Markdown mirror when available: `/index.md` for the homepage and `/path/index.md` for pages and sections. An explicit HTML filename maps to its `.md` counterpart. Query strings remain intact.
+
+The Worker serves mirror bytes unchanged with `Content-Type: text/markdown; charset=utf-8`, `Vary: Accept`, and the mirror's caching headers. `HEAD` returns headers without a body. If a mirror is missing, unavailable, or returns HTML instead of Markdown, the Worker converts the HTML response. The converter removes scripts and structured data, decodes entities once after stripping markup, and preserves code whitespace and literal angle brackets. Fallback responses keep the HTML status and caching policy but drop its body length, encoding, and ETag. API handlers run before this negotiation.
+
+Canonical URLs, page alternate-format links, and crawl policy remain defined by the existing Hugo templates and static assets.
+
 ## Static files
 
 Everything under `static/` is copied verbatim, so Hugo will never keep it in sync with `content/` or

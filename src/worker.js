@@ -34,19 +34,17 @@ function withVary(headers, value) {
 }
 
 function decodeHtmlEntities(text) {
-  return text
-    .replace(/&#x([0-9a-f]+);/gi, (_, hex) =>
-      String.fromCodePoint(parseInt(hex, 16))
-    )
-    .replace(/&#([0-9]+);/g, (_, dec) =>
-      String.fromCodePoint(parseInt(dec, 10))
-    )
-    .replace(/&nbsp;/gi, " ")
-    .replace(/&amp;/gi, "&")
-    .replace(/&lt;/gi, "<")
-    .replace(/&gt;/gi, ">")
-    .replace(/&quot;/gi, '"')
-    .replace(/&#39;/gi, "'");
+  // One pass: an escaped entity such as &amp;lt; remains literal &lt;.
+  const named = { nbsp: " ", amp: "&", lt: "<", gt: ">", quot: '"', apos: "'" };
+  return text.replace(/&(#x[0-9a-f]+|#[0-9]+|nbsp|amp|lt|gt|quot|apos);/gi, (_, entity) => {
+    if (entity[0] !== "#") return named[entity.toLowerCase()];
+    const hex = entity[1].toLowerCase() === "x";
+    const point = parseInt(entity.slice(hex ? 2 : 1), hex ? 16 : 10);
+    // Invalid numeric references follow HTML's replacement-character rule.
+    return point === 0 || point > 0x10ffff || (point >= 0xd800 && point <= 0xdfff)
+      ? "\ufffd"
+      : String.fromCodePoint(point);
+  });
 }
 
 function stripTags(text) {
@@ -69,11 +67,11 @@ function convertInlineHtml(html, baseUrl) {
   output = output.replace(/<br\s*\/?>/gi, "\n");
   output = output.replace(
     /<img[^>]*src="([^"]+)"[^>]*alt="([^"]*)"[^>]*>/gi,
-    (_, src, alt) => `![${decodeHtmlEntities(alt)}](${absolutizeUrl(src, baseUrl)})`
+    (_, src, alt) => `![${alt}](${absolutizeUrl(src, baseUrl)})`
   );
   output = output.replace(
     /<img[^>]*alt="([^"]*)"[^>]*src="([^"]+)"[^>]*>/gi,
-    (_, alt, src) => `![${decodeHtmlEntities(alt)}](${absolutizeUrl(src, baseUrl)})`
+    (_, alt, src) => `![${alt}](${absolutizeUrl(src, baseUrl)})`
   );
   output = output.replace(
     /<a[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi,
@@ -81,10 +79,6 @@ function convertInlineHtml(html, baseUrl) {
       const label = convertInlineHtml(text, baseUrl).trim() || absolutizeUrl(href, baseUrl);
       return `[${label}](${absolutizeUrl(href, baseUrl)})`;
     }
-  );
-  output = output.replace(
-    /<code[^>]*>([\s\S]*?)<\/code>/gi,
-    (_, text) => `\`${stripTags(text).trim()}\``
   );
   output = output.replace(
     /<(strong|b)[^>]*>([\s\S]*?)<\/\1>/gi,
@@ -95,10 +89,15 @@ function convertInlineHtml(html, baseUrl) {
     (_, _tag, text) => `*${convertInlineHtml(text, baseUrl).trim()}*`
   );
   output = output.replace(/\s+/g, " ");
-  return stripTags(output).replace(/\s+\n/g, "\n").replace(/\n\s+/g, "\n").trim();
+  return output.replace(/<[^>]+>/g, " ").replace(/\s+\n/g, "\n").replace(/\n\s+/g, "\n").trim();
 }
 
 function htmlToMarkdown(html, requestUrl) {
+  // Remove non-content before selecting main/body: script strings can contain
+  // apparent <main> tags and must never become the selected document text.
+  html = html
+    .replace(/<!--[\s\S]*?-->/g, "")
+    .replace(/<(script|style|noscript|svg|canvas)\b[^>]*>[\s\S]*?(?:<\/\1\s*>|$)/gi, "");
   const titleMatch = html.match(/<title>([\s\S]*?)<\/title>/i);
   const title = titleMatch ? stripTags(titleMatch[1]).trim() : "";
   const mainMatch = html.match(/<main[^>]*>([\s\S]*?)<\/main>/i);
@@ -106,17 +105,35 @@ function htmlToMarkdown(html, requestUrl) {
   let content = mainMatch ? mainMatch[1] : bodyMatch ? bodyMatch[1] : html;
   const hasH1 = /<h1[\s\S]*?<\/h1>/i.test(content);
 
-  content = content
-    .replace(/<!--[\s\S]*?-->/g, "")
-    .replace(/<script[\s\S]*?<\/script>/gi, "")
-    .replace(/<style[\s\S]*?<\/style>/gi, "")
-    .replace(/<noscript[\s\S]*?<\/noscript>/gi, "")
-    .replace(/<svg[\s\S]*?<\/svg>/gi, "")
-    .replace(/<canvas[\s\S]*?<\/canvas>/gi, "");
-
+  // Keep code outside all markup conversion and whitespace normalization.
+  // Choose a marker absent even from decoded input so literal text cannot
+  // impersonate a saved segment during restoration.
+  let marker = "\ue000";
+  const decodedContent = decodeHtmlEntities(content);
+  while (decodedContent.includes(marker)) marker += "\ue000";
+  const codeSegments = [];
+  const saveCode = (text) => `${marker}${codeSegments.push(text) - 1}${marker}`;
+  const codeText = (text) => decodeHtmlEntities(text.replace(/<[^>]+>/g, ""));
+  // CommonMark code delimiters must exceed any backtick run in their content.
+  const delimiter = (text, minimum) => "`".repeat(
+    Array.from(text.matchAll(/`+/g)).reduce((length, match) => Math.max(length, match[0].length + 1), minimum)
+  );
   content = content.replace(
-    /<pre[^>]*>\s*(?:<code[^>]*>)?([\s\S]*?)(?:<\/code>)?\s*<\/pre>/gi,
-    (_, code) => `\n\n\`\`\`\n${decodeHtmlEntities(code).trim()}\n\`\`\`\n\n`
+    /<pre\b[^>]*>([\s\S]*?)<\/pre>/gi,
+    (_, code) => {
+      const text = codeText(code);
+      const fence = delimiter(text, 3);
+      return `\n\n${saveCode(`${fence}\n${text}${text.endsWith("\n") ? "" : "\n"}${fence}`)}\n\n`;
+    }
+  );
+  content = content.replace(
+    /<code\b[^>]*>([\s\S]*?)<\/code>/gi,
+    (_, code) => {
+      const text = codeText(code);
+      const ticks = delimiter(text, 1);
+      const pad = /^`|`$|^ .* $/s.test(text) ? " " : "";
+      return saveCode(`${ticks}${pad}${text}${pad}${ticks}`);
+    }
   );
   content = content.replace(
     /<blockquote[^>]*>([\s\S]*?)<\/blockquote>/gi,
@@ -147,13 +164,17 @@ function htmlToMarkdown(html, requestUrl) {
     (_, _tag, text) => `\n\n${text}\n\n`
   );
 
-  let markdown = decodeHtmlEntities(content)
+  let markdown = content
     .replace(/<[^>]+>/g, " ")
     .replace(/\r/g, "")
     .replace(/[ \t]+\n/g, "\n")
     .replace(/\n{3,}/g, "\n\n")
     .replace(/[ \t]{2,}/g, " ")
     .trim();
+  markdown = decodeHtmlEntities(markdown).replace(
+    new RegExp(`${marker}(\\d+)${marker}`, "g"),
+    (_, index) => codeSegments[Number(index)]
+  );
 
   if (!hasH1 && title && !new RegExp(`^#\\s+${title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "m").test(markdown)) {
     markdown = `# ${title}\n\n${markdown}`;
@@ -166,7 +187,7 @@ function estimateMarkdownTokens(markdown) {
   return Math.max(1, Math.ceil(markdown.length / 4));
 }
 
-async function maybeServeMarkdown(request, response) {
+async function maybeServeMarkdown(request, response, assets) {
   const headers = new Headers(response.headers);
 
   if (!wantsMarkdown(request) || !isHtmlResponse(response)) {
@@ -174,6 +195,35 @@ async function maybeServeMarkdown(request, response) {
       status: response.status,
       statusText: response.statusText,
       headers,
+    });
+  }
+
+  // Hugo's home/page/section Markdown outputs use index.md beside index.html.
+  // Fetch HTML first so redirects and missing/error statuses remain authoritative.
+  const mirrorUrl = new URL(request.url);
+  mirrorUrl.pathname = mirrorUrl.pathname.endsWith(".html")
+    ? mirrorUrl.pathname.replace(/\.html$/, ".md")
+    : `${mirrorUrl.pathname.replace(/\/$/, "")}/index.md`;
+  const mirrorRequest = new Request(mirrorUrl, request);
+  // Conditions and ranges for the HTML representation cannot validate a mirror.
+  for (const name of ["If-Match", "If-None-Match", "If-Modified-Since", "If-Unmodified-Since", "If-Range", "Range"]) {
+    mirrorRequest.headers.delete(name);
+  }
+  let mirror;
+  try {
+    mirror = await assets.fetch(mirrorRequest);
+  } catch {
+    // Some missing directory assets throw instead of returning a 404.
+  }
+  if (mirror?.status === 200 &&
+      (mirror.headers.get("Content-Type") || "").split(";")[0].trim().toLowerCase() === "text/markdown") {
+    const mirrorHeaders = new Headers(mirror.headers);
+    withVary(mirrorHeaders, "Accept");
+    mirrorHeaders.set("Content-Type", MARKDOWN_CONTENT_TYPE);
+    return new Response(request.method === "HEAD" ? null : mirror.body, {
+      status: mirror.status,
+      statusText: mirror.statusText,
+      headers: mirrorHeaders,
     });
   }
 
@@ -1099,7 +1149,7 @@ export default {
     // proper not-found responses.
     try {
       const assetResponse = await env.ASSETS.fetch(request);
-      return await maybeServeMarkdown(request, assetResponse);
+      return await maybeServeMarkdown(request, assetResponse, env.ASSETS);
     } catch (err) {
       console.error("ASSETS fetch threw:", err, "path:", path);
       return new Response("Not Found", { status: 404 });
