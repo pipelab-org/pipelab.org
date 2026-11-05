@@ -47,7 +47,7 @@ When the scanner cannot decide, it drops the request. Call this **fail-closed**,
 - **Agent Egress Bench:** public adversarial corpus and methodology.
 - **Binary and licensing:** Pipelock ships as a single Go binary. The core uses Apache 2.0; enterprise modules use the Elastic License 2.0. A size claim must identify the measured release artifact and whether it is compressed or unpacked.
 - **Dependencies:** Use `direct_deps` from `data/stats.yaml`; don't keep a second count here. There's no separate runtime service or model dependency.
-- **Capability separation:** Pipelock does not store agent credentials. Preventing direct bypass depends on deployment isolation and egress controls.
+- **Capability separation:** limit the proxy to the access its configured functions need. Leak detection can retain selected environment and configured secret-file values in memory; treat the proxy and those inputs as sensitive. Proxy scanning covers routed traffic; supported Linux containment can block direct egress when configured and its live restrictions are verified.
 - **Fail-closed:** timeouts, parse failures, and malformed inputs block on mediated enforcement paths. Do not extend this claim to traffic that bypasses Pipelock.
 - **Evidence:** Ed25519-signed decision records and signed YAML rule bundles, hot-reloadable.
 - **Stack:** HTTP/1.1, HTTP/2, WebSocket, MCP, and A2A where documented.
