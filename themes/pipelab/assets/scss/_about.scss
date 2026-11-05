@@ -7,10 +7,9 @@
 //   of the theme. Mirrors the /proof/ + /enterprise/ + /assess/
 //   namespacing pattern.
 //
-//   Token discipline: only var() calls for tokens defined in
-//   _variables.scss. Phantom tokens silently dropped by browsers
-//   (the /enterprise/ + /assess/ first-pass mistake) — every
-//   missing token mapped to a literal value below.
+//   Every var() must resolve to a custom property defined in
+//   _variables.scss; undefined properties cause browsers to discard the
+//   affected declarations. Use literal values where no shared token exists.
 // ============================================================
 
 .about-product {
