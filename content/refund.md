@@ -28,7 +28,7 @@ Monthly subscriptions are not refunded past 30 days since you can cancel anytime
 Two options:
 
 1. **Email us** at [luckypipe@pipelab.org](mailto:luckypipe@pipelab.org) with your account email and we will process the refund.
-2. **Through Polar.** Log into the [Polar customer portal](https://polar.sh) to manage your subscription. For refunds, email us or contact Polar support directly.
+2. **Through Polar.** Log into the [Polar customer portal](https://polar.sh/pipelock/portal) to manage your subscription. For refunds, email us or contact Polar support directly.
 
 All refunds are processed through Polar.sh (our payment processor) and returned to your original payment method. Expect 5 to 10 business days for the refund to appear, depending on your bank.
 
