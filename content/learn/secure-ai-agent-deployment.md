@@ -128,9 +128,9 @@ A proxy-based kill switch is straightforward: the proxy stops forwarding. The ag
          └────────────┘  └───────────┘
 ```
 
-The agent process has credentials but no network access. The proxy has network access but no credentials. MCP servers are wrapped through the proxy, so tool calls and responses pass through the same scanning pipeline as HTTP traffic.
+The agent retains its authentication configuration, and network controls restrict its internet access to the proxy. Configured MCP wrappers mediate tool calls and responses. When enabled, leak detection reads selected values from the proxy process environment and any configured `dlp.secrets_file`, retaining them in memory for matching. Treat the proxy process and those inputs as sensitive.
 
-This is capability separation. Neither component alone can exfiltrate data. Both must be compromised simultaneously for secrets to leave the network.
+This is capability separation. Its protection depends on the configured network and process boundaries; the proxy can itself hold sensitive leak-detection data.
 
 ## Getting started
 

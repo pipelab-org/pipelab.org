@@ -20,7 +20,7 @@ tags:
   - credentials
   - exfiltration
 ---
-Agent egress security is the discipline of controlling and inspecting outbound traffic from AI agents to prevent credential exfiltration, prompt-injection responses, and unsafe destination access. The threat model differs from server-side security because the agent is the active party making outbound calls rather than a passive receiver of inbound requests. Agents leak credentials through HTTP request bodies, URL paths and query strings, DNS queries to attacker-controlled domains, and MCP tool arguments, often with encoding (base64, hex, URL encoding) layered on top to hide the leak. As of April 2026, runtime egress filtering with content inspection is the minimum control set; capability separation (agent holds secrets but has no network access, proxy has network access but no agent secrets) is the architectural foundation.
+Agent egress security is the discipline of controlling and inspecting outbound traffic from AI agents to prevent credential exfiltration, prompt-injection responses, and unsafe destination access. The threat model differs from server-side security because the agent is the active party making outbound calls rather than a passive receiver of inbound requests. Agents leak credentials through HTTP request bodies, URL paths and query strings, DNS queries to attacker-controlled domains, and MCP tool arguments, often with encoding (base64, hex, URL encoding) layered on top to hide the leak. As of April 2026, runtime egress filtering with content inspection is the minimum control set; capability separation restricts agent egress to the proxy in enforced deployments. The proxy may retain sensitive values for leak detection and needs its own protected boundary.
 
 ## The problem: why you need to secure AI agents
 
@@ -164,10 +164,10 @@ The strongest defense: the agent process physically cannot reach the internet. A
 Setting `HTTPS_PROXY` alone isn't enough. A prompt injection can unset environment variables. Real enforcement requires the network stack to block direct connections from the agent process.
 
 ```
-Agent Process (has secrets, no network) → Proxy (no secrets, has network) → Internet
+Agent Process (network-isolated) → Proxy (policy-controlled egress; sensitive DLP data) → Internet
 ```
 
-This is [capability separation](/agent-firewall/). The agent has the credentials but can't reach the internet. The proxy can reach the internet but doesn't have the credentials. Neither alone can exfiltrate anything.
+This is [capability separation](/agent-firewall/). Deployment controls restrict the agent to mediated network access. The proxy can retain sensitive values for leak detection; protect its process, inputs, and controls separately.
 
 ### Layer 5: Audit logging
 

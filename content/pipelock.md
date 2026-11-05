@@ -15,7 +15,7 @@ faq:
   - q: "What transports does Pipelock scan?"
     a: "Pipelock mediates HTTP, WebSocket, MCP, and Agent-to-Agent (A2A) traffic across its supported proxy modes. For HTTP, that includes forward proxy, CONNECT, and fetch. MCP supports stdio wrapping, streamable HTTP, and HTTP reverse proxy. Target URLs use the ordered URL scanner. Response bodies, frames, MCP messages and tools, and A2A tasks and artifacts add controls for the data and actions each transport exposes."
   - q: "Does Pipelock see the agent's real secrets?"
-    a: "No. Pipelock holds no agent credentials by design. The agent runs in the privileged zone with its own secrets. Pipelock runs in a separate trust zone with no secret access, inspecting traffic as it crosses the boundary. This capability separation is enforced at the deployment layer through container or process isolation."
+    a: "Pipelock can handle credentials. Leak detection reads selected values from the proxy process environment and any configured secrets file into memory for matching. Supported MCP setup commands can also save configured authentication headers in private sidecar files. Give the proxy only the access its configured functions need and protect those inputs."
   - q: "Is Pipelock free?"
     a: "The core is free and Apache-2.0 licensed. Its scanning, detection, and enforcement controls are in the open-source binary. Run the full firewall on as many agents as you want, free. Pipelock Pro adds coordination once you want multiple agents under one admin boundary. Enterprise adds fleet management and compliance."
   - q: "What does Pipelock catch that a domain allowlist misses?"

@@ -50,7 +50,7 @@ faq:
 
 **[Microsoft Agent Governance Toolkit](https://github.com/microsoft/agent-governance-toolkit)** is an MIT-licensed SDK for Python and TypeScript. Its README describes policy enforcement, zero-trust identity, execution sandboxing, and reliability engineering for autonomous agents, installed with one `pip install` into any framework. Its modules cover a policy engine, an agent mesh with Ed25519 identity and trust scores, runtime sandboxing with privilege rings, a compliance CLI, and a hypervisor with execution audit and a command denylist.
 
-The difference is where each one stands. AGT's architecture document states it plainly: "The enforcement boundary is the Python interpreter, which is the same trust boundary used by every Python-based agent framework." The agent process holds AGT's policy engine, the agent's credentials, and the agent's network access, all in one trust domain. Pipelock stands outside that domain. The agent has no egress except through the proxy, and the proxy holds no agent credentials.
+The difference is where each one stands. AGT's architecture document states it plainly: "The enforcement boundary is the Python interpreter, which is the same trust boundary used by every Python-based agent framework." The agent process holds AGT's policy engine, the agent's credentials, and the agent's network access, all in one trust domain. Pipelock stands outside that domain. In an enforced deployment, the agent's supported network access goes through the proxy. The proxy can retain selected environment and configured secret-file values in memory for leak detection.
 
 ## Feature comparison
 

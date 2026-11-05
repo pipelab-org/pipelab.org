@@ -30,7 +30,7 @@ These are outside what a network and tool proxy can see. If your threat model in
 
 | Limitation | Why | Mitigation |
 |------------|-----|------------|
-| Process-level attacks | Pipelock mediates traffic, it does not isolate the process. An agent that can exec arbitrary processes can open a channel that never touches the proxy. | Pair with an OS sandbox (Docker, gVisor, Firecracker) and containment. |
+| Process-level attacks | Proxy mediation alone does not isolate the process. Supported `pipelock contain` and sandbox modes add OS restrictions under their documented platform and deployment requirements. Uncontained processes can open channels outside proxy inspection. | Configure and verify containment or another suitable OS/network boundary. |
 | Non-HTTP exfiltration | A write to a cloud-synced folder, the clipboard, stdout, or a subprocess that does not use the proxy never reaches Pipelock. | Container network isolation so the only egress path is the proxy. |
 | Model compromise | If the model itself is fine-tuned to be malicious, Pipelock cannot read intent. It sees the network-visible symptoms, not the motive. | Defense in depth across the four functions. |
 | Pixel-level steganography | Data hidden in image pixels or audio or video sample bits is beyond content inspection. Pipelock strips EXIF, XMP, IPTC, and ICC metadata, so metadata-based steganography is covered, but pixel-level encoding is not. | Specialized media analysis if your threat model needs it. |

@@ -81,7 +81,7 @@ If you run a public web app, you still need web controls: WAF, auth, rate limits
 
 ## Capability separation and the mediated-traffic caveat
 
-The clean Pipelock deployment separates capabilities. The agent environment holds secrets and does useful work, but it should not have direct network egress. Pipelock has network egress, but it should not hold agent secrets. The intended path to the internet and to MCP servers runs through Pipelock, where policy is enforced.
+The Pipelock deployment separates the agent runtime from policy-controlled network access. Restrict direct agent egress and give the proxy only the access its configured functions need. When enabled, leak detection reads selected values from the proxy process environment and any configured `dlp.secrets_file`, retaining them in memory for matching. Treat the proxy process and those inputs as sensitive.
 
 Two limits define what that buys you.
 
@@ -89,7 +89,7 @@ First, coverage is for mediated traffic: traffic that actually routes through Pi
 
 Content visibility is part of this. Pipelock scans a request body only when it can see the body: the fetch endpoint, plaintext forward-proxy traffic, or a CONNECT tunnel with TLS interception turned on. On a plain CONNECT tunnel without interception, Pipelock sees the destination host but not the encrypted body, so on that path it enforces destination policy rather than body DLP. Turn on TLS interception to get body and response scanning on CONNECT traffic.
 
-Second, blocking direct egress around Pipelock is deployment-enforced, not a property of the binary. The Pipelock binary enforces policy on traffic it mediates. It does not, on its own, rewire the host network so every process is forced through it. Operators enforce that with container networking, Kubernetes NetworkPolicy, firewall rules, or Pipelock's own containment command.
+Proxy scanning covers traffic routed through Pipelock. On supported Linux setups, `pipelock contain` can also block direct egress using a private network namespace, nftables, and managed identities when configured and its live restrictions are verified. This does not provide automatic whole-host coverage; filesystem confinement is a separate setting. Running a proxy beside an unrestricted process does not force that process through it. Other deployments can enforce an equivalent boundary using container networking, Kubernetes NetworkPolicy, or firewall rules.
 
 On Linux, `pipelock contain install` sets that up directly. It creates a separate low-privilege agent user and installs nftables owner-match rules so the agent's only route to the network is the Pipelock proxy. Direct egress from that user is dropped at the kernel, and `pipelock contain verify` confirms the rules are live. That turns "traffic should go through Pipelock" into "traffic can only go through Pipelock" for the contained user. It is still a deployment step you run, not something the binary does to your host by itself.
 

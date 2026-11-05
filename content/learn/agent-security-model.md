@@ -19,7 +19,7 @@ faq:
   - q: "What are the four functions of agent security?"
     a: "Prevention stops a known-bad action before it runs. Detection identifies threats in traffic the control can see. Containment forces the agent's traffic through the control so there is no path around it. Evidence produces a signed record outside the agent runtime of what the other three observed. The first three reduce risk; the fourth lets you verify and audit the recorded decisions."
   - q: "Which functions does Pipelock cover?"
-    a: "Pipelock's binary performs prevention (tool policy, blocklists, kill switch) and detection (the scanning pipeline for DLP, injection, and SSRF) on mediated traffic. Containment is deployment guidance: you enforce it with host containment, container networking, or network policy, and Pipelock ships a self-test that attempts the bypass and confirms it is blocked. Evidence is the layer Pipelock owns: signed receipts for mediated decisions that verify offline against a pinned key. Pipelock does not claim to be all four."
+    a: "Pipelock performs prevention and detection on mediated traffic and signs records of those decisions. Supported Linux containment adds OS-enforced restrictions when configured and its live restrictions are verified. It requires the documented platform and deployment setup; neither a proxy alone nor a successful self-test proves complete coverage."
   - q: "Is runtime security the same as an agent firewall?"
     a: "Runtime security is the umbrella for controls that act while the agent runs, as opposed to static review of code or config before it runs. An agent firewall is one runtime control, the one on the network and tool path. The four-function model (prevention, detection, containment, evidence) describes what any runtime stack needs, regardless of which product names a vendor uses."
 ---
@@ -67,7 +67,7 @@ None of these terms names the evidence function, which is why it keeps getting s
 
 Pipelock's binary performs **prevention** (tool policy, blocklists, kill switch) and **detection** (the scanning pipeline) on mediated traffic. Both are enforced by the binary on traffic that passes through it.
 
-**Containment** is deployment guidance. Pipelock does not isolate the process by itself; you enforce that with host containment, container networking, or network policy. What the binary does ship is a self-test (`pipelock contain verify`) that attempts egress around the proxy from the contained account and confirms the path is blocked. The control is yours to deploy; the check that it worked is built in.
+**Containment** adds an OS-enforced boundary on supported setups. Proxy scanning covers traffic routed through Pipelock. On supported Linux setups, `pipelock contain` can also block direct egress using a private network namespace, nftables, and managed identities when configured and its live restrictions are verified. This does not provide automatic whole-host coverage; filesystem confinement is a separate setting. `pipelock contain verify` checks installed and live restrictions, while `pipelock contain doctor` checks that supported tools can use the proxy. A successful check describes the observed deployment, not a continuous guarantee.
 
 **Evidence** is the function Pipelock owns. Mediated decisions can emit signed receipts that verify offline against a pinned key and report what was confirmed versus claimed. Pipelock does not assert that it is your sandbox or that nothing bypassed it. The receipts make the mediated fraction measurable without claiming to cover unseen actions.
 
