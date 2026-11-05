@@ -90,7 +90,7 @@ pipelock_version = "3.7.1"
   notAlternative = true
 
 [outputs]
-  home = ["html", "rss", "markdown", "productFacts", "redirects"]
+  home = ["html", "rss", "markdown", "productFacts", "redirects", "llms", "llmsfull"]
   page = ["html", "markdown"]
   section = ["html", "rss", "markdown"]
 
@@ -120,3 +120,16 @@ pipelock_version = "3.7.1"
 
 [frontmatter]
   lastmod = ["lastmod", "modified", "date", "publishDate"]
+
+# Machine context uses approved tracked prose and existing shared facts.
+[outputFormats.llms]
+  mediaType = "text/plain"
+  baseName = "llms"
+  isPlainText = true
+  notAlternative = true
+
+[outputFormats.llmsfull]
+  mediaType = "text/plain"
+  baseName = "llms-full"
+  isPlainText = true
+  notAlternative = true

@@ -61,7 +61,7 @@ const documentationClaims = [
   ["content/learn/ai-agent-regulatory-controls.md", [llmDoc, threatsDoc]],
   ...["pipelock-vs-runlayer", "pipelock-vs-prisma-airs", "pipelock-vs-microsoft-agent-governance-toolkit", "pipelock-vs-lakera-guard", "agent-firewall-vs-ai-security-platform"]
     .map(page => [`content/compare/${page}.md`, [llmDoc, threatsDoc, nistDoc]]),
-  ["static/llms-full.txt", [llmDoc, threatsDoc, nistDoc]],
+  ["themes/pipelab/layouts/index.llmsfull.txt", [llmDoc, threatsDoc, nistDoc]],
   ["themes/pipelab/layouts/enterprise/single.html", [llmDoc, threatsDoc, nistDoc]],
 ];
 
@@ -127,7 +127,7 @@ test("every copy of the Assess report list names the whole shipped catalog", () 
     assert.ok(cell, `${page}: Assess report cell not found`);
     return [page, cell[1]];
   });
-  const llms = source("static/llms-full.txt").match(/Pipelock Assess v3\.7\.1 report mappings cover ([^.]*)\./);
+  const llms = source("themes/pipelab/layouts/index.llmsfull.txt").match(/Pipelock Assess v3\.7\.1 report mappings cover ([^.]*)\./);
   assert.ok(llms, "llms-full.txt: Assess report sentence not found");
   copies.push(["llms-full.txt", llms[1]]);
   const pills = source("themes/pipelab/layouts/enterprise/single.html").match(/Assess report mappings \(v3\.7\.1\)([\s\S]*?)Published documentation mappings/);

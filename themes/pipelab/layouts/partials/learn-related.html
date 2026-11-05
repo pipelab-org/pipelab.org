@@ -68,7 +68,7 @@
         <p class="learn-related-cat">{{ $catLabel }}</p>
       {{ end }}
       <p class="learn-related-title">{{ .LinkTitle | default .Title }}</p>
-      {{ with .Description }}<p class="learn-related-desc">{{ . }}</p>{{ end }}
+      {{ with (partial "fact-text.html" .Description) }}<p class="learn-related-desc">{{ . }}</p>{{ end }}
     </a>
     {{ end }}
   </div>

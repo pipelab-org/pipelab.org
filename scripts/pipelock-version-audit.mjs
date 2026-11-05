@@ -2,7 +2,8 @@
 
 import { readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
-import { auditProductFacts } from "./product-facts-audit.mjs";
+import { auditProductFacts, auditDerivedCountSources } from "./product-facts-audit.mjs";
+import { auditMachineContext, machineSources, machineOutputs } from "./machine-context-audit.mjs";
 import { auditReleaseData } from "./release-data-audit.mjs";
 import { auditHistoricalArtifact, HISTORICAL_GAUNTLET_POINTER, loadHistoricalArtifacts, versionsInCurrentClaim } from "./historical-artifacts.mjs";
 
@@ -14,8 +15,7 @@ const currentClaimPaths = new Set([
   "content/pipelock.md",
   "data/blog_index.yaml",
   "data/learn_index.yaml",
-  "static/llms.txt",
-  "static/llms-full.txt",
+  ...machineSources,
   "static/assess/demo-assessment/index.html",
   "static/assess/demo-egress-report/index.html",
   "static/assess/demo-summary/index.html",
@@ -45,14 +45,14 @@ if (!declared) {
 }
 
 const historical = loadHistoricalArtifacts(".", currentClaimPaths);
-const findings = [...auditProductFacts(), ...auditReleaseData(".", declared, historical)];
+const findings = [...auditProductFacts(), ...auditDerivedCountSources(), ...auditMachineContext(), ...auditReleaseData(".", declared, historical)];
 for (const path of historical.entries.keys()) {
   if (!files.includes(path)) {
     findings.push(`${path}: classified historical artifact is not tracked; remove its classification`);
   }
 }
-for (const file of files) {
-  if (!isCurrentClaimFile(file) || !textSource.test(file)) {
+for (const file of [...files, ...machineOutputs]) {
+  if ((!isCurrentClaimFile(file) && !machineOutputs.includes(file)) || !textSource.test(file)) {
     continue;
   }
 

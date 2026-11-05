@@ -4,7 +4,7 @@
 {{- with $html }}
 Canonical URL: {{ .Permalink }}
 {{- end }}
-{{- with .Description }}
+{{- with (partial "fact-text.html" .Description) }}
 Description: {{ . }}
 {{- end }}
 {{- with .Params.subtitle }}

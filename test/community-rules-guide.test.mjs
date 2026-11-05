@@ -10,7 +10,7 @@ const read = file => readFileSync(new URL(`../${file}`, import.meta.url), "utf8"
 test("community guide separates bundle totals from loaded rules and preserves the shipped load contract", () => {
   const guide = read("content/learn/community-rules.md");
   const bundle = parse(read("static/rules/pipelock-community/bundle.yaml"));
-  assert.equal(Number(/bundle ships (\d+) rules/.exec(guide)[1]), bundle.rules.length);
+  assert.match(guide, /bundle ships \{\{< stat key="community_rules" >\}\} rules/);
   assert.ok(bundle.rules.some(rule => rule.status === "experimental"));
   assert.match(guide, /rules\.include_experimental: false/);
   assert.match(guide, /unprovable running build version warns and loads/);

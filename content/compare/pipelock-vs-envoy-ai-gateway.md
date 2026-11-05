@@ -58,7 +58,7 @@ Envoy AI Gateway is platform routing and access control on Envoy. Pipelock is pa
 | **Authentication** | Not a gateway function | OAuth flows, JWT |
 | **Authorization** | Tool policy via config | JWT claims, scopes, and CEL expressions |
 | **Upstream credential injection** | No | Yes, API keys injected at the gateway |
-| **Credential scanning (DLP)** | 65 patterns, encoding-aware | Not documented |
+| **Credential scanning (DLP)** | {{< stat key="dlp_patterns" >}} patterns, encoding-aware | Not documented |
 | **Prompt injection detection** | Deterministic patterns with multi-pass normalization | Not documented |
 | **Tool poisoning and rug-pull drift** | Fingerprinting and drift detection | Not documented |
 | **SSRF protection** | Private IP, metadata, and DNS rebinding checks | Not documented |

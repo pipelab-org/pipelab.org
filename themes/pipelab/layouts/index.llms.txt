@@ -1,6 +1,6 @@
 # PipeLab / Pipelock
 
-> Pipelock is an open-source agent firewall for MCP and AI agent egress. Pipelock 3.7 (current release 3.7.1) adds parallel signed receipt chains, filesystem grants for Linux containment, kernel-observed local MCP identities, and exact destination grants. `pipelock exec` steers cooperative commands through a running proxy; commands can ignore its settings.
+> {{ partial "machine/release-intro.txt" . }}
 
 ## Full context
 
@@ -40,10 +40,4 @@
 - [AI egress proxy](https://pipelab.org/learn/ai-egress-proxy/): Explains outbound agent traffic inspection, deployment patterns, and bypass prevention.
 - [Verify a Pipelock receipt](https://pipelab.org/learn/verify-a-receipt/): Copy-paste verification against the public signed-receipt conformance corpus.
 
-## Pipelock v3.7 guides
-
-- [v3.7 upgrade actions](https://pipelab.org/learn/pipelock-v370-upgrade/)
-- [Parallel receipt chains](https://pipelab.org/learn/parallel-receipt-chains/)
-- [Cooperative command launch](https://pipelab.org/learn/pipelock-exec/)
-- [Verified local MCP services](https://pipelab.org/learn/verified-local-mcp-services/)
-- [Exact destination grants](https://pipelab.org/learn/destination-grants/)
+{{ partial "machine/guides.txt" . }}

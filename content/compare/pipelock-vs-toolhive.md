@@ -59,7 +59,7 @@ ToolHive answers how a server runs, what it may reach, and who may call it. Pipe
 | **Network control** | Domain policy plus content scanning | Network isolation and access filtering per server |
 | **Identity and access** | Tool policy via config | Per-request identity and access policy with an auth source |
 | **Registry and provenance** | No | Registry, provenance verification, server signing |
-| **Credential scanning (DLP)** | 65 patterns, encoding-aware, on the traffic | Not documented |
+| **Credential scanning (DLP)** | {{< stat key="dlp_patterns" >}} patterns, encoding-aware, on the traffic | Not documented |
 | **Prompt injection detection** | Deterministic patterns with multi-pass normalization | Not documented |
 | **Tool poisoning and rug-pull drift** | Fingerprinting and drift detection | Not documented |
 | **Signed receipts** | Yes, Ed25519, verifiable offline | Not documented |

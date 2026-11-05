@@ -52,7 +52,7 @@ Pipelock inspects what the agent process sends and receives over the network whe
 | **Non-LLM HTTP egress scanning** | Yes | No |
 | **WebSocket frame scanning** | Yes, both directions | Not documented for arbitrary endpoints |
 | **MCP awareness** | Tool descriptions, arguments, and responses, both directions | Not documented |
-| **Credential scanning (DLP)** | 65 built-in patterns with encoding normalization | DLP profiles on prompts and completions (beta) |
+| **Credential scanning (DLP)** | {{< stat key="dlp_patterns" >}} built-in patterns with encoding normalization | DLP profiles on prompts and completions (beta) |
 | **Prompt injection and harmful content** | Deterministic patterns on scanned responses, tool descriptions, and MCP responses | Guardrails flag or block harmful-content categories on prompts and responses (beta) |
 | **Tool poisoning and rug-pull detection** | Yes | Not applicable, no MCP surface |
 | **SSRF and private-IP blocking** | Yes, before DNS resolution | Not applicable |
