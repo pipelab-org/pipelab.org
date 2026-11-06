@@ -1,0 +1,10 @@
+{{- $facts := .Params.hub.display_facts | default slice -}}
+{{- if eq .Kind "section" -}}
+  {{- $route := .RelPermalink -}}{{- with .OutputFormats.Get "html" -}}{{- $route = .RelPermalink -}}{{- end -}}
+  {{- with site.Data.hub.generated.sections -}}{{- range $key, $value := index . $route -}}{{- $facts = $facts | append (dict "key" $key "value" $value) -}}{{- end -}}{{- end -}}
+{{- end -}}
+{{- with $facts -}}
+<section><h2>Reader facts</h2><dl>
+{{- range . -}}<dt>{{ .key }}</dt><dd><code data-hub-fact="{{ .key }}">{{ .value }}</code></dd>{{- end -}}
+</dl></section>
+{{- end -}}

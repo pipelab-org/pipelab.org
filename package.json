@@ -12,7 +12,10 @@
     "site:capability-details": "node scripts/capability-detail-audit.mjs",
     "site:audit": "node scripts/gauntlet-evidence-audit.mjs && node scripts/verify-playground-assurances.mjs && node scripts/capability-detail-audit.mjs && node scripts/site-audit.mjs",
     "site:links": "node scripts/external-link-audit.mjs",
-    "indexnow:submit": "node scripts/indexnow-submit.mjs"
+    "indexnow:submit": "node scripts/indexnow-submit.mjs",
+    "hub:build-harness": "node scripts/hub/build-harness.mjs",
+    "hub:generate": "node scripts/hub/generate.mjs",
+    "hub:bench": "node scripts/hub/benchmark-report.mjs"
   },
   "dependencies": {
     "pg": "^8.13.1"

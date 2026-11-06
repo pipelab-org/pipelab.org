@@ -1,0 +1,16 @@
+{
+  "format": 1,
+  "bundle_sha256": "f4c63c73e9e06c69745b03f9720c6d3940c9323b5821c189a28e59f609e076de",
+  "rules": {
+    "dlp-doppler-service-token": "The Doppler integration guide explains how to rotate service tokens. Credential values are omitted.",
+    "dlp-modal-workspace-key": "The Modal workspace credentials are stored in the deployment secret store. This guide contains no key value.",
+    "dlp-modal-workspace-secret": "The Modal workspace secret is rotated by the account owner. No secret value is included in this example.",
+    "dlp-shopify-token-family": "Shopify app credentials belong in the secret store. The guide lists credential names without values.",
+    "injection-chinese-core-override": "本指南介绍项目文件和安装步骤。",
+    "injection-french-core-override": "Ce document explique comment consulter les fichiers du projet et lire le guide d'installation.",
+    "injection-german-core-override": "Dieses Dokument beschreibt die Projektdateien und verweist auf die Installationsanleitung.",
+    "injection-spanish-core-override": "Este documento describe los archivos del proyecto y explica cómo consultar la guía de instalación.",
+    "tool-poison-binary-name-mimicry": "List the installed command names and return their documentation links.",
+    "tool-poison-encoded-blob-description": "Describe the supported query parameters and return a small JSON example."
+  }
+}

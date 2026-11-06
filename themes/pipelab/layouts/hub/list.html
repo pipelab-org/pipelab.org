@@ -3,10 +3,11 @@
 <section class="section hub-page">
   <header data-hero="utility"><p class="eyebrow">COMPONENTS</p><h1>{{ .Title }}</h1><p>Find Pipelock components and read their setup instructions and limits.</p></header>
   <ul class="hub-list">
-  {{ range .RegularPagesRecursive.ByTitle }}
+  {{ range .RegularPagesRecursive.ByTitle }}{{ if .Params.hub.listing }}
     <li><a href="{{ .RelPermalink }}">{{ .Title }}</a><p>{{ .Params.hub.listing.summary }}</p></li>
-  {{ end }}
+  {{ end }}{{ end }}
   </ul>
+  {{ partial "hub-facts.html" . }}
   {{ partial "page-formats.html" . }}
 </section>
 {{ end }}

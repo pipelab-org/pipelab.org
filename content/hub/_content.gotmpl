@@ -2,23 +2,42 @@
 {{- if partial "hub-open.html" . -}}
   {{- .AddPage (dict "path" "." "kind" "section" "type" "hub" "title" "PipeLab Hub" "description" "Explore the PipeLab Hub for Pipelock components, setup instructions, documented limits, and links to the evidence supplied for each listing." "outputs" (slice "html" "markdown" "hubindex")) -}}
   {{- $adapter := . -}}
-  {{- range slice "bundles" "configs" "recipes" "verifiers" -}}
+  {{- range slice "bundles" "configs" "recipes" "verifiers" "removed" -}}
     {{- $adapter.AddPage (dict "path" . "kind" "section" "type" "hub" "title" (printf "Hub %s" .) "description" (printf "Browse Pipelock %s in the PipeLab Hub. Read setup instructions, supplied evidence, and documented limitations for each component." .) "outputs" (slice "html" "markdown")) -}}
+  {{- end -}}
+  {{- range $route, $facts := site.Data.hub.generated.sections -}}
+    {{- $path := strings.TrimSuffix "/" (strings.TrimPrefix "/hub/" $route) -}}
+    {{- if and $path (not (in (slice "bundles" "configs" "recipes" "verifiers" "removed") $path)) -}}
+      {{- $.AddPage (dict "path" $path "kind" "section" "type" "hub" "title" "Hub components" "description" "Browse Pipelock components in the PipeLab Hub. Read setup instructions, supplied evidence, and documented limitations for each component." "outputs" (slice "html" "markdown")) -}}
+    {{- end -}}
   {{- end -}}
   {{- $seen := newScratch -}}
   {{- range site.Data.hub.generated.listings -}}
     {{- /* Only trusted normalized records enter this adapter. No contributor
          map is merged into frontmatter. Description uses type and ID only. */ -}}
     {{- $listing := .listing -}}
+    {{- with .bundle_sha256 -}}
+      {{- if ne $listing.bundle_sha256 . -}}{{- errorf "hub bundle metadata digest differs" -}}{{- end -}}
+    {{- end -}}
+    {{- if .served_source -}}
+      {{- if ne (crypto.SHA256 (os.ReadFile .served_source)) .bundle_sha256 -}}{{- errorf "hub served bundle digest differs" -}}{{- end -}}
+    {{- end -}}
     {{- $group := index (dict "bundle" "bundles" "config" "configs" "recipe" "recipes" "verifier" "verifiers") $listing.type -}}
     {{- if not $group }}{{ errorf "hub record has unknown type" }}{{ end -}}
     {{- if not (findRE `^[a-z0-9][a-z0-9-]{1,62}[a-z0-9]$` $listing.id) }}{{ errorf "hub record has invalid id" }}{{ end -}}
-    {{- $path := printf "%s/%s" $group $listing.id -}}
-    {{- if $seen.Get $path }}{{ errorf "hub duplicate listing path: %s" $path }}{{ end -}}
-    {{- $seen.Set $path true -}}
     {{- $description := printf "Pipelock %s listing %s. Read setup instructions, supplied evidence, documented limitations, and the maintainer's external source links." $listing.type $listing.id -}}
     {{- /* Description cap: AGENTS.md's 120–155 character SEO contract. */ -}}
     {{- $description = strings.Truncate 155 "" $description -}}
+    {{- $path := printf "%s/%s" $group $listing.id -}}
+    {{- with .route -}}{{- $path = strings.TrimPrefix "/hub/" . -}}{{- end -}}
+    {{- $path = strings.TrimSuffix "/" $path -}}
+    {{- if $seen.Get $path }}{{ errorf "hub duplicate listing path: %s" $path }}{{ end -}}
+    {{- $seen.Set $path true -}}
     {{- $.AddPage (dict "path" $path "kind" "page" "type" "hub" "title" $listing.title "description" $description "outputs" (slice "html" "markdown") "params" (dict "hub" .)) -}}
+  {{- end -}}
+  {{- range site.Data.hub.generated.references -}}
+    {{- $params := dict "hub" . -}}
+    {{- if eq .indexable false -}}{{- $params = merge $params (dict "robots" "noindex, follow") -}}{{- end -}}
+    {{- $.AddPage (dict "path" .path "kind" "page" "type" "hub" "title" .title "description" .description "outputs" (slice "html" "markdown") "params" $params) -}}
   {{- end -}}
 {{- end -}}

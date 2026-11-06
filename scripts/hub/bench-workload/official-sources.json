@@ -1,0 +1,10 @@
+{
+  "pipelock-community": {
+    "bundle_sha256": "f4c63c73e9e06c69745b03f9720c6d3940c9323b5821c189a28e59f609e076de",
+    "rules_commit": "37bf0e9643d49145213a8625454747a9eee9b9a8"
+  },
+  "healthcare-phi-pii": {
+    "bundle_sha256": "74cc0cb579795c7d2cdff523170aaf3874c47dbc70f349673cf504dee11c639c",
+    "rules_commit": "d901e6be2bd4ebd8dea127be2e67ffa2b87aa21c"
+  }
+}
