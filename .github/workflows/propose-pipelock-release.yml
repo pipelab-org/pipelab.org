@@ -1,0 +1,82 @@
+name: Propose verified Pipelock release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Explicit stable release tag (vMAJOR.MINOR.PATCH)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: propose-pipelock-release
+  cancel-in-progress: false
+
+jobs:
+  propose:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: main
+          persist-credentials: false
+
+      - name: Require site-only proposal credential
+        env:
+          PROPOSAL_TOKEN: ${{ secrets.PIPELAB_RULES_SYNC_TOKEN }}
+        run: |
+          test -n "$PROPOSAL_TOKEN" || { echo 'PIPELAB_RULES_SYNC_TOKEN is required' >&2; exit 1; }
+
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.0.0
+        with:
+          node-version: 22
+
+      - id: hugo-version
+        name: Read approved Hugo pin
+        run: echo "version=$(tr -d '\n' < .hugo-version)" >> "$GITHUB_OUTPUT"
+
+      - uses: peaceiris/actions-hugo@2752ce1d29631191ea3f27c23495fa06139a5b78 # v3.0.0
+        with:
+          hugo-version: ${{ steps.hugo-version.outputs.version }}
+          extended: true
+
+      - name: Install site dependencies and test preparation offline
+        run: |
+          npm ci
+          node --test test/prepare-pipelock-release.test.mjs
+
+      - name: Authenticate and prepare the complete release update
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: node scripts/prepare-pipelock-release.mjs "$RELEASE_TAG" "$RUNNER_TEMP/release-proposal.md"
+
+      - name: Install candidate verifier and validate proposal
+        run: |
+          bash scripts/install-pipelock-verifier.sh
+          make preflight
+          npm run site:links -- --fail-on-blocked
+
+      - name: Open or update one human-reviewed proposal
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          token: ${{ secrets.PIPELAB_RULES_SYNC_TOKEN }}
+          add-paths: |
+            hugo.toml
+            .github/workflows/sync-pipelock-rules.yml
+            scripts/pipelock-verifier-pin.env
+            content/capabilities.md
+            data/pipelock_capabilities.json
+          branch: automation/pipelock-release
+          base: main
+          delete-branch: false
+          commit-message: 'chore: propose verified Pipelock release update'
+          committer: 'github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>'
+          author: 'github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>'
+          title: 'chore: propose verified Pipelock release update'
+          body-path: ${{ runner.temp }}/release-proposal.md
+          draft: true
