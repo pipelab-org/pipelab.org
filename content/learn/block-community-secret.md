@@ -28,7 +28,7 @@ The [community rules guide](/learn/community-rules/) explains signature trust, f
 
 Use Ubuntu 24.04 on Linux x86-64 with Bash, curl, CA certificates and tar. The commands also use standard Ubuntu tools, including `grep`, `sha256sum` and `seq`. Start in an empty working directory with no Pipelock installation, config, installed rules or license. Run the blocks in order in the same Bash shell. This recipe uses free features.
 
-Downloads need HTTPS access to GitHub release assets and pipelab.org. Keep any proxy settings your environment requires. If a security proxy refuses a download, stop and inspect its logs. Don't bypass it. The [bundle-download prerequisite](/learn/community-rules/#installing-through-a-pipelock-proxy) explains the operator-approved signed-artifact configuration for a Pipelock proxy.
+Downloads need HTTPS access to GitHub release assets and pipelab.org. Keep any proxy settings your environment requires. Before installing the bundle, configure `HTTPS_PROXY` (or `https_proxy`) with your operator-approved proxy address. Pipelock's Go downloader doesn't use `ALL_PROXY`. Check that `NO_PROXY` (or `no_proxy`) doesn't exclude `pipelab.org`, including through a domain suffix or `*` entry. If a security proxy refuses a download, stop and inspect its logs. Don't bypass it. The [bundle-download prerequisite](/learn/community-rules/#installing-through-a-pipelock-proxy) explains the operator-approved signed-artifact configuration for a Pipelock proxy.
 
 ## Download and check Pipelock
 

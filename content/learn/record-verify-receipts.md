@@ -153,7 +153,7 @@ fi
 
 It reports the same fields and exits 3 without a running proxy or network service.
 
-For a complete-chain claim, follow the [v3.7.1 verification guide](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/guides/receipt-verification.md) and pin an independently known head with `--expect-head`. Reading the head from the same untrusted evidence isn't independent end proof.
+For a complete-chain claim, follow the [v3.7.1 verification guide](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/guides/receipt-verification.md) and pin the independently known final head for the claimed run with `--expect-head`. Reading the head from the same untrusted evidence isn't independent end proof.
 
 ## What this doesn't prove
 
