@@ -17,6 +17,8 @@ import test from "node:test";
 
 const CONTINUOUS = new URL("../themes/pipelab/assets/js/gauntlet-continuous.js", import.meta.url);
 const RESULTS = new URL("../themes/pipelab/layouts/gauntlet/results.html", import.meta.url);
+const RESULTS_SCRIPT = new URL("../themes/pipelab/assets/js/gauntlet-results.js", import.meta.url);
+const resultsSource = async () => (await readFile(RESULTS, "utf8")) + (await readFile(RESULTS_SCRIPT, "utf8"));
 
 test("the verified checkpoint names full-corpus containment before applicable", async () => {
   const source = await readFile(CONTINUOUS, "utf8");
@@ -29,7 +31,7 @@ test("the verified checkpoint names full-corpus containment before applicable", 
 });
 
 test("the result hero reports a measurement rather than a benchmark-awarded mark", async () => {
-  const source = await readFile(RESULTS, "utf8");
+  const source = await resultsSource();
 
   assert.match(source, /id="gr-record-measured">MEASURED</,
     "result hero must describe the published score as a measurement");
@@ -42,7 +44,7 @@ test("the result hero reports a measurement rather than a benchmark-awarded mark
 });
 
 test("the result hero leads with full-corpus containment and demotes applicable containment", async () => {
-  const source = await readFile(RESULTS, "utf8");
+  const source = await resultsSource();
   const fullHero = source.indexOf("fullScore + ' containment on the full corpus.'");
   const applicableDiagnostic = source.indexOf("applicable containment (diagnostic)");
 
@@ -107,7 +109,7 @@ test("the verified checkpoint publishes a reconstructing fraction rather than a 
 });
 
 test("the results page keeps the buyer name, explicit run actions, and maintainer boundary", async () => {
-  const source = await readFile(RESULTS, "utf8");
+  const source = await resultsSource();
 
   assert.match(source, /Agent Egress Bench Results/,
     "the listing must use the buyer-facing benchmark name");
