@@ -1,3 +1,4 @@
+import { namingIdentity } from "./names.mjs";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync, lstatSync, mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -58,7 +59,7 @@ export function treeIdentity(directory) {
   return gitHash("tree", Buffer.concat(parts)).toString("hex");
 }
 export function toolingIdentity(root, engine) {
-  return { scripts_tree: treeIdentity(path.join(root, "scripts/hub")), package_lock_sha256: sha256(readFileSync(path.join(root, "package-lock.json"))), engine };
+  return { naming: namingIdentity, scripts_tree: treeIdentity(path.join(root, "scripts/hub")), package_lock_sha256: sha256(readFileSync(path.join(root, "package-lock.json"))), engine };
 }
 
 // R3-5: origins and exact effective bytes are part of the workload binding.

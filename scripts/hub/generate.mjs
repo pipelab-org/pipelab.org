@@ -1,3 +1,4 @@
+import { assertCatalogNames } from "./names.mjs";
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync, realpathSync, statSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
@@ -65,6 +66,7 @@ export function generateCatalog({ root, items, engine, binary, repository, confi
   const officialInventory = readdirSync(path.join(root, "static/rules"), { withFileTypes: true }).filter(entry => entry.isDirectory() && existsSync(path.join(root, "static/rules", entry.name, "bundle.yaml"))).map(entry => entry.name).sort();
   const officialRecords = records.filter(record => record.badge === "official").map(record => record.reader.name).sort();
   if (!records.length || JSON.stringify(officialInventory) !== JSON.stringify(officialRecords)) throw new Error("official served inventory differs from active catalog");
+  assertCatalogNames(records);
   records.sort((a, b) => a.listing.id.localeCompare(b.listing.id));
   const manifest = routeManifest({ records, publishers, core, policies, schemaBytes: readFileSync(path.join(root, "scripts/hub/schema/listing-v1.json")) });
   return {

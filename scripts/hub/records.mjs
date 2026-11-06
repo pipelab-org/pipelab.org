@@ -1,3 +1,4 @@
+import { assertCommunityNames } from "./names.mjs";
 import { validateListing, describeLinks } from "./validate.mjs";
 import { compareReaderSignature } from "./verify-bundle.mjs";
 import { canonical, sha256 } from "./evidence.mjs";
@@ -31,6 +32,7 @@ export function deriveRecord({ listing: input, reader, independent, publisher, t
   record.badge = reader.trust_tier === "official" ? "official" : "community";
   if (record.badge === "community") {
     if (!publisher || !/^[a-z0-9][a-z0-9-]{1,62}[a-z0-9]$/.test(publisher.id) || !publisher.keys.map(key => typeof key === "string" ? key : key.fingerprint).includes(reader.signer_fingerprint)) throw new Error("publisher signer differs");
+    assertCommunityNames(listing, publisher);
     if (reader.format_version !== 2 || reader.declared_tier !== "community" || reader.name.startsWith("pipelock-")) throw new Error("community bundle policy refused");
     if (listing.links.homepage && (() => { const host = new URL(listing.links.homepage).hostname; return host === "pipelab.org" || host.endsWith(".pipelab.org"); })()) throw new Error("community listing claims PipeLab host");
     if (!reader.policies.full.loaded.length) throw new Error("no loadable rules");

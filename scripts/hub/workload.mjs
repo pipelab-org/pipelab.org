@@ -6,6 +6,13 @@ import { runHubcheck } from "./generate.mjs";
 
 const sources = JSON.parse(readFileSync(new URL("./bench-workload/official-sources.json", import.meta.url)));
 const supplements = JSON.parse(readFileSync(new URL("./bench-workload/supplemental-negatives.json", import.meta.url)));
+// Producer CONTRIBUTING.md and scripts/test-fixtures.go: each nonblank line
+// is one input; there is no comment syntax. Preserve original line numbers.
+export function producerInputs(text, origin) {
+  const inputs = text.split("\n").map((line, i) => ({ origin: `${origin}:L${i + 1}`, text: line.replace(/\r$/, "") })).filter(input => input.text.trim() !== "");
+  if (!inputs.length) throw new Error("empty official workload fixture");
+  return inputs;
+}
 // R3-6: exact producer bytes at a revision with the SAME served bundle. Missing
 // experimental negatives use versioned site inputs, never an empty scan.
 export function officialOwnInputs({ repository, reader }) {
@@ -19,7 +26,7 @@ export function officialOwnInputs({ repository, reader }) {
     const input = { rule_id: rule.id };
     for (const [group, suffix] of [["positive", "true"], ["negative", "false"]]) {
       const file = `fixtures/${reader.name}/${rule.type}/${rule.id}-${suffix}-positive.txt`;
-      if (tree.has(file)) input[group] = [{ origin: `rules:${source.rules_commit}:${file}`, text: show(file).toString("utf8") }];
+      if (tree.has(file)) input[group] = producerInputs(show(file).toString("utf8"), `rules:${source.rules_commit}:${file}`);
       else if (group === "negative" && rule.status === "experimental" && supplements.bundle_sha256 === reader.bundle_sha256 && supplements.rules[rule.id]) input[group] = [{ origin: `site:supplemental-negatives.json:${reader.bundle_sha256}:${rule.id}`, text: supplements.rules[rule.id] }];
       else throw new Error("missing official workload mapping");
     }

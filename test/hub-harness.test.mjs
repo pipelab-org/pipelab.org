@@ -1,3 +1,4 @@
+import { assertNamingRuntime, nameSkeleton, assertCommunityNames, assertCatalogNames } from "../scripts/hub/names.mjs";
 import assert from "node:assert/strict";
 import test from "node:test";
 import path from "node:path";
@@ -11,7 +12,7 @@ import { deriveRecord, indexProjection, assertIndex } from "../scripts/hub/recor
 import { canonical, contentDigest, bindWorkload, measurementArtifact, writeMeasurement, acceptedMeasurement, latencyVerdict, assertRegeneration, treeIdentity, jsonBytes, sha256, goWorkloadSHA256, measurementBindings } from "../scripts/hub/evidence.mjs";
 import { routeManifest } from "../scripts/hub/route-manifest.mjs";
 import { assertPublication, htmlFacts, markdownFacts, representationPaths } from "../scripts/hub/parity.mjs";
-import { officialOwnInputs, nearInput, prefixCoverage } from "../scripts/hub/workload.mjs";
+import { officialOwnInputs, producerInputs, nearInput, prefixCoverage } from "../scripts/hub/workload.mjs";
 import { runHubcheck, generateCatalog, writeCatalog, assertFirstPartyListing } from "../scripts/hub/generate.mjs";
 import { benchmarkReport } from "../scripts/hub/benchmark-report.mjs";
 
@@ -186,7 +187,7 @@ test("displayed-fact parsers preserve literal syntax and reject duplicate facts"
 
 test("real Hugo joins reader facts, rule/core routes, exact mirrors and digest guards", { skip: !native }, t => {
   const dir = temp(t);
-  for (const name of ["data", "content/hub", "layouts", "assets/hub"]) cpSync(path.join(root, name), path.join(dir, name), { recursive: true });
+  for (const name of ["data", "content/hub", "layouts", "assets/hub", "scripts/hub"]) cpSync(path.join(root, name), path.join(dir, name), { recursive: true });
   mkdirSync(path.join(dir, "content/learn"), { recursive: true });
   cpSync(path.join(root, "content/learn/mcp-security.md"), path.join(dir, "content/learn/mcp-security.md"));
   mkdirSync(path.join(dir, "content/blog"), { recursive: true }); writeFileSync(path.join(dir, "content/blog/pipelock-v370-release.md"), '---\ntitle: Release control\ndate: 2026-11-05\n---\n');
@@ -205,7 +206,12 @@ test("real Hugo joins reader facts, rule/core routes, exact mirrors and digest g
   items.push({ listing_file: communityFile, bundle_dir: community.dir, publisher });
   const communityAssets = path.join(dir, "assets/hub/community/example/example-bundle"); mkdirSync(communityAssets, { recursive: true });
   cpSync(path.join(community.dir, "bundle.yaml"), path.join(communityAssets, "bundle.yaml")); cpSync(path.join(community.dir, "bundle.yaml.sig"), path.join(communityAssets, "bundle.yaml.sig"));
-  const source = { root, items, binary, repository, config: path.join(engineDir, "configs/claude-code.yaml"), engine: JSON.parse(readFileSync(path.join(engineDir, "engine-identity.json"))), policies: [], publishers: [publisher], mode: "report" };
+  cpSync(path.join(root, "package-lock.json"), path.join(dir, "package-lock.json"));
+  mkdirSync(path.join(dir, "data/hub/first-party"), { recursive: true });
+  const recipe = structuredClone(base); delete recipe.evidence.artifact;
+  const recipeFile = path.join(dir, "data/hub/first-party/recipe.yaml");
+  writeFileSync(recipeFile, stringify(recipe)); items.push({ listing_file: recipeFile });
+  const source = { root: dir, items, binary, repository, config: path.join(engineDir, "configs/claude-code.yaml"), engine: JSON.parse(readFileSync(path.join(engineDir, "engine-identity.json"))), policies: [], publishers: [publisher], mode: "report" };
   const catalog = generateCatalog(source), generated = path.join(dir, "data/hub/generated"); writeCatalog(generated, catalog); writeCatalog(generated, generateCatalog(source), { check: true });
   assert.equal(catalog["listings.json"].find(record => record.listing.id === "pipelock-community").badge, "official");
   const overlay = `themesDir = ${JSON.stringify(path.join(root, "themes"))}\ncontentDir = ${JSON.stringify(path.join(dir, "content"))}\nassetDir = ${JSON.stringify(path.join(dir, "assets"))}\ndataDir = ${JSON.stringify(path.join(dir, "data"))}\nstaticDir = ${JSON.stringify(path.join(dir, "distribution"))}\n`;
@@ -216,7 +222,7 @@ test("real Hugo joins reader facts, rule/core routes, exact mirrors and digest g
   assertPublication({ directory: path.join(dir, "public"), manifest, records, open: true, requireBuild: false });
   if (process.env.HUBCHECK_CAPTURE_DIR) {
     const destination = process.env.HUBCHECK_CAPTURE_DIR; mkdirSync(destination, { recursive: true });
-    for (const [input, name] of [["learn/mcp-security/index.md", "learn-mcp-security.md"]]) cpSync(path.join(dir, "public", input), path.join(destination, name));
+    for (const [input, name] of [["learn/mcp-security/index.md", "learn-mcp-security.md"], ["hub/recipes/example-recipe/index.md", "hub-example-recipe.md"]]) cpSync(path.join(dir, "public", input), path.join(destination, name));
   }
   const original = readFileSync(path.join(generated, "listings.json"));
   const corrupt = structuredClone(records); const corruptRecord = corrupt.find(record => record.badge === "official"); corruptRecord.bundle_sha256 = "0".repeat(64); corruptRecord.listing.bundle_sha256 = "0".repeat(64); writeFileSync(path.join(generated, "listings.json"), JSON.stringify(corrupt));
@@ -257,4 +263,45 @@ test("benchmark report refuses a caller reader and a different executable", { sk
   assert.equal(report.bindings.bundle_sha256, sha256(fixture.bytes));
   assert.throws(() => benchmarkReport({ binary, request: fixture.request, reader: { bundle_sha256: "f".repeat(64), declared: [] }, engine, workloadSpec: spec, pairs: 1, output: temp(t), root }), /derived/);
   assert.throws(() => benchmarkReport({ binary, request: fixture.request, engine: { ...engine, binary_sha256: "0".repeat(64) }, workloadSpec: spec, pairs: 1, output: temp(t), root }), /engine executable/);
+});
+
+
+test("Unicode naming refuses brand lookalikes and active or retained collisions", () => {
+  const listing = { ...base, id: "acme-dlp", bundle_name: "acme-dlp", title: "Acme rules" };
+  const publisher = { id: "acme", name: "Acme maintainer" };
+  assertCommunityNames(listing, publisher);
+  for (const name of ["pipe1ock-community", "pipelockcommunity", "communlty-pipelock", "pipelab-rules"]) {
+    assert.throws(() => assertCommunityNames({ ...listing, bundle_name: name }, publisher), /reserved brand/);
+  }
+  assert.throws(() => assertCommunityNames({ ...listing, maintainer: { ...listing.maintainer, name: "PipeLab Team" } }, publisher), /reserved brand/);
+  assert.equal(nameSkeleton("\u0440\u0456pelock"), nameSkeleton("pipelock"));
+  assert.equal(nameSkeleton("Stra\u00dfe"), nameSkeleton("STRASSE"));
+  assert.equal(nameSkeleton("\uff30\uff49\uff50\uff45\uff2c\uff41\uff42"), nameSkeleton("PipeLab"));
+  assert.throws(() => assertNamingRuntime({ unicode: "other", icu: process.versions.icu }), /pinned/);
+  const record = { listing };
+  assertCatalogNames([record]);
+  assert.throws(() => assertCatalogNames([record, { listing: { id: "acme-d1p" } }]), /collides/);
+  assert.throws(() => assertCatalogNames([record], ["acme-d1p"]), /retained/);
+});
+
+
+test("signed third-party lookalike names never acquire a community record", { skip: !native }, t => {
+  for (const name of ["acme-dlp", "pipe1ock-community", "pipelockcommunity"]) {
+    const fixture = stage(t, b => ({ ...b, name }));
+    const reader = runHubcheck(binary, "reader", fixture.request);
+    const independent = verifyBundle({ bytes: fixture.bytes, signature: fixture.signature, official: [], publisher: [fixture.key.hex] });
+    const args = { listing: listingFor(reader), reader, independent, publisher: { id: "acme", name: "Acme", keys: [fixture.key.hex] }, tooling: {} };
+    if (name === "acme-dlp") assert.equal(deriveRecord(args).badge, "community");
+    else assert.throws(() => deriveRecord(args), /reserved brand/);
+  }
+});
+
+
+test("official fixtures preserve each producer input rather than joining lines", () => {
+  assert.deepEqual(producerInputs("first\r\n\n  \n# literal input\nlast", "rules:revision:fixture"), [
+    { origin: "rules:revision:fixture:L1", text: "first" },
+    { origin: "rules:revision:fixture:L4", text: "# literal input" },
+    { origin: "rules:revision:fixture:L5", text: "last" },
+  ]);
+  assert.throws(() => producerInputs("\n \n", "empty"), /empty/);
 });
