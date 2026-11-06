@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync, realpathSync, statSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -6,18 +6,30 @@ import { enginePin } from "./build-harness.mjs";
 import { deriveRecord } from "./records.mjs";
 import { officialKeys, verifyBundle, readBundleFiles } from "./verify-bundle.mjs";
 import { parseListing, resolveArtifact } from "./validate.mjs";
-import { toolingIdentity, jsonBytes, acceptedMeasurement, assertRegeneration, bindWorkload, measurementBindings, sha256 } from "./evidence.mjs";
+import { toolingIdentity, jsonBytes, acceptedMeasurement, assertRegeneration, bindWorkload, measurementBindings, measurementMethod, goWorkloadSHA256, sha256 } from "./evidence.mjs";
 import { routeManifest } from "./route-manifest.mjs";
 
 export function runHubcheck(binary, mode, request, { timeout = 120000 } = {}) {
   const output = execFileSync(binary, [mode], { input: JSON.stringify(request), encoding: "utf8", timeout, maxBuffer: 16 * 1024 * 1024, env: { ...process.env, GOMAXPROCS: "1" } });
   return JSON.parse(output);
 }
+export function assertEngineIdentity({ root, engine, binary }) {
+  if (!engine || engine.version !== enginePin.version || engine.source_commit !== enginePin.source_commit || engine.go_version.split(" ")[2] !== enginePin.go_version || engine.harness_sha256 !== sha256(readFileSync(path.join(root, "scripts/hub/pipelock-harness/main.go"))) || engine.binary_sha256 !== sha256(readFileSync(binary))) throw new Error("engine executable identity differs");
+}
+// Recipe and verifier badges are admitted only from the site source directory.
+export function assertFirstPartyListing(root, listingFile) {
+  const refused = "first-party listing must be a regular file under data/hub/first-party";
+  let trusted, file;
+  try { trusted = realpathSync(path.join(root, "data/hub/first-party")); file = realpathSync(listingFile); }
+  catch { throw new Error(refused); }
+  const relative = path.relative(trusted, file);
+  if (!relative || relative.startsWith("..") || path.isAbsolute(relative) || !statSync(file).isFile()) throw new Error(refused);
+}
 // Caller supplies trusted input paths from an acquired source tree. No shell,
 // URLs, commands, modules or executable contribution are accepted as inputs.
 export function generateCatalog({ root, items, engine, binary, repository, config, publishers = [], policies, mode = "routine" }) {
   if (!["routine", "report"].includes(mode)) throw new Error("unsupported generation mode");
-  if (engine.version !== enginePin.version || engine.source_commit !== enginePin.source_commit || engine.go_version.split(" ")[2] !== enginePin.go_version || engine.harness_sha256 !== sha256(readFileSync(path.join(root, "scripts/hub/pipelock-harness/main.go"))) || engine.binary_sha256 !== sha256(readFileSync(binary))) throw new Error("engine executable identity differs");
+  assertEngineIdentity({ root, engine, binary });
   const sourceConfig = execFileSync("git", ["-C", repository, "show", `${enginePin.source_commit}:configs/claude-code.yaml`]);
   if (sha256(readFileSync(config)) !== sha256(sourceConfig)) throw new Error("reader base config differs from pinned preset");
   const tooling = toolingIdentity(root, engine), official = officialKeys(repository), records = [];
@@ -25,6 +37,8 @@ export function generateCatalog({ root, items, engine, binary, repository, confi
   const limits = JSON.parse(readFileSync(path.join(root, "data/hub/latency-limits.json")));
   for (const item of items) {
     const listing = parseListing(readFileSync(item.listing_file, "utf8"));
+    const source = listing.type === "recipe" || listing.type === "verifier" ? "first-party" : "catalog";
+    if (source === "first-party") assertFirstPartyListing(root, item.listing_file);
     let reader, independent, measurement = null;
     if (listing.type === "bundle") {
       independent = verifyBundle({ ...readBundleFiles(item.bundle_dir), official, publisher: (item.publisher?.keys || []).map(key => typeof key === "string" ? key : key.fingerprint) });
@@ -32,8 +46,8 @@ export function generateCatalog({ root, items, engine, binary, repository, confi
       core = reader.core;
       if (item.measurement_reference && item.workload_spec) {
         const workload = bindWorkload({ rules: reader.declared, ...item.workload_spec });
-        const method = { ...JSON.parse(readFileSync(path.join(root, "data/hub/benchmark-method.json"))), base_config_sha256: sha256(readFileSync(config)) };
-        const currentBindings = measurementBindings({ reader, workload, engine, method });
+        const method = measurementMethod(root, config, JSON.parse(readFileSync(path.join(root, "data/hub/benchmark-method.json"))).pairs);
+        const currentBindings = measurementBindings({ reader, workload, engine, method, executedWorkloadSHA256: goWorkloadSHA256(workload.harness) });
         measurement = { reference: item.measurement_reference, ...acceptedMeasurement(path.join(root, "data/hub/measurements"), item.measurement_reference, currentBindings, limits, { acceptance: false }) };
         // Records bind evidence by digest; samples remain in immutable artifacts.
         measurement = { reference: measurement.reference, verdict: measurement.verdict };
@@ -41,7 +55,7 @@ export function generateCatalog({ root, items, engine, binary, repository, confi
     }
     let evidencePresent = false;
     if (listing.evidence.artifact) { resolveArtifact(item.artifact_root, listing.evidence.artifact); evidencePresent = true; }
-    const record = deriveRecord({ listing, reader, independent, publisher: item.publisher, tooling, evidencePresent, measurement });
+    const record = deriveRecord({ listing, reader, independent, publisher: item.publisher, tooling, evidencePresent, measurement, source });
     if (listing.type === "config") {
       if (!item.config_file || !item.assessed_config_sha256) throw new Error("config assessment required");
       record.config_sha256 = sha256(readFileSync(item.config_file)); record.assessed_config_sha256 = item.assessed_config_sha256;

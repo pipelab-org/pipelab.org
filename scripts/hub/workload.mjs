@@ -20,7 +20,7 @@ export function officialOwnInputs({ repository, reader }) {
     for (const [group, suffix] of [["positive", "true"], ["negative", "false"]]) {
       const file = `fixtures/${reader.name}/${rule.type}/${rule.id}-${suffix}-positive.txt`;
       if (tree.has(file)) input[group] = [{ origin: `rules:${source.rules_commit}:${file}`, text: show(file).toString("utf8") }];
-      else if (group === "negative" && supplements.bundle_sha256 === reader.bundle_sha256 && supplements.rules[rule.id]) input[group] = [{ origin: `site:supplemental-negatives.json:${reader.bundle_sha256}:${rule.id}`, text: supplements.rules[rule.id] }];
+      else if (group === "negative" && rule.status === "experimental" && supplements.bundle_sha256 === reader.bundle_sha256 && supplements.rules[rule.id]) input[group] = [{ origin: `site:supplemental-negatives.json:${reader.bundle_sha256}:${rule.id}`, text: supplements.rules[rule.id] }];
       else throw new Error("missing official workload mapping");
     }
     result.push(input);

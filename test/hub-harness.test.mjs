@@ -8,11 +8,12 @@ import { spawnSync, execFileSync } from "node:child_process";
 import { parse, stringify } from "yaml";
 import { verifyBundle, officialKeys, compareReaderSignature, readBundleFiles } from "../scripts/hub/verify-bundle.mjs";
 import { deriveRecord, indexProjection, assertIndex } from "../scripts/hub/records.mjs";
-import { canonical, contentDigest, bindWorkload, measurementArtifact, writeMeasurement, acceptedMeasurement, latencyVerdict, assertRegeneration, treeIdentity, jsonBytes, sha256 } from "../scripts/hub/evidence.mjs";
+import { canonical, contentDigest, bindWorkload, measurementArtifact, writeMeasurement, acceptedMeasurement, latencyVerdict, assertRegeneration, treeIdentity, jsonBytes, sha256, goWorkloadSHA256, measurementBindings } from "../scripts/hub/evidence.mjs";
 import { routeManifest } from "../scripts/hub/route-manifest.mjs";
 import { assertPublication, htmlFacts, markdownFacts, representationPaths } from "../scripts/hub/parity.mjs";
 import { officialOwnInputs, nearInput, prefixCoverage } from "../scripts/hub/workload.mjs";
-import { runHubcheck, generateCatalog, writeCatalog } from "../scripts/hub/generate.mjs";
+import { runHubcheck, generateCatalog, writeCatalog, assertFirstPartyListing } from "../scripts/hub/generate.mjs";
+import { benchmarkReport } from "../scripts/hub/benchmark-report.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
 const read = file => readFileSync(path.join(root, file), "utf8");
@@ -39,7 +40,7 @@ function stage(t, mutate = value => value) {
 }
 function listingFor(reader) { const listing = structuredClone(base); delete listing.learn_page; delete listing.evidence.artifact; Object.assign(listing, { type: "bundle", id: reader.name, bundle_name: reader.name, bundle_sha256: reader.bundle_sha256, signer_fingerprint: reader.signer_fingerprint }); return listing; }
 function timer(samples) { return { samples_ns: samples, maximum_ns: Math.max(...samples), completed: true, timeout: false }; }
-function results(maximum = 12) { const measured = { baseline: timer([10, 10, 10]), target: timer([12, 12, maximum]), ratio: 0.2 }; return { rules: { "test-rule": structuredClone(measured) }, bundle: measured, deprecated: [] }; }
+function results(maximum = 12, workload_sha256 = "executed") { const measured = { baseline: timer([10, 10, 10]), target: timer([12, 12, maximum]), ratio: 0.2 }; return { rules: { "test-rule": structuredClone(measured) }, bundle: measured, deprecated: [], workload_sha256 }; }
 
 // Numeric values in these synthetic unit cases are evidence fixtures, not policy.
 test("measurement evidence binds full workload, supports immutable supersession, and recomputes deadlines", t => {
@@ -48,7 +49,12 @@ test("measurement evidence binds full workload, supports immutable supersession,
   const changed = structuredClone(inputs); changed[0].negative[0].text = "different";
   assert.notEqual(workload.digest, bindWorkload({ rules: [{ id: "test-rule", status: "stable" }], inputs: changed, generator: "v1", parameters: { bytes: 20 } }).digest);
   assert.throws(() => bindWorkload({ rules: [{ id: "test-rule", status: "stable" }], inputs: [], generator: "v1", parameters: {} }), /mapping/);
-  const binding = { bundle_sha256: "bundle", workload_sha256: workload.digest, engine: { source: "engine-a" }, method: { pairs: 3, gomaxprocs: 1, interleave: ["baseline", "target"] } };
+  const executed = goWorkloadSHA256(workload.harness);
+  const binding = { bundle_sha256: "bundle", workload_sha256: workload.digest, executed_workload_sha256: "executed", measured_rule_ids: ["test-rule"], engine: { source: "engine-a" }, method: { pairs: 3, gomaxprocs: 1, interleave: ["baseline", "target"], measurement_policy: { min_confidence: "low", include_experimental: true } } };
+  assert.throws(() => measurementArtifact({ ...binding, executed_workload_sha256: "" }, results()), /missing/);
+  assert.throws(() => measurementArtifact(binding, results(12, "other")), /executed workload/);
+  assert.throws(() => measurementBindings({ reader: { bundle_sha256: "bundle", declared: [{ id: "test-rule", status: "stable" }] }, workload, engine: binding.engine, method: binding.method, executedWorkloadSHA256: "other" }), /executed workload/);
+  assert.equal(measurementBindings({ reader: { bundle_sha256: "bundle", declared: [{ id: "test-rule", status: "stable" }] }, workload, engine: binding.engine, method: binding.method, executedWorkloadSHA256: executed }).executed_workload_sha256, executed);
   const old = measurementArtifact(binding, results(), { run: "first" }), reference = writeMeasurement(dir, old);
   const newerBinding = { ...binding, engine: { source: "engine-b" } };
   const newer = measurementArtifact(newerBinding, results(), { run: "second" }); writeMeasurement(dir, newer);
@@ -116,8 +122,9 @@ test("native reader refuses signed reader-invalid data and checks exact identity
 test("native benchmark requires complete inputs then isolates stable, experimental and low-confidence identities", { skip: !native }, t => {
   const fixture = stage(t);
   assert.throws(() => runHubcheck(binary, "bench", { ...fixture.request, pairs: 1, workload: [] }));
-  const workload = fixture.bundle.rules.filter(rule => rule.status !== "deprecated").map(rule => ({ rule_id: rule.id, positive: [rule.pattern.regex], negative: ["A normal description of project files."], clean: ["Read the setup instructions."], near: ["fixture filler"] }));
+  const workload = fixture.bundle.rules.filter(rule => rule.status !== "deprecated").map(rule => ({ rule_id: rule.id, positive: [rule.pattern.regex], negative: ["A normal description of project files."], clean: ["Read the setup & <instructions>."], near: ["fixture filler"] }));
   const measured = runHubcheck(binary, "bench", { ...fixture.request, pairs: 1, workload });
+  assert.equal(measured.workload_sha256, goWorkloadSHA256(workload));
   assert.deepEqual(Object.keys(measured.rules).sort(), ["low-rule", "stable-rule", "stable-rule-long"]);
   assert.deepEqual(measured.deprecated, ["deprecated-rule"]); assert.equal(measured.bundle.target.completed, true);
   assert.equal(latencyVerdict(measured, {}).status, "unassessed");
@@ -139,7 +146,16 @@ function emitManifest(dir, manifest, records) {
   }
 }
 test("manifest owns schema/config files, rejects absent or stale output, and scopes closure to hub", t => {
-  const dir = temp(t), record = deriveRecord({ listing: base, tooling: {} });
+  const dir = temp(t), record = deriveRecord({ listing: base, tooling: {}, source: "first-party" });
+  assert.equal(record.badge, "first-party");
+  assert.throws(() => deriveRecord({ listing: base, tooling: {} }), /not admitted/);
+  const party = temp(t); mkdirSync(path.join(party, "data/hub/first-party/nested"), { recursive: true });
+  const inside = path.join(party, "data/hub/first-party/nested/recipe.yaml"); writeFileSync(inside, "name: inside\n");
+  assert.equal(assertFirstPartyListing(party, inside), undefined);
+  const outside = path.join(party, "recipe.yaml"); writeFileSync(outside, "name: outside\n");
+  assert.throws(() => assertFirstPartyListing(party, outside), /data\/hub\/first-party/);
+  symlinkSync(outside, path.join(party, "data/hub/first-party/escape.yaml"));
+  assert.throws(() => assertFirstPartyListing(party, path.join(party, "data/hub/first-party/escape.yaml")), /data\/hub\/first-party/);
   const manifest = routeManifest({ records: [record], policies: [], schemaBytes: read("scripts/hub/schema/listing-v1.json") });
   emitManifest(dir, manifest, [record]); assertPublication({ directory: dir, manifest, records: [record], open: true });
   const schemaFile = path.join(dir, "schemas/pipelab-hub/listing-v1.json"), schemaBytes = readFileSync(schemaFile);
@@ -189,7 +205,6 @@ test("real Hugo joins reader facts, rule/core routes, exact mirrors and digest g
   items.push({ listing_file: communityFile, bundle_dir: community.dir, publisher });
   const communityAssets = path.join(dir, "assets/hub/community/example/example-bundle"); mkdirSync(communityAssets, { recursive: true });
   cpSync(path.join(community.dir, "bundle.yaml"), path.join(communityAssets, "bundle.yaml")); cpSync(path.join(community.dir, "bundle.yaml.sig"), path.join(communityAssets, "bundle.yaml.sig"));
-  const recipe = structuredClone(base); delete recipe.evidence.artifact; const recipeFile = path.join(dir, "recipe.yaml"); writeFileSync(recipeFile, stringify(recipe)); items.push({ listing_file: recipeFile });
   const source = { root, items, binary, repository, config: path.join(engineDir, "configs/claude-code.yaml"), engine: JSON.parse(readFileSync(path.join(engineDir, "engine-identity.json"))), policies: [], publishers: [publisher], mode: "report" };
   const catalog = generateCatalog(source), generated = path.join(dir, "data/hub/generated"); writeCatalog(generated, catalog); writeCatalog(generated, generateCatalog(source), { check: true });
   assert.equal(catalog["listings.json"].find(record => record.listing.id === "pipelock-community").badge, "official");
@@ -201,7 +216,7 @@ test("real Hugo joins reader facts, rule/core routes, exact mirrors and digest g
   assertPublication({ directory: path.join(dir, "public"), manifest, records, open: true, requireBuild: false });
   if (process.env.HUBCHECK_CAPTURE_DIR) {
     const destination = process.env.HUBCHECK_CAPTURE_DIR; mkdirSync(destination, { recursive: true });
-    for (const [input, name] of [["learn/mcp-security/index.md", "learn-mcp-security.md"], ["hub/recipes/example-recipe/index.md", "hub-example-recipe.md"]]) cpSync(path.join(dir, "public", input), path.join(destination, name));
+    for (const [input, name] of [["learn/mcp-security/index.md", "learn-mcp-security.md"]]) cpSync(path.join(dir, "public", input), path.join(destination, name));
   }
   const original = readFileSync(path.join(generated, "listings.json"));
   const corrupt = structuredClone(records); const corruptRecord = corrupt.find(record => record.badge === "official"); corruptRecord.bundle_sha256 = "0".repeat(64); corruptRecord.listing.bundle_sha256 = "0".repeat(64); writeFileSync(path.join(generated, "listings.json"), JSON.stringify(corrupt));
@@ -220,8 +235,26 @@ test("official workloads bind exact served producer bytes and supply every missi
     for (const input of own) { assert.ok(input.positive[0].text); assert.ok(input.negative[0].text); supplementary += Number(input.negative[0].origin.startsWith("site:")); }
     count += own.length;
     assert.throws(() => officialOwnInputs({ repository: process.env.HUBCHECK_RULES_REPOSITORY, reader: { ...reader, bundle_sha256: "changed" } }), /not current/);
+    if (name === "pipelock-community") {
+      const flipped = structuredClone(reader);
+      flipped.declared.find(rule => rule.id === "dlp-doppler-service-token").status = "stable";
+      assert.throws(() => officialOwnInputs({ repository: process.env.HUBCHECK_RULES_REPOSITORY, reader: flipped }), /missing official/);
+    }
   }
   assert.equal(count, 56); assert.equal(supplementary, 10);
   assert.ok(nearInput({ binary, regex: "literal-prefix", bytes: 32 }).text.length);
   assert.throws(() => nearInput({ binary, regex: ".*", bytes: 32 }), /held/);
+});
+
+test("benchmark report refuses a caller reader and a different executable", { skip: !native }, t => {
+  const fixture = stage(t);
+  const engine = JSON.parse(readFileSync(path.join(engineDir, "engine-identity.json")));
+  const inputs = fixture.bundle.rules.filter(rule => rule.status !== "deprecated").map(rule => ({ rule_id: rule.id, positive: [{ origin: "fixture", text: rule.pattern.regex }], negative: [{ origin: "fixture", text: "A normal description of project files." }], clean: [{ origin: "fixture", text: "Read the setup & <instructions>." }], near: [{ origin: "fixture", text: "fixture filler" }] }));
+  const spec = { inputs, generator: "hub-harness-test", parameters: { pairs: 1 } };
+  const report = benchmarkReport({ binary, request: fixture.request, engine, workloadSpec: spec, pairs: 1, output: temp(t), root });
+  assert.equal(report.verdict.status, "unassessed");
+  assert.equal(report.results.workload_sha256, report.bindings.executed_workload_sha256);
+  assert.equal(report.bindings.bundle_sha256, sha256(fixture.bytes));
+  assert.throws(() => benchmarkReport({ binary, request: fixture.request, reader: { bundle_sha256: "f".repeat(64), declared: [] }, engine, workloadSpec: spec, pairs: 1, output: temp(t), root }), /derived/);
+  assert.throws(() => benchmarkReport({ binary, request: fixture.request, engine: { ...engine, binary_sha256: "0".repeat(64) }, workloadSpec: spec, pairs: 1, output: temp(t), root }), /engine executable/);
 });

@@ -1,16 +1,22 @@
 import { readFileSync, mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { bindWorkload, measurementBindings, measurementArtifact, writeMeasurement, latencyVerdict, sha256, jsonBytes } from "./evidence.mjs";
-import { runHubcheck } from "./generate.mjs";
+import { bindWorkload, measurementBindings, measurementArtifact, writeMeasurement, latencyVerdict, measurementMethod, goWorkloadSHA256, sha256, jsonBytes } from "./evidence.mjs";
+import { runHubcheck, assertEngineIdentity } from "./generate.mjs";
 
-// Report mode chooses no budget. The caller supplies a measured pair count;
-// acceptance separately requires all three approved limits and fresh evidence.
-export function benchmarkReport({ binary, request, reader, engine, workloadSpec, pairs, limits = {}, output, acceptance = false }) {
-  const workload = bindWorkload({ rules: reader.declared, ...workloadSpec });
-  const method = { pairs, interleave: ["baseline", "target"], gomaxprocs: 1, base_config_sha256: sha256(readFileSync(request.config)), measurement_policy: { min_confidence: "low", include_experimental: true } };
-  const bindings = measurementBindings({ reader, workload, engine, method });
+// Report mode chooses no budget. The pair count is the count actually run.
+// The reader and workload digest come from that same binary and bundle.
+export function benchmarkReport({ binary, request, reader, engine, workloadSpec, pairs, limits = {}, output, acceptance = false, root }) {
+  if (reader !== undefined) throw new Error("reader is derived from the executed binary");
+  assertEngineIdentity({ root, engine, binary });
+  const derived = runHubcheck(binary, "reader", { bundle_dir: request.bundle_dir, config: request.config, trusted_keys: request.trusted_keys });
+  if (sha256(readFileSync(path.join(request.bundle_dir, "bundle.yaml"))) !== derived.bundle_sha256) throw new Error("executed bundle digest differs");
+  const workload = bindWorkload({ rules: derived.declared, ...workloadSpec });
+  const method = measurementMethod(root, request.config, pairs);
+  const executedWorkloadSHA256 = goWorkloadSHA256(workload.harness);
+  const bindings = measurementBindings({ reader: derived, workload, engine, method, executedWorkloadSHA256 });
   const results = runHubcheck(binary, "bench", { ...request, pairs, workload: workload.harness, deadline_ns: limits.deadline_ns || 0 });
+  if (results.workload_sha256 !== executedWorkloadSHA256) throw new Error("executed workload differs");
   const measured = measurementArtifact(bindings, results, { measured_at: new Date().toISOString() });
   const reference = writeMeasurement(path.join(output, "measurements"), measured);
   const report = { format: 1, reference, bindings, results, verdict: latencyVerdict(results, limits, { acceptance }) };

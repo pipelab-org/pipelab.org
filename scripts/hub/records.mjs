@@ -14,11 +14,14 @@ export function assertIndex(actual, records) {
   if (canonical(actual) !== canonical(indexProjection(records))) throw new Error("hub index projection differs");
 }
 // Contributions and declarations never choose the badge or install command.
-export function deriveRecord({ listing: input, reader, independent, publisher, tooling, evidencePresent = false, measurement = null }) {
+export function deriveRecord({ listing: input, reader, independent, publisher, tooling, evidencePresent = false, measurement = null, source = "catalog" }) {
   const listing = validateListing(input);
   const record = { listing, evidence_present: evidencePresent, link_hosts: describeLinks(listing.links), schema_version: 1, tooling_identity: tooling, pipelock_version: "3.7.1", facts: {} };
   if (listing.type !== "bundle") {
-    record.badge = ["recipe", "verifier"].includes(listing.type) ? "first-party" : "none";
+    if (listing.type === "recipe" || listing.type === "verifier") {
+      if (source !== "first-party") throw new Error("listing type is not admitted from this source");
+      record.badge = "first-party";
+    } else record.badge = "none";
     record.route = listingRoute(record);
     return record;
   }

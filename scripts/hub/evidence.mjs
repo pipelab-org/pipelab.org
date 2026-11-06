@@ -3,6 +3,37 @@ import { existsSync, readFileSync, readdirSync, lstatSync, mkdirSync, writeFileS
 import path from "node:path";
 
 export const sha256 = bytes => createHash("sha256").update(bytes).digest("hex");
+// encoding/json default escaping for the harness workload struct. Field order matches the Go struct.
+function goString(value) {
+  let out = '"';
+  for (const ch of value) {
+    const cp = ch.codePointAt(0);
+    if (ch === '"' || ch === "\\") out += "\\" + ch;
+    else if (ch === "\b") out += "\\b";
+    else if (ch === "\f") out += "\\f";
+    else if (ch === "\n") out += "\\n";
+    else if (ch === "\r") out += "\\r";
+    else if (ch === "\t") out += "\\t";
+    else if (ch === "&") out += "\\u0026";
+    else if (ch === "<") out += "\\u003c";
+    else if (ch === ">") out += "\\u003e";
+    else if (cp === 0x2028 || cp === 0x2029) out += "\\u" + cp.toString(16);
+    else if (cp < 0x20) out += "\\u00" + cp.toString(16).padStart(2, "0");
+    else out += ch;
+  }
+  return out + '"';
+}
+const goArray = items => `[${items.map(goString).join(",")}]`;
+export function goWorkloadSHA256(harness) {
+  const sorted = [...harness].sort((a, b) => Buffer.compare(Buffer.from(a.rule_id), Buffer.from(b.rule_id)));
+  const body = sorted.map(item => `{"rule_id":${goString(item.rule_id)},"positive":${goArray(item.positive)},"negative":${goArray(item.negative)},"clean":${goArray(item.clean)},"near":${goArray(item.near)}}`).join(",");
+  return sha256(Buffer.from(`[${body}]`));
+}
+export function measurementMethod(root, configPath, pairs) {
+  const committed = JSON.parse(readFileSync(path.join(root, "data/hub/benchmark-method.json")));
+  if (committed.pairs != null && committed.pairs !== pairs) throw new Error("measurement pair count differs from the committed method");
+  return { ...committed, pairs, base_config_sha256: sha256(readFileSync(configPath)) };
+}
 export function canonical(value) {
   if (Array.isArray(value)) return `[${value.map(canonical).join(",")}]`;
   if (value && typeof value === "object") return `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${canonical(value[key])}`).join(",")}}`;
@@ -76,10 +107,12 @@ export function latencyVerdict(results, limits, { acceptance = false } = {}) {
   return { status: Object.values(checks).some(pass => !pass) ? "fail" : unset ? "unassessed" : "pass", checks };
 }
 export function measurementArtifact(bindings, results, provenance = {}) {
-  for (const key of ["bundle_sha256", "workload_sha256", "engine", "method"]) if (!bindings[key]) throw new Error("missing measurement binding");
+  for (const key of ["bundle_sha256", "workload_sha256", "executed_workload_sha256", "engine", "method", "measured_rule_ids"]) if (!bindings?.[key]) throw new Error("missing measurement binding");
+  if (!Number.isSafeInteger(bindings.method.pairs) || bindings.method.pairs <= 0) throw new Error("missing measurement binding");
   latencyVerdict(results, {});
-  if (bindings.measured_rule_ids && canonical(Object.keys(results.rules).sort()) !== canonical(bindings.measured_rule_ids)) throw new Error("measurement rule identities differ");
-  if (bindings.method?.pairs && [...Object.values(results.rules), results.bundle].some(measured => measured.target.samples_ns.length !== bindings.method.pairs || measured.baseline.samples_ns.length !== bindings.method.pairs)) throw new Error("measurement pair count differs");
+  if (results?.workload_sha256 !== bindings.executed_workload_sha256) throw new Error("executed workload differs");
+  if (canonical(Object.keys(results.rules).sort()) !== canonical([...bindings.measured_rule_ids].sort())) throw new Error("measurement rule identities differ");
+  if ([...Object.values(results.rules), results.bundle].some(measured => measured.target.samples_ns.length !== bindings.method.pairs || measured.baseline.samples_ns.length !== bindings.method.pairs)) throw new Error("measurement pair count differs");
   const artifact = { format: 1, bindings, results, provenance };
   // Evidence identity includes results: fresh runs sharing bindings can coexist.
   return { id: contentDigest(artifact), artifact };
@@ -105,7 +138,8 @@ export function assertRegeneration(committed, regenerated) {
   if (!Buffer.from(committed).equals(Buffer.from(regenerated))) throw new Error("generated hub records differ");
 }
 
-export function measurementBindings({ reader, workload, engine, method }) {
+export function measurementBindings({ reader, workload, engine, method, executedWorkloadSHA256 }) {
   if (!Number.isSafeInteger(method?.pairs) || method.pairs <= 0 || method.gomaxprocs !== 1 || JSON.stringify(method.interleave) !== '["baseline","target"]' || method.measurement_policy?.min_confidence !== "low" || method.measurement_policy?.include_experimental !== true) throw new Error("measurement method is not configured");
-  return { bundle_sha256: reader.bundle_sha256, measured_rule_ids: reader.declared.filter(rule => rule.status !== "deprecated").map(rule => rule.id).sort(), workload_sha256: workload.digest, engine, method };
+  if (executedWorkloadSHA256 !== goWorkloadSHA256(workload.harness)) throw new Error("executed workload differs");
+  return { bundle_sha256: reader.bundle_sha256, measured_rule_ids: reader.declared.filter(rule => rule.status !== "deprecated").map(rule => rule.id).sort(), workload_sha256: workload.digest, executed_workload_sha256: executedWorkloadSHA256, engine, method };
 }
