@@ -1,8 +1,12 @@
 ## Pipelock v{{ site.Data.machine_context.release.minor }} guides
 
 {{ range site.Data.machine_context.guides -}}
-{{ $path := (urls.Parse (.url | absURL)).Path -}}
-{{ $isHub := or (eq $path "/hub") (hasPrefix $path "/hub/") -}}
+{{ $resolved := strings.TrimSuffix "/" (urls.Parse (.url | absURL)).Path -}}
+{{ $base := strings.TrimSuffix "/" (urls.Parse site.BaseURL).Path -}}
+{{ $underBase := and (ne $base "") (or (eq $resolved $base) (hasPrefix $resolved (printf "%s/" $base))) -}}
+{{ $relative := cond $underBase (strings.TrimPrefix $base $resolved) $resolved -}}
+{{ if not $relative }}{{ $relative = "/" }}{{ end -}}
+{{ $isHub := or (eq $relative "/hub") (hasPrefix $relative "/hub/") -}}
 {{ if or (not $isHub) (partial "hub-open.html" .) -}}
 - [{{ .label }}]({{ .url | absURL }})
 {{ end -}}
