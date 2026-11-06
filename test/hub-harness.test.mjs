@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import path from "node:path";
 import { tmpdir } from "node:os";
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, cpSync, rmSync, existsSync, symlinkSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, cpSync, rmSync, existsSync, symlinkSync, chmodSync } from "node:fs";
 import { generateKeyPairSync, sign, createHash } from "node:crypto";
 import { spawnSync, execFileSync } from "node:child_process";
 import { parse, stringify } from "yaml";
@@ -15,6 +15,7 @@ import { assertPublication, htmlFacts, markdownFacts, representationPaths } from
 import { officialOwnInputs, producerInputs, nearInput, repeatNear, workloadCaps, NEAR_GENERATOR } from "../scripts/hub/workload.mjs";
 import { runHubcheck, generateCatalog, writeCatalog, assertFirstPartyListing } from "../scripts/hub/generate.mjs";
 import { benchmarkReport } from "../scripts/hub/benchmark-report.mjs";
+import { toolDefinitionLimit } from "../scripts/hub/build-harness.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
 const read = file => readFileSync(path.join(root, file), "utf8");
@@ -326,6 +327,40 @@ test("near generation holds unusable inputs and records production normalization
   assert.throws(() => nearInput({ binary, request: fixture.request, rule, positive, bytes: 0 }), /cap required/);
   const tooLarge = workloadCaps(repository).dlp + 1;
   assert.throws(() => nearInput({ binary, request: fixture.request, rule, positive, bytes: tooLarge }), /outside the pinned preset/);
+});
+
+// Rewrites only the native near-derivation record. Each case changes one field
+// that Node independently reconstructs or binds, so a disabled cross-check fails.
+function tamperedNative(t, mutation) {
+  const file = path.join(temp(t), "hubcheck");
+  writeFileSync(file, `#!/bin/sh\n"${binary}" "$@" | "${process.execPath}" -e 'const o=JSON.parse(require("fs").readFileSync(0,"utf8"));if(o.status==="generated"){${mutation}}process.stdout.write(JSON.stringify(o))'\n`);
+  chmodSync(file, 0o755);
+  return file;
+}
+
+test("Node refuses a native near derivation that differs from its own reconstruction", { skip: !native }, t => {
+  const fixture = stage(t), toolTextLimit = workloadCaps(repository).tool_definition.bytes;
+  const injection = fixture.bundle.rules[0], tool = { ...fixture.bundle.rules[2], scan_field: fixture.bundle.rules[2].pattern.scan_field };
+  const run = (mutation, rule) => nearInput({ binary: tamperedNative(t, mutation), request: fixture.request, rule, positive: [{ origin: "fixture:L1", text: rule.pattern.regex }], bytes: 256, toolTextLimit });
+  assert.ok(run("", injection).text && run("", tool).text);
+  for (const [mutation, reason, rule] of [
+    ['o.text_sha256="0".repeat(64)', /transport bytes differ/, injection],
+    ["o.transport_bytes+=1", /transport bytes differ/, injection],
+    ["o.tool_definition_text_bytes+=1", /transport bytes differ/, tool],
+    ['o.fixture_sha256="0".repeat(64)', /producer binding differs/, injection],
+    ['o.fixture_origin="fixture:other"', /producer binding differs/, injection],
+    ["o.raw_negative=false", /derivation differs/, injection],
+    ["o.cap_bytes+=1", /derivation differs/, injection],
+    ['o.generator="other"', /derivation differs/, injection],
+    ["o.tool_definition_cap_bytes+=1", /tool-definition limit differs/, tool],
+  ]) assert.throws(() => run(mutation, rule), reason, mutation);
+});
+
+test("the harness tool-definition limit mirrors the pinned declaration and a pair count is required", { skip: !native }, t => {
+  const declared = read("scripts/hub/pipelock-harness/main.go").match(/^const toolDefinitionTextBytes = (\d+)$/m);
+  assert.equal(Number(declared?.[1]), toolDefinitionLimit(repository).bytes);
+  const fixture = stage(t), engine = JSON.parse(readFileSync(path.join(engineDir, "engine-identity.json")));
+  for (const pairs of [0, undefined, 1.5]) assert.throws(() => benchmarkReport({ binary, request: fixture.request, engine, workloadSpec: { inputs: [], generator: "hub-harness-test", parameters: {} }, pairs, output: temp(t), root }), /positive measurement pair count/);
 });
 
 test("benchmark report refuses a caller reader and a different executable", { skip: !native }, t => {
