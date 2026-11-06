@@ -179,3 +179,21 @@ test("missing facts, unknown tokens, invalid bundles and unreviewed minor copy f
   assert.notEqual(result.status, 0);
   assert.match(result.stdout + result.stderr, /must match the approved release summary/);
 });
+
+
+test("slashless, query and absolute Hub guides stay hidden until launch", t => {
+  const f = fixture(t);
+  const editorial = parse(read("data/machine_context.yaml"));
+  const variants = ["/hub", "/hub/", "/hub?view=all", "/hub/#listing", "https://pipelab.org/hub", "/hub/recipes/example/"];
+  editorial.guides = variants.map((url, i) => ({ label: `Gated guide ${i}`, url }));
+  f.write("data/machine_context.yaml", stringify(editorial));
+  let result = f.build();
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  for (const file of ["llms.txt", "llms-full.txt"]) assert.doesNotMatch(f.built(file), /Gated guide/);
+  assert.deepEqual(auditMachineContext(f.dir), []);
+  f.write("data/hub/launch.toml", "open = true\n");
+  result = f.build();
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  for (const file of ["llms.txt", "llms-full.txt"]) for (const guide of editorial.guides) assert.ok(f.built(file).includes(guide.label));
+  assert.deepEqual(auditMachineContext(f.dir), []);
+});

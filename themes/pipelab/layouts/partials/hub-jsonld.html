@@ -1,6 +1,6 @@
 {{- $items := slice (dict "@type" "ListItem" "position" 1 "name" "Home" "item" site.BaseURL) -}}
 {{- $items = $items | append (dict "@type" "ListItem" "position" 2 "name" .Title "item" .Permalink) -}}
-{{- if ne .RelPermalink "/hub/" -}}
+{{- if ne .Permalink ("hub/" | absURL) -}}
   {{- $items = slice (dict "@type" "ListItem" "position" 1 "name" "Home" "item" site.BaseURL) (dict "@type" "ListItem" "position" 2 "name" "PipeLab Hub" "item" ("hub/" | absURL)) (dict "@type" "ListItem" "position" 3 "name" .Title "item" .Permalink) -}}
 {{- end -}}
 <script type="application/ld+json">{{ dict "@context" "https://schema.org" "@type" "BreadcrumbList" "itemListElement" $items | jsonify | safeJS }}</script>
