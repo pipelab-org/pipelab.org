@@ -36,6 +36,8 @@
     {{- $.AddPage (dict "path" $path "kind" "page" "type" "hub" "title" $listing.title "description" $description "outputs" (slice "html" "markdown") "params" (dict "hub" .)) -}}
   {{- end -}}
   {{- range site.Data.hub.generated.references -}}
-    {{- $.AddPage (dict "path" .path "kind" "page" "type" "hub" "title" .title "description" .description "outputs" (slice "html" "markdown") "params" (dict "hub" .)) -}}
+    {{- $params := dict "hub" . -}}
+    {{- if eq .indexable false -}}{{- $params = merge $params (dict "robots" "noindex, follow") -}}{{- end -}}
+    {{- $.AddPage (dict "path" .path "kind" "page" "type" "hub" "title" .title "description" .description "outputs" (slice "html" "markdown") "params" $params) -}}
   {{- end -}}
 {{- end -}}

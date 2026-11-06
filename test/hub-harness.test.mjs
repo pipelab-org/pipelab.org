@@ -243,6 +243,10 @@ function catalogSource(t) {
 
 test("real Hugo joins reader facts, rule/core routes, exact mirrors and digest guards", { skip: !native }, t => {
   const { dir, source } = catalogSource(t);
+  const removed = { id: "retired-listing", publisher_id: "former", route: "/hub/community/former/older-bundle/", facts: { "removal.reason": '<gone> & "retained"' } };
+  const baseline = [removed.route + "old-rule/", "/hub/bundles/older-bundle/"].map(route => ({ listing_id: removed.id, route, representations: ["html", "mirror"] }));
+  source.publishers.push({ ...source.publishers[0], id: "former", name: "Former maintainer" });
+  Object.assign(source, { removed: [removed], baseline });
   const catalog = generateCatalog(source), generated = path.join(dir, "data/hub/generated"); writeCatalog(generated, catalog); writeCatalog(generated, generateCatalog(source), { check: true });
   assert.equal(catalog["listings.json"].find(record => record.listing.id === "pipelock-community").badge, "official");
   const overlay = `themesDir = ${JSON.stringify(path.join(root, "themes"))}\ncontentDir = ${JSON.stringify(path.join(dir, "content"))}\nassetDir = ${JSON.stringify(path.join(dir, "assets"))}\ndataDir = ${JSON.stringify(path.join(dir, "data"))}\nstaticDir = ${JSON.stringify(path.join(dir, "distribution"))}\n`;
@@ -251,6 +255,14 @@ test("real Hugo joins reader facts, rule/core routes, exact mirrors and digest g
   const built = build(true); assert.equal(built.status, 0, built.output);
   const manifest = catalog["routes.json"], records = catalog["listings.json"];
   assertPublication({ directory: path.join(dir, "public"), manifest, records, open: true, requireBuild: false });
+  const removalRoutes = manifest.entries.filter(entry => entry.kind === "removal");
+  assert.equal(removalRoutes.length, 3);
+  for (const entry of removalRoutes) {
+    const html = readFileSync(path.join(dir, "public", entry.route, "index.html"), "utf8");
+    assert.match(html, /<meta name="robots" content="noindex, follow"/);
+    assert.ok(!readFileSync(path.join(dir, "public/sitemap.xml"), "utf8").includes(entry.route));
+  }
+  assert.ok(!readFileSync(path.join(dir, "public/hub/index.json"), "utf8").includes(removed.id));
   if (process.env.HUBCHECK_PREVIEW_DIR) cpSync(path.join(dir, "public"), process.env.HUBCHECK_PREVIEW_DIR, { recursive: true });
   if (process.env.HUBCHECK_CAPTURE_DIR) {
     const destination = process.env.HUBCHECK_CAPTURE_DIR; mkdirSync(destination, { recursive: true });
@@ -262,6 +274,12 @@ test("real Hugo joins reader facts, rule/core routes, exact mirrors and digest g
   writeFileSync(path.join(generated, "listings.json"), original);
   const closed = build(false); assert.equal(closed.status, 0, closed.output);
   assertPublication({ directory: path.join(dir, "public"), manifest, records, open: false });
+  const withoutCommunity = generateCatalog({ ...source, items: source.items.filter(item => !item.publisher) }); writeCatalog(generated, withoutCommunity);
+  rmSync(path.join(dir, "assets/hub/community"), { recursive: true });
+  const removalBuild = build(true); assert.equal(removalBuild.status, 0, removalBuild.output);
+  assertPublication({ directory: path.join(dir, "public"), manifest: withoutCommunity["routes.json"], records: withoutCommunity["listings.json"], open: true, requireBuild: false });
+  const removedClosed = build(false); assert.equal(removedClosed.status, 0, removedClosed.output);
+  assertPublication({ directory: path.join(dir, "public"), manifest: withoutCommunity["routes.json"], records: withoutCommunity["listings.json"], open: false });
 });
 
 test("official workloads bind exact served producer bytes and supply every missing experimental negative", { skip: !native || !process.env.HUBCHECK_RULES_REPOSITORY }, () => {

@@ -13,9 +13,9 @@ export function routeManifest({ records, publishers = [], core = [], removed = [
   if (removed.some(record => active.has(record.id))) throw new Error("active tombstone");
   const add = entry => entries.push({ indexable: true, facts: {}, ...entry });
   const page = (route, kind, facts = {}, extra = {}) => add({ route, kind, ownership: "hub", representations: ["html", "mirror"], facts, ...extra });
-  const reference = (route, kind, title, facts) => {
-    page(route, kind, facts);
-    refs.push({ path: route.slice("/hub/".length), title, description: `Pipelock ${kind} reference. Read the exact rule identifiers, published evidence, setup details, and documented limits for this hub reference.`, facts, display_facts: Object.entries(facts).map(([key, value]) => ({ key, value })), reference_kind: kind });
+  const reference = (route, kind, title, facts, extra = {}) => {
+    page(route, kind, facts, extra);
+    refs.push({ path: route.slice("/hub/".length), title, description: `Pipelock ${kind} reference. Read the exact rule identifiers, published evidence, setup details, and documented limits for this hub reference.`, facts, display_facts: Object.entries(facts).map(([key, value]) => ({ key, value })), reference_kind: kind, indexable: extra.indexable !== false });
   };
   for (const record of records) {
     const listing = record.listing, route = listingRoute(record);
@@ -48,17 +48,22 @@ export function routeManifest({ records, publishers = [], core = [], removed = [
     for (const key of publisher.keys) { if (typeof key !== "object" || !key.fingerprint || !key.added) throw new Error("publisher key history required"); facts[`publisher.key.${key.fingerprint}.added`] = key.added; }
     reference(`/hub/publishers/${publisher.id}/`, "publisher", publisher.name, facts);
   }
+  for (const record of removed) {
+    for (const route of new Set([record.route, ...baseline.filter(entry => entry.listing_id === record.id && entry.representations.includes("html")).map(entry => entry.route)])) reference(route, "removal", "Removed component", record.facts, { indexable: false, listing_id: record.id });
+  }
   const sectionPaths = new Set(rules.sections);
-  // Hugo emits ancestors for nested community and publisher pages. Include
-  // those source-derived routes rather than accepting unmanifested output.
-  if (records.some(record => record.badge === "community")) sectionPaths.add("community");
-  for (const record of records.filter(record => record.badge === "community")) sectionPaths.add(`community/${record.publisher_id}`);
-  if (refs.some(record => record.reference_kind === "publisher")) sectionPaths.add("publishers");
+  // Hugo emits ancestors for source-derived pages, including removals after
+  // the last active listing disappears. Existing pages own their own routes.
+  const pageRoutes = new Set(entries.filter(entry => entry.representations.includes("html")).map(entry => entry.route));
+  for (const route of pageRoutes) {
+    const parents = route.slice("/hub/".length).split("/").filter(Boolean); parents.pop();
+    while (parents.length) {
+      if (!pageRoutes.has(`/hub/${parents.join("/")}/`)) sectionPaths.add(parents.join("/"));
+      parents.pop();
+    }
+  }
   for (const section of sectionPaths) page(`/hub/${section ? section + "/" : ""}`, "section", { children: canonical(records.filter(record => !section || listingRoute(record).startsWith(`/hub/${section}/`)).map(record => record.listing.id).sort()) });
   for (const policy of policies) page(`/hub/${policy}/`, "policy");
-  for (const record of removed) {
-    for (const route of new Set([record.route, ...baseline.filter(entry => entry.listing_id === record.id && entry.representations.includes("html")).map(entry => entry.route)])) page(route, "removal", record.facts, { indexable: false, listing_id: record.id });
-  }
   add({ route: "/hub/index.json", kind: "index", ownership: "hub", representations: ["json"] });
   add({ route: "/hub/build.json", kind: "build", ownership: "hub", representations: ["json"] });
   if (!schemaBytes) throw new Error("trusted schema bytes required");
