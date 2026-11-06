@@ -16,6 +16,8 @@ Pipelock ships with {{< stat key="dlp_patterns" >}} built-in DLP patterns and {{
 
 ## Install
 
+For a clean-machine walkthrough with a verified block, try [block a fake secret](/learn/block-community-secret/) or [block synthetic patient data](/learn/block-synthetic-patient-data/). Both recipes use free signed detection bundles.
+
 ```bash
 pipelock rules install pipelock-community
 ```
