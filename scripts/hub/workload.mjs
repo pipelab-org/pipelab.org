@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { parse } from "yaml";
-import { bindWorkload, sha256, contentDigest, goString } from "./evidence.mjs";
+import { sha256, contentDigest, goString } from "./evidence.mjs";
 import { runHubcheck } from "./generate.mjs";
 import { enginePin, toolDefinitionLimit } from "./build-harness.mjs";
 
@@ -42,7 +42,7 @@ export const NEAR_GENERATOR = "site:fixture-span-truncation-v1";
 
 // These are the blocking presets used by the readability contract. The response
 // ceiling is their largest configured fetch body; outbound DLP uses the base
-// benchmark preset's request-body cap. Record the exact source bytes as well.
+// claude-code preset's request-body cap. Record the exact source bytes as well.
 export function workloadCaps(repository) {
   const presets = ["claude-code", "strict", "hostile-model"].map(name => {
     const file = `configs/${name}.yaml`;
@@ -99,6 +99,11 @@ export function nearInput({ binary, request, rule, positive, bytes, toolTextLimi
   if (evidence.generator !== NEAR_GENERATOR || evidence.rule_id !== rule.id || evidence.cap_bytes !== bytes || evidence.raw_negative !== true || typeof evidence.production_target_match !== "boolean") throw new Error("near workload derivation differs");
   const fixture = positive.find(input => input.origin === evidence.fixture_origin);
   if (!fixture || sha256(fixture.text) !== evidence.fixture_sha256) throw new Error("near producer binding differs");
+  const fixtureBytes = Buffer.from(fixture.text);
+  const { span_start: start, span_end: end, trimmed_runes: trimmed } = evidence;
+  if (![start, end, trimmed].every(Number.isSafeInteger) || start < 0 || end <= start || end > fixtureBytes.length || trimmed <= 0) throw new Error("near producer span differs");
+  const span = [...new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(fixtureBytes.subarray(start, end))];
+  if (trimmed >= span.length || span.slice(0, -trimmed).join("") !== evidence.seed) throw new Error("near producer span differs");
   if (rule.type === "tool-poison" && evidence.tool_definition_cap_bytes !== toolTextLimit) throw new Error("native tool-definition limit differs");
   const { text, transportBytes, toolTextBytes } = repeatNear(rule, evidence.seed, bytes, toolTextLimit);
   if (!text || sha256(text) !== evidence.text_sha256 || Buffer.byteLength(text) !== evidence.text_bytes || transportBytes !== evidence.transport_bytes || transportBytes > bytes || toolTextBytes !== evidence.tool_definition_text_bytes) throw new Error("near transport bytes differ");
@@ -121,25 +126,12 @@ export function officialWorkload({ binary, request, reader, repository, rulesRep
     inputs: own.map(input => ({ ...input, clean, near: near[input.rule_id] })),
   };
 }
-export function completeWorkload({ own, reader, clean, near, parameters, generator }) {
-  const inputs = own.map(input => ({ ...input, clean, near: near[input.rule_id] || [] }));
-  return bindWorkload({ rules: reader.declared, inputs, generator, parameters });
-}
 export function cleanInputs(directory, manifest) {
   return manifest.map(entry => {
     const file = path.join(directory, entry.file), text = readFileSync(file, "utf8");
     if (sha256(text) !== entry.sha256) throw new Error("clean snapshot digest differs");
     return { origin: entry.origin, text };
   });
-}
-
-export function prefixCoverage(binary, reader) {
-  const covered = [], held = [];
-  for (const rule of reader.declared.filter(rule => rule.status !== "deprecated")) {
-    const result = runHubcheck(binary, "prefix", { config: rule.regex });
-    ([...result.prefix].length >= 2 ? covered : held).push(rule.id);
-  }
-  return { covered, held, reason: "Go regexp/syntax Prog.Prefix returned fewer than two runes; removing the final rune leaves no nonempty repeated prefix." };
 }
 
 export function versionedCleanInputs() {

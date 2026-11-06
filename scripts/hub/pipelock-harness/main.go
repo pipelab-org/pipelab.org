@@ -15,7 +15,6 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
-	"regexp/syntax"
 	"runtime"
 	"slices"
 	"strings"
@@ -302,6 +301,20 @@ func toolInput(rule rules.Rule, text string) []byte {
 	require(err)
 	return line
 }
+func checkedResponse(sc *scanner.Scanner, text string) scanner.ResponseScanResult {
+	result := sc.ScanResponse(context.Background(), text)
+	if result.ScanError != "" {
+		panic("production scan incomplete")
+	}
+	return result
+}
+func checkedTools(sc *scanner.Scanner, loaded *rules.LoadResult, rule rules.Rule, text string) tools.ToolScanResult {
+	result := tools.ScanTools(toolInput(rule, text), sc, &tools.ToolScanConfig{Action: "block", ExtraPoison: rules.ConvertToolPoison(loaded.ToolPoison)})
+	if !result.IsToolsList || result.ResourceLimit != "" {
+		panic("production tool scan incomplete")
+	}
+	return result
+}
 func measure(req request, b *rules.Bundle, root, only string, workload []work) measured {
 	cfg0, res0 := load(req, b, root, true, "", true)
 	cfg1, res1 := load(req, b, root, true, only, false)
@@ -325,9 +338,9 @@ func measure(req request, b *rules.Bundle, root, only string, workload []work) m
 				case rules.RuleTypeDLP:
 					sc.ScanTextForDLP(context.Background(), text)
 				case rules.RuleTypeInjection:
-					sc.ScanResponse(context.Background(), text)
+					checkedResponse(sc, text)
 				case rules.RuleTypeToolPoison:
-					tools.ScanTools(toolInput(rule, text), sc, &tools.ToolScanConfig{Action: "block", ExtraPoison: rules.ConvertToolPoison(res.ToolPoison)})
+					checkedTools(sc, res, rule, text)
 				}
 			}
 		}
@@ -489,10 +502,7 @@ func targetMatches(sc *scanner.Scanner, loaded *rules.LoadResult, rule rules.Rul
 			}
 		}
 	case rules.RuleTypeInjection:
-		result := sc.ScanResponse(context.Background(), text)
-		if result.ScanError != "" {
-			panic("production scan incomplete")
-		}
+		result := checkedResponse(sc, text)
 		for _, match := range result.Matches {
 			for _, pattern := range loaded.Injection {
 				if match.PatternName == pattern.Name {
@@ -501,10 +511,7 @@ func targetMatches(sc *scanner.Scanner, loaded *rules.LoadResult, rule rules.Rul
 			}
 		}
 	case rules.RuleTypeToolPoison:
-		result := tools.ScanTools(toolInput(rule, text), sc, &tools.ToolScanConfig{Action: "block", ExtraPoison: rules.ConvertToolPoison(loaded.ToolPoison)})
-		if !result.IsToolsList || result.ResourceLimit != "" {
-			panic("production tool scan incomplete")
-		}
+		result := checkedTools(sc, loaded, rule, text)
 		for _, match := range result.Matches {
 			for _, pattern := range loaded.ToolPoison {
 				if slices.Contains(match.ToolPoison, pattern.Name) {
@@ -562,16 +569,6 @@ func bench(req request, b *rules.Bundle, root string) benchmark {
 	return out
 }
 
-// Near-prefix discovery uses the production Go regexp AST. An empty prefix is
-// reported explicitly; callers must provide a reviewed versioned workload.
-func prefix(regex string) map[string]any {
-	tree, err := syntax.Parse(regex, syntax.Perl)
-	require(err)
-	program, err := syntax.Compile(tree.Simplify())
-	require(err)
-	p, complete := program.Prefix()
-	return map[string]any{"prefix": p, "complete": complete}
-}
 func main() {
 	runtime.GOMAXPROCS(1)
 	defer func() {
@@ -590,10 +587,6 @@ func main() {
 	var extra any
 	if !errors.Is(decoder.Decode(&extra), io.EOF) {
 		panic("extra request")
-	}
-	if os.Args[1] == "prefix" {
-		require(json.NewEncoder(os.Stdout).Encode(prefix(req.Config)))
-		return
 	}
 	b, v, data, root := stage(req)
 	defer os.RemoveAll(root)

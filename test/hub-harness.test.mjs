@@ -141,6 +141,13 @@ test("native benchmark requires complete inputs then isolates stable, experiment
   assert.equal(latencyVerdict(measured, {}).status, "unassessed");
   const timedOut = runHubcheck(binary, "bench", { ...fixture.request, pairs: 1, workload, deadline_ns: 1 });
   assert.equal(latencyVerdict(timedOut, {}).status, "fail");
+  const oversized = structuredClone(workload);
+  oversized.find(input => input.rule_id === "low-rule").near = ["x".repeat(toolDefinitionLimit(repository).bytes)];
+  assert.throws(() => runHubcheck(binary, "bench", { ...fixture.request, pairs: 1, workload: oversized }), /REFUSED/);
+  const inputs = oversized.map(input => ({ rule_id: input.rule_id, ...Object.fromEntries(["positive", "negative", "clean", "near"].map(group => [group, input[group].map(text => ({ origin: "test:oversized", text }))])) }));
+  const output = path.join(temp(t), "refused-report"), engine = JSON.parse(readFileSync(path.join(engineDir, "engine-identity.json")));
+  assert.throws(() => benchmarkReport({ binary, request: fixture.request, engine, workloadSpec: { inputs, generator: "test:oversized", parameters: {} }, pairs: 1, output, root }), /REFUSED/);
+  assert.equal(existsSync(output), false);
 });
 
 function emitManifest(dir, manifest, records) {
@@ -349,6 +356,9 @@ test("Node refuses a native near derivation that differs from its own reconstruc
     ["o.tool_definition_text_bytes+=1", /transport bytes differ/, tool],
     ['o.fixture_sha256="0".repeat(64)', /producer binding differs/, injection],
     ['o.fixture_origin="fixture:other"', /producer binding differs/, injection],
+    ["o.span_start+=1", /producer span differs/, injection],
+    ["o.span_end+=1", /producer span differs/, injection],
+    ["o.trimmed_runes+=1", /producer span differs/, injection],
     ["o.raw_negative=false", /derivation differs/, injection],
     ["o.cap_bytes+=1", /derivation differs/, injection],
     ['o.generator="other"', /derivation differs/, injection],
