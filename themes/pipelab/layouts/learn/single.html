@@ -16,6 +16,7 @@
       {{ with .Params.eyebrow }}<p class="learn-eyebrow">{{ . }}</p>{{ end }}
       <h1{{ if not .Params.disable_title_fx }} data-fx="decrypt"{{ end }}>{{ .Title }}</h1>
       {{ with .Params.subtitle }}<p class="learn-lead">{{ . }}</p>{{ end }}
+      {{ partial "recipe-requirement.html" . }}
       <dl class="learn-article-meta">
         {{ if .ReadingTime }}<div><dt>Read</dt><dd>{{ .ReadingTime }} min</dd></div>{{ end }}
         {{ $isUpdated := and (not .Lastmod.IsZero) (not (.Lastmod.Equal .Date)) }}

@@ -106,6 +106,8 @@ documents the exact policy assumptions the public verifiers use.
 
 ## How receipts get produced
 
+For commands you can run from release archives, follow [Record signed receipts and verify them offline](/learn/record-verify-receipts/). The recipe records a synthetic-secret block, verifies its signed prefix and rejects a tampered copy.
+
 With a configured flight recorder and receipt signing key, the Pipelock proxy emits a receipt for every mediated action. Sources:
 
 - **Every HTTP request** the agent issues through the forward proxy or
