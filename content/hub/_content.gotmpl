@@ -11,6 +11,7 @@
       {{- $.AddPage (dict "path" $path "kind" "section" "type" "hub" "title" "Hub components" "description" "Browse Pipelock components in the PipeLab Hub. Read setup instructions, supplied evidence, and documented limitations for each component." "outputs" (slice "html" "markdown")) -}}
     {{- end -}}
   {{- end -}}
+  {{- $seen := newScratch -}}
   {{- range site.Data.hub.generated.listings -}}
     {{- /* Only trusted normalized records enter this adapter. No contributor
          map is merged into frontmatter. Description uses type and ID only. */ -}}
@@ -29,6 +30,9 @@
     {{- $description = strings.Truncate 155 "" $description -}}
     {{- $path := printf "%s/%s" $group $listing.id -}}
     {{- with .route -}}{{- $path = strings.TrimPrefix "/hub/" . -}}{{- end -}}
+    {{- $path = strings.TrimSuffix "/" $path -}}
+    {{- if $seen.Get $path }}{{ errorf "hub duplicate listing path: %s" $path }}{{ end -}}
+    {{- $seen.Set $path true -}}
     {{- $.AddPage (dict "path" $path "kind" "page" "type" "hub" "title" $listing.title "description" $description "outputs" (slice "html" "markdown") "params" (dict "hub" .)) -}}
   {{- end -}}
   {{- range site.Data.hub.generated.references -}}

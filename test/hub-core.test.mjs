@@ -119,7 +119,7 @@ function buildFixture(t) {
   for (const file of ["rules", "_headers", "robots.txt"]) cpSync(path.join(root, "static", file), path.join(dir, "distribution", file), { recursive: true });
   const config = read("hugo.toml");
   const build = (value, listing = base, recordOverrides = {}, env = {}) => {
-    writeFileSync(path.join(dir, "data/hub/generated/listings.json"), JSON.stringify([{ listing, evidence_present: true, link_hosts: describeLinks(listing.links), ...recordOverrides }]));
+    writeFileSync(path.join(dir, "data/hub/generated/listings.json"), JSON.stringify((Array.isArray(listing) ? listing : [listing]).map(listing => ({ listing, evidence_present: true, link_hosts: describeLinks(listing.links), ...recordOverrides }))));
     const overlay = `\nthemesDir = ${JSON.stringify(path.join(root, "themes"))}\ncontentDir = ${JSON.stringify(path.join(dir, "content"))}\nassetDir = ${JSON.stringify(path.join(dir, "assets"))}\ndataDir = ${JSON.stringify(path.join(dir, "data"))}\nstaticDir = ${JSON.stringify(path.join(dir, "distribution"))}\n`;
     // Top-level keys must precede the first TOML table.
     writeFileSync(path.join(dir, "hugo.toml"), overlay + config);
@@ -370,4 +370,37 @@ test("Worker remains API-only and preserves API routing without an ASSETS bindin
   assert.equal((await worker.fetch(new Request("https://example.com/api/results/not-a-uuid"), {})).status, 400);
   assert.equal((await worker.fetch(new Request("https://example.com/api/contact", { method: "POST", headers: { "Content-Type": "text/plain" }, body: "x" }), {})).status, 415);
   assert.equal((await worker.fetch(new Request("https://example.com/api/gh-advisory", { method: "POST", body: "{}" }), {})).status, 403);
+});
+
+
+test("Hub breadcrumbs preserve a path-prefixed base URL and section scripts stay external", t => {
+  const f = buildFixture(t);
+  const result = f.build("true", base, {}, { HUGO_BASEURL: "https://example.com/preview/" });
+  assert.equal(result.status, 0, result.output);
+  for (const [route, count] of [["hub/index.html", 2], ["hub/recipes/example-recipe/index.html", 3]]) {
+    const blocks = scripts(f.built(route));
+    for (const node of blocks) {
+      if (["application/ld+json", "application/json"].includes(attr(node, "type"))) assert.doesNotThrow(() => JSON.parse(textContent(node)));
+      else { assert.ok(attr(node, "src")); assert.equal(textContent(node).trim(), ""); }
+    }
+    const crumb = blocks.filter(node => attr(node, "type") === "application/ld+json").map(node => JSON.parse(textContent(node))).find(block => block["@type"] === "BreadcrumbList");
+    assert.equal(crumb.itemListElement.length, count);
+    assert.equal(new Set(crumb.itemListElement.map(item => item.item)).size, count);
+    assert.equal(crumb.itemListElement[1].item, "https://example.com/preview/hub/");
+  }
+});
+
+test("config change prose keeps the schema's Unicode character bound", () => {
+  const listing = { ...base, type: "config", base_preset: "generic-agent", changes: [{ op: "set", path: "logging.level", value: "x".repeat(1000) }] };
+  delete listing.learn_page;
+  assert.doesNotThrow(() => validateListing(listing));
+  listing.changes[0].value += "x";
+  assert.throws(() => validateListing(listing));
+});
+
+test("duplicate generated listing paths fail the Hugo build", t => {
+  const f = buildFixture(t);
+  const result = f.build("true", [base, { ...base, title: "Collision" }]);
+  assert.notEqual(result.status, 0, result.output);
+  assert.match(result.output, /hub duplicate listing path/);
 });
