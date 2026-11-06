@@ -19,6 +19,8 @@ export function benchmarkReport({ binary, request, reader, engine, workloadSpec,
   const executedWorkloadSHA256 = goWorkloadSHA256(workload.harness);
   const bindings = measurementBindings({ reader: derived, workload, engine, method, executedWorkloadSHA256 });
   const results = runHubcheck(binary, "bench", { ...request, pairs, workload: workload.harness, deadline_ns: limits.deadline_ns || 0 }, { timeout: executionTimeout });
+  if (results.bundle_sha256 !== derived.bundle_sha256) throw new Error("executed bundle digest differs");
+  if (results.config_sha256 !== method.base_config_sha256 || derived.config_sha256 !== method.base_config_sha256) throw new Error("executed config digest differs");
   if (results.workload_sha256 !== executedWorkloadSHA256) throw new Error("executed workload differs");
   const measured = measurementArtifact(bindings, results, { measured_at: new Date().toISOString() });
   const reference = writeMeasurement(path.join(output, "measurements"), measured);

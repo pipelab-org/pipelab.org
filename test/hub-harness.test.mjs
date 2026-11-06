@@ -3,19 +3,20 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import path from "node:path";
 import { tmpdir } from "node:os";
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, cpSync, rmSync, existsSync, symlinkSync, chmodSync } from "node:fs";
+import { pathToFileURL } from "node:url";
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, cpSync, rmSync, existsSync, symlinkSync, chmodSync, readdirSync } from "node:fs";
 import { generateKeyPairSync, sign, createHash } from "node:crypto";
 import { spawnSync, execFileSync } from "node:child_process";
 import { parse, stringify } from "yaml";
 import { verifyBundle, officialKeys, compareReaderSignature, readBundleFiles } from "../scripts/hub/verify-bundle.mjs";
 import { deriveRecord, indexProjection, assertIndex } from "../scripts/hub/records.mjs";
-import { canonical, contentDigest, bindWorkload, measurementArtifact, writeMeasurement, acceptedMeasurement, latencyVerdict, assertRegeneration, treeIdentity, jsonBytes, sha256, goWorkloadSHA256, measurementBindings } from "../scripts/hub/evidence.mjs";
+import { canonical, contentDigest, bindWorkload, measurementArtifact, writeMeasurement, acceptedMeasurement, latencyVerdict, assertRegeneration, treeIdentity, jsonBytes, sha256, goWorkloadSHA256, measurementBindings, measurementMethod } from "../scripts/hub/evidence.mjs";
 import { routeManifest } from "../scripts/hub/route-manifest.mjs";
 import { assertPublication, htmlFacts, markdownFacts, representationPaths } from "../scripts/hub/parity.mjs";
 import { officialOwnInputs, producerInputs, nearInput, repeatNear, workloadCaps, NEAR_GENERATOR } from "../scripts/hub/workload.mjs";
 import { runHubcheck, generateCatalog, writeCatalog, assertFirstPartyListing } from "../scripts/hub/generate.mjs";
 import { benchmarkReport } from "../scripts/hub/benchmark-report.mjs";
-import { toolDefinitionLimit } from "../scripts/hub/build-harness.mjs";
+import { buildHarness, toolDefinitionLimit } from "../scripts/hub/build-harness.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
 const read = file => readFileSync(path.join(root, file), "utf8");
@@ -42,7 +43,7 @@ function stage(t, mutate = value => value) {
 }
 function listingFor(reader) { const listing = structuredClone(base); delete listing.learn_page; delete listing.evidence.artifact; Object.assign(listing, { type: "bundle", id: reader.name, bundle_name: reader.name, bundle_sha256: reader.bundle_sha256, signer_fingerprint: reader.signer_fingerprint }); return listing; }
 function timer(samples) { return { samples_ns: samples, maximum_ns: Math.max(...samples), completed: true, timeout: false }; }
-function results(maximum = 12, workload_sha256 = "executed") { const measured = { baseline: timer([10, 10, 10]), target: timer([12, 12, maximum]), ratio: 0.2 }; return { rules: { "test-rule": structuredClone(measured) }, bundle: measured, deprecated: [], workload_sha256 }; }
+function results(maximum = 12, workload_sha256 = "executed") { const measured = { baseline: timer([10, 10, 10]), target: timer([12, 12, maximum]), ratio: 0.2 }; return { rules: { "test-rule": structuredClone(measured) }, bundle: measured, deprecated: [], workload_sha256, bundle_sha256: "bundle", config_sha256: "config" }; }
 
 test("streamed evidence digests preserve the canonical byte contract", () => {
   for (const value of [null, false, 0, "\u2028<&>\uD800", [], { b: [1, "quoted\\text", null], a: { z: true } }]) {
@@ -60,11 +61,13 @@ test("measurement evidence binds full workload, supports immutable supersession,
   assert.notEqual(workload.digest, bindWorkload({ rules: [{ id: "test-rule", status: "stable" }], inputs: changed, generator: "v1", parameters: { bytes: 20 } }).digest);
   assert.throws(() => bindWorkload({ rules: [{ id: "test-rule", status: "stable" }], inputs: [], generator: "v1", parameters: {} }), /mapping/);
   const executed = goWorkloadSHA256(workload.harness);
-  const binding = { bundle_sha256: "bundle", workload_sha256: workload.digest, executed_workload_sha256: "executed", measured_rule_ids: ["test-rule"], engine: { source: "engine-a" }, method: { pairs: 3, gomaxprocs: 1, interleave: ["baseline", "target"], measurement_policy: { min_confidence: "low", include_experimental: true } } };
+  const binding = { bundle_sha256: "bundle", workload_sha256: workload.digest, executed_workload_sha256: "executed", measured_rule_ids: ["test-rule"], engine: { source: "engine-a" }, method: { base_config_sha256: "config", pairs: 3, gomaxprocs: 1, interleave: ["baseline", "target"], measurement_policy: { min_confidence: "low", include_experimental: true } } };
   assert.throws(() => measurementArtifact({ ...binding, executed_workload_sha256: "" }, results()), /missing/);
   assert.throws(() => measurementArtifact(binding, results(12, "other")), /executed workload/);
   assert.throws(() => measurementBindings({ reader: { bundle_sha256: "bundle", declared: [{ id: "test-rule", status: "stable" }] }, workload, engine: binding.engine, method: binding.method, executedWorkloadSHA256: "other" }), /executed workload/);
   assert.equal(measurementBindings({ reader: { bundle_sha256: "bundle", declared: [{ id: "test-rule", status: "stable" }] }, workload, engine: binding.engine, method: binding.method, executedWorkloadSHA256: executed }).executed_workload_sha256, executed);
+  assert.throws(() => measurementArtifact(binding, { ...results(), bundle_sha256: "other" }), /executed bundle digest/);
+  assert.throws(() => measurementArtifact(binding, { ...results(), config_sha256: "other" }), /executed config digest/);
   const old = measurementArtifact(binding, results(), { run: "first" }), reference = writeMeasurement(dir, old);
   const newerBinding = { ...binding, engine: { source: "engine-b" } };
   const newer = measurementArtifact(newerBinding, results(), { run: "second" }); writeMeasurement(dir, newer);
@@ -117,7 +120,7 @@ test("native reader refuses signed reader-invalid data and checks exact identity
   const fixture = stage(t), reader = runHubcheck(binary, "reader", fixture.request);
   assert.deepEqual(reader.policies.stock.loaded, ["stable-rule"]); assert.deepEqual(reader.policies.full.loaded, ["low-rule", "stable-rule", "stable-rule-long"]);
   assert.ok(!reader.policies.full.loaded.includes("deprecated-rule"));
-  for (const mutate of [b => ({ ...b, unexpected: true }), b => { b.rules[0].status = "unknown"; return b; }, b => { delete b.key_id; return b; }]) {
+  for (const mutate of [b => ({ ...b, name: "../escape" }), b => ({ ...b, unexpected: true }), b => { b.rules[0].status = "unknown"; return b; }, b => { delete b.key_id; return b; }]) {
     const invalid = stage(t, mutate);
     assert.throws(() => runHubcheck(binary, "reader", invalid.request));
   }
@@ -208,7 +211,7 @@ test("displayed-fact parsers preserve literal syntax and reject duplicate facts"
 });
 
 
-test("real Hugo joins reader facts, rule/core routes, exact mirrors and digest guards", { skip: !native }, t => {
+function catalogSource(t) {
   const dir = temp(t);
   for (const name of ["data", "content/hub", "layouts", "assets/hub", "scripts/hub"]) cpSync(path.join(root, name), path.join(dir, name), { recursive: true });
   mkdirSync(path.join(dir, "content/learn"), { recursive: true });
@@ -235,6 +238,11 @@ test("real Hugo joins reader facts, rule/core routes, exact mirrors and digest g
   const recipeFile = path.join(dir, "data/hub/first-party/recipe.yaml");
   writeFileSync(recipeFile, stringify(recipe)); items.push({ listing_file: recipeFile });
   const source = { root: dir, items, binary, repository, config: path.join(engineDir, "configs/claude-code.yaml"), engine: JSON.parse(readFileSync(path.join(engineDir, "engine-identity.json"))), policies: [], publishers: [publisher], mode: "report" };
+  return { dir, source };
+}
+
+test("real Hugo joins reader facts, rule/core routes, exact mirrors and digest guards", { skip: !native }, t => {
+  const { dir, source } = catalogSource(t);
   const catalog = generateCatalog(source), generated = path.join(dir, "data/hub/generated"); writeCatalog(generated, catalog); writeCatalog(generated, generateCatalog(source), { check: true });
   assert.equal(catalog["listings.json"].find(record => record.listing.id === "pipelock-community").badge, "official");
   const overlay = `themesDir = ${JSON.stringify(path.join(root, "themes"))}\ncontentDir = ${JSON.stringify(path.join(dir, "content"))}\nassetDir = ${JSON.stringify(path.join(dir, "assets"))}\ndataDir = ${JSON.stringify(path.join(dir, "data"))}\nstaticDir = ${JSON.stringify(path.join(dir, "distribution"))}\n`;
@@ -430,4 +438,111 @@ test("official fixtures preserve each producer input rather than joining lines",
     { origin: "rules:revision:fixture:L6", text: "last" },
   ]);
   assert.throws(() => producerInputs("\n \n", "empty"), /empty/);
+});
+
+
+test("catalog verification uses exactly one registered publisher", { skip: !native }, t => {
+  const { source } = catalogSource(t);
+  assert.throws(() => generateCatalog({ ...source, publishers: [] }), /registered publisher/);
+  assert.throws(() => generateCatalog({ ...source, publishers: [...source.publishers, ...source.publishers] }), /registered publisher/);
+  const items = source.items.map(item => item.publisher ? { ...item, publisher: { id: item.publisher.id, name: "PipeLab spoof", keys: [] } } : item);
+  const catalog = generateCatalog({ ...source, items });
+  assert.equal(catalog["listings.json"].find(record => record.badge === "community").publisher_id, source.publishers[0].id);
+  assert.equal(catalog["references.json"].find(record => record.reference_kind === "publisher").facts["publisher.name"], source.publishers[0].name);
+});
+
+test("catalog generation joins lifecycle removals and retains their names", { skip: !native }, t => {
+  const { dir, source } = catalogSource(t);
+  const removed = { id: "retired-listing", publisher_id: "example", route: "/hub/community/example/older-bundle/", facts: { "bundle.name": "example-bund1e" } };
+  assert.throws(() => generateCatalog({ ...source, removed: [removed] }), /retained name/);
+  const generated = path.join(dir, "data/hub/generated");
+  mkdirSync(generated, { recursive: true });
+  writeFileSync(path.join(generated, "inventory.json"), jsonBytes({ format: 1, active: [], removed: [removed.id], retained_names: [removed.facts["bundle.name"]] }));
+  assert.throws(() => generateCatalog(source), /retained name/);
+  writeFileSync(path.join(generated, "inventory.json"), jsonBytes({ format: 1, active: [], removed: [], retained_names: [] }));
+  removed.facts["bundle.name"] = "older-bundle";
+  const catalog = generateCatalog({ ...source, removed: [removed], baseline: [{ listing_id: removed.id, route: removed.route + "old-rule/", representations: ["html", "mirror"] }] });
+  assert.deepEqual(catalog["inventory.json"].removed, [removed.id]);
+  assert.deepEqual(catalog["inventory.json"].retained_names, ["older-bundle", removed.id]);
+  assert.ok(catalog["routes.json"].entries.some(entry => entry.route === removed.route + "old-rule/" && entry.kind === "removal"));
+});
+
+test("routine catalogs refuse failed or unassessed bound measurements", { skip: !native }, t => {
+  const { dir, source } = catalogSource(t), pairs = 3;
+  const methodFile = path.join(dir, "data/hub/benchmark-method.json"), limitsFile = path.join(dir, "data/hub/latency-limits.json");
+  const method = JSON.parse(readFileSync(methodFile)); method.pairs = pairs; writeFileSync(methodFile, jsonBytes(method));
+  for (const item of source.items.filter(item => item.bundle_dir)) {
+    const reader = runHubcheck(binary, "reader", { bundle_dir: item.bundle_dir, config: source.config, trusted_keys: item.publisher?.keys.map(key => ({ name: "fixture", public_key: key.fingerprint })) });
+    item.workload_spec = { generator: "test:catalog-admission", parameters: {}, inputs: reader.declared.filter(rule => rule.status !== "deprecated").map(rule => ({ rule_id: rule.id, ...Object.fromEntries(["positive", "negative", "clean", "near"].map(group => [group, [{ origin: "test:synthetic-evidence", text: "fixture" }]])) })) };
+    const workload = bindWorkload({ rules: reader.declared, ...item.workload_spec }), executed = goWorkloadSHA256(workload.harness);
+    const bindings = measurementBindings({ reader, workload, engine: source.engine, method: measurementMethod(dir, source.config, pairs), executedWorkloadSHA256: executed });
+    const measured = { ...results(12, executed), bundle_sha256: reader.bundle_sha256, config_sha256: bindings.method.base_config_sha256 };
+    measured.rules = Object.fromEntries(bindings.measured_rule_ids.map(id => [id, structuredClone(measured.bundle)]));
+    item.measurement_reference = writeMeasurement(path.join(dir, "data/hub/measurements"), measurementArtifact(bindings, measured, { synthetic: true }));
+  }
+  // Synthetic limits exercise admission; they are never site policy.
+  writeFileSync(limitsFile, jsonBytes({ rule_ratio: 1, bundle_ratio: 1, deadline_ns: 15 }));
+  assert.ok(generateCatalog({ ...source, mode: "routine" })["listings.json"].length);
+  for (const [limits, status] of [[{ rule_ratio: 0.1, bundle_ratio: 0.1, deadline_ns: 15 }, "fail"], [{}, "unassessed"]]) {
+    writeFileSync(limitsFile, jsonBytes(limits));
+    assert.throws(() => generateCatalog({ ...source, mode: "routine" }), /passing latency measurement required/);
+    assert.equal(generateCatalog(source)["listings.json"].find(record => record.badge === "official").measurement.verdict.status, status);
+  }
+});
+
+test("benchmark refuses signed bundle or config replacement between reader and bench", { skip: !native }, t => {
+  for (const replacementKind of ["bundle", "config"]) {
+    const fixture = stage(t), dir = temp(t), wrapper = path.join(dir, "hubcheck");
+    const config = parse(readFileSync(fixture.request.config, "utf8"));
+    fixture.request.config = path.join(fixture.dir, "base.yaml"); writeFileSync(fixture.request.config, stringify(config));
+    config.request_body_scanning.max_body_bytes = 1024; writeFileSync(path.join(dir, "config.yaml"), stringify(config));
+    const replacement = Buffer.from(stringify({ ...fixture.bundle, version: "2026.11.1" }));
+    writeFileSync(path.join(dir, "bundle.yaml"), replacement);
+    writeFileSync(path.join(dir, "bundle.yaml.sig"), sign(null, replacement, fixture.key.privateKey).toString("base64") + "\n");
+    writeFileSync(wrapper, `#!${process.execPath}
+  const fs=require("node:fs"),cp=require("node:child_process"),p=require("node:path"),input=fs.readFileSync(0),r=JSON.parse(input);if(process.argv[2]==="bench"){if(${JSON.stringify(replacementKind)}==="config")fs.copyFileSync(p.join(${JSON.stringify(dir)},"config.yaml"),r.config);else for(const f of ["bundle.yaml","bundle.yaml.sig"])fs.copyFileSync(p.join(${JSON.stringify(dir)},f),p.join(r.bundle_dir,f));}process.stdout.write(cp.execFileSync(${JSON.stringify(binary)},process.argv.slice(2),{input}));
+  `);
+    chmodSync(wrapper, 0o755);
+    const engine = { ...JSON.parse(readFileSync(path.join(engineDir, "engine-identity.json"))), binary_sha256: sha256(readFileSync(wrapper)) };
+    const inputs = fixture.bundle.rules.filter(rule => rule.status !== "deprecated").map(rule => ({ rule_id: rule.id, ...Object.fromEntries(["positive", "negative", "clean", "near"].map(group => [group, [{ origin: "test:replacement", text: "fixture filler" }]])) }));
+    const output = path.join(dir, "report");
+    assert.throws(() => benchmarkReport({ binary: wrapper, request: fixture.request, engine, workloadSpec: { inputs, generator: "test:replacement", parameters: {} }, pairs: 1, output, root }), new RegExp(`executed ${replacementKind} digest differs`));
+    assert.equal(existsSync(output), false);
+  }
+});
+
+test("failed native staging removes partial temporary files", { skip: !native || process.platform !== "linux" }, t => {
+  const fixture = stage(t), staging = temp(t);
+  const result = spawnSync("prlimit", ["--fsize=0:0", "--", binary, "reader"], { input: JSON.stringify(fixture.request), encoding: "utf8", env: { ...process.env, TMPDIR: staging } });
+  assert.ifError(result.error); assert.notEqual(result.status, 0); assert.match(result.stderr, /REFUSED/);
+  assert.deepEqual(readdirSync(staging), []);
+});
+
+test("harness builds into a relative capture path", { skip: !native }, t => {
+  const outputRoot = path.relative(process.cwd(), path.join(temp(t), "capture with space"));
+  const built = buildHarness({ repository, outputRoot });
+  assert.equal(path.isAbsolute(built.destination), true);
+  assert.equal(existsSync(built.binary), true);
+});
+
+test("clean snapshots load from a checkout path containing spaces and a hash", async t => {
+  const dir = path.join(temp(t), "site #1");
+  cpSync(path.join(root, "scripts/hub"), path.join(dir, "scripts/hub"), { recursive: true });
+  symlinkSync(path.join(root, "node_modules"), path.join(dir, "node_modules"), "dir");
+  const module = await import(pathToFileURL(path.join(dir, "scripts/hub/workload.mjs")).href);
+  assert.equal(module.versionedCleanInputs().length, 2);
+});
+
+test("default official benchmark honors smaller effective configuration caps", { skip: !native || !process.env.HUBCHECK_RULES_REPOSITORY }, t => {
+  const dir = temp(t), config = parse(readFileSync(path.join(engineDir, "configs/strict.yaml"), "utf8"));
+  config.fetch_proxy.max_response_mb = 1;
+  config.request_body_scanning.max_body_bytes = 512;
+  const file = path.join(dir, "strict-small.yaml"); writeFileSync(file, stringify(config));
+  const request = { bundle_dir: path.join(root, "static/rules/healthcare-phi-pii"), config: file };
+  const engine = JSON.parse(readFileSync(path.join(engineDir, "engine-identity.json")));
+  const report = benchmarkReport({ binary, request, engine, repository, rulesRepository: process.env.HUBCHECK_RULES_REPOSITORY, pairs: 1, output: path.join(dir, "report"), root });
+  assert.equal(report.verdict.status, "unassessed");
+  assert.equal(report.bindings.workload_parameters.caps.dlp, 512);
+  assert.equal(report.bindings.workload_parameters.caps.injection, 1024 * 1024);
+  assert.equal(report.results.bundle_sha256, report.bindings.bundle_sha256);
 });

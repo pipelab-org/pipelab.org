@@ -24,7 +24,7 @@ export function buildHarness({ repository, outputRoot, go = "go" }) {
   const version = execFileSync(go, ["version"], { encoding: "utf8" }).trim();
   if (version.split(" ")[2] !== enginePin.go_version) throw new Error("Go toolchain does not match engine pin");
   mkdirSync(outputRoot, { recursive: true });
-  const destination = mkdtempSync(path.join(outputRoot, "hub-engine-"));
+  const destination = mkdtempSync(path.resolve(outputRoot, "hub-engine-"));
   const archive = path.join(destination, "source.tar");
   execFileSync("git", ["-C", repository, "archive", `--output=${archive}`, enginePin.source_commit, "go.mod", "go.sum", "internal", "configs"]);
   execFileSync("tar", ["-xf", archive, "-C", destination]);

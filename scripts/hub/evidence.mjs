@@ -122,6 +122,8 @@ export function measurementArtifact(bindings, results, provenance = {}) {
   for (const key of ["bundle_sha256", "workload_sha256", "executed_workload_sha256", "engine", "method", "measured_rule_ids"]) if (!bindings?.[key]) throw new Error("missing measurement binding");
   if (!Number.isSafeInteger(bindings.method.pairs) || bindings.method.pairs <= 0) throw new Error("missing measurement binding");
   latencyVerdict(results, {});
+  if (results.bundle_sha256 !== bindings.bundle_sha256) throw new Error("executed bundle digest differs");
+  if (!bindings.method.base_config_sha256 || results.config_sha256 !== bindings.method.base_config_sha256) throw new Error("executed config digest differs");
   if (results?.workload_sha256 !== bindings.executed_workload_sha256) throw new Error("executed workload differs");
   if (canonical(Object.keys(results.rules).sort()) !== canonical([...bindings.measured_rule_ids].sort())) throw new Error("measurement rule identities differ");
   if ([...Object.values(results.rules), results.bundle].some(measured => measured.target.samples_ns.length !== bindings.method.pairs || measured.baseline.samples_ns.length !== bindings.method.pairs)) throw new Error("measurement pair count differs");

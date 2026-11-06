@@ -85,6 +85,8 @@ type ruleFact struct {
 	ScanField   string `json:"scan_field,omitempty"`
 }
 type reader struct {
+	ConfigSHA256  string            `json:"config_sha256"`
+	WorkloadCaps  map[string]int    `json:"workload_caps"`
 	Name          string            `json:"name"`
 	Version       string            `json:"version"`
 	FormatVersion int               `json:"format_version"`
@@ -109,6 +111,8 @@ type measured struct {
 	Ratio    float64 `json:"ratio"`
 }
 type benchmark struct {
+	BundleSHA256   string              `json:"bundle_sha256"`
+	ConfigSHA256   string              `json:"config_sha256"`
 	Rules          map[string]measured `json:"rules"`
 	Bundle         measured            `json:"bundle"`
 	Deprecated     []string            `json:"deprecated"`
@@ -234,14 +238,28 @@ func stage(req request) (*rules.Bundle, *rules.VerifyResult, []byte, string) {
 	require(err)
 	verified, err := rules.VerifyBundleSignatureBytes(data, sig, rules.DefaultTrustPolicy(trustedKeys(req.TrustedKeys)))
 	require(err)
+	configBytes, err := os.ReadFile(req.Config)
+	require(err)
 	root, err := os.MkdirTemp("", "hubcheck-")
 	require(err)
+	staged := false
+	defer func() {
+		if !staged {
+			os.RemoveAll(root)
+		}
+	}()
+	require(os.WriteFile(filepath.Join(root, ".base.yaml"), configBytes, 0600))
 	dir := filepath.Join(root, b.Name)
 	require(os.Mkdir(dir, 0700))
 	require(os.WriteFile(filepath.Join(dir, "bundle.yaml"), data, 0600))
 	require(os.WriteFile(filepath.Join(dir, "bundle.yaml.sig"), encoded, 0600))
 	require(rules.WriteLockFile(filepath.Join(dir, "bundle.lock"), &rules.LockFile{InstalledVersion: b.Version, BundleSHA256: digest(data), SignerFingerprint: verified.SignerFingerprint}))
+	staged = true
 	return b, verified, data, root
+}
+func workloadCaps(cfg *config.Config) map[string]int {
+	response := cfg.FetchProxy.MaxResponseMB * 1024 * 1024
+	return map[string]int{"dlp": cfg.RequestBodyScanning.MaxBodyBytes, "injection": response, "tool-poison": response}
 }
 func inspect(req request, b *rules.Bundle, v *rules.VerifyResult, data []byte, root string) reader {
 	out := reader{Name: b.Name, Version: b.Version, FormatVersion: b.FormatVersion, DeclaredTier: b.Tier, Fingerprint: v.SignerFingerprint, TrustTier: v.Tier, Digest: digest(data), Declared: declared(b), Policies: map[string]policy{}, Core: []ruleFact{}, OfficialKeys: []string{}}
@@ -257,6 +275,7 @@ func inspect(req request, b *rules.Bundle, v *rules.VerifyResult, data []byte, r
 			}
 		}
 		out.Policies[name] = p
+		out.WorkloadCaps = workloadCaps(cfg)
 	}
 	for _, p := range config.CoreDLPPatterns() {
 		out.Core = append(out.Core, ruleFact{ID: p.Name, Type: "dlp", Name: p.Name, Regex: p.Regex})
@@ -267,6 +286,9 @@ func inspect(req request, b *rules.Bundle, v *rules.VerifyResult, data []byte, r
 			out.Core = append(out.Core, ruleFact{ID: p.Name, Type: "injection", Name: p.Name, Regex: p.Regex})
 		}
 	}
+	configBytes, err := os.ReadFile(req.Config)
+	require(err)
+	out.ConfigSHA256 = digest(configBytes)
 	return out
 }
 func add(t *timing, ns int64, deadline int64) {
@@ -377,13 +399,9 @@ func fixtureNear(req request, b *rules.Bundle, root string) map[string]any {
 		return held("unknown or deprecated rule")
 	}
 	cfg, loaded := load(req, b, root, true, rule.ID, false)
-	// The pinned preset is the source of the byte ceiling. Smaller caps are
-	// useful for diagnostic tests; official workload generation requires the
-	// full cap and binds the preset bytes separately.
-	ceiling := cfg.FetchProxy.MaxResponseMB * 1024 * 1024
-	if rule.Type == rules.RuleTypeDLP {
-		ceiling = cfg.RequestBodyScanning.MaxBodyBytes
-	}
+	// Use the effective measurement configuration; Node also applies the
+	// source-backed workload ceiling and records both limits.
+	ceiling := workloadCaps(cfg)[string(rule.Type)]
 	capBytes := req.CapBytes
 	if capBytes == 0 {
 		capBytes = ceiling
@@ -590,12 +608,18 @@ func main() {
 	}
 	b, v, data, root := stage(req)
 	defer os.RemoveAll(root)
+	req.Config = filepath.Join(root, ".base.yaml")
 	var out any
 	switch os.Args[1] {
 	case "reader":
 		out = inspect(req, b, v, data, root)
 	case "bench":
-		out = bench(req, b, root)
+		result := bench(req, b, root)
+		result.BundleSHA256 = digest(data)
+		configBytes, err := os.ReadFile(req.Config)
+		require(err)
+		result.ConfigSHA256 = digest(configBytes)
+		out = result
 	case "near":
 		out = fixtureNear(req, b, root)
 	default:

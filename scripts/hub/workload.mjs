@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { parse } from "yaml";
 import { sha256, contentDigest, goString } from "./evidence.mjs";
 import { runHubcheck } from "./generate.mjs";
@@ -113,6 +114,13 @@ export function nearInput({ binary, request, rule, positive, bytes, toolTextLimi
 export function officialWorkload({ binary, request, reader, repository, rulesRepository }) {
   const own = officialOwnInputs({ repository: rulesRepository, reader });
   const caps = workloadCaps(repository), clean = versionedCleanInputs();
+  caps.config_sha256 = reader.config_sha256;
+  caps.effective_config = reader.workload_caps;
+  for (const type of ["dlp", "injection", "tool-poison"]) {
+    const effective = caps.effective_config?.[type];
+    if (!Number.isSafeInteger(effective) || effective <= 0) throw new Error("effective workload cap required");
+    caps[type] = Math.min(caps[type], effective);
+  }
   const near = {}, derivations = {};
   for (const input of own) {
     const rule = reader.declared.find(rule => rule.id === input.rule_id);
@@ -136,5 +144,5 @@ export function cleanInputs(directory, manifest) {
 
 export function versionedCleanInputs() {
   const manifest = JSON.parse(readFileSync(new URL("./bench-workload/clean-manifest.json", import.meta.url)));
-  return cleanInputs(new URL("./bench-workload/clean/", import.meta.url).pathname, manifest.files);
+  return cleanInputs(fileURLToPath(new URL("./bench-workload/clean/", import.meta.url)), manifest.files);
 }
