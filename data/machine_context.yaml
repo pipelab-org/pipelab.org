@@ -12,3 +12,5 @@ guides:
     url: learn/verified-local-mcp-services/
   - label: Exact destination grants
     url: learn/destination-grants/
+  - label: PipeLab Hub
+    url: /hub/

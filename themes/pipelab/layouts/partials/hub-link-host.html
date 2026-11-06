@@ -1,0 +1,11 @@
+{{- $host := (urls.Parse .url).Host -}}
+{{- $label := $host -}}
+{{- if findRE `(^|\.)xn--` $host -}}
+  {{- $info := index .record.link_hosts .name -}}
+  {{- if or (not $info) (ne $info.host $host) (not $info.decoded_host) -}}
+    {{- errorf "hub punycode link requires matching decoded host metadata" -}}
+  {{- else -}}
+    {{- $label = printf "%s; decoded: %s" $host $info.decoded_host -}}
+  {{- end -}}
+{{- end -}}
+{{- return $label -}}

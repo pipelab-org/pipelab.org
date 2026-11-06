@@ -55,7 +55,7 @@ function fixture(t) {
     cpSync(path.join(root, file), path.join(dir, destination), { recursive: true });
   };
   for (const file of ["hugo.toml", "data", "static/_headers", "static/rules/pipelock-community/bundle.yaml"]) copy(file);
-  for (const file of ["index.llms.txt", "index.llmsfull.txt", "partials/machine", "partials/fact-value.html", "partials/fact-text.html", "partials/faq.html", "shortcodes/stat.html"]) {
+  for (const file of ["index.llms.txt", "index.llmsfull.txt", "partials/machine", "partials/hub-open.html", "partials/fact-value.html", "partials/fact-text.html", "partials/faq.html", "shortcodes/stat.html"]) {
     copy(`themes/pipelab/layouts/${file}`, `layouts/${file}`);
   }
   // Audits inspect the tracked templates, not a second editable summary copy.
@@ -87,6 +87,23 @@ faq:
   const built = file => readFileSync(path.join(dir, "public", file), "utf8");
   return { dir, write, build, built };
 }
+
+test("machine guide rendering and audit use the hub visibility switch together", t => {
+  const f = fixture(t);
+  let result = f.build();
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.doesNotMatch(f.built("llms.txt"), /\/hub\//);
+  assert.deepEqual(auditMachineContext(f.dir), []);
+  f.write("data/hub/launch.toml", "open = true\n");
+  result = f.build();
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.match(f.built("llms.txt"), /\[PipeLab Hub\]\(https:\/\/pipelab.org\/hub\/\)/);
+  assert.deepEqual(auditMachineContext(f.dir), []);
+  for (const file of ["llms.txt", "llms-full.txt"]) {
+    f.write(`public/${file}`, f.built(file).replace(/^- \[PipeLab Hub\].*\n/m, ""));
+  }
+  assert.equal(auditMachineContext(f.dir).filter(issue => issue.includes("missing approved guide PipeLab Hub")).length, 2);
+});
 
 test("Hugo derives counts, FAQ text, page metadata, release copy and install commands without static copies", t => {
   const f = fixture(t);
@@ -161,4 +178,55 @@ test("missing facts, unknown tokens, invalid bundles and unreviewed minor copy f
   result = f.build();
   assert.notEqual(result.status, 0);
   assert.match(result.stdout + result.stderr, /must match the approved release summary/);
+});
+
+
+test("slashless, query and absolute Hub guides stay hidden until launch", t => {
+  const f = fixture(t);
+  const editorial = parse(read("data/machine_context.yaml"));
+  const variants = ["/hub", "/hub/", "/hub?view=all", "/hub/#listing", "https://pipelab.org/hub", "/hub/recipes/example/", "hub/", "hub/recipes/example/"];
+  editorial.guides = variants.map((url, i) => ({ label: `Gated guide ${i}`, url }));
+  f.write("data/machine_context.yaml", stringify(editorial));
+  let result = f.build();
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  for (const file of ["llms.txt", "llms-full.txt"]) assert.doesNotMatch(f.built(file), /Gated guide/);
+  assert.deepEqual(auditMachineContext(f.dir), []);
+  f.write("data/hub/launch.toml", "open = true\n");
+  result = f.build();
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  for (const file of ["llms.txt", "llms-full.txt"]) for (const guide of editorial.guides) assert.ok(f.built(file).includes(guide.label));
+  assert.deepEqual(auditMachineContext(f.dir), []);
+});
+
+test("path-prefixed base URLs hide hub guides until launch and keep ordinary guides", t => {
+  const f = fixture(t);
+  const config = readFileSync(path.join(f.dir, "hugo.toml"), "utf8").replace('baseURL = "https://pipelab.org/"', 'baseURL = "https://example.com/preview/"');
+  f.write("hugo.toml", config);
+  const editorial = parse(read("data/machine_context.yaml"));
+  editorial.guides = [
+    { label: "Relative hub", url: "hub/" },
+    { label: "Absolute hub", url: "https://example.com/preview/hub/recipes/example/" },
+    { label: "Host hub", url: "/hub/" },
+    { label: "Learn guide", url: "learn/foo/" },
+  ];
+  f.write("data/machine_context.yaml", stringify(editorial));
+  let result = f.build();
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  for (const file of ["llms.txt", "llms-full.txt"]) {
+    const body = f.built(file);
+    assert.doesNotMatch(body, /Relative hub|Absolute hub|Host hub/);
+    assert.match(body, /\[Learn guide\]\(https:\/\/example.com\/preview\/learn\/foo\/\)/);
+  }
+  assert.deepEqual(auditMachineContext(f.dir), []);
+  f.write("data/hub/launch.toml", "open = true\n");
+  result = f.build();
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  for (const file of ["llms.txt", "llms-full.txt"]) {
+    const body = f.built(file);
+    assert.match(body, /\[Relative hub\]\(https:\/\/example.com\/preview\/hub\/\)/);
+    assert.match(body, /\[Absolute hub\]\(https:\/\/example.com\/preview\/hub\/recipes\/example\/\)/);
+    assert.match(body, /\[Host hub\]\(https:\/\/example.com\/hub\/\)/);
+    assert.match(body, /\[Learn guide\]\(https:\/\/example.com\/preview\/learn\/foo\/\)/);
+  }
+  assert.deepEqual(auditMachineContext(f.dir), []);
 });

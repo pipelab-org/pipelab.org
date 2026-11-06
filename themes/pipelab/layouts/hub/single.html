@@ -1,0 +1,28 @@
+{{ define "main" }}
+{{ $r := .Params.hub }}{{ $l := $r.listing }}
+<article class="section hub-page" data-hub-id="{{ $l.id }}">
+  <header data-hero="utility"><p class="eyebrow">{{ $l.type }}</p><h1 data-hub-field="title">{{ $l.title }}</h1><p class="hub-text" data-hub-field="summary">{{ $l.summary }}</p></header>
+  <h2>Maintainer</h2>
+  <p data-hub-field="maintainer.name">{{ $l.maintainer.name }}</p>
+  <p data-hub-field="maintainer.github">{{ $l.maintainer.github }}</p>
+  <p>License: <span data-hub-field="license">{{ $l.license }}</span></p>
+  <h2>Setup</h2>
+  {{ range $i, $step := $l.setup }}<p class="hub-text" data-hub-field="setup.{{ $i }}.text">{{ $step.text }}</p>{{ with $step.command }}<pre><code data-hub-field="setup.{{ $i }}.command">{{ . }}</code></pre>{{ end }}{{ end }}
+  <h2>Limitations</h2>
+  <ul>{{ range $i, $text := $l.limitations }}<li class="hub-text" data-hub-field="limitations.{{ $i }}">{{ $text }}</li>{{ end }}</ul>
+  <h2>Not claimed</h2>
+  <ul>{{ range $i, $text := $l.not_claimed }}<li class="hub-text" data-hub-field="not_claimed.{{ $i }}">{{ $text }}</li>{{ end }}</ul>
+  <h2>Evidence</h2>
+  {{ if $r.evidence_present }}
+  <p data-hub-field="evidence.date">{{ $l.evidence.date }}</p><p data-hub-field="evidence.pipelock_version">{{ $l.evidence.pipelock_version }}</p><p class="hub-text" data-hub-field="evidence.method">{{ $l.evidence.method }}</p>
+  {{ else }}<p>Evidence not supplied.</p>{{ end }}
+  <h2>Disclosures</h2>
+  <p>AI assisted: <span data-hub-field="disclosures.ai_assisted">{{ $l.disclosures.ai_assisted }}</span></p>
+  {{ with $l.disclosures.ai_text }}<p class="hub-text" data-hub-field="disclosures.ai_text">{{ . }}</p>{{ end }}
+  <p class="hub-text" data-hub-field="disclosures.conflict_of_interest">{{ $l.disclosures.conflict_of_interest }}</p>
+  <h2>External links</h2><p>PipeLab doesn't review these external destinations.</p>
+  <ul>{{ range $name, $url := $l.links }}<li><a href="{{ $url }}" target="_blank" rel="ugc nofollow noopener noreferrer"><span>{{ $name }} ({{ partial "hub-link-host.html" (dict "url" $url "name" $name "record" $r) }})</span>: <span data-hub-field="links.{{ $name }}">{{ $url }}</span></a></li>{{ end }}</ul>
+  <p><a href="/hub/">All components</a></p>
+  {{ partial "page-formats.html" . }}
+</article>
+{{ end }}

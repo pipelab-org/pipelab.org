@@ -1,0 +1,10 @@
+{{- /* Temporary §4.4 override until the site-wide CSP removes unsafe-inline.
+     Closed output remains the static header file, with no hub route. */ -}}
+{{- $headers := readFile "static/_headers" -}}
+{{- $headers -}}
+{{- $global := index (findRE `(?m)^  Content-Security-Policy: [^\r\n]+` $headers 1) 0 -}}
+{{ if and (partial "hub-open.html" .) (findRE `script-src [^;]*'unsafe-inline'` $global) }}
+/hub/*
+  ! Content-Security-Policy
+{{ replaceRE `(script-src [^;]*)'unsafe-inline' ?` "$1" $global }}
+{{ end -}}

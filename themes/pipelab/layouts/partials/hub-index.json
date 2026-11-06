@@ -1,0 +1,7 @@
+{{- /* Exact summary projection: design §7.3. No browser search in hub-core. */ -}}
+{{- $items := slice -}}
+{{- range sort .RegularPagesRecursive "Params.hub.listing.id" -}}
+  {{- $r := .Params.hub -}}{{- $l := $r.listing -}}
+  {{- $items = $items | append (dict "id" $l.id "type" $l.type "title" $l.title "summary" $l.summary "badge" ($r.badge | default "none") "url" .RelPermalink) -}}
+{{- end -}}
+{{- return (dict "format" 1 "items" $items) -}}
