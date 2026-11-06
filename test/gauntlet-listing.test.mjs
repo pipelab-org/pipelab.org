@@ -56,6 +56,74 @@ test("absent category data leaves the section hidden", async () => {
   const get = await listing({ summary: null });
   assert.equal(get("gl-categories").hidden, true);
 });
+test("a rejected verified summary does not fall back to record categories", async () => {
+  const payload = { per_category: { community_copy: { applicable: 9, containment: 1 } } };
+  const get = await listing({ summary: null, payload });
+  assert.equal(get("gl-result-hero-claim").textContent, "DIGEST CHECKED");
+  assert.equal(get("gl-categories").hidden, true);
+  assert.equal(get("gl-category-grid").innerHTML, "");
+});
+test("verified summary categories replace a different record category block", async () => {
+  const get = await listing({
+    summary: { per_category: { injection: { applicable: 2, containment: 0.5 } } },
+    payload: { per_category: { community_copy: { applicable: 9, containment: 1 } } },
+  });
+  assert.match(get("gl-category-grid").innerHTML, /injection/);
+  assert.doesNotMatch(get("gl-category-grid").innerHTML, /community copy/);
+});
+
+function richElement() {
+  const el = element();
+  el.classList = { add() {} };
+  el.addEventListener = () => {};
+  el.replaceChildren = () => { el.children = []; };
+  return el;
+}
+async function verifiedDetail({ summary, payload }) {
+  const nodes = new Map();
+  const document = {
+    getElementById(id) { if (!nodes.has(id)) nodes.set(id, richElement()); return nodes.get(id); },
+    createElement: richElement,
+    createTextNode: textContent => ({ textContent }),
+    querySelector() { return richElement(); },
+  };
+  const id = "b".repeat(64);
+  const fetch = async () => { throw new Error("detail must not use the community API"); };
+  const window = {
+    location: { pathname: "/gauntlet/results/", search: `?record=${id}`, href: `https://example.test/gauntlet/results/?record=${id}` },
+    fetch, crypto: {},
+    GauntletContinuous: {
+      loadLatestVerified: async () => ({ pointer: { candidate_sha256: id }, record: payload, summary, failures: null, recordUrl: "/evidence" }),
+      metricCounts: () => null,
+      formatScoreWithFraction: score => String(score),
+      formatScoreFraction: () => "",
+      CASE_EQUAL_WEIGHTING: "case-equal",
+    },
+  };
+  vm.runInNewContext(source, { window, document, fetch, URLSearchParams, navigator: { clipboard: { writeText: async () => {} } } });
+  await new Promise(resolve => setImmediate(resolve));
+  return document.getElementById;
+}
+const recordWithForeignCategories = {
+  tool: "Pipelock", tool_version: "1", case_count: { total: 4 }, canonical_url: "https://example.test/run",
+  scores: { full: { containment: 0.5, false_positive_rate: 0 }, applicable: { containment: 0.5 } },
+  per_category: { community_copy: { applicable: 9, containment: 1 } },
+};
+test("verified detail hides categories when the summary is missing", async () => {
+  const get = await verifiedDetail({ summary: null, payload: recordWithForeignCategories });
+  assert.equal(get("gr-record-claim").textContent, "DIGEST CHECKED");
+  assert.equal(get("gr-categories-chapter").hidden, true);
+  assert.equal(get("gr-categories").innerHTML, "");
+});
+test("verified detail renders the summary rather than the record category block", async () => {
+  const get = await verifiedDetail({
+    summary: { per_category: { injection: { applicable: 2, containment: 0.5 } } },
+    payload: recordWithForeignCategories,
+  });
+  assert.match(get("gr-categories").innerHTML, /injection/);
+  assert.doesNotMatch(get("gr-categories").innerHTML, /community copy/);
+  assert.equal(get("gr-categories-chapter").hidden, false);
+});
 
 test("the published verified record renders every category from its published summary", async () => {
   const evidence = new URL("../static/gauntlet/evidence/", import.meta.url);

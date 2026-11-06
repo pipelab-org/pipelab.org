@@ -177,7 +177,9 @@
     // read as a clean result.
     var categoryChapter = document.getElementById('gr-categories-chapter');
     try {
-      var cats = (data.summary && data.summary.per_category) || p.per_category || {};
+      var cats = data.verified
+        ? ((data.summary && data.summary.per_category) || {})
+        : ((p && p.per_category) || {});
       var catKeys = Object.keys(cats).sort(function(a, b) {
         var aLoss = categoryHasLoss(cats[a]);
         var bLoss = categoryHasLoss(cats[b]);
@@ -612,9 +614,12 @@
       .then(function(data) {
         var p = data && data.payload;
         renderRecordExhibit(p, data);
-        var cats = (data && data.verified && data.summary && data.summary.per_category) || (p && p.per_category);
-        // Verified summaries carry the category breakdown separately from the
-        // record. Missing data leaves the section hidden.
+        // Digest-checked categories come only from the hash-bound summary.
+        // A missing or rejected summary hides the section. A community row
+        // still uses the categories in its own payload.
+        var cats = data && data.verified
+          ? (data.summary && data.summary.per_category)
+          : (p && p.per_category);
         if (!cats || typeof cats !== 'object') {
           section.hidden = true;
           return;
