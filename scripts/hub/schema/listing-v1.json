@@ -1,0 +1,1002 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pipelab.org/schemas/pipelab-hub/listing-v1.json",
+  "title": "PipeLab Hub listing v1",
+  "$comment": "Design §§2.2–2.3,17; DR-415 license set. Class 1 display/resource caps: summary/prose 1000 Unicode characters, arrays 32 entries, commands 4096 ASCII characters, URL 2048 characters, artifact paths 256 characters, names/releases 100 characters. These bound page size and parsing, not security/evidence quality. Title 50 from AGENTS.md SEO contract. Schema is structural; validate.mjs also enforces Unicode, fact-token and URL policy. Config assessment belongs to the config pipeline.",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": 1,
+          "type": "number"
+        },
+        "type": {
+          "const": "bundle",
+          "type": "string"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "x-text": "label",
+          "pattern": "^[a-z0-9][a-z0-9-]{1,62}[a-z0-9]$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 50,
+          "x-text": "label"
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000,
+          "x-text": "prose"
+        },
+        "maintainer": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100,
+              "x-text": "label"
+            },
+            "github": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100,
+              "x-text": "label",
+              "pattern": "^[A-Za-z0-9-]{1,100}$"
+            }
+          },
+          "required": [
+            "name",
+            "github"
+          ]
+        },
+        "license": {
+          "enum": [
+            "Apache-2.0",
+            "MIT",
+            "BSD-2-Clause",
+            "BSD-3-Clause",
+            "ISC",
+            "0BSD",
+            "CC0-1.0"
+          ],
+          "type": "string"
+        },
+        "evidence": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "date": {
+              "type": "string",
+              "format": "date"
+            },
+            "pipelock_version": {
+              "type": "string",
+              "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+            },
+            "method": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1000,
+              "x-text": "prose"
+            },
+            "artifact": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "x-text": "label",
+              "pattern": "^[a-zA-Z0-9_-]+(?:/[a-zA-Z0-9_.-]+)*$",
+              "format": "artifact-path"
+            }
+          },
+          "required": [
+            "date",
+            "pipelock_version",
+            "method"
+          ]
+        },
+        "setup": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "text": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1000,
+                "x-text": "prose"
+              },
+              "command": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096,
+                "x-text": "command"
+              }
+            },
+            "required": [
+              "text"
+            ]
+          }
+        },
+        "limitations": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000,
+            "x-text": "prose"
+          }
+        },
+        "not_claimed": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000,
+            "x-text": "prose"
+          }
+        },
+        "links": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "source": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048,
+              "x-text": "label",
+              "format": "uri"
+            },
+            "homepage": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048,
+              "x-text": "label",
+              "format": "uri"
+            },
+            "issues": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048,
+              "x-text": "label",
+              "format": "uri"
+            }
+          },
+          "required": []
+        },
+        "disclosures": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "ai_assisted": {
+              "type": "boolean"
+            },
+            "ai_text": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1000,
+              "x-text": "prose"
+            },
+            "conflict_of_interest": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1000,
+              "x-text": "prose"
+            }
+          },
+          "required": [
+            "ai_assisted",
+            "conflict_of_interest"
+          ]
+        },
+        "bundle_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "x-text": "label",
+          "pattern": "^[a-z0-9][a-z0-9-]{1,62}[a-z0-9]$"
+        },
+        "bundle_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "signer_fingerprint": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "quality_artifact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "x-text": "label",
+          "pattern": "^[a-zA-Z0-9_-]+(?:/[a-zA-Z0-9_.-]+)*$",
+          "format": "artifact-path"
+        }
+      },
+      "required": [
+        "schema_version",
+        "type",
+        "id",
+        "title",
+        "summary",
+        "maintainer",
+        "license",
+        "evidence",
+        "setup",
+        "limitations",
+        "not_claimed",
+        "links",
+        "disclosures",
+        "bundle_name",
+        "bundle_sha256",
+        "signer_fingerprint"
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": 1,
+          "type": "number"
+        },
+        "type": {
+          "const": "config",
+          "type": "string"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "x-text": "label",
+          "pattern": "^[a-z0-9][a-z0-9-]{1,62}[a-z0-9]$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 50,
+          "x-text": "label"
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000,
+          "x-text": "prose"
+        },
+        "maintainer": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100,
+              "x-text": "label"
+            },
+            "github": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100,
+              "x-text": "label",
+              "pattern": "^[A-Za-z0-9-]{1,100}$"
+            }
+          },
+          "required": [
+            "name",
+            "github"
+          ]
+        },
+        "license": {
+          "enum": [
+            "Apache-2.0",
+            "MIT",
+            "BSD-2-Clause",
+            "BSD-3-Clause",
+            "ISC",
+            "0BSD",
+            "CC0-1.0"
+          ],
+          "type": "string"
+        },
+        "evidence": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "date": {
+              "type": "string",
+              "format": "date"
+            },
+            "pipelock_version": {
+              "type": "string",
+              "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+            },
+            "method": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1000,
+              "x-text": "prose"
+            },
+            "artifact": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "x-text": "label",
+              "pattern": "^[a-zA-Z0-9_-]+(?:/[a-zA-Z0-9_.-]+)*$",
+              "format": "artifact-path"
+            }
+          },
+          "required": [
+            "date",
+            "pipelock_version",
+            "method"
+          ]
+        },
+        "setup": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "text": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1000,
+                "x-text": "prose"
+              },
+              "command": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096,
+                "x-text": "command"
+              }
+            },
+            "required": [
+              "text"
+            ]
+          }
+        },
+        "limitations": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000,
+            "x-text": "prose"
+          }
+        },
+        "not_claimed": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000,
+            "x-text": "prose"
+          }
+        },
+        "links": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "source": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048,
+              "x-text": "label",
+              "format": "uri"
+            },
+            "homepage": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048,
+              "x-text": "label",
+              "format": "uri"
+            },
+            "issues": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048,
+              "x-text": "label",
+              "format": "uri"
+            }
+          },
+          "required": []
+        },
+        "disclosures": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "ai_assisted": {
+              "type": "boolean"
+            },
+            "ai_text": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1000,
+              "x-text": "prose"
+            },
+            "conflict_of_interest": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1000,
+              "x-text": "prose"
+            }
+          },
+          "required": [
+            "ai_assisted",
+            "conflict_of_interest"
+          ]
+        },
+        "requires_pro": {
+          "type": "boolean"
+        },
+        "base_preset": {
+          "type": "string",
+          "enum": [
+            "strict",
+            "balanced",
+            "audit",
+            "claude-code",
+            "cursor",
+            "generic-agent",
+            "hostile-model"
+          ],
+          "description": "Pipelock v3.7.1 internal/cli/presets/presets.go All"
+        },
+        "changes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "op": {
+                "type": "string",
+                "enum": [
+                  "set",
+                  "append",
+                  "remove"
+                ]
+              },
+              "path": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*(?:\\.[a-z][a-z0-9_]*)*$"
+              },
+              "value": {
+                "oneOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "x-text": "prose"
+                  },
+                  {
+                    "type": "array",
+                    "maxItems": 32,
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 1000,
+                      "x-text": "label"
+                    }
+                  }
+                ]
+              }
+            },
+            "required": [
+              "op",
+              "path",
+              "value"
+            ]
+          }
+        }
+      },
+      "required": [
+        "schema_version",
+        "type",
+        "id",
+        "title",
+        "summary",
+        "maintainer",
+        "license",
+        "evidence",
+        "setup",
+        "limitations",
+        "not_claimed",
+        "links",
+        "disclosures",
+        "base_preset",
+        "changes"
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": 1,
+          "type": "number"
+        },
+        "type": {
+          "const": "recipe",
+          "type": "string"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "x-text": "label",
+          "pattern": "^[a-z0-9][a-z0-9-]{1,62}[a-z0-9]$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 50,
+          "x-text": "label"
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000,
+          "x-text": "prose"
+        },
+        "maintainer": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100,
+              "x-text": "label"
+            },
+            "github": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100,
+              "x-text": "label",
+              "pattern": "^[A-Za-z0-9-]{1,100}$"
+            }
+          },
+          "required": [
+            "name",
+            "github"
+          ]
+        },
+        "license": {
+          "enum": [
+            "Apache-2.0",
+            "MIT",
+            "BSD-2-Clause",
+            "BSD-3-Clause",
+            "ISC",
+            "0BSD",
+            "CC0-1.0"
+          ],
+          "type": "string"
+        },
+        "evidence": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "date": {
+              "type": "string",
+              "format": "date"
+            },
+            "pipelock_version": {
+              "type": "string",
+              "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+            },
+            "method": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1000,
+              "x-text": "prose"
+            },
+            "artifact": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "x-text": "label",
+              "pattern": "^[a-zA-Z0-9_-]+(?:/[a-zA-Z0-9_.-]+)*$",
+              "format": "artifact-path"
+            }
+          },
+          "required": [
+            "date",
+            "pipelock_version",
+            "method"
+          ]
+        },
+        "setup": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "text": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1000,
+                "x-text": "prose"
+              },
+              "command": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096,
+                "x-text": "command"
+              }
+            },
+            "required": [
+              "text"
+            ]
+          }
+        },
+        "limitations": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000,
+            "x-text": "prose"
+          }
+        },
+        "not_claimed": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000,
+            "x-text": "prose"
+          }
+        },
+        "links": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "source": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048,
+              "x-text": "label",
+              "format": "uri"
+            },
+            "homepage": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048,
+              "x-text": "label",
+              "format": "uri"
+            },
+            "issues": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048,
+              "x-text": "label",
+              "format": "uri"
+            }
+          },
+          "required": []
+        },
+        "disclosures": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "ai_assisted": {
+              "type": "boolean"
+            },
+            "ai_text": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1000,
+              "x-text": "prose"
+            },
+            "conflict_of_interest": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1000,
+              "x-text": "prose"
+            }
+          },
+          "required": [
+            "ai_assisted",
+            "conflict_of_interest"
+          ]
+        },
+        "requires_pro": {
+          "type": "boolean"
+        },
+        "learn_page": {
+          "type": "string",
+          "pattern": "^/learn/[a-z0-9-]+/$"
+        }
+      },
+      "required": [
+        "schema_version",
+        "type",
+        "id",
+        "title",
+        "summary",
+        "maintainer",
+        "license",
+        "evidence",
+        "setup",
+        "limitations",
+        "not_claimed",
+        "links",
+        "disclosures",
+        "learn_page"
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": 1,
+          "type": "number"
+        },
+        "type": {
+          "const": "verifier",
+          "type": "string"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "x-text": "label",
+          "pattern": "^[a-z0-9][a-z0-9-]{1,62}[a-z0-9]$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 50,
+          "x-text": "label"
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000,
+          "x-text": "prose"
+        },
+        "maintainer": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100,
+              "x-text": "label"
+            },
+            "github": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100,
+              "x-text": "label",
+              "pattern": "^[A-Za-z0-9-]{1,100}$"
+            }
+          },
+          "required": [
+            "name",
+            "github"
+          ]
+        },
+        "license": {
+          "enum": [
+            "Apache-2.0",
+            "MIT",
+            "BSD-2-Clause",
+            "BSD-3-Clause",
+            "ISC",
+            "0BSD",
+            "CC0-1.0"
+          ],
+          "type": "string"
+        },
+        "evidence": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "date": {
+              "type": "string",
+              "format": "date"
+            },
+            "pipelock_version": {
+              "type": "string",
+              "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+            },
+            "method": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1000,
+              "x-text": "prose"
+            },
+            "artifact": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "x-text": "label",
+              "pattern": "^[a-zA-Z0-9_-]+(?:/[a-zA-Z0-9_.-]+)*$",
+              "format": "artifact-path"
+            }
+          },
+          "required": [
+            "date",
+            "pipelock_version",
+            "method"
+          ]
+        },
+        "setup": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "text": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1000,
+                "x-text": "prose"
+              },
+              "command": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096,
+                "x-text": "command"
+              }
+            },
+            "required": [
+              "text"
+            ]
+          }
+        },
+        "limitations": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000,
+            "x-text": "prose"
+          }
+        },
+        "not_claimed": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000,
+            "x-text": "prose"
+          }
+        },
+        "links": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "source": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048,
+              "x-text": "label",
+              "format": "uri"
+            },
+            "homepage": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048,
+              "x-text": "label",
+              "format": "uri"
+            },
+            "issues": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048,
+              "x-text": "label",
+              "format": "uri"
+            }
+          },
+          "required": []
+        },
+        "disclosures": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "ai_assisted": {
+              "type": "boolean"
+            },
+            "ai_text": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1000,
+              "x-text": "prose"
+            },
+            "conflict_of_interest": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1000,
+              "x-text": "prose"
+            }
+          },
+          "required": [
+            "ai_assisted",
+            "conflict_of_interest"
+          ]
+        },
+        "language": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "x-text": "label",
+          "pattern": "^[a-z0-9][a-z0-9-]{1,62}[a-z0-9]$"
+        },
+        "release": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "x-text": "label"
+        },
+        "conformance_artifact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "x-text": "label",
+          "pattern": "^[a-zA-Z0-9_-]+(?:/[a-zA-Z0-9_.-]+)*$",
+          "format": "artifact-path"
+        }
+      },
+      "required": [
+        "schema_version",
+        "type",
+        "id",
+        "title",
+        "summary",
+        "maintainer",
+        "license",
+        "evidence",
+        "setup",
+        "limitations",
+        "not_claimed",
+        "links",
+        "disclosures",
+        "language",
+        "release",
+        "conformance_artifact"
+      ]
+    }
+  ]
+}

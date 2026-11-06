@@ -1,6 +1,6 @@
 {{- $pages := .RegularPages -}}
 {{- if .IsHome -}}
-  {{- $pages = site.RegularPages -}}
+  {{- $pages = where site.RegularPages "Section" "ne" "hub" -}}
 {{- end -}}
 {{- $pages = $pages.ByLastmod.Reverse -}}
 {{- /* Keep feeds bounded even when the global RSS limit is -1 (unlimited).

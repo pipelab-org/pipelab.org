@@ -18,6 +18,8 @@ import { auditDemoVersions } from "./historical-artifacts.mjs";
 import { probeHugoVersion, readPinnedVersion } from "./hugo-pin.mjs";
 import { auditResponsePatternCounts } from "./response-pattern-audit.mjs";
 
+import { auditHubTemplates } from "./hub/template-lint.mjs";
+
 const repoRoot = process.cwd();
 const publicDir = path.join(repoRoot, "public");
 
@@ -1519,6 +1521,8 @@ for (const origin of ["https://buildhop.io", "https://www.buildhop.io"]) {
 if (/^\s*X-Frame-Options:/m.test(demoHeaders)) {
   issues.push("static/_headers: /playground/demo/* X-Frame-Options conflicts with the BuildHop frame-ancestors allowlist");
 }
+
+issues.push(...auditHubTemplates(repoRoot));
 
 if (issues.length > 0) {
   if (notices.length > 0) {

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  {{ $hubOpen := partial "hub-open.html" . }}
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   {{ $pageTitle := .LinkTitle }}
@@ -91,6 +92,8 @@
     "url": "{{ .Site.BaseURL }}"
   }
   </script>
+  {{ else if eq .Section "hub" }}
+  {{ partial "hub-jsonld.html" . }}
   {{ else if and (eq .Section "blog") (not .IsSection) }}
   <script type="application/ld+json">
   {
@@ -456,7 +459,7 @@
   }
   </script>
   {{ end }}
-  {{ if not .IsHome }}
+  {{ if and (not .IsHome) (ne .Section "hub") }}
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",

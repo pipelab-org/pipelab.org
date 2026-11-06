@@ -1,0 +1,5 @@
+{{- /* CommonMark 0.31.2 §4.5: fence longer than every content run, at least 3. */ -}}
+{{- $length := 3 -}}
+{{- range findRE "`+" . -}}{{- $length = math.Max $length (add (len .) 1) -}}{{- end -}}
+{{- $fence := strings.Repeat (int $length) "`" -}}
+{{- return (printf "%s\n%s\n%s" $fence . $fence) -}}

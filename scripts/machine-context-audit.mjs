@@ -4,6 +4,21 @@ import { parse as parseYaml } from "yaml";
 import { parse as parseToml } from "smol-toml";
 import { auditRawInstallSource } from "./install-contract.mjs";
 
+// Hugo absURL keeps a baseURL directory on relative links and on absolute links
+// already under that directory. A host-root "/hub" path stays a hub path.
+function siteRelativePath(url, baseURL) {
+  const trim = pathname => pathname.replace(/\/+$/, "") || "/";
+  const guidePath = trim(new URL(url, baseURL).pathname);
+  const basePath = trim(new URL(baseURL).pathname);
+  if (basePath !== "/" && (guidePath === basePath || guidePath.startsWith(`${basePath}/`))) return trim(guidePath.slice(basePath.length)) || "/";
+  return guidePath;
+}
+
+export function isHubGuide(url, baseURL) {
+  const path = siteRelativePath(url, baseURL);
+  return path === "/hub" || path.startsWith("/hub/");
+}
+
 export const machineSources = [
   "themes/pipelab/layouts/index.llms.txt",
   "themes/pipelab/layouts/index.llmsfull.txt",
@@ -17,6 +32,9 @@ export function auditMachineContext(root = ".") {
   try {
     const read = file => readFileSync(path.join(root, file), "utf8");
     const config = parseToml(read("hugo.toml"));
+    const launchFile = "data/hub/launch.toml";
+    const launch = existsSync(path.join(root, launchFile)) ? parseToml(read(launchFile)) : {};
+    if (Object.hasOwn(launch, "open") && typeof launch.open !== "boolean") throw new Error(`${launchFile}: open must be a boolean`);
     const version = config.params.pipelock_version;
     const editorial = parseYaml(read("data/machine_context.yaml"));
     const minor = version.split(".").slice(0, 2).join(".");
@@ -38,7 +56,7 @@ export function auditMachineContext(root = ".") {
         issues.push(`${file}: must render the shared release introduction`);
       }
       if (!source.includes('{{ partial "machine/guides.txt" . }}')) issues.push(`${file}: must render the approved shared guide list`);
-      for (const guide of editorial.guides) {
+      for (const guide of editorial.guides.filter(guide => !isHubGuide(guide.url, config.baseURL) || launch.open === true)) {
         if (!body.includes(`[${guide.label}](${new URL(guide.url, config.baseURL).href})`)) issues.push(`${file}: missing approved guide ${guide.label}`);
       }
       if (/\{\{|\}\}|\bVERSION\b/.test(body)) issues.push(`${file}: unresolved template or fact token`);
