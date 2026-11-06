@@ -368,15 +368,22 @@
     var countEl = document.getElementById('gl-count');
 
     Promise.all([
-      fetch('/api/results').then(function(res) { return res.json(); }),
+      fetch('/api/results').then(function(res) {
+        if (!res.ok) throw new Error('listing');
+        return res.json();
+      }).then(function(data) {
+        if (!data || !Array.isArray(data.results)) throw new Error('listing shape');
+        return data;
+      }).catch(function() { return null; }),
       window.GauntletContinuous
         ? window.GauntletContinuous.loadLatestVerified(window.fetch.bind(window), window.crypto).catch(function() { return null; })
         : Promise.resolve(null)
     ])
       .then(function(values) {
         listLoading.style.display = 'none';
-        var rows = values[0].results || [];
         var verifiedLoaded = values[1] || null;
+        if (!values[0] && !verifiedLoaded) throw new Error('listing unavailable');
+        var rows = values[0] ? values[0].results : [];
         if (verifiedLoaded) {
           var verifiedRow = window.GauntletContinuous.verifiedListingRow(verifiedLoaded);
           // The digest-checked record does not live behind /api/results. Carry
@@ -550,7 +557,7 @@
       meterFill.style.width = (ratio * 100).toFixed(2) + '%';
       meter.hidden = false;
       meter.setAttribute('role', 'img');
-      meter.setAttribute('aria-label', applicable + ' of ' + totalCases + ' applicable cases contained');
+      meter.setAttribute('aria-label', applicable + ' of ' + totalCases + ' cases routed to the tool');
     } else if (meter) {
       meter.hidden = true;
     }
@@ -598,16 +605,16 @@
     // continuous loader; it is not served by /api/results at all. Everything
     // else is an API record and is fetched by id.
     var source = r.verified_record && r.loaded && r.loaded.record
-      ? Promise.resolve({ payload: r.loaded.record, verified: true })
+      ? Promise.resolve({ payload: r.loaded.record, verified: true, summary: r.loaded.summary })
       : fetch('/api/results/' + encodeURIComponent(r.id))
           .then(function(res) { if (!res.ok) throw new Error('detail'); return res.json(); });
     source
       .then(function(data) {
         var p = data && data.payload;
         renderRecordExhibit(p, data);
-        var cats = p && p.per_category;
-        // The continuous record carries totals and scores but no per-category
-        // block. Say so rather than leaving an empty frame, and never invent one.
+        var cats = (data && data.verified && data.summary && data.summary.per_category) || (p && p.per_category);
+        // Verified summaries carry the category breakdown separately from the
+        // record. Missing data leaves the section hidden.
         if (!cats || typeof cats !== 'object') {
           section.hidden = true;
           return;

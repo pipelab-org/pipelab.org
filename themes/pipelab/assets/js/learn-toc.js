@@ -6,15 +6,17 @@
   if (!disclosure) return;
 
   var desktopMql = window.matchMedia('(min-width: 901px)');
+  var mobileOpen = false;
+  var syncedOpen;
   function syncDisclosure() {
-    if (desktopMql.matches) {
-      disclosure.setAttribute('open', '');
-    } else if (disclosure.dataset.userToggled !== '1') {
-      disclosure.removeAttribute('open');
-    }
+    syncedOpen = desktopMql.matches || mobileOpen;
+    disclosure.open = syncedOpen;
   }
   disclosure.addEventListener('toggle', function() {
-    if (!desktopMql.matches) disclosure.dataset.userToggled = '1';
+    if (!desktopMql.matches && disclosure.open !== syncedOpen) {
+      mobileOpen = disclosure.open;
+      syncedOpen = disclosure.open;
+    }
   });
   syncDisclosure();
   desktopMql.addEventListener
