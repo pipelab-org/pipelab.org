@@ -1,0 +1,7 @@
+{
+  "format": 1,
+  "sections": ["", "bundles", "configs", "recipes", "verifiers", "removed"],
+  "policies": ["trust", "contribute", "evaluate"],
+  "config_filename": "pipelock.yaml",
+  "schema": "/schemas/pipelab-hub/listing-v1.json"
+}

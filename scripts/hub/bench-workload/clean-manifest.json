@@ -1,0 +1,19 @@
+{
+  "format": 1,
+  "hugo_version": "0.147.7",
+  "source_base": "338832693152dd2e9ec236704a3bfeb416e16530",
+  "fixture": "test/hub-harness.test.mjs",
+  "fixture_sha256": "9edf8ae1b538c0f40ff1dd0a8e6a6b1485c515fb75dfc54dbd4c5cee6c4acfcd",
+  "files": [
+    {
+      "file": "learn-mcp-security.md",
+      "sha256": "2a071d32874a23668cc88f93f53e7aaa7c6a8e4330738d428ae2d240fac1a8eb",
+      "origin": "site:built-mirror:learn-mcp-security.md"
+    },
+    {
+      "file": "hub-example-recipe.md",
+      "sha256": "f885779e43e72780f5c0e7e82b43e0dd60134ff5df384be32af259d3541549d4",
+      "origin": "site:built-mirror:hub-example-recipe.md"
+    }
+  ]
+}

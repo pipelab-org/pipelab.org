@@ -3,6 +3,7 @@ Source: {{ .Permalink }}
 # {{ partial "hub-md-label.html" .Title }}
 
 {{ $l := .Params.hub.listing -}}
+{{ if $l -}}
 ID: {{ $l.id }}
 
 {{ partial "hub-md-text.html" $l.summary }}
@@ -51,3 +52,6 @@ PipeLab doesn't review these external destinations.
 {{ range $name, $url := $l.links }}
 {{ partial "hub-md-label.html" $name }} ({{ partial "hub-md-label.html" (partial "hub-link-host.html" (dict "url" $url "name" $name "record" $.Params.hub)) }}): {{ partial "hub-md-text.html" $url }}
 {{ end }}
+
+{{ end }}
+{{ partial "hub-facts.markdown" . }}

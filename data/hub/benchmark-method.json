@@ -1,0 +1,7 @@
+{
+  "format": 1,
+  "pairs": null,
+  "interleave": ["baseline", "target"],
+  "gomaxprocs": 1,
+  "measurement_policy": {"min_confidence": "low", "include_experimental": true}
+}

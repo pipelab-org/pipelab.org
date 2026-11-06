@@ -1,5 +1,6 @@
 {{ define "main" }}
 {{ $r := .Params.hub }}{{ $l := $r.listing }}
+{{ if $l }}
 <article class="section hub-page" data-hub-id="{{ $l.id }}">
   <header data-hero="utility"><p class="eyebrow">{{ $l.type }}</p><h1 data-hub-field="title">{{ $l.title }}</h1><p class="hub-text" data-hub-field="summary">{{ $l.summary }}</p></header>
   <h2>Maintainer</h2>
@@ -23,6 +24,10 @@
   <h2>External links</h2><p>PipeLab doesn't review these external destinations.</p>
   <ul>{{ range $name, $url := $l.links }}<li><a href="{{ $url }}" target="_blank" rel="ugc nofollow noopener noreferrer"><span>{{ $name }} ({{ partial "hub-link-host.html" (dict "url" $url "name" $name "record" $r) }})</span>: <span data-hub-field="links.{{ $name }}">{{ $url }}</span></a></li>{{ end }}</ul>
   <p><a href="/hub/">All components</a></p>
+  {{ partial "hub-facts.html" . }}
   {{ partial "page-formats.html" . }}
 </article>
+{{ else }}
+<article class="section hub-page"><header data-hero="utility"><h1>{{ .Title }}</h1></header>{{ partial "hub-facts.html" . }}{{ partial "page-formats.html" . }}</article>
+{{ end }}
 {{ end }}
