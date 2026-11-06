@@ -9,7 +9,9 @@ const supplements = JSON.parse(readFileSync(new URL("./bench-workload/supplement
 // Producer CONTRIBUTING.md and scripts/test-fixtures.go: each nonblank line
 // is one input; there is no comment syntax. Preserve original line numbers.
 export function producerInputs(text, origin) {
-  const inputs = text.split("\n").map((line, i) => ({ origin: `${origin}:L${i + 1}`, text: line.replace(/\r$/, "") })).filter(input => input.text.trim() !== "");
+  // Blank follows Unicode White_Space (Go strings.TrimSpace / unicode.IsSpace).
+  // JavaScript whitespace and String trim also strip U+FEFF, which would drop a BOM-only line.
+  const inputs = text.split("\n").map((line, i) => ({ origin: `${origin}:L${i + 1}`, text: line.replace(/\r$/, "") })).filter(input => !/^\p{White_Space}*$/u.test(input.text));
   if (!inputs.length) throw new Error("empty official workload fixture");
   return inputs;
 }

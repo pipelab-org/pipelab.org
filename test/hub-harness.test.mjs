@@ -270,10 +270,12 @@ test("Unicode naming refuses brand lookalikes and active or retained collisions"
   const listing = { ...base, id: "acme-dlp", bundle_name: "acme-dlp", title: "Acme rules" };
   const publisher = { id: "acme", name: "Acme maintainer" };
   assertCommunityNames(listing, publisher);
-  for (const name of ["pipe1ock-community", "pipelockcommunity", "communlty-pipelock", "pipelab-rules"]) {
+  for (const name of ["pipe1ock-community", "pipelockcommunity", "communlty-pipelock", "pipelab-rules", "pipel0ck"]) {
     assert.throws(() => assertCommunityNames({ ...listing, bundle_name: name }, publisher), /reserved brand/);
   }
   assert.throws(() => assertCommunityNames({ ...listing, maintainer: { ...listing.maintainer, name: "PipeLab Team" } }, publisher), /reserved brand/);
+  assert.throws(() => assertCommunityNames({ ...listing, title: "pipeIock" }, publisher), /reserved brand/);
+  assert.throws(() => assertCommunityNames(listing, { ...publisher, name: "\u202eAcme" }), /invisible or control/);
   assert.equal(nameSkeleton("\u0440\u0456pelock"), nameSkeleton("pipelock"));
   assert.equal(nameSkeleton("Stra\u00dfe"), nameSkeleton("STRASSE"));
   assert.equal(nameSkeleton("\uff30\uff49\uff50\uff45\uff2c\uff41\uff42"), nameSkeleton("PipeLab"));
@@ -282,6 +284,8 @@ test("Unicode naming refuses brand lookalikes and active or retained collisions"
   assertCatalogNames([record]);
   assert.throws(() => assertCatalogNames([record, { listing: { id: "acme-d1p" } }]), /collides/);
   assert.throws(() => assertCatalogNames([record], ["acme-d1p"]), /retained/);
+  assert.throws(() => assertCatalogNames([{ listing: { id: "acme-dop", bundle_name: "acme-dop" } }, { listing: { id: "acme-d0p", bundle_name: "acme-d0p" } }]), /collides/);
+  assert.equal(nameSkeleton("pipel0ck"), nameSkeleton("pipelock"));
 });
 
 
@@ -298,10 +302,11 @@ test("signed third-party lookalike names never acquire a community record", { sk
 
 
 test("official fixtures preserve each producer input rather than joining lines", () => {
-  assert.deepEqual(producerInputs("first\r\n\n  \n# literal input\nlast", "rules:revision:fixture"), [
+  assert.deepEqual(producerInputs("first\r\n\n  \n\uFEFF\n# literal input\nlast", "rules:revision:fixture"), [
     { origin: "rules:revision:fixture:L1", text: "first" },
-    { origin: "rules:revision:fixture:L4", text: "# literal input" },
-    { origin: "rules:revision:fixture:L5", text: "last" },
+    { origin: "rules:revision:fixture:L4", text: "\uFEFF" },
+    { origin: "rules:revision:fixture:L5", text: "# literal input" },
+    { origin: "rules:revision:fixture:L6", text: "last" },
   ]);
   assert.throws(() => producerInputs("\n \n", "empty"), /empty/);
 });
