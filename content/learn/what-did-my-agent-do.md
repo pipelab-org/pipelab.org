@@ -193,6 +193,8 @@ Set up any one of these, configure a flight-recorder path, and configure receipt
 
 ## Try it on your own setup
 
+For a clean-machine path using pinned release binaries, follow [Record signed receipts and verify them offline](/learn/record-verify-receipts/). It uses the HTTP fetch proxy, reports the unproven chain end explicitly and checks a tampered copy. The source-based demo below covers several transports.
+
 The fastest accurate path is the public harness in the Pipelock repo. It uses the MCP stdio proxy, emits real receipts to `./evidence/`, and prints the verifier output as it goes:
 
 ```bash
