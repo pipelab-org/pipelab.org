@@ -17,6 +17,15 @@ Use the filter and search at the top of the page to narrow the list, or jump str
 
 ## All guides
 
+### Tested recipes
+
+These free recipes start on Ubuntu 24.04 with curl and tar. Each uses Pipelock v3.7.1 and includes commands, observed results and evidence limits.
+
+- [Block a secret with signed community rules](/learn/block-community-secret/)
+- [Block synthetic patient data](/learn/block-synthetic-patient-data/)
+- [Block a poisoned MCP tool description](/learn/block-poisoned-mcp-tool/)
+- [Record signed receipts and verify them offline](/learn/record-verify-receipts/)
+
 ### IDE Setup
 
 - [Claude Code Security](/learn/claude-code-security/)

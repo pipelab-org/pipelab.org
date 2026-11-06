@@ -53,5 +53,7 @@
     </div>
   </section>
 </article>
+{{- $pricingBilling := resources.Get "js/pricing-billing.js" | minify | fingerprint -}}
+<script defer src="{{ $pricingBilling.RelPermalink }}" integrity="{{ $pricingBilling.Data.Integrity }}"></script>
 {{ partial "site-fx.html" . }}
 {{ end }}

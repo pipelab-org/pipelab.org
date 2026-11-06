@@ -232,6 +232,8 @@ For the detailed comparison see [Pipelock vs Docker MCP Gateway](/compare/pipelo
 
 ## Getting started with an MCP proxy
 
+For a clean-machine test before wrapping a real server, follow [Block a poisoned MCP tool description](/learn/block-poisoned-mcp-tool/). It compares a clean tool list with a blocked poisoned definition using the pinned release.
+
 [Install Pipelock](/install/) (Go binary, no runtime deps):
 
 ```bash

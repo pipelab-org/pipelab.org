@@ -184,7 +184,7 @@ test("missing facts, unknown tokens, invalid bundles and unreviewed minor copy f
 test("slashless, query and absolute Hub guides stay hidden until launch", t => {
   const f = fixture(t);
   const editorial = parse(read("data/machine_context.yaml"));
-  const variants = ["/hub", "/hub/", "/hub?view=all", "/hub/#listing", "https://pipelab.org/hub", "/hub/recipes/example/"];
+  const variants = ["/hub", "/hub/", "/hub?view=all", "/hub/#listing", "https://pipelab.org/hub", "/hub/recipes/example/", "hub/", "hub/recipes/example/"];
   editorial.guides = variants.map((url, i) => ({ label: `Gated guide ${i}`, url }));
   f.write("data/machine_context.yaml", stringify(editorial));
   let result = f.build();
@@ -195,5 +195,38 @@ test("slashless, query and absolute Hub guides stay hidden until launch", t => {
   result = f.build();
   assert.equal(result.status, 0, result.stdout + result.stderr);
   for (const file of ["llms.txt", "llms-full.txt"]) for (const guide of editorial.guides) assert.ok(f.built(file).includes(guide.label));
+  assert.deepEqual(auditMachineContext(f.dir), []);
+});
+
+test("path-prefixed base URLs hide hub guides until launch and keep ordinary guides", t => {
+  const f = fixture(t);
+  const config = readFileSync(path.join(f.dir, "hugo.toml"), "utf8").replace('baseURL = "https://pipelab.org/"', 'baseURL = "https://example.com/preview/"');
+  f.write("hugo.toml", config);
+  const editorial = parse(read("data/machine_context.yaml"));
+  editorial.guides = [
+    { label: "Relative hub", url: "hub/" },
+    { label: "Absolute hub", url: "https://example.com/preview/hub/recipes/example/" },
+    { label: "Host hub", url: "/hub/" },
+    { label: "Learn guide", url: "learn/foo/" },
+  ];
+  f.write("data/machine_context.yaml", stringify(editorial));
+  let result = f.build();
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  for (const file of ["llms.txt", "llms-full.txt"]) {
+    const body = f.built(file);
+    assert.doesNotMatch(body, /Relative hub|Absolute hub|Host hub/);
+    assert.match(body, /\[Learn guide\]\(https:\/\/example.com\/preview\/learn\/foo\/\)/);
+  }
+  assert.deepEqual(auditMachineContext(f.dir), []);
+  f.write("data/hub/launch.toml", "open = true\n");
+  result = f.build();
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  for (const file of ["llms.txt", "llms-full.txt"]) {
+    const body = f.built(file);
+    assert.match(body, /\[Relative hub\]\(https:\/\/example.com\/preview\/hub\/\)/);
+    assert.match(body, /\[Absolute hub\]\(https:\/\/example.com\/preview\/hub\/recipes\/example\/\)/);
+    assert.match(body, /\[Host hub\]\(https:\/\/example.com\/hub\/\)/);
+    assert.match(body, /\[Learn guide\]\(https:\/\/example.com\/preview\/learn\/foo\/\)/);
+  }
   assert.deepEqual(auditMachineContext(f.dir), []);
 });
