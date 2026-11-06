@@ -12,7 +12,7 @@ import { deriveRecord, indexProjection, assertIndex } from "../scripts/hub/recor
 import { canonical, contentDigest, bindWorkload, measurementArtifact, writeMeasurement, acceptedMeasurement, latencyVerdict, assertRegeneration, treeIdentity, jsonBytes, sha256, goWorkloadSHA256, measurementBindings } from "../scripts/hub/evidence.mjs";
 import { routeManifest } from "../scripts/hub/route-manifest.mjs";
 import { assertPublication, htmlFacts, markdownFacts, representationPaths } from "../scripts/hub/parity.mjs";
-import { officialOwnInputs, producerInputs, nearInput, prefixCoverage } from "../scripts/hub/workload.mjs";
+import { officialOwnInputs, producerInputs, nearInput, repeatNear, workloadCaps, NEAR_GENERATOR } from "../scripts/hub/workload.mjs";
 import { runHubcheck, generateCatalog, writeCatalog, assertFirstPartyListing } from "../scripts/hub/generate.mjs";
 import { benchmarkReport } from "../scripts/hub/benchmark-report.mjs";
 
@@ -42,6 +42,14 @@ function stage(t, mutate = value => value) {
 function listingFor(reader) { const listing = structuredClone(base); delete listing.learn_page; delete listing.evidence.artifact; Object.assign(listing, { type: "bundle", id: reader.name, bundle_name: reader.name, bundle_sha256: reader.bundle_sha256, signer_fingerprint: reader.signer_fingerprint }); return listing; }
 function timer(samples) { return { samples_ns: samples, maximum_ns: Math.max(...samples), completed: true, timeout: false }; }
 function results(maximum = 12, workload_sha256 = "executed") { const measured = { baseline: timer([10, 10, 10]), target: timer([12, 12, maximum]), ratio: 0.2 }; return { rules: { "test-rule": structuredClone(measured) }, bundle: measured, deprecated: [], workload_sha256 }; }
+
+test("streamed evidence digests preserve the canonical byte contract", () => {
+  for (const value of [null, false, 0, "\u2028<&>\uD800", [], { b: [1, "quoted\\text", null], a: { z: true } }]) {
+    assert.equal(contentDigest(value), sha256(canonical(value)));
+  }
+  assert.throws(() => contentDigest({ value: undefined }), /undefined evidence/);
+  assert.throws(() => contentDigest({ value: Infinity }), /non-finite/);
+});
 
 // Numeric values in these synthetic unit cases are evidence fixtures, not policy.
 test("measurement evidence binds full workload, supports immutable supersession, and recomputes deadlines", t => {
@@ -124,6 +132,7 @@ test("native benchmark requires complete inputs then isolates stable, experiment
   const fixture = stage(t);
   assert.throws(() => runHubcheck(binary, "bench", { ...fixture.request, pairs: 1, workload: [] }));
   const workload = fixture.bundle.rules.filter(rule => rule.status !== "deprecated").map(rule => ({ rule_id: rule.id, positive: [rule.pattern.regex], negative: ["A normal description of project files."], clean: ["Read the setup & <instructions>."], near: ["fixture filler"] }));
+  workload[0].clean.push("JSON line separators \u2028\u2029 and an unpaired surrogate \uD800");
   const measured = runHubcheck(binary, "bench", { ...fixture.request, pairs: 1, workload });
   assert.equal(measured.workload_sha256, goWorkloadSHA256(workload));
   assert.deepEqual(Object.keys(measured.rules).sort(), ["low-rule", "stable-rule", "stable-rule-long"]);
@@ -182,6 +191,12 @@ test("displayed-fact parsers preserve literal syntax and reject duplicate facts"
   assert.deepEqual(htmlFacts('<code data-hub-fact="regex">&lt;x&gt; &amp; &quot;y&quot;</code>'), { regex: '<x> & "y"' });
   assert.deepEqual(markdownFacts('```\n{"hub_fact":"regex","value":"<x> & \\\"y\\\""}\n```'), { regex: '<x> & \\"y\\"'.replaceAll('\\"', '"') });
   assert.throws(() => htmlFacts('<i data-hub-fact="x">a</i><i data-hub-fact="x">b</i>'), /duplicate/);
+  const html = '<code data-hub-fact="__proto__">extra</code>';
+  const mirror = '```\n{"hub_fact":"__proto__","value":"extra"}\n```\n';
+  assert.equal(Object.hasOwn(htmlFacts(html), "__proto__"), true);
+  assert.equal(Object.hasOwn(markdownFacts(mirror), "__proto__"), true);
+  assert.throws(() => htmlFacts(html + html), /duplicate/);
+  assert.throws(() => markdownFacts(mirror + mirror), /invalid mirror fact/);
 });
 
 
@@ -216,10 +231,11 @@ test("real Hugo joins reader facts, rule/core routes, exact mirrors and digest g
   assert.equal(catalog["listings.json"].find(record => record.listing.id === "pipelock-community").badge, "official");
   const overlay = `themesDir = ${JSON.stringify(path.join(root, "themes"))}\ncontentDir = ${JSON.stringify(path.join(dir, "content"))}\nassetDir = ${JSON.stringify(path.join(dir, "assets"))}\ndataDir = ${JSON.stringify(path.join(dir, "data"))}\nstaticDir = ${JSON.stringify(path.join(dir, "distribution"))}\n`;
   writeFileSync(path.join(dir, "hugo.toml"), overlay + read("hugo.toml"));
-  const build = open => { writeFileSync(path.join(dir, "data/hub/launch.toml"), `open = ${open}\n`); const result = spawnSync(process.env.HUGO_BIN || "hugo", ["--source", dir, "--config", path.join(dir, "hugo.toml"), "--destination", path.join(dir, "public"), "--cleanDestinationDir", "--clock", "2026-11-05T00:00:00Z"], { encoding: "utf8", timeout: 120000 }); return { ...result, output: result.stdout + result.stderr }; };
+  const build = open => { writeFileSync(path.join(dir, "data/hub/launch.toml"), `open = ${open}\n`); const result = spawnSync(process.env.HUGO_BIN || "hugo", ["--source", dir, "--config", path.join(dir, "hugo.toml"), "--destination", path.join(dir, "public"), "--cleanDestinationDir", "--clock", "2026-11-05T00:00:00Z"], { encoding: "utf8", timeout: 120000 }); assert.ifError(result.error); return { ...result, output: result.stdout + result.stderr }; };
   const built = build(true); assert.equal(built.status, 0, built.output);
   const manifest = catalog["routes.json"], records = catalog["listings.json"];
   assertPublication({ directory: path.join(dir, "public"), manifest, records, open: true, requireBuild: false });
+  if (process.env.HUBCHECK_PREVIEW_DIR) cpSync(path.join(dir, "public"), process.env.HUBCHECK_PREVIEW_DIR, { recursive: true });
   if (process.env.HUBCHECK_CAPTURE_DIR) {
     const destination = process.env.HUBCHECK_CAPTURE_DIR; mkdirSync(destination, { recursive: true });
     for (const [input, name] of [["learn/mcp-security/index.md", "learn-mcp-security.md"], ["hub/recipes/example-recipe/index.md", "hub-example-recipe.md"]]) cpSync(path.join(dir, "public", input), path.join(destination, name));
@@ -248,8 +264,68 @@ test("official workloads bind exact served producer bytes and supply every missi
     }
   }
   assert.equal(count, 56); assert.equal(supplementary, 10);
-  assert.ok(nearInput({ binary, regex: "literal-prefix", bytes: 32 }).text.length);
-  assert.throws(() => nearInput({ binary, regex: ".*", bytes: 32 }), /held/);
+  const caps = workloadCaps(repository);
+  assert.equal(caps.engine_commit, "d6bb0003c1dac00d3b2df8dd1eb1a51ed8cecd6a");
+  assert.equal(caps.dlp, caps.presets.find(preset => preset.name === "claude-code").request_bytes);
+  assert.equal(caps.injection, Math.max(...caps.presets.map(preset => preset.response_mb)) * 1024 * 1024);
+  assert.equal(caps["tool-poison"], caps.injection);
+});
+
+test("fixture-derived near inputs bind the first matching producer line and the actual transport", { skip: !native }, t => {
+  const fixture = stage(t);
+  const toolTextLimit = workloadCaps(repository).tool_definition.bytes;
+  for (const rule of fixture.bundle.rules.filter(rule => rule.status !== "deprecated")) {
+    const positive = [{ origin: "fixture:L1", text: "An unrelated input." }, { origin: "fixture:L2", text: rule.pattern.regex }];
+    const bytes = 256; // Diagnostic fixture cap, not an admission limit.
+    const near = nearInput({ binary, request: fixture.request, rule: { ...rule, scan_field: rule.pattern.scan_field }, positive, bytes, toolTextLimit });
+    assert.equal(near.evidence.generator, NEAR_GENERATOR);
+    assert.equal(near.evidence.fixture_origin, "fixture:L2");
+    assert.equal(near.evidence.fixture_sha256, sha256(positive[1].text));
+    assert.equal(near.evidence.text_sha256, sha256(near.text));
+    assert.equal(near.evidence.production_target_match, false);
+    assert.ok(near.evidence.trimmed_runes > 0);
+    assert.ok(near.evidence.transport_bytes <= bytes);
+    assert.ok(Buffer.byteLength(near.text) <= bytes);
+    assert.throws(() => nearInput({ binary, request: fixture.request, rule, positive: positive.slice(0, 1), bytes }), /no producer line/);
+  }
+  for (const scan_field of ["name", "description"]) {
+    const escaped = stage(t, bundle => {
+      const rule = bundle.rules.find(rule => rule.type === "tool-poison");
+      rule.pattern = { regex: '🚧"<>&ending', scan_field };
+      return bundle;
+    });
+    const rule = { ...escaped.bundle.rules.find(rule => rule.type === "tool-poison"), scan_field };
+    const positive = [{ origin: "fixture:unicode", text: rule.pattern.regex }];
+    const near = nearInput({ binary, request: escaped.request, rule, positive, bytes: 256, toolTextLimit });
+    assert.equal(new TextDecoder("utf-8", { fatal: true }).decode(Buffer.from(near.text)), near.text);
+    const repeated = repeatNear(rule, near.evidence.seed, 256, toolTextLimit);
+    assert.equal(repeated.text, near.text);
+    assert.equal(repeated.transportBytes, near.evidence.transport_bytes);
+    const full = nearInput({ binary, request: escaped.request, rule, positive, bytes: workloadCaps(repository)["tool-poison"], toolTextLimit });
+    assert.ok(full.evidence.tool_definition_text_bytes <= toolTextLimit);
+    assert.ok(full.evidence.transport_bytes > toolTextLimit);
+  }
+});
+
+test("near generation holds unusable inputs and records production normalization rather than claiming a negative", { skip: !native }, t => {
+  for (const [regex, text, reason] of [
+    ["X", "X", /empty seed/],
+    [".*", "anything", /empty-matching pattern/],
+    ["abcX|abc abc", "abcX", /repetition creates a match/],
+  ]) {
+    const fixture = stage(t, bundle => { bundle.rules[0].pattern.regex = regex; return bundle; });
+    const rule = fixture.bundle.rules[0];
+    assert.throws(() => nearInput({ binary, request: fixture.request, rule, positive: [{ origin: "fixture:L1", text }], bytes: 256 }), reason);
+  }
+  const fixture = stage(t, bundle => { bundle.rules[1].pattern.regex = "X{20}"; return bundle; });
+  const rule = fixture.bundle.rules[1], positive = [{ origin: "fixture:L1", text: "X".repeat(20) }];
+  const near = nearInput({ binary, request: fixture.request, rule, positive, bytes: 256 });
+  assert.equal(near.evidence.raw_negative, true);
+  assert.equal(/X{20}/.test(near.text), false);
+  assert.equal(near.evidence.production_target_match, true);
+  assert.throws(() => nearInput({ binary, request: fixture.request, rule, positive, bytes: 0 }), /cap required/);
+  const tooLarge = workloadCaps(repository).dlp + 1;
+  assert.throws(() => nearInput({ binary, request: fixture.request, rule, positive, bytes: tooLarge }), /outside the pinned preset/);
 });
 
 test("benchmark report refuses a caller reader and a different executable", { skip: !native }, t => {

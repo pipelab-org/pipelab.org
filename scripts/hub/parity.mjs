@@ -9,23 +9,23 @@ const text = node => node.nodeName === "#text" ? node.value : (node.childNodes |
 function elements(node) { return [node, ...(node.childNodes || []).flatMap(elements)]; }
 function attribute(node, key) { return node.attrs?.find(attr => attr.name === key)?.value; }
 export function htmlFacts(source) {
-  const facts = {};
+  const facts = new Map();
   for (const node of elements(parseHTML(source))) {
     const key = attribute(node, "data-hub-fact");
-    if (key !== undefined) { if (Object.hasOwn(facts, key)) throw new Error("duplicate displayed fact"); facts[key] = text(node); }
+    if (key !== undefined) { if (facts.has(key)) throw new Error("duplicate displayed fact"); facts.set(key, text(node)); }
   }
-  return facts;
+  return Object.fromEntries(facts);
 }
 export function markdownFacts(source) {
-  const facts = {}, walker = new commonmark.Parser().parse(source).walker(); let event;
+  const facts = new Map(), walker = new commonmark.Parser().parse(source).walker(); let event;
   while ((event = walker.next())) if (event.entering && event.node.type === "code_block") {
     let item; try { item = JSON.parse(event.node.literal); } catch { continue; }
     if (item?.hub_fact !== undefined) {
-      if (typeof item.hub_fact !== "string" || typeof item.value !== "string" || Object.hasOwn(facts, item.hub_fact)) throw new Error("invalid mirror fact");
-      facts[item.hub_fact] = item.value;
+      if (typeof item.hub_fact !== "string" || typeof item.value !== "string" || facts.has(item.hub_fact)) throw new Error("invalid mirror fact");
+      facts.set(item.hub_fact, item.value);
     }
   }
-  return facts;
+  return Object.fromEntries(facts);
 }
 export function representationPaths(entry) {
   return entry.representations.map(representation => ({ representation, route: representation === "html" ? `${entry.route}index.html` : representation === "mirror" ? `${entry.route}index.md` : entry.route }));

@@ -14,11 +14,13 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 	"regexp/syntax"
 	"runtime"
 	"slices"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/luckyPipewrench/pipelock/internal/config"
 	"github.com/luckyPipewrench/pipelock/internal/mcp/tools"
@@ -28,6 +30,10 @@ import (
 
 const version = "3.7.1"
 
+// Pinned internal/mcp/tools/tools.go:maxToolDefinitionTextBytes. The builder
+// checks this against that exact source declaration before compiling.
+const toolDefinitionTextBytes = 1048576
+
 type request struct {
 	BundleDir   string              `json:"bundle_dir"`
 	Config      string              `json:"config"`
@@ -36,6 +42,13 @@ type request struct {
 	Workload    []work              `json:"workload"`
 	Pairs       int                 `json:"pairs"`
 	DeadlineNS  int64               `json:"deadline_ns"`
+	RuleID      string              `json:"rule_id,omitempty"`
+	Positive    []fixtureInput      `json:"positive,omitempty"`
+	CapBytes    int                 `json:"cap_bytes,omitempty"`
+}
+type fixtureInput struct {
+	Origin string `json:"origin"`
+	Text   string `json:"text"`
 }
 type keyInput struct {
 	Name      string `json:"name"`
@@ -279,6 +292,16 @@ func median(values []int64) float64 {
 	}
 	return (float64(v[n/2-1]) + float64(v[n/2])) / 2
 }
+func toolInput(rule rules.Rule, text string) []byte {
+	tool := map[string]any{"name": "benchmark-tool", "description": text, "inputSchema": map[string]any{"type": "object"}}
+	if rule.Pattern.ScanField == "name" {
+		tool["name"] = text
+		tool["description"] = "benchmark"
+	}
+	line, err := json.Marshal(map[string]any{"jsonrpc": "2.0", "id": 1, "result": map[string]any{"tools": []any{tool}}})
+	require(err)
+	return line
+}
 func measure(req request, b *rules.Bundle, root, only string, workload []work) measured {
 	cfg0, res0 := load(req, b, root, true, "", true)
 	cfg1, res1 := load(req, b, root, true, only, false)
@@ -304,14 +327,7 @@ func measure(req request, b *rules.Bundle, root, only string, workload []work) m
 				case rules.RuleTypeInjection:
 					sc.ScanResponse(context.Background(), text)
 				case rules.RuleTypeToolPoison:
-					tool := map[string]any{"name": "benchmark-tool", "description": text, "inputSchema": map[string]any{"type": "object"}}
-					if rule.Pattern.ScanField == "name" {
-						tool["name"] = text
-						tool["description"] = "benchmark"
-					}
-					line, e := json.Marshal(map[string]any{"jsonrpc": "2.0", "id": 1, "result": map[string]any{"tools": []any{tool}}})
-					require(e)
-					tools.ScanTools(line, sc, &tools.ToolScanConfig{Action: "block", ExtraPoison: rules.ConvertToolPoison(res.ToolPoison)})
+					tools.ScanTools(toolInput(rule, text), sc, &tools.ToolScanConfig{Action: "block", ExtraPoison: rules.ConvertToolPoison(res.ToolPoison)})
 				}
 			}
 		}
@@ -331,6 +347,175 @@ func measure(req request, b *rules.Bundle, root, only string, workload []work) m
 	}
 	out.Ratio = (median(out.Target.Samples) - base) / base
 	return out
+}
+
+// This is a finite, versioned workload, not a worst-case regex construction.
+// The producer fixture supplies the first raw (?i) match. Truncate that span
+// until it stops matching, repeat with spaces, then check the production path.
+func fixtureNear(req request, b *rules.Bundle, root string) map[string]any {
+	held := func(reason string) map[string]any { return map[string]any{"status": "held", "reason": reason} }
+	var rule rules.Rule
+	for _, r := range b.Rules {
+		if r.ID == req.RuleID && r.Status != rules.StatusDeprecated {
+			rule = r
+		}
+	}
+	if rule.ID == "" {
+		return held("unknown or deprecated rule")
+	}
+	cfg, loaded := load(req, b, root, true, rule.ID, false)
+	// The pinned preset is the source of the byte ceiling. Smaller caps are
+	// useful for diagnostic tests; official workload generation requires the
+	// full cap and binds the preset bytes separately.
+	ceiling := cfg.FetchProxy.MaxResponseMB * 1024 * 1024
+	if rule.Type == rules.RuleTypeDLP {
+		ceiling = cfg.RequestBodyScanning.MaxBodyBytes
+	}
+	capBytes := req.CapBytes
+	if capBytes == 0 {
+		capBytes = ceiling
+	}
+	if capBytes <= 0 || capBytes > ceiling {
+		return held("cap is outside the pinned preset")
+	}
+	re, err := regexp.Compile("(?i)" + rule.Pattern.Regex)
+	if err != nil || re.MatchString("") {
+		return held("invalid or empty-matching pattern")
+	}
+	var input fixtureInput
+	var span []int
+	for _, candidate := range req.Positive {
+		if candidate.Origin == "" || !utf8.ValidString(candidate.Text) {
+			return held("invalid producer input")
+		}
+		if found := re.FindStringIndex(candidate.Text); found != nil {
+			input, span = candidate, found
+			break
+		}
+	}
+	if span == nil {
+		return held("no producer line matches the raw pattern")
+	}
+	seed := input.Text[span[0]:span[1]]
+	trimmed := 0
+	for seed != "" && re.MatchString(seed) {
+		_, size := utf8.DecodeLastRuneInString(seed)
+		seed = seed[:len(seed)-size]
+		trimmed++
+	}
+	if seed == "" {
+		return held("truncation leaves an empty seed")
+	}
+	if re.MatchString(seed + " " + seed + " ") {
+		return held("seed repetition creates a match")
+	}
+	text, transportBytes := repeatNear(rule, seed, capBytes)
+	if text == "" || re.MatchString(text) {
+		return held("capped repetition is empty or matches the raw pattern")
+	}
+	sc, err := scanner.New(cfg)
+	require(err)
+	defer sc.Close()
+	matched := targetMatches(sc, loaded, rule, text)
+	return map[string]any{
+		"status": "generated", "generator": "site:fixture-span-truncation-v1",
+		"rule_id": rule.ID, "fixture_origin": input.Origin, "fixture_sha256": digest([]byte(input.Text)),
+		"span_start": span[0], "span_end": span[1], "seed": seed, "trimmed_runes": trimmed,
+		"cap_bytes": capBytes, "preset_cap_bytes": ceiling, "text_bytes": len(text),
+		"transport_bytes": transportBytes, "text_sha256": digest([]byte(text)),
+		"raw_negative": true, "production_target_match": matched,
+		"tool_definition_cap_bytes":  toolDefinitionTextBytes,
+		"tool_definition_text_bytes": toolTextBytes(rule, text),
+	}
+}
+
+func toolTextBytes(rule rules.Rule, text string) int {
+	if rule.Type != rules.RuleTypeToolPoison {
+		return 0
+	}
+	// Native budget counts name, description and raw InputSchema JSON bytes.
+	fixed := len("benchmark-tool")
+	if rule.Pattern.ScanField == "name" {
+		fixed = len("benchmark")
+	}
+	return len(text) + fixed + len(`{"type":"object"}`)
+}
+
+// json.Marshal's escaping is additive per rune. Counting that encoded cost
+// keeps the complete tools/list envelope inside the cap, including for names,
+// quotes, HTML-sensitive characters and multibyte fixture text.
+func repeatNear(rule rules.Rule, seed string, capBytes int) (string, int) {
+	unit, remaining := seed+" ", capBytes
+	textRemaining := capBytes
+	cost := func(text string) int { return len(text) }
+	if rule.Type == rules.RuleTypeToolPoison {
+		remaining -= len(toolInput(rule, ""))
+		textRemaining = toolDefinitionTextBytes - toolTextBytes(rule, "")
+		cost = func(text string) int { encoded, err := json.Marshal(text); require(err); return len(encoded) - 2 }
+	}
+	if remaining <= 0 {
+		return "", 0
+	}
+	copies := min(remaining/cost(unit), textRemaining/len(unit))
+	remaining -= copies * cost(unit)
+	textRemaining -= copies * len(unit)
+	var tail strings.Builder
+	for _, runeValue := range unit {
+		runeText := string(runeValue)
+		if cost(runeText) > remaining || len(runeText) > textRemaining {
+			break
+		}
+		tail.WriteRune(runeValue)
+		remaining -= cost(runeText)
+		textRemaining -= len(runeText)
+	}
+	text := strings.Repeat(unit, copies) + tail.String()
+	transportBytes := len(text)
+	if rule.Type == rules.RuleTypeToolPoison {
+		transportBytes = len(toolInput(rule, text))
+	}
+	return text, transportBytes
+}
+
+func targetMatches(sc *scanner.Scanner, loaded *rules.LoadResult, rule rules.Rule, text string) bool {
+	switch rule.Type {
+	case rules.RuleTypeDLP:
+		result := sc.ScanTextForDLP(context.Background(), text)
+		for _, match := range append(result.Matches, result.InformationalMatches...) {
+			for _, pattern := range loaded.DLP {
+				if match.PatternName == pattern.Name {
+					return true
+				}
+			}
+		}
+	case rules.RuleTypeInjection:
+		result := sc.ScanResponse(context.Background(), text)
+		if result.ScanError != "" {
+			panic("production scan incomplete")
+		}
+		for _, match := range result.Matches {
+			for _, pattern := range loaded.Injection {
+				if match.PatternName == pattern.Name {
+					return true
+				}
+			}
+		}
+	case rules.RuleTypeToolPoison:
+		result := tools.ScanTools(toolInput(rule, text), sc, &tools.ToolScanConfig{Action: "block", ExtraPoison: rules.ConvertToolPoison(loaded.ToolPoison)})
+		if !result.IsToolsList || result.ResourceLimit != "" {
+			panic("production tool scan incomplete")
+		}
+		for _, match := range result.Matches {
+			for _, pattern := range loaded.ToolPoison {
+				if slices.Contains(match.ToolPoison, pattern.Name) {
+					return true
+				}
+			}
+		}
+	default:
+		panic("unsupported rule type")
+	}
+	return false
 }
 func bench(req request, b *rules.Bundle, root string) benchmark {
 	if req.Pairs <= 0 {
@@ -418,6 +603,8 @@ func main() {
 		out = inspect(req, b, v, data, root)
 	case "bench":
 		out = bench(req, b, root)
+	case "near":
+		out = fixtureNear(req, b, root)
 	default:
 		panic("unknown mode")
 	}

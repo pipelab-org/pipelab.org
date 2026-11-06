@@ -5,30 +5,27 @@ import path from "node:path";
 
 export const sha256 = bytes => createHash("sha256").update(bytes).digest("hex");
 // encoding/json default escaping for the harness workload struct. Field order matches the Go struct.
-function goString(value) {
-  let out = '"';
-  for (const ch of value) {
-    const cp = ch.codePointAt(0);
-    if (ch === '"' || ch === "\\") out += "\\" + ch;
-    else if (ch === "\b") out += "\\b";
-    else if (ch === "\f") out += "\\f";
-    else if (ch === "\n") out += "\\n";
-    else if (ch === "\r") out += "\\r";
-    else if (ch === "\t") out += "\\t";
-    else if (ch === "&") out += "\\u0026";
-    else if (ch === "<") out += "\\u003c";
-    else if (ch === ">") out += "\\u003e";
-    else if (cp === 0x2028 || cp === 0x2029) out += "\\u" + cp.toString(16);
-    else if (cp < 0x20) out += "\\u00" + cp.toString(16).padStart(2, "0");
-    else out += ch;
-  }
-  return out + '"';
+export function goString(value) {
+  // Go's JSON decoder replaces unpaired surrogates. The standard string
+  // encoder handles quotes/control characters without a per-rune rope for
+  // multi-megabyte inputs; these are encoding/json's additional escapes.
+  return JSON.stringify(value.toWellFormed()).replace(/[&<>\u2028\u2029]/g, ch => `\\u${ch.codePointAt(0).toString(16).padStart(4, "0")}`);
 }
-const goArray = items => `[${items.map(goString).join(",")}]`;
 export function goWorkloadSHA256(harness) {
   const sorted = [...harness].sort((a, b) => Buffer.compare(Buffer.from(a.rule_id), Buffer.from(b.rule_id)));
-  const body = sorted.map(item => `{"rule_id":${goString(item.rule_id)},"positive":${goArray(item.positive)},"negative":${goArray(item.negative)},"clean":${goArray(item.clean)},"near":${goArray(item.near)}}`).join(",");
-  return sha256(Buffer.from(`[${body}]`));
+  const hash = createHash("sha256");
+  hash.update("[");
+  for (const [index, item] of sorted.entries()) {
+    if (index) hash.update(",");
+    hash.update(`{"rule_id":${goString(item.rule_id)}`);
+    for (const group of ["positive", "negative", "clean", "near"]) {
+      hash.update(`,"${group}":[`);
+      item[group].forEach((text, i) => { if (i) hash.update(","); hash.update(goString(text)); });
+      hash.update("]");
+    }
+    hash.update("}");
+  }
+  return hash.update("]").digest("hex");
 }
 export function measurementMethod(root, configPath, pairs) {
   const committed = JSON.parse(readFileSync(path.join(root, "data/hub/benchmark-method.json")));
@@ -41,7 +38,21 @@ export function canonical(value) {
   if (typeof value === "number" && !Number.isFinite(value) || value === undefined) throw new Error("non-finite or undefined evidence");
   return JSON.stringify(value);
 }
-export const contentDigest = value => sha256(canonical(value));
+export function contentDigest(value) {
+  const hash = createHash("sha256");
+  function visit(item) {
+    if (Array.isArray(item)) {
+      hash.update("["); item.forEach((entry, i) => { if (i) hash.update(","); visit(entry); }); hash.update("]");
+    } else if (item && typeof item === "object") {
+      hash.update("{"); Object.keys(item).sort().forEach((key, i) => { if (i) hash.update(","); hash.update(JSON.stringify(key) + ":"); visit(item[key]); }); hash.update("}");
+    } else {
+      if (typeof item === "number" && !Number.isFinite(item) || item === undefined) throw new Error("non-finite or undefined evidence");
+      hash.update(JSON.stringify(item));
+    }
+  }
+  visit(value);
+  return hash.digest("hex");
+}
 export const jsonBytes = value => canonical(value) + "\n";
 
 // Git tree object identity from current bytes, including uncommitted new files.
@@ -142,5 +153,5 @@ export function assertRegeneration(committed, regenerated) {
 export function measurementBindings({ reader, workload, engine, method, executedWorkloadSHA256 }) {
   if (!Number.isSafeInteger(method?.pairs) || method.pairs <= 0 || method.gomaxprocs !== 1 || JSON.stringify(method.interleave) !== '["baseline","target"]' || method.measurement_policy?.min_confidence !== "low" || method.measurement_policy?.include_experimental !== true) throw new Error("measurement method is not configured");
   if (executedWorkloadSHA256 !== goWorkloadSHA256(workload.harness)) throw new Error("executed workload differs");
-  return { bundle_sha256: reader.bundle_sha256, measured_rule_ids: reader.declared.filter(rule => rule.status !== "deprecated").map(rule => rule.id).sort(), workload_sha256: workload.digest, executed_workload_sha256: executedWorkloadSHA256, engine, method };
+  return { bundle_sha256: reader.bundle_sha256, measured_rule_ids: reader.declared.filter(rule => rule.status !== "deprecated").map(rule => rule.id).sort(), workload_sha256: workload.digest, workload_generator: workload.binding.generator, workload_parameters: workload.binding.parameters, executed_workload_sha256: executedWorkloadSHA256, engine, method };
 }

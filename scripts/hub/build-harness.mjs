@@ -7,6 +7,15 @@ import { createHash } from "node:crypto";
 export const enginePin = JSON.parse(readFileSync(new URL("./engine.json", import.meta.url)));
 export const sha256 = bytes => createHash("sha256").update(bytes).digest("hex");
 
+export function toolDefinitionLimit(repository) {
+  const file = "internal/mcp/tools/tools.go";
+  const source = execFileSync("git", ["-C", repository, "show", `${enginePin.source_commit}:${file}`]);
+  const match = source.toString("utf8").match(/^const maxToolDefinitionTextBytes = 1 << (\d+)\b/m);
+  const bytes = match ? 2 ** Number(match[1]) : NaN;
+  if (!Number.isSafeInteger(bytes) || bytes <= 0) throw new Error("unsupported native tool-definition limit declaration");
+  return { bytes, file, source_sha256: sha256(source), engine_commit: enginePin.source_commit };
+}
+
 // Offline build only: caller supplies a local object store and a unique capture
 // directory. Neither the source checkout nor its working tree is modified.
 export function buildHarness({ repository, outputRoot, go = "go" }) {
@@ -20,6 +29,9 @@ export function buildHarness({ repository, outputRoot, go = "go" }) {
   execFileSync("git", ["-C", repository, "archive", `--output=${archive}`, enginePin.source_commit, "go.mod", "go.sum", "internal", "configs"]);
   execFileSync("tar", ["-xf", archive, "-C", destination]);
   const source = readFileSync(new URL("./pipelock-harness/main.go", import.meta.url));
+  const nativeLimit = toolDefinitionLimit(repository);
+  const declaredLimit = source.toString("utf8").match(/^const toolDefinitionTextBytes = (\d+)$/m);
+  if (Number(declaredLimit?.[1]) !== nativeLimit.bytes) throw new Error("harness tool-definition limit differs from pinned source");
   mkdirSync(path.join(destination, "internal/hubcheck"));
   writeFileSync(path.join(destination, "internal/hubcheck/main.go"), source);
   const binary = path.join(destination, "hubcheck");
