@@ -44,5 +44,5 @@ start_here:
 # come from params.pipelock_version in hugo.toml. Update summary and minor
 # together when a new minor release ships; a mismatch fails the build.
 release:
-  minor: "3.7"
-  summary: "Parallel receipts, filesystem grants, local MCP identity, and upgrade actions"
+  minor: "3.8"
+  summary: "Reload results, unconfirmed MCP wrappers, a dedicated metrics listener, and upgrade actions"

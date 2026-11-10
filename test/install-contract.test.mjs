@@ -15,8 +15,8 @@ const oldCommand = "go install github.com/luckyPipewrench/pipelock/cmd/pipelock@
 const raw = `## Installation\n### Source\n\`\`\`bash\n${clone}\n${build}\n\`\`\`\n### Homebrew\n\`\`\`bash\n${brew}\n\`\`\`\n`;
 const data = () => ({ methods: [
   { id: "go", label: "Source (Go)", note: "Requires Go 1.26+, Git, and Make. Community build only.", command: `${clone.replace("3.7.0", "VERSION")}\n${build}` },
-  { id: "docker", command: "docker pull ghcr.io/luckypipewrench/pipelock:VERSION" },
-  { id: "helm", command: "helm install pipelock oci://ghcr.io/luckypipewrench/charts/pipelock --version VERSION" },
+  { id: "docker", command: "docker pull ghcr.io/pipelab-org/pipelock:VERSION" },
+  { id: "helm", command: "helm install pipelock oci://ghcr.io/pipelab-org/charts/pipelock --version VERSION" },
   { id: "homebrew", command: brew },
 ] });
 
@@ -42,7 +42,7 @@ for (const [name, mutate] of [
   ["missing build prerequisites", value => { delete value.methods[0].note; }],
   ["missing Helm", value => { value.methods.splice(2, 1); }],
   ["unpinned Helm", value => { value.methods[2].command = value.methods[2].command.replace("VERSION", "latest"); }],
-  ["wrong Helm registry", value => { value.methods[2].command = value.methods[2].command.replace("luckypipewrench", "pipelab-org"); }],
+  ["wrong Helm registry", value => { value.methods[2].command = value.methods[2].command.replace("pipelab-org", "luckypipewrench"); }],
   ["unpinned Docker", value => { value.methods[1].command = value.methods[1].command.replace("VERSION", "latest"); }],
 ]) {
   test(`shared source rejects ${name}`, () => {

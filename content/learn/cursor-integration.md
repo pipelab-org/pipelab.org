@@ -118,7 +118,7 @@ pipelock generate config --preset cursor > ~/.config/pipelock/cursor.yaml
 pipelock cursor install --config ~/.config/pipelock/cursor.yaml
 ```
 
-The [cursor preset](https://github.com/pipelab-org/pipelock/blob/main/configs/cursor.yaml) is a good starting point. See the [configuration reference](https://github.com/pipelab-org/pipelock/blob/main/docs/configuration.md) for all options.
+The cursor preset is a good starting point. Run `pipelock generate config --preset cursor` to print the version that matches your installed binary. See the [configuration reference](https://github.com/pipelab-org/pipelock/blob/main/docs/configuration.md) for all options.
 
 ## Verify the installation
 

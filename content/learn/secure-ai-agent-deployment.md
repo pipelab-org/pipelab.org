@@ -152,10 +152,13 @@ For any agent that makes HTTP requests:
 
 ```bash
 # Start the proxy
-pipelock run
+pipelock generate config --preset generic-agent --output pipelock.yaml
+pipelock run --config pipelock.yaml
 
 # Route traffic through it
 export HTTPS_PROXY=http://127.0.0.1:8888
+export HTTP_PROXY=http://127.0.0.1:8888
+export http_proxy=http://127.0.0.1:8888
 ```
 
 Combine with network isolation (iptables, container networking, or Kubernetes NetworkPolicy) for enforcement that prompt injection can't bypass.

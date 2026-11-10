@@ -21,11 +21,11 @@ function build(t, version) {
 }
 
 test("homepage hero and release sidebars link a patch release to its minor release post", (t) => {
-  const result = build(t, "3.7.4");
+  const result = build(t, "3.8.4");
   assert.ifError(result.error);
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  assert.match(result.html, /\/blog\/pipelock-v370-release\//);
-  assert.match(result.html, /v3\.7\.4/);
+  assert.match(result.html, /\/blog\/pipelock-v380-release\//);
+  assert.match(result.html, /v3\.8\.4/);
 });
 
 test("homepage hero fails the build when the release post does not exist", (t) => {
@@ -36,8 +36,8 @@ test("homepage hero fails the build when the release post does not exist", (t) =
 });
 
 test("release sidebars fail the build when their summary is for another minor release", (t) => {
-  const result = build(t, "3.6.2");
+  const result = build(t, "3.7.2");
   assert.ifError(result.error);
   assert.notEqual(result.status, 0);
-  assert.match(result.stdout + result.stderr, /release\.summary describes v3\.7 but pipelock_version is v3\.6\.2/);
+  assert.match(result.stdout + result.stderr, /release\.summary describes v3\.8 but pipelock_version is v3\.7\.2/);
 });

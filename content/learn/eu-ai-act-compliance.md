@@ -148,13 +148,13 @@ Penalties: up to EUR 35M or 7% global turnover (prohibited practices), EUR 15M o
 # Homebrew alternative on macOS/Linux: {{< install-cmd homebrew >}}
 
 # Generate a config
-pipelock generate config --preset balanced > pipelock.yaml
+pipelock generate config --preset generic-agent --output pipelock.yaml
 
 # Enable audit logging + run
 pipelock run --config pipelock.yaml
 ```
 
-Set `HTTPS_PROXY=http://127.0.0.1:8888` on your agent. Every connection is now logged and filtered. Enable TLS interception for full HTTPS body scanning.
+Set `HTTPS_PROXY=http://127.0.0.1:8888`, `HTTP_PROXY=http://127.0.0.1:8888` and `http_proxy=http://127.0.0.1:8888` on your agent. Every connection is now logged and filtered. Enable TLS interception for full HTTPS body scanning.
 
 For the full compliance mapping with NIST crosswalk, see the [source document on GitHub](https://github.com/pipelab-org/pipelock/blob/main/docs/compliance/eu-ai-act-mapping.md).
 

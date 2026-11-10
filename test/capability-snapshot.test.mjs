@@ -792,6 +792,6 @@ test("Browser Shield copy preserves the JavaScript and partial-coverage boundari
 test("product control links expose Browser Shield and the existing Filesystem Sentinel guide", () => {
   const product = readFileSync(new URL("../content/pipelock.md", import.meta.url), "utf8");
   assert.match(product, /href="\/capabilities\/browser-shield\/">Browser Shield/);
-  assert.match(product, /href="https:\/\/github.com\/pipelab-org\/pipelock\/blob\/v3\.7\.1\/docs\/guides\/filesystem-sentinel\.md"[^>]*>Filesystem Sentinel/);
+  assert.match(product, /href="https:\/\/github.com\/pipelab-org\/pipelock\/blob\/v3\.8\.0\/docs\/guides\/filesystem-sentinel\.md"[^>]*>Filesystem Sentinel/);
   assert.ok(Object.values(capabilityReferences.capabilities).flat().some(reference => reference.path === "docs/guides/filesystem-sentinel.md"));
 });

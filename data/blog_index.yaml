@@ -18,6 +18,7 @@ categories:
     label: OpSec
 
 featured:
+  - pipelock-v380-release
   - check-the-work
   - pipelock-v370-release
   - a-valid-receipt-chain-can-still-be-cut-short
@@ -29,8 +30,8 @@ featured:
 # from params.pipelock_version in hugo.toml. Update summary and minor together
 # when a new minor release ships; a mismatch fails the build.
 release:
-  minor: "3.7"
-  summary: "Parallel signed receipt chains, filesystem grants, and verified local MCP services."
+  minor: "3.8"
+  summary: "Reload results you can check, unconfirmed MCP wrappers in discover, and metrics on their own listener."
 
 subscribe:
   - label: dev.to mirror

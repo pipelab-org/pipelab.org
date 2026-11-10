@@ -189,10 +189,13 @@ Plus MCP argument scanning, which catches credential leaks through tool calls (n
 
 ```bash
 # Start the proxy
+pipelock generate config --preset generic-agent --output pipelock.yaml
 pipelock run --config pipelock.yaml
 
 # Point the agent at it
 export HTTPS_PROXY=http://127.0.0.1:8888
+export HTTP_PROXY=http://127.0.0.1:8888
+export http_proxy=http://127.0.0.1:8888
 
 # For real enforcement, combine with network isolation:
 # iptables, Docker network, or K8s NetworkPolicy

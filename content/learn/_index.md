@@ -88,6 +88,7 @@ These free recipes start on Ubuntu 24.04 with curl and tar. Each uses Pipelock v
 - [License Setup](/learn/license-setup/)
 - [Pipelock Kill Switch](/learn/kill-switch/)
 - [Pipelock Release Notes](/learn/pipelock-release-notes/)
+- [Pipelock v3.8 Upgrade Guide](/learn/pipelock-v380-upgrade/)
 - [Pipelock v3.7 Upgrade Guide](/learn/pipelock-v370-upgrade/)
 - [Launch a Command Through Pipelock](/learn/pipelock-exec/)
 - [Parallel Signed Receipt Chains](/learn/parallel-receipt-chains/)

@@ -1,19 +1,19 @@
 ---
 title: "Pipelock EULA and Code Licenses"
 linkTitle: "Pipelock EULA"
-description: "Pipelock EULA: read the full Apache License 2.0 for the core and Elastic License 2.0 for enterprise code, reproduced from release v3.7.1."
+description: "Pipelock EULA: read the full Apache License 2.0 for the core and Elastic License 2.0 for enterprise code, reproduced from release v3.8.0."
 robots: "index, follow"
 suppress_published: true
 disable_cta: true
 ---
 
-The full code license texts below are reproduced verbatim from Pipelock v3.7.1. The [release README](https://github.com/pipelab-org/pipelock/blob/v3.7.1/README.md#license) identifies which code each license governs. The [Terms of Service](/terms/) cover the website and commercial relationship, including the precedence of code licenses for code rights.
+The full code license texts below are reproduced verbatim from Pipelock v3.8.0. The [release README](https://github.com/pipelab-org/pipelock/blob/v3.8.0/README.md#license) identifies which code each license governs. The [Terms of Service](/terms/) cover the website and commercial relationship, including the precedence of code licenses for code rights.
 
 ## Apache License 2.0
 
 Pipelock core is licensed under the Apache License 2.0.
 
-Source: [`LICENSE` at v3.7.1](https://github.com/pipelab-org/pipelock/blob/v3.7.1/LICENSE).
+Source: [`LICENSE` at v3.8.0](https://github.com/pipelab-org/pipelock/blob/v3.8.0/LICENSE).
 
 ```text
 
@@ -224,7 +224,7 @@ Source: [`LICENSE` at v3.7.1](https://github.com/pipelab-org/pipelock/blob/v3.7.
 
 The `enterprise/` directory is licensed under the Elastic License 2.0 (ELv2).
 
-Source: [`enterprise/LICENSE` at v3.7.1](https://github.com/pipelab-org/pipelock/blob/v3.7.1/enterprise/LICENSE).
+Source: [`enterprise/LICENSE` at v3.8.0](https://github.com/pipelab-org/pipelock/blob/v3.8.0/enterprise/LICENSE).
 
 ```text
 Elastic License 2.0

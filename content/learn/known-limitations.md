@@ -44,7 +44,7 @@ These are mediated but not absolute. Pipelock reduces the risk without closing i
 |------------|--------|------------|
 | Semantic prompt injection | Injection detection is pattern-based, so it is syntactic, not semantic. An injection crafted to match no known pattern can pass. | Add custom patterns for your domain. Treat detection as one of four functions, not the whole defense. |
 | Very slow exfiltration | A drip of one byte per hour over days sits below any practical rate limit or entropy threshold. | Container isolation prevents it. Without isolation, this is the residual risk. |
-| Misconfiguration | Audit mode logs without blocking. An operator who never switches to balanced or strict enforces nothing. | Start in balanced mode. Use `pipelock audit` to generate a tuned config. |
+| Misconfiguration | The mode name `audit` does not turn off enforcement. With the default `enforce: true`, ordinary URL findings still block. The bundled `audit` preset is the observation trial, and it still applies independent core and transport refusals. | Use the `audit` preset when you want an observation trial, then move to balanced or strict. Review the [v3.8 upgrade guide](/learn/pipelock-v380-upgrade/) before relying on mode names. |
 | IPv6 reachability | If the internal CIDR list omits IPv6 ranges, an agent could reach internal services over IPv6. | The default config includes the standard IPv6 private and multicast ranges and strips zone IDs before parsing. |
 | Unintercepted CONNECT | On a plain HTTPS CONNECT tunnel without TLS interception, only the destination host is visible, not the path, body, or response. | Enable TLS interception for full content coverage on CONNECT traffic. |
 

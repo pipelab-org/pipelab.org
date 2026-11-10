@@ -4,6 +4,7 @@ linkTitle: "AI Agent Data Loss Prevention"
 subtitle: "What DLP for AI agents actually catches, where the leaks happen, and the open-source self-hosted approach."
 description: "AI agent DLP guide: where agents leak credentials and PII, what catches it at the network layer, and the open-source self-hosted approach."
 date: 2026-04-18
+lastmod: 2026-11-09
 faq:
   - q: "What is AI agent data loss prevention?"
     a: "AI agent data loss prevention (AI agent DLP) is the practice of detecting and blocking sensitive data (credentials, API keys, PII, payment data, source code, secrets) from leaving an organization through an AI agent's outbound traffic. AI agents introduce new leak channels that traditional DLP was not designed for: prompt injection causes the agent to include secrets in HTTP requests, MCP tool calls forward arguments to third-party servers, response-based exfiltration encodes data in URL paths, and chain-of-tool calls split secrets across multiple requests to evade single-request scanning. AI agent DLP needs to inspect every outbound request and every MCP tool argument in real time, with multiple normalization passes to catch encoded payloads."
@@ -102,11 +103,16 @@ Two arguments for open source on the DLP layer specifically:
 
 **Your secrets should never traverse a third party's infrastructure to be scanned.** SaaS DLP routes your prompts and tool calls through the vendor's servers. That is a second-party exposure on the data you are trying to keep private.
 
-**Pipelock** is the open-source self-hosted approach. It runs as a network proxy between the agent and the internet, scans HTTP, MCP, and WebSocket traffic, inspects proxied hostnames before DNS resolution, ships {{< stat key="dlp_patterns" >}} built-in DLP patterns (four with checksum validation), runs six normalization passes plus iterative decoding up to five layers deep, tracks cross-request entropy, scans MCP tool descriptions and tool calls bidirectionally, signs every block decision as a verifiable receipt, and fails closed on every code path. Pair it with OS or network isolation for direct DNS or raw-socket egress (Apache-2.0 core; Enterprise features under ELv2). [Single binary](/install/), no SaaS dependency.
+**Pipelock** is the open-source self-hosted approach. It runs as a network proxy between the agent and the internet, scans HTTP, MCP, and WebSocket traffic, inspects proxied hostnames before DNS resolution, ships {{< stat key="dlp_patterns" >}} built-in DLP patterns (four with checksum validation), runs six normalization passes plus iterative decoding up to five layers deep, tracks cross-request entropy, scans MCP tool descriptions and tool calls bidirectionally, signs every block decision as a verifiable receipt, and fails closed on every code path. It also reads the text inside Office and ZIP uploads, within extraction limits. HTTPS through the forward proxy needs TLS interception, which is off in defaults and all {{< stat key="presets" >}} presets. PDF text isn't extracted yet; PDF uploads only get the existing raw-byte scan. Pair it with OS or network isolation for direct DNS or raw-socket egress (Apache-2.0 core; Enterprise features under ELv2). [Single binary](/install/), no SaaS dependency.
 
 ```bash
-# Forward HTTPS proxy mode: all agent HTTP traffic
-HTTPS_PROXY=http://127.0.0.1:8888 pipelock run
+# Forward proxy mode: start Pipelock, then point the agent at it
+pipelock generate config --preset generic-agent --output pipelock.yaml
+pipelock run --config pipelock.yaml
+# In the agent's shell. HTTPS bodies are scanned only with TLS interception, which presets leave off.
+export HTTPS_PROXY=http://127.0.0.1:8888
+export HTTP_PROXY=http://127.0.0.1:8888
+export http_proxy=http://127.0.0.1:8888
 
 # MCP wrapping mode: wraps any MCP server with bidirectional scanning
 pipelock mcp proxy --config pipelock.yaml -- npx @modelcontextprotocol/server-filesystem /tmp

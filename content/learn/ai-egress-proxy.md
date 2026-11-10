@@ -147,10 +147,13 @@ pipelock claude setup
 # Homebrew alternative on macOS/Linux: {{< install-cmd homebrew >}}
 
 # Run as HTTP proxy
+pipelock generate config --preset generic-agent --output pipelock.yaml
 pipelock run --config pipelock.yaml
 
 # Route agent traffic through it
 export HTTPS_PROXY=http://127.0.0.1:8888
+export HTTP_PROXY=http://127.0.0.1:8888
+export http_proxy=http://127.0.0.1:8888
 
 # Or set up Claude Code with hooks + MCP proxy
 pipelock claude setup

@@ -48,4 +48,4 @@ Linux sandbox socket isolation depends on Landlock support. On amd64 below ABI 9
 
 Use [exact destination grants](/learn/destination-grants/) for a single host and port, [verified local MCP identities](/learn/verified-local-mcp-services/) for a changing local service, or [cooperative command launch](/learn/pipelock-exec/) to route a command through a running proxy. Verify the behavior you depend on before restoring unattended work.
 
-For earlier versions, see the [Pipelock release notes](/learn/pipelock-release-notes/), which list every release post with its upgrade guide.
+Upgrading past v3.7? Read the [v3.8 upgrade guide](/learn/pipelock-v380-upgrade/) next. For earlier versions, see the [Pipelock release notes](/learn/pipelock-release-notes/), which list every release post with its upgrade guide.

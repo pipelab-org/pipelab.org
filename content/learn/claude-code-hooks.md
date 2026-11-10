@@ -146,10 +146,10 @@ By default, `pipelock claude hook` uses a built-in security profile with tool po
 pipelock generate config --preset claude-code > ~/.config/pipelock/claude-code.yaml
 
 # Edit it, then reinstall hooks with the config
-pipelock claude setup
+pipelock claude setup --config ~/.config/pipelock/claude-code.yaml
 ```
 
-The hook automatically uses the [claude-code preset](https://github.com/pipelab-org/pipelock/blob/main/configs/claude-code.yaml) defaults. See the [configuration reference](https://github.com/pipelab-org/pipelock/blob/main/docs/configuration.md) for all options.
+Without `--config`, the hook uses the built-in profile described above, not the claude-code preset. Run `pipelock generate config --preset claude-code` to print the preset that matches your installed binary. See the [configuration reference](https://github.com/pipelab-org/pipelock/blob/main/docs/configuration.md) for all options.
 
 ## Project-level hooks
 

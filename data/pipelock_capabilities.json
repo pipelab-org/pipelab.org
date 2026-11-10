@@ -2,10 +2,10 @@
   "schema_version": 1,
   "source": {
     "repository": "https://github.com/pipelab-org/pipelock",
-    "ref": "v3.7.1",
-    "commit": "d6bb0003c1dac00d3b2df8dd1eb1a51ed8cecd6a",
-    "manifest_sha256": "2c060722c5ba55a08fb5ea8ba4259be156af02a271c2ef3c21dbdf189e2084db",
-    "release_version": "3.7.1",
+    "ref": "v3.8.0",
+    "commit": "556048c1c18d84f7d61d28f686220178a4ff2c4d",
+    "manifest_sha256": "a93045cdc43efb0b3e55fe432a53c19b61c89e12e870f8ecf34625febac932c3",
+    "release_version": "3.8.0",
     "status": "release"
   },
   "tier_counts": {
@@ -63,12 +63,12 @@
         "value": "pipelock mcp proxy",
         "source": {
           "file": "internal/cli/runtime/mcp.go",
-          "symbol": "mcpProxyCmdWithAuditLoggerFactory"
+          "symbol": "mcpProxyCmdWithListenerTimeout"
         }
       },
       "implementation": {
         "file": "internal/cli/runtime/mcp.go",
-        "symbol": "mcpProxyCmdWithAuditLoggerFactory"
+        "symbol": "mcpProxyCmdWithListenerTimeout"
       },
       "detail": {
         "family": "traffic-mediation",
@@ -137,7 +137,7 @@
       },
       "availability": {
         "scope": "platform_dependent",
-        "qualifier": "Kernel-enforced containment requires Linux, a private network namespace, nftables, and the managed identities. The recommended unprivileged systemd service emits signed pre-launch posture from a root signer that verifies its own managed namespace, live runtime mounts, and proxy doorway; contain run instead signs a host-side preflight and also emits a post-session workspace statement. Filesystem confinement is a separate containment.filesystem.mode setting. enforce hides the host filesystem with ProtectSystem=strict and ProtectHome=tmpfs and binds the agent home plus unexpired workspace grants. Every managed launch hides host /run and /dev/shm and binds only the namespace identity under /run; systemd may add its own read-only, empty mount-propagation directory at /run/systemd/incoming. Omitted or off otherwise retains host filesystem visibility. A process that can create a user namespace can remount, same-uid /proc stays visible, private /tmp is shared with the network-namespace anchor and its forwarders, and operator-written units are left unchanged."
+        "qualifier": "Kernel-enforced containment requires Linux, a private network namespace, nftables, and the managed identities. The recommended unprivileged systemd service emits signed pre-launch posture from a root signer that verifies its own managed namespace, live runtime mounts, and proxy doorway; contain run instead signs a host-side preflight and also emits a post-session workspace statement. Filesystem confinement is a separate containment.filesystem.mode setting. enforce hides the host filesystem with ProtectSystem=strict and ProtectHome=tmpfs and binds the agent home plus unexpired workspace grants. Every managed launch configures masks for host /run and /dev/shm and binds only the namespace identity under /run; systemd may add its own read-only, empty mount-propagation directory at /run/systemd/incoming. A visible service unit identity also permits exactly its root-owned, read-only tmpfs or ramfs credentials store under a private /run/credentials mask; only inspectable regular files and no nested mounts are accepted. Service-user-owned credential stores remain refused. The signer observes its own systemd-built twin mount namespace, so its runtime mount claim is a construction claim. The check detects a device that also appears in PID 1's mount table. It misses sharing visible only in another mount namespace, and a bind whose source was unmounted after binding. Omitted or off otherwise retains host filesystem visibility. A process that can create a user namespace can remount, same-uid /proc stays visible, private /tmp is shared with the network-namespace anchor and its forwarders, and operator-written units are left unchanged."
       }
     },
     {

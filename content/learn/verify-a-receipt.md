@@ -45,14 +45,14 @@ Replace `trusted-signing.pub` in these examples with the public key you independ
 
 An intact chain without an end proof reports `VALID PREFIX, END UNPROVEN`. For recorder directories, use `pipelock verify-receipt --chain ./recorder --whole-recorder --key trusted-signing.pub` to check the transcript seal. Receipt-chain mode can exit 3 even after a clean shutdown if EvidenceReceipt v2 receipts have no chain end marker. Other verifiers support independently retained expected heads or sequences where documented.
 
-For [parallel receipt chains](/learn/parallel-receipt-chains/), keep the complete directory and use a group-capable verifier. The published TypeScript and Rust packages at 0.6.5 check whole groups; Python `pipelock-verify` 0.4.1 checks individual shards and chains, including their signed group binding, but doesn't verify the group. Signed recovery seals attest a discontinuity and preserve the damaged history's failure. Read the [v3.7 upgrade guide](/learn/pipelock-v370-upgrade/).
+For [parallel receipt chains](/learn/parallel-receipt-chains/), keep the complete directory and use a group-capable verifier. The published TypeScript and Rust packages at 0.6.15 check whole groups; Python `pipelock-verify` 0.4.1 checks individual shards and chains, including their signed group binding, but doesn't verify the group. Signed recovery seals attest a discontinuity and preserve the damaged history's failure. Read the [v3.7 upgrade guide](/learn/pipelock-v370-upgrade/).
 
 ## The verifier commands
 
 The Pipelock verifier is available as the built-in CLI, a standalone Go binary, and TypeScript, Rust, and Python ports. Choose the exit contract for the command you run:
 
-- Built-in `pipelock verify-receipt` v3.7.1: `0` valid, `1` invalid, malformed or refused, and `2` for a configuration error or a usage error the command checks itself. A missing argument or unknown flag is rejected before the command runs and exits `1`. Chain mode also exits `3` for an intact prefix whose end isn't proven.
-- Standalone Go v3.7.1, TypeScript 0.6.5 and Rust 0.6.5: `0` valid, `1` invalid, `2` runtime error, `64` usage error, and `3` for an intact chain prefix whose end isn't proven. `--allow-prefix` accepts that prefix with exit `0` while retaining its incomplete-end label.
+- Built-in `pipelock verify-receipt` v3.8.0: `0` valid, `1` invalid, malformed or refused, and `2` for a configuration error or a usage error the command checks itself. A missing argument or unknown flag is rejected before the command runs and exits `1`. Chain mode also exits `3` for an intact prefix whose end isn't proven.
+- Standalone Go v3.8.0, TypeScript 0.6.15 and Rust 0.6.15: `0` valid, `1` invalid, `2` runtime error, `64` usage error, and `3` for an intact chain prefix whose end isn't proven. `--allow-prefix` accepts that prefix with exit `0` while retaining its incomplete-end label.
 - Python `pipelock-verify` 0.4.1: `0` for valid receipts or chain linkage, `1` for verification failure, and `2` for argument errors. It has no end-proof state and can exit `0` when a chain's tail is missing. Its success doesn't establish run completeness or whole-group validity.
 
 | Binary | Source | What it covers |

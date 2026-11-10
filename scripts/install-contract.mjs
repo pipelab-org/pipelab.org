@@ -3,12 +3,14 @@ import path from "node:path";
 import { parse as parseYaml } from "yaml";
 
 // Published contract: the v3.7.0 release README's source-build instructions.
-// OCI contract: v3.7.1 README.md, Installation (Helm chart).
+// OCI contract: v3.8.0 README.md, Installation (Helm chart). Releases from
+// v3.8.0 publish images and charts under ghcr.io/pipelab-org; v3.7.1 and older
+// keep their original registry addresses.
 // Both HTML and plain-text Hugo outputs consume data/install.yaml.
 export const sourceBuildTemplate = "git clone --branch vVERSION --depth 1 https://github.com/pipelab-org/pipelock.git\nmake -C pipelock install";
 export const brewInstallCommand = "brew install luckyPipewrench/tap/pipelock";
-export const helmTemplate = "helm install pipelock oci://ghcr.io/luckypipewrench/charts/pipelock --version VERSION";
-const dockerTemplate = "docker pull ghcr.io/luckypipewrench/pipelock:VERSION";
+export const helmTemplate = "helm install pipelock oci://ghcr.io/pipelab-org/charts/pipelock --version VERSION";
+const dockerTemplate = "docker pull ghcr.io/pipelab-org/pipelock:VERSION";
 export const installationCorrection = "> Installation correction (2026-10-16): The `go install` command below doesn't install current Pipelock releases. Use the [current installation guide](/install/) for a release binary or a source build pinned to the release tag. The original post follows unchanged.";
 
 // Install-bearing articles published at 0e166a9c keep their frozen bodies.

@@ -9,7 +9,7 @@ import { parse as parseYaml } from "yaml";
 import { PIN_PATHS, prepareRelease, sha256, verifyManifest, checksumEntries, assertBinaryVersion } from "../scripts/prepare-pipelock-release.mjs";
 
 const ROOT = fileURLToPath(new URL("../", import.meta.url));
-const TAG = "v3.7.2";
+const TAG = "v3.8.1";
 const COMMIT = "a".repeat(40);
 const PUB = "https://github.com/pipelab-org/pipelock/releases/download";
 // Private keys exist in memory for this process only, never in fixture files.
@@ -120,7 +120,7 @@ const negatives = [
     const other = generateKeyPairSync("ed25519").privateKey;
     a.set("release.json.sig", Buffer.from(`ed25519:${sign(null, Buffer.concat([domain, a.get("release.json")]), other).toString("hex")}`));
   } }, /signature rejected/],
-  ["wrong signed tag", { manifest: m => { m.tag = "v3.7.3"; } }, /another tag/],
+  ["wrong signed tag", { manifest: m => { m.tag = "v3.8.2"; } }, /another tag/],
   ["wrong signed commit", { commit: "b".repeat(40) }, /commit.*tag/],
   ["unbound checksum file", { assets: a => a.set("checksums.txt", Buffer.concat([a.get("checksums.txt"), Buffer.from("\n")])) }, /checksum-file binding/],
   ["duplicate checksum entry", { duplicate: true }, /duplicate checksum/],
@@ -133,9 +133,9 @@ const negatives = [
   ["prerelease", { release: r => { r.prerelease = true; } }, /prerelease/],
   ["draft", { release: r => { r.draft = true; } }, /draft/],
   ["downgrade", { tag: "v3.7.0" }, /newer/],
-  ["same release", { tag: "v3.7.1" }, /newer/],
-  ["prerelease tag", { tag: "v3.7.2-beta.1" }, /stable/],
-  ["malicious tag", { tag: "v3.7.2;echo nope" }, /stable/],
+  ["same release", { tag: "v3.8.0" }, /newer/],
+  ["prerelease tag", { tag: "v3.8.1-beta.1" }, /stable/],
+  ["malicious tag", { tag: "v3.8.1;echo nope" }, /stable/],
   ["traversal archive", { entry: "../escape" }, /unsafe/],
   ["absolute archive path", { entry: "/escape" }, /unsafe/],
   ["symlink archive", { entry: "symlink" }, /unsafe/],
