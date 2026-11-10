@@ -128,7 +128,7 @@ test("Hugo derives counts, FAQ text, page metadata, release copy and install com
   f.write("data/stats.yaml", stringify(stats));
   bundle.rules.push({ name: "Synthetic fixture rule" });
   f.write("static/rules/pipelock-community/bundle.yaml", stringify(bundle));
-  f.write("hugo.toml", readFileSync(path.join(f.dir, "hugo.toml"), "utf8").replace('pipelock_version = "3.7.1"', 'pipelock_version = "3.7.9"'));
+  f.write("hugo.toml", readFileSync(path.join(f.dir, "hugo.toml"), "utf8").replace('pipelock_version = "3.8.0"', 'pipelock_version = "3.8.9"'));
   result = f.build();
   assert.equal(result.status, 0, result.stdout + result.stderr);
   for (const [key, label] of [["dlp_patterns", "DLP patterns"], ["direct_deps", "direct dependencies"], ["presets", "presets"], ["assess_config_categories", "categories"]]) {
@@ -136,13 +136,13 @@ test("Hugo derives counts, FAQ text, page metadata, release copy and install com
   }
   assert.ok(f.built("facts/index.html").includes(`Community ${bundle.rules.length} rules`));
   assert.ok(f.built("facts/index.html").includes(`"There are ${stats.dlp_patterns} DLP patterns."`));
-  for (const file of ["llms.txt", "llms-full.txt"]) assert.ok(f.built(file).includes("current release 3.7.9"));
-  assert.ok(f.built("llms-full.txt").includes("git clone --branch v3.7.9"));
-  assert.ok(f.built("llms-full.txt").includes("--version 3.7.9"));
+  for (const file of ["llms.txt", "llms-full.txt"]) assert.ok(f.built(file).includes("current release 3.8.9"));
+  assert.ok(f.built("llms-full.txt").includes("git clone --branch v3.8.9"));
+  assert.ok(f.built("llms-full.txt").includes("--version 3.8.9"));
   assert.ok(f.built("llms-full.txt").includes("/blob/v3.7.1/docs/"), "checked citations retain their revision");
   assert.deepEqual(auditMachineContext(f.dir), []);
 
-  f.write("public/llms-full.txt", f.built("llms-full.txt").replace("--version 3.7.9", "--version 3.0.0") + "\n{{stat:missing}}\n");
+  f.write("public/llms-full.txt", f.built("llms-full.txt").replace("--version 3.8.9", "--version 3.0.0") + "\n{{stat:missing}}\n");
   assert.match(auditMachineContext(f.dir).join("\n"), /unresolved template/);
   assert.match(auditMachineContext(f.dir).join("\n"), /missing shared helm|Helm OCI install/);
   f.write("static/llms.txt", "conflicting copy");
@@ -174,7 +174,7 @@ test("missing facts, unknown tokens, invalid bundles and unreviewed minor copy f
   assert.notEqual(result.status, 0);
   assert.match(result.stdout + result.stderr, /requires the served/);
   f.write("static/rules/pipelock-community/bundle.yaml", read("static/rules/pipelock-community/bundle.yaml"));
-  f.write("data/machine_context.yaml", read("data/machine_context.yaml").replace('minor: "3.7"', 'minor: "3.6"'));
+  f.write("data/machine_context.yaml", read("data/machine_context.yaml").replace('minor: "3.8"', 'minor: "3.7"'));
   result = f.build();
   assert.notEqual(result.status, 0);
   assert.match(result.stdout + result.stderr, /must match the approved release summary/);

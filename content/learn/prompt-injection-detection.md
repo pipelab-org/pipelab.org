@@ -139,10 +139,13 @@ For closed-pipeline agents like Claude Code and Cursor, the network layer is you
 
 ```bash
 # Start the proxy with injection detection enabled
-pipelock run --config balanced.yaml
+pipelock generate config --preset generic-agent --output pipelock.yaml
+pipelock run --config pipelock.yaml
 
 # Point your agent at it
 export HTTPS_PROXY=http://127.0.0.1:8888
+export HTTP_PROXY=http://127.0.0.1:8888
+export http_proxy=http://127.0.0.1:8888
 
 # Wrap MCP servers for tool-level scanning
 pipelock mcp proxy -- npx @some/mcp-server

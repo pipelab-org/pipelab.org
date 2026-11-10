@@ -164,9 +164,11 @@ When the redaction section is enabled in the pipelock config, matched secrets in
 For HTTP that Continue's agent makes outside the MCP surface (curl-style tool calls, REST clients), run pipelock as a forward proxy and point the IDE shell at it:
 
 ```bash
-pipelock run --config ~/.config/pipelock/pipelock.yaml &
+pipelock generate config --preset generic-agent --output "$PWD/pipelock.yaml"
+pipelock run --config "$PWD/pipelock.yaml" &
 export HTTPS_PROXY=http://127.0.0.1:8888
 export HTTP_PROXY=http://127.0.0.1:8888
+export http_proxy=http://127.0.0.1:8888
 export NO_PROXY=127.0.0.1,localhost
 ```
 

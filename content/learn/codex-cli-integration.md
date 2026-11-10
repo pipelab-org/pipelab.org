@@ -4,6 +4,7 @@ linkTitle: "Codex CLI Security"
 subtitle: "Put Pipelock in front of Codex's MCP servers and proxy-aware commands. One installer wraps the servers it can rewrite safely."
 description: "Codex CLI security guide. Wrap Codex MCP servers with pipelock codex install, route proxy-aware commands through Pipelock, and see what each layer covers."
 date: 2026-10-28
+lastmod: 2026-11-09
 learn_cat: operator
 level: intro
 howto_steps:
@@ -37,7 +38,7 @@ related:
 ---
 [Codex](https://learn.chatgpt.com/docs/security) is OpenAI's coding agent. The `codex` CLI reads a real repository, runs commands, and calls tools from MCP servers you register with `codex mcp add`. Pipelock covers two of those paths. It wraps each MCP server with `pipelock mcp proxy`, and it inspects outbound requests from commands that honor proxy settings.
 
-This page is about the Codex CLI at runtime. OpenAI's separate Codex Security product scans connected GitHub repositories, and OpenAI's own [security page](https://learn.chatgpt.com/docs/security) points readers looking for it elsewhere. The full command reference for this integration lives in the [Codex integration guide](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/guides/codex.md) on GitHub.
+This page is about the Codex CLI at runtime. OpenAI's separate Codex Security product scans connected GitHub repositories, and OpenAI's own [security page](https://learn.chatgpt.com/docs/security) points readers looking for it elsewhere. The full command reference for this integration lives in the [Codex integration guide](https://github.com/pipelab-org/pipelock/blob/v3.8.0/docs/guides/codex.md) on GitHub.
 
 ## What Codex already enforces
 
@@ -84,7 +85,9 @@ pipelock codex install --config "$PWD/pipelock.yaml"
 
 The installer reads the servers that `codex mcp list` reports and rewrites each one it can preserve to launch through `pipelock mcp proxy`. It embeds the absolute config path, so the wrapped servers don't depend on the directory Codex starts in. It skips servers that are already wrapped, so you can run it again after `codex mcp add` registers a new one. A server registered by URL becomes a stdio wrapper that reaches the original address through `--upstream`.
 
-It also skips any server whose settings `codex mcp add` can't carry over: a disabled server, custom timeouts, a custom working directory, `env_vars` passthrough, an environment key it can't pass safely, or a URL server with auth or header settings. The dry run prints `skip <name> (<reason>)` for each one and ends with a `Plan:` line counting the servers it wraps and skips. The install still succeeds when it skips servers, and every skipped server keeps talking to Codex without Pipelock in between. Wrap those by hand (step 3) once you've moved the setting the installer can't keep, or accept that they're unprotected.
+For stdio servers, the installer records each environment variable by name in the server's `env_vars` list in `config.toml` and forwards it with Pipelock's `--env`. Export those variables in the shell that runs the installer and Codex. If a server has a literal `env` value, the exported value has to match it, or the install stops with an error naming the server and variable before it changes anything.
+
+It also skips any server whose settings `codex mcp add` can't carry over: a disabled server, custom timeouts, a custom working directory, an `env_vars` entry that isn't a plain variable name or a local source, or a URL server with auth or header settings. The dry run prints `skip <name> (<reason>)` for each one and ends with a `Plan:` line counting the servers it wraps and skips. The install still succeeds when it skips servers, and every skipped server keeps talking to Codex without Pipelock in between. Wrap those by hand (step 3) once you've moved the setting the installer can't keep, or accept that they're unprotected.
 
 Restart Codex, then check:
 
@@ -139,13 +142,16 @@ Plain HTTPS through the proxy shows Pipelock the destination host, not the reque
 
 ## Pass credentials to MCP servers
 
-Codex's `codex mcp add --env` sets the wrapper's environment. Pipelock doesn't forward every wrapper variable to the MCP server it launches. Pass the ones a server needs with Pipelock's own `--env`:
+Codex's `codex mcp add --env` takes `KEY=VALUE`, which puts the value on the process command line where other local processes can read it. Use the `env_vars` list in `~/.codex/config.toml` instead and export the variable before you start Codex. The wrapper inherits `API_KEY` and Pipelock's `--env` forwards it by name to the MCP server:
 
-```bash
-codex mcp add my-server \
-  -- pipelock mcp proxy --config "$PWD/pipelock.yaml" --env API_KEY \
-  -- my-mcp-server
+```toml
+[mcp_servers.my-server]
+command = "pipelock"
+args = ["mcp", "proxy", "--config", "/home/you/pipelock.yaml", "--env", "API_KEY", "--", "my-mcp-server"]
+env_vars = ["API_KEY"]
 ```
+
+`pipelock codex install` writes this list for you when it wraps an existing stdio server.
 
 Pipelock refuses to pass code-loading variables and other blocked names into the server at startup.
 
@@ -183,4 +189,4 @@ The full register is on [known limitations](/learn/known-limitations/).
 - [Claude Code security](/learn/claude-code-security/): hooks, egress inspection and containment for Claude Code
 - [Pipelock contain](/learn/pipelock-contain-guide/): close the direct-egress path on Linux
 
-Sources read 2026-10-28: OpenAI's [Codex security page](https://learn.chatgpt.com/docs/security), [approvals and security page](https://learn.chatgpt.com/docs/agent-approvals-security), [configuration reference](https://learn.chatgpt.com/docs/config-file/config-reference) and [MCP page](https://learn.chatgpt.com/docs/extend/mcp?surface=cli), and the Pipelock v3.7.1 [Codex guide](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/guides/codex.md). OpenAI changes these pages; check them before relying on a quoted default.
+Sources read 2026-10-28: OpenAI's [Codex security page](https://learn.chatgpt.com/docs/security), [approvals and security page](https://learn.chatgpt.com/docs/agent-approvals-security), [configuration reference](https://learn.chatgpt.com/docs/config-file/config-reference) and [MCP page](https://learn.chatgpt.com/docs/extend/mcp?surface=cli). OpenAI changes these pages; check them before relying on a quoted default. Pipelock integration checked 2026-11-10 against the v3.8.0 [Codex guide](https://github.com/pipelab-org/pipelock/blob/v3.8.0/docs/guides/codex.md).

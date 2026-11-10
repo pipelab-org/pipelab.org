@@ -29,7 +29,7 @@
              It otherwise mirrors Hugo's built-in RSS output: a summary in
              description, and no full-text content:encoded element. */ -}}
       {{- $correction := partial "blog-updates.html" (dict "page" . "format" "rss") -}}
-      {{- $description := printf "%s%s" $correction (or .Summary (partial "fact-text.html" .Description)) -}}
+      {{- $description := printf "%s%s" $correction (partial "fact-text.html" (or .Summary .Description)) -}}
       <item>
         <title>{{ .Title }}</title>
         <link>{{ .Permalink }}</link>

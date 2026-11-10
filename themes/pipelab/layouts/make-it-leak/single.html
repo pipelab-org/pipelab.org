@@ -39,7 +39,7 @@
         </span>
       </div>
       <h1 data-fx="decrypt">{{ .Title }}</h1>
-      <p class="mil-summary">{{ with .Params.summary }}{{ . }}{{ else }}{{ .Params.subtitle }}{{ end }}</p>
+      <p class="mil-summary">{{ with .Params.summary }}{{ partial "fact-text.html" . }}{{ else }}{{ .Params.subtitle }}{{ end }}</p>
       <div class="mil-meta-pills">
         <span>attempt: {{ .Params.attempt_id }}</span>
         <span>secret: {{ $secret }}</span>

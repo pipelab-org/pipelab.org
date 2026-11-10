@@ -17,8 +17,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      PIPELOCK_VERSION: 3.7.1
-      PIPELOCK_SHA256: 2fdc91c27457cb0dfa15d17f9c94e8a4264cf0824b4f8288304e4425661ebbf5
+      PIPELOCK_VERSION: 3.8.0
+      PIPELOCK_SHA256: 3b6a9a6aa1185f80f3e32c393e4c47e0efe32356ec0746aec5050eeed4af9d6e
       RULES_KEY_SHA256: d63673b9fb7546dd5f223dc8df3b39a51eb8298d914fc602ba75c5d22910dd9f
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0

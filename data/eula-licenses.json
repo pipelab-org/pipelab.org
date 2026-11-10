@@ -1,7 +1,7 @@
 {
   "repository": "https://github.com/pipelab-org/pipelock",
-  "tag": "v3.7.1",
-  "commit": "d6bb0003c1dac00d3b2df8dd1eb1a51ed8cecd6a",
+  "tag": "v3.8.0",
+  "commit": "556048c1c18d84f7d61d28f686220178a4ff2c4d",
   "scope_source": "README.md",
   "licenses": [
     {

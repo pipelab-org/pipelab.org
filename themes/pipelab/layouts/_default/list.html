@@ -12,7 +12,7 @@
     <li class="post-item">
       {{ if not .Date.IsZero }}<span class="post-date">{{ .Date.Format "January 2, 2006" }}</span>{{ end }}
       <h2 class="post-title"><a href="{{ .Permalink }}">{{ .Title }}</a></h2>
-      {{ with .Params.summary }}<p class="post-summary">{{ . }}</p>{{ end }}
+      {{ with .Params.summary }}<p class="post-summary">{{ partial "fact-text.html" . }}</p>{{ end }}
     </li>
     {{ end }}
   </ul>

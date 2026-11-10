@@ -315,8 +315,11 @@ If you have zero layers today, start with egress inspection. It covers the wides
 pipelock claude setup
 
 # Or just proxy HTTP traffic for any agent
+pipelock generate config --preset generic-agent --output pipelock.yaml
 export HTTPS_PROXY=http://127.0.0.1:8888
-pipelock run
+export HTTP_PROXY=http://127.0.0.1:8888
+export http_proxy=http://127.0.0.1:8888
+pipelock run --config pipelock.yaml
 ```
 
 Then add hooks and guardrails as your threat model demands. The three layers are complementary, not competing.

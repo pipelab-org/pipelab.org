@@ -172,10 +172,13 @@ You can't install model-layer guardrails. Network-layer scanning is your only in
 
 ```bash
 # Start the proxy with injection scanning enabled
+pipelock generate config --preset generic-agent --output pipelock.yaml
 pipelock run --config pipelock.yaml
 
 # Point the agent at it
 export HTTPS_PROXY=http://127.0.0.1:8888
+export HTTP_PROXY=http://127.0.0.1:8888
+export http_proxy=http://127.0.0.1:8888
 
 # Wrap MCP servers
 pipelock mcp proxy -- npx @some/mcp-server

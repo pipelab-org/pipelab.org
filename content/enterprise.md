@@ -18,7 +18,7 @@ Deploy Pipelock with the published Helm chart from the OCI registry. The chart v
 
 {{< install-block "helm" >}}
 
-See the [tagged chart documentation](https://github.com/pipelab-org/pipelock/blob/v3.7.1/charts/pipelock/README.md) for chart values and the [install guide](/install/) for source builds, Docker, Homebrew, and release binaries.
+See the [tagged chart documentation](https://github.com/pipelab-org/pipelock/blob/v3.8.0/charts/pipelock/README.md) for chart values and the [install guide](/install/) for source builds, Docker, Homebrew, and release binaries.
 
 ## More on Pipelock
 

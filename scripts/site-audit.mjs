@@ -1164,7 +1164,7 @@ if (currentVersion) {
   const renderedPipelockPage = pageByRoute.get("/pipelock/");
   if (!renderedPipelockPage) {
     issues.push("content/pipelock.md: product page did not render, cannot verify the Docker image version");
-  } else if (!renderedPipelockPage.html.includes(`ghcr.io/luckypipewrench/pipelock:${currentVersion}`)) {
+  } else if (!renderedPipelockPage.html.includes(`ghcr.io/pipelab-org/pipelock:${currentVersion}`)) {
     issues.push(`/pipelock: rendered page missing Docker image version ${currentVersion}`);
   }
 }

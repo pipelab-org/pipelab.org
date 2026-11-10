@@ -132,7 +132,7 @@ Open source AI firewalls should be easy to deploy wherever your agents run. Pipe
 **Docker.** Pull and run with two environment variables.
 
 ```bash
-docker run -p 8888:8888 ghcr.io/luckypipewrench/pipelock:latest
+docker run -p 8888:8888 ghcr.io/pipelab-org/pipelock:3.8.0
 ```
 
 **Kubernetes companion proxy.** In `v2.2.0`, `pipelock init sidecar --inject-spec` generates an enforced companion proxy topology with a separate proxy Deployment, Service, NetworkPolicies, and bound workload identity. Use this when you want the cluster to enforce that the agent pod can only reach Pipelock. The full guide is [Pipelock Kubernetes companion proxy](/learn/pipelock-kubernetes-companion-proxy/).
@@ -154,8 +154,11 @@ docker run -p 8888:8888 ghcr.io/luckypipewrench/pipelock:latest
 pipelock claude setup
 
 # Or proxy any agent's HTTP traffic
+pipelock generate config --preset generic-agent --output pipelock.yaml
 export HTTPS_PROXY=http://127.0.0.1:8888
-pipelock run
+export HTTP_PROXY=http://127.0.0.1:8888
+export http_proxy=http://127.0.0.1:8888
+pipelock run --config pipelock.yaml
 ```
 
 Pipelock scans mediated traffic for {{< stat key="dlp_patterns" >}} credential patterns, prompt injection (with 6-pass encoding normalization), SSRF, DNS rebinding, and MCP tool poisoning. Every decision lands in the [flight recorder](/learn/flight-recorder/) audit log, and enabling a signing key adds mediator-signed action receipts on top.

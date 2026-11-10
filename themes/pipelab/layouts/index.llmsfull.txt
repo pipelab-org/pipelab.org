@@ -94,11 +94,11 @@ The URL pipeline first rejects an oversized URL before parsing it. After parsing
 
 ### Browser Shield
 
-Browser Shield is opt-in and sanitizes supported HTML and SVG markup. Existing inline scripts and standalone JavaScript responses keep their original bytes; response scanning follows its own configured policy. SVG delivery requires complete-body structural validation and is refused when Shield cannot validate it. The default oversize action, scan_head, rewrites only a prefix and records partial coverage; the remainder is unshielded. Guide: https://pipelab.org/learn/browser-shield/. Release contract: https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/configuration.md#browser-shield.
+Browser Shield is opt-in and sanitizes supported HTML and SVG markup. Existing inline scripts and standalone JavaScript responses keep their original bytes; response scanning follows its own configured policy. SVG delivery requires complete-body structural validation and is refused when Shield cannot validate it. The default oversize action, scan_head, rewrites only a prefix and records partial coverage; the remainder is unshielded. Guide: https://pipelab.org/learn/browser-shield/. Release contract: https://github.com/pipelab-org/pipelock/blob/v3.8.0/docs/configuration.md#browser-shield.
 
 ### Filesystem Sentinel
 
-Filesystem Sentinel watches configured directories for secrets written to disk. It detects writes after they happen. The default action warns. In subprocess MCP mode, block can terminate the child after an agent-attributed DLP finding; skipped or unreadable files do not create findings. Release contract: https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/guides/filesystem-sentinel.md.
+Filesystem Sentinel watches configured directories for secrets written to disk. It detects writes after they happen. The default action warns. In subprocess MCP mode, block can terminate the child after an agent-attributed DLP finding; skipped or unreadable files do not create findings. Release contract: https://github.com/pipelab-org/pipelock/blob/v3.8.0/docs/guides/filesystem-sentinel.md.
 
 ### Fail-closed defaults
 
@@ -208,7 +208,7 @@ The container registry tags published images by version. Pin to a specific tag i
 {{ partial "machine/install.txt" (dict "id" "helm") }}
 ```
 
-The tagged chart documentation is https://github.com/pipelab-org/pipelock/blob/v3.7.1/charts/pipelock/README.md.
+The tagged chart documentation is https://github.com/pipelab-org/pipelock/blob/v3.8.0/charts/pipelock/README.md.
 
 ### Homebrew
 
@@ -226,7 +226,7 @@ For enforced Kubernetes deployments, `pipelock init sidecar --inject-spec <manif
 
 ### As a GitHub Action
 
-The Pipelock repository includes a composite GitHub Action. Use `uses: pipelab-org/pipelock@v3.7.1` or pin it to the full release commit SHA for stricter supply-chain control. The action runs Pipelock in CI against a repository, scanning for AI-agent security risks, credential leaks, unsafe configs, and PR-diff findings. The Pipelock project uses this public action on its own pull requests.
+The Pipelock repository includes a composite GitHub Action. Use `uses: pipelab-org/pipelock@v3.8.0` or pin it to the full release commit SHA for stricter supply-chain control. The action runs Pipelock in CI against a repository, scanning for AI-agent security risks, credential leaks, unsafe configs, and PR-diff findings. The Pipelock project uses this public action on its own pull requests.
 
 ## Licensing
 
