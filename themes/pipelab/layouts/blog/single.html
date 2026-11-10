@@ -16,7 +16,7 @@
       {{ end }}
       {{ with $eyebrow }}<p class="blog-eyebrow">{{ . }}</p>{{ end }}
       <h1 data-fx="decrypt">{{ .Title }}</h1>
-      {{ with .Params.summary }}<p class="blog-lead">{{ . }}</p>{{ end }}
+      {{ with .Params.summary }}<p class="blog-lead">{{ partial "fact-text.html" . }}</p>{{ end }}
       <dl class="blog-article-meta">
         {{ with .Params.author }}<div><dt>Author</dt><dd><span class="blog-meta-dot" aria-hidden="true"></span>{{ . }}</dd></div>{{ end }}
         {{ $isUpdated := and (not .Lastmod.IsZero) (not (.Lastmod.Equal .Date)) }}

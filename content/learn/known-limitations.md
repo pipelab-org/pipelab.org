@@ -4,7 +4,7 @@ linkTitle: "Known Limitations"
 subtitle: "A standing, public register of what Pipelock does not protect against. Honesty is the moat."
 description: "A standing register of what Pipelock does not catch: process-level bypass, non-HTTP exfiltration, covert channels, and semantic prompt injection."
 date: 2026-06-13
-lastmod: 2026-06-13
+lastmod: 2026-11-09
 learn_cat: concepts
 level: ref
 tags:
