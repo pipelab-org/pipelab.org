@@ -216,7 +216,7 @@ function catalogSource(t) {
   for (const name of ["data", "content/hub", "layouts", "assets/hub", "scripts/hub"]) cpSync(path.join(root, name), path.join(dir, name), { recursive: true });
   mkdirSync(path.join(dir, "content/learn"), { recursive: true });
   cpSync(path.join(root, "content/learn/mcp-security.md"), path.join(dir, "content/learn/mcp-security.md"));
-  mkdirSync(path.join(dir, "content/blog"), { recursive: true }); writeFileSync(path.join(dir, "content/blog/pipelock-v370-release.md"), '---\ntitle: Release control\ndate: 2026-11-05\n---\n');
+  mkdirSync(path.join(dir, "content/blog"), { recursive: true }); writeFileSync(path.join(dir, "content/blog/pipelock-v380-release.md"), '---\ntitle: Release control\ndate: 2026-11-05\n---\n');
   symlinkSync(path.join(root, "static"), path.join(dir, "static"), "dir");
   mkdirSync(path.join(dir, "distribution"));
   for (const file of ["rules", "_headers", "robots.txt"]) cpSync(path.join(root, "static", file), path.join(dir, "distribution", file), { recursive: true });

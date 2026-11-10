@@ -105,7 +105,7 @@ function buildFixture(t) {
   cpSync(path.join(root, "content/hub"), path.join(dir, "content/hub"), { recursive: true });
   cpSync(path.join(root, "content/learn/mcp-security.md"), path.join(dir, "content/learn/mcp-security.md"));
   mkdirSync(path.join(dir, "content/blog"));
-  writeFileSync(path.join(dir, "content/blog/pipelock-v370-release.md"), '---\ntitle: Release control\ndate: 2026-11-05\n---\n');
+  writeFileSync(path.join(dir, "content/blog/pipelock-v380-release.md"), '---\ntitle: Release control\ndate: 2026-11-05\n---\n');
   cpSync(path.join(root, "assets/hub"), path.join(dir, "assets/hub"), { recursive: true });
   mkdirSync(path.join(dir, "assets/hub/community/example/example-bundle"), { recursive: true });
   writeFileSync(path.join(dir, "assets/hub/community/example/example-bundle/bundle.yaml"), "fixture: exact-byte-download\n");
@@ -167,7 +167,7 @@ test("real Hugo builds enforce omitted/false closed, true open, and invalid swit
       const relative = path.relative(path.join(root, "static"), file);
       assert.deepEqual(readFileSync(path.join(f.dir, "public", relative)), readFileSync(file), relative);
     }
-    assert.ok(f.built("llms.txt").includes("v3.7 upgrade actions"));
+    assert.ok(f.built("llms.txt").includes("v3.8 upgrade actions"));
     assert.ok(f.built("learn/mcp-security/index.md").includes("MCP"));
     for (const route of ["/hub/", "/hub/index.md", "/hub/index.json", "/hub/community/example/example-bundle/bundle.yaml", "/schemas/pipelab-hub/listing-v1.json"]) {
       assert.equal((await fetch(origin + route, { headers: { Accept: "text/markdown" } })).status, 404, route);

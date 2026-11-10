@@ -1,7 +1,7 @@
 ---
 title: "Pipelock v3.8 Upgrade Guide"
 linkTitle: "Pipelock v3.8 Upgrade"
-description: "Upgrade to Pipelock v3.8: move metrics to a dedicated listener, update ghcr.io/pipelab-org image and chart references, and review the audit mode name, exceptions, and presets."
+description: "Upgrade to Pipelock v3.8: move metrics to a dedicated listener, use ghcr.io/pipelab-org images and charts, and review audit mode, exceptions and presets."
 date: 2026-11-09
 learn_cat: operator
 level: intermediate
