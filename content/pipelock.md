@@ -99,11 +99,15 @@ faq:
         <div class="product-runbook-artifact pipelock-command"><button type="button" data-cmd-copy aria-label="Copy: pipelock verify-receipt"><span class="prompt">$ </span><span class="cmd-text">pipelock verify-receipt receipt.json --key signer.pub</span></button></div>
       </li>
     </ol>
-    <nav class="pipelock-runbook-links" aria-label="Pipelock setup guides">
+    <nav class="pipelock-runbook-links" aria-label="Pipelock guides">
       <a href="/install/">All install methods</a>
       <a href="/learn/claude-code-hooks/">Claude Code guide</a>
       <a href="/learn/mcp-proxy/">MCP proxy guide</a>
       <a href="/learn/mcp-security/">MCP security checklist</a>
+      <a href="/learn/mcp-vulnerabilities/">MCP vulnerabilities and CVEs</a>
+      <a href="/learn/claude-code-security/">Claude Code hardening</a>
+      <a href="/learn/ai-agent-security/">AI agent security checklist</a>
+      <a href="/learn/open-source-ai-firewall/">Open source AI firewall</a>
     </nav>
     <p class="pipelock-runbook-release"><span>Current container</span><code>{{< install-cmd docker >}}</code></p>
     <p class="pipelock-runbook-release"><span>Helm chart (OCI)</span><code>{{< install-cmd helm >}}</code></p>

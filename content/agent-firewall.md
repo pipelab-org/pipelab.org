@@ -270,7 +270,7 @@ To see what your agent traffic looks like before enforcing, run `pipelock audit 
 **Concepts:**
 
 - [AI Agent Security Categories](/learn/ai-agent-security-categories/): map of the six product categories selling themselves as agent security
-- [Agent Egress Security](/learn/agent-egress-security/), [AI Egress Proxy](/learn/ai-egress-proxy/), [AI Agent Security](/learn/ai-agent-security/), [open source AI firewall](/learn/open-source-ai-firewall/)
+- [Agent Egress Security](/learn/agent-egress-security/), [AI Egress Proxy](/learn/ai-egress-proxy/), [AI Agent Security](/learn/ai-agent-security/), [open source AI firewall](/learn/open-source-ai-firewall/), [MCP vulnerabilities](/learn/mcp-vulnerabilities/), [Claude Code security](/learn/claude-code-security/)
 - [MCP Security](/learn/mcp-security/), [MCP Proxy](/learn/mcp-proxy/), [MCP Gateway](/learn/mcp-gateway/), [MCP Authorization](/learn/mcp-authorization/), [MCP Security Tools](/learn/mcp-security-tools/), [MCP Tool Poisoning](/learn/mcp-tool-poisoning/), [Shadow MCP](/learn/shadow-mcp/)
 - [LLM Prompt Injection](/learn/llm-prompt-injection/), [Prompt Injection Detection](/learn/prompt-injection-detection/), [OWASP Agentic Top 10](/learn/owasp-agentic-top10/), [OWASP MCP Top 10](/learn/owasp-mcp-top10/)
 - [Agent Firewall Checklist](/agent-firewall-checklist/): 15 requirements for evaluating implementations
