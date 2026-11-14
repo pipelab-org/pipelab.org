@@ -48,7 +48,7 @@ A prompt or LLM firewall checks content entering or leaving a model-powered appl
 
 An agent egress firewall mediates supported traffic between an agent and external services. A WAF generally protects the application receiving web requests. Both can protect different points in the same workflow. [MCP vulnerabilities](/learn/mcp-vulnerabilities/) explains risks in tool descriptions and responses, while [AI agent security](/learn/ai-agent-security/) covers the broader runtime.
 
-Pipelock inspects supported mediated traffic, with checks and outcomes dependent on the path and configuration. HTTPS CONNECT payload inspection requires TLS interception; without it, inspection is limited to hostname and URL information. Network isolation or another containment control is needed to prevent direct proxy bypass. Detection can miss secrets or instructions, even on inspected paths. See [Pipelock](/pipelock/) for deployment options.
+Pipelock inspects supported mediated traffic, with checks and outcomes dependent on the path and configuration. HTTPS CONNECT payload inspection requires TLS interception; without it, the proxy sees only the destination hostname, not the path, query, or body. Network isolation or another containment control is needed to prevent direct proxy bypass. Detection can miss secrets or instructions, even on inspected paths. See [Pipelock](/pipelock/) for deployment options.
 
 ## What is an open source AI firewall?
 
