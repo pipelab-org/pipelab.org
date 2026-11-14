@@ -1,11 +1,11 @@
 ---
 title: "Runlayer Pricing & Features vs Pipelock (Free, Open Source)"
 linkTitle: "Pipelock vs Runlayer"
-seoTitle: "Runlayer Pricing & Features vs Pipelock"
+seoTitle: "Runlayer Pricing: Compare Pipelock"
 subtitle: "A self-hosted proxy that inspects routed agent traffic, next to a Runlayer-hosted or self-hosted AI control plane with MCP governance and content inspection."
-description: "Runlayer pricing and features vs Pipelock: a deployment-sized platform fee and MCP control plane next to a free, open-source agent traffic proxy."
+description: "Compare Runlayer pricing and MCP governance with Pipelock’s free core and paid plans. Runlayer asks buyers to contact its account team for terms."
 date: 2026-04-05
-lastmod: 2026-10-14
+lastmod: 2026-11-13
 reviewed: "October 2026"
 compare_cat: "platform"
 compare:
@@ -13,7 +13,7 @@ compare:
   subject_job: "AI control plane. A governed MCP gateway with a large MCP catalog, identity-based access, shadow AI discovery, configurable scanning of tool definitions, inputs, and outputs, and audit across many AI clients."
   subject_boundary: "Runlayer-hosted or self-hosted control plane with MCP governance and content inspection"
   subject_source: "Closed source (Anysource Inc.)"
-  subject_pricing: "Platform fee based on deployment size; no per-seat charges or dollar amount in the cited description"
+  subject_pricing: "Commercial terms available from Runlayer’s account team"
   subject_deploy: "Runlayer-hosted single tenant, or self-hosted on AWS ECS with Terraform or on Kubernetes; the site advertises SOC 2, HIPAA, and GDPR"
   pick_subject: "Your problem is who may use which MCP servers across a company, with identity-based access, a catalog, shadow AI discovery, and scanning at the gateway."
   pick_pipelock: "Your problem is what's inside agent traffic on HTTP and WebSocket as well as MCP, with open detection rules and receipts you can verify offline."
@@ -32,7 +32,7 @@ sources:
     note: "describes the gateway as handling discovery, authentication, input and output filtering, and observability"
   - label: "Runlayer docs: deployment overview"
     url: "https://docs.runlayer.com/deployment/overview"
-    checked: 2026-10-14
+    checked: 2026-11-13
     note: "Runlayer-hosted single-tenant or self-hosted deployment, with AWS ECS and Terraform or Kubernetes options; says to ask the Runlayer account team for commercial terms"
   - label: "Runlayer docs: ToolGuard"
     url: "https://docs.runlayer.com/runlayer-toolguard"
@@ -43,9 +43,9 @@ sources:
     checked: 2026-10-14
     note: "logs tool calls, policy and security events, and scan metadata, with export and retention controls; no offline signature-verification format described"
   - label: "Runlayer blog: Runlayer vs. Natoma"
-    url: "https://llms.runlayer.com/blog/runlayer-vs-natoma"
-    checked: 2026-10-14
-    note: "describes a platform fee scoped to deployment size with no per-seat pricing, no dollar amount; says Runlayer sits between all 300+ MCP clients and their servers; lists rug-pull detection as a ToolGuard capability"
+    url: "https://www.runlayer.com/llms/runlayer-vs-natoma"
+    checked: 2026-11-13
+    note: "says Runlayer sits between every MCP client in an organization and the servers those clients connect to; lists rug-pull detection as a ToolGuard capability"
 faq:
   - q: "What's the difference between Pipelock and Runlayer?"
     a: "Pipelock is an open-source proxy that scans agent traffic routed through it across HTTP, WebSocket, and MCP, and can emit signed receipts when a recorder directory and signing key are configured. Runlayer is an AI control plane with MCP access governance, a large catalog, identity-based access, shadow AI discovery, and configurable inspection of tool definitions, arguments, and outputs. Runlayer offers Runlayer-hosted and self-hosted deployment. Both inspect MCP content; Pipelock also covers routed HTTP and WebSocket traffic."
@@ -59,13 +59,13 @@ faq:
 
 **[Pipelock](/pipelock/)** is an open-source agent firewall. It scans HTTP, MCP, and WebSocket traffic routed through it for credential leaks, injection, SSRF, and tool poisoning, can emit signed action receipts for mediated decisions when a signing key is configured, and runs as a single self-hosted binary.
 
-**[Runlayer](https://www.runlayer.com/)** describes an AI control plane with MCP access governance and configurable inspection of tool definitions, arguments, and outputs. Its site lists a catalog of more than 18,000 MCPs, shadow AI discovery across unmanaged agents and client configs, and SOC 2, HIPAA, and GDPR badges. Its [Natoma comparison post](https://llms.runlayer.com/blog/runlayer-vs-natoma) says it sits between more than 300 MCP clients and their servers. Its [deployment docs](https://docs.runlayer.com/deployment/overview) describe Runlayer-hosted and self-hosted deployment.
+**[Runlayer](https://www.runlayer.com/)** describes an AI control plane with MCP access governance and configurable inspection of tool definitions, arguments, and outputs. Its site lists a catalog of more than 18,000 MCPs, shadow AI discovery across unmanaged agents and client configs, and SOC 2, HIPAA, and GDPR badges. Its [Natoma comparison post](https://www.runlayer.com/llms/runlayer-vs-natoma) says it sits between every MCP client in an organization and the servers those clients connect to. Its [deployment docs](https://docs.runlayer.com/deployment/overview) describe Runlayer-hosted and self-hosted deployment.
 
 Pipelock is a self-hosted proxy for supported HTTP, WebSocket, and MCP paths, with content scanning on traffic routed through it. Inspecting inner HTTPS requests and responses carried through CONNECT tunnels requires TLS interception. Fetch mode can inspect content fetched from HTTPS origins.
 
 ### Runlayer pricing
 
-Runlayer describes a platform fee based on deployment size, with no per-seat charges. Its public pricing description doesn't include a dollar amount, so you'll need a quote for the deployment you're evaluating. Pipelock's Apache-2.0 core is free. Pro adds named security profiles with separate policies and budgets. Enterprise adds central fleet governance. See [current Pipelock plans and pricing](/pricing/).
+Runlayer’s [deployment documentation](https://docs.runlayer.com/deployment/overview) directs buyers to its account team for commercial terms; it doesn’t list a price. Pipelock's Apache-2.0 core is free. Pro adds named security profiles with separate policies and budgets. Enterprise adds central fleet governance. See [current Pipelock plans and pricing](/pricing/).
 
 ## Feature comparison
 
@@ -83,7 +83,7 @@ Runlayer describes a platform fee based on deployment size, with no per-seat cha
 | **Signed receipts** | With an enabled flight recorder, recorder directory and signing key, Pipelock can emit signed receipts for covered mediated decisions. Emission is best-effort by default; receipts can be verified offline against a trusted operator public key. | Audit logs and exports; its audit-log page says "All logs are tamper-proof." An offline signed-receipt format wasn't found on the audit-log and ToolGuard pages checked on 2026-10-14. |
 | **Compliance** | Assess report: [OWASP MCP Top 10](/learn/owasp-mcp-top10/), [OWASP Agentic Top 10](/learn/owasp-agentic-top10/), [MITRE ATLAS](/learn/mitre-atlas/), [EU AI Act](/learn/eu-ai-act-compliance/), [NIST AI RMF](/learn/nist-ai-rmf/), [HIPAA Security Rule](/learn/hipaa-security-rule/), [SOC 2](/learn/soc2-trust-services-criteria/); published documentation mappings: [OWASP Agentic AI Threats and Mitigations](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/owasp-agentic-top15-mapping.md), [OWASP LLM Top 10](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/owasp-llm-top10-mapping.md), [NIST 800-53](https://github.com/pipelab-org/pipelock/blob/v3.7.1/docs/compliance/nist-800-53.md) | SOC 2, HIPAA, GDPR advertised |
 | **Source availability** | Apache-2.0 core; Enterprise under ELv2 | Closed source |
-| **Pricing** | Free core; paid tiers published | Platform fee based on deployment size; no per-seat charges or dollar amount in the cited description |
+| **Pricing** | Free core; paid tiers published | Commercial terms available from Runlayer’s account team |
 
 ## Where Runlayer is stronger
 
