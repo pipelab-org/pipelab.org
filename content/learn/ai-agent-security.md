@@ -5,8 +5,14 @@ seoTitle: "AI Agent Security & Hardening: 2026 Checklist"
 subtitle: "Identity, scoped tokens, sandboxing, egress allowlists, approvals, logging, and a kill switch, mapped to OWASP and ISACA."
 description: "AI agent security and hardening checklist mapped to OWASP: identity, scoped tokens, sandbox, egress allowlist, approvals, logging, and kill switch."
 date: 2026-04-07
-lastmod: 2026-10-21
+lastmod: 2026-11-14
 faq:
+  - q: "How do you secure an AI agent?"
+    a: "Give the agent a separate, least-privilege identity, restrict its tools and network access, isolate its runtime and memory, require approval for consequential actions, and test and monitor those controls."
+  - q: "What are the top 3 AI security risks?"
+    a: "Three major risks for agents are prompt injection that redirects behavior, excessive permissions that let an agent misuse tools, and exposure of sensitive data through tool calls or network traffic. The ranking depends on the deployment."
+  - q: "What are the best practices for AI security?"
+    a: "Inventory agents and their access, scope and rotate credentials, treat external content as untrusted data, isolate workloads, log decisions, and regularly test controls against realistic attacks."
   - q: "What are the three layers of AI agent security?"
     a: "AI agent security has three distinct layers: agent-side hooks (intercept tool calls before execution), inference guardrails (classify prompts and completions for safety), and egress inspection (scan actual network traffic between the agent and the internet). Each layer catches different attacks. No single layer covers everything."
   - q: "Why do AI agents need security beyond the model's built-in safety?"
@@ -29,7 +35,7 @@ tags:
   - explainer
 ---
 
-*Last updated: 2026-10-21.*
+*Last updated: 2026-11-14.*
 
 AI agent security is not one tool or one layer. Your agent has API keys, file system access, and an internet connection. When something goes wrong, secrets leave through HTTP requests, MCP tool calls, or DNS queries before anyone notices. The model's built-in safety training helps, but it's not a security boundary. It can be bypassed with the right prompt.
 
@@ -95,7 +101,7 @@ Only give the agent the keys it uses. Prefer short-lived tokens with automatic r
 
 ### 3. Run tools and code in a sandbox
 
-ISACA: "Run tool execution, code interpretation, browser automation, and file parsing in sandboxed environments such as containers, virtual machines (VMs), or microVMs." The OWASP cheat sheet's Don'ts include letting agents "execute arbitrary code without sandboxing."
+For a development setup, see [Claude Code security](/learn/claude-code-security/). ISACA: "Run tool execution, code interpretation, browser automation, and file parsing in sandboxed environments such as containers, virtual machines (VMs), or microVMs." The OWASP cheat sheet's Don'ts include letting agents "execute arbitrary code without sandboxing."
 
 **What Pipelock does:** `pipelock sandbox` and `pipelock mcp proxy --sandbox` run a command with Landlock filesystem rules, a network namespace, and, on `linux/amd64` only, a seccomp syscall filter. Protected directories such as `~/.ssh`, `~/.aws`, and `~/.kube` are denied. Inside the namespace, HTTP(S) can only leave through Pipelock. On macOS it uses sandbox-exec profiles. `strict: true` refuses to start if any layer is unavailable:
 
@@ -137,7 +143,7 @@ Validation (v3.7.0): `Config validation: OK`, `Mode: strict`, `API allowlist: 4 
 
 `*.example.com` matches subdomains and the apex. Wildcards over a whole TLD (`*.com`) are refused. Leave chat platforms such as Slack, Discord, and Telegram off the list unless you need them; they are common exfiltration channels. In `balanced` mode (the default) all domains are reachable, and Pipelock blocks known-bad traffic instead.
 
-The allowlist only applies to traffic that goes through Pipelock. Enforce that with the sandbox, container networking, or a Kubernetes NetworkPolicy (`pipelock init sidecar` generates a companion-proxy setup).
+See the [open-source AI firewall guide](/learn/open-source-ai-firewall/) for deployment choices. The allowlist only applies to traffic that goes through Pipelock. Enforce that with the sandbox, container networking, or a Kubernetes NetworkPolicy (`pipelock init sidecar` generates a companion-proxy setup).
 
 ### 5. Require approval for high-impact actions
 
@@ -220,6 +226,15 @@ Validation (v3.7.0): run with `PIPELOCK_KILLSWITCH_API_TOKEN` set, `Config valid
 Don't set `enabled: true` unless you want deny-all from startup. That field is a trigger, not an on/off switch for the feature. To stop traffic, `touch /var/run/pipelock/kill`, send `SIGUSR1`, or `POST /api/v1/killswitch` on the API port with the bearer token. Under `pipelock mcp proxy`, the API port serves only the deferred-action routes, so use the sentinel file there. A tool call already sent upstream before activation can't be recalled.
 
 For a softer response than deny-all, adaptive enforcement and airlock can move one session into observe-only, read-only, or drain tiers. See the [kill switch and airlock reference](https://github.com/pipelab-org/pipelock/blob/v3.7.0/docs/configuration.md#kill-switch).
+
+## Tool, instruction, and memory controls
+
+- **Tool allowlists:** Expose only the tools and operations needed for the task. Validate arguments and enforce authorization outside the model, including limits on paths, destinations, and write operations.
+- **MCP servers:** Check the server's publisher, source, dependencies, requested permissions, and update process before connecting it. Pin and review versions, watch for changes to tool descriptions, and remove unused servers. The [MCP vulnerabilities guide](/learn/mcp-vulnerabilities/) covers common failure modes.
+- **Instructions and data:** Keep system instructions separate from retrieved pages, files, messages, and tool results. Treat those inputs as untrusted data, and enforce permissions even when the model follows an injected instruction.
+- **Memory:** Separate stored context by user, tenant, and agent where appropriate. Limit who can write or retrieve it, review persistent entries, and provide a way to delete poisoned or obsolete memory.
+
+Use the [OWASP AI Agent Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/AI_Agent_Security_Cheat_Sheet.html), the [OWASP LLM Top 10](https://genai.owasp.org/resource/owasp-top-10-for-llm-applications-2025/), and the [OWASP Agentic Top 10](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/) to map threats to controls. The [NIST AI Risk Management Framework](https://www.nist.gov/itl/ai-risk-management-framework) provides a broader process for governing, measuring, and managing AI risk.
 
 ## Beyond the seven: test it
 

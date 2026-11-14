@@ -173,5 +173,8 @@ Not every egress proxy does the same thing. [iron-proxy](/compare/pipelock-vs-ir
 - [MCP Gateway](/learn/mcp-gateway/): routing and access control vs content inspection for MCP
 - [MCP Security](/learn/mcp-security/): the MCP attack surface and how to scan it
 - [AI Agent Security](/learn/ai-agent-security/): hooks, guardrails, and egress inspection compared
+- [Open source AI firewall](/learn/open-source-ai-firewall/): AI firewall types and how to choose one
+- [MCP vulnerabilities](/learn/mcp-vulnerabilities/): attack classes and public CVEs
+- [Claude Code security](/learn/claude-code-security/): hardening a Claude Code deployment
 - [Agent Egress Security](/learn/agent-egress-security/): credential leak vectors and defenses
 - [Pipelock on GitHub](https://github.com/pipelab-org/pipelock)
