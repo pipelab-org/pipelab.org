@@ -5,6 +5,7 @@ seoTitle: "MCP Vulnerabilities and Security Risks (2026)"
 subtitle: "Every MCP attack vector in one place, with runtime defenses for each."
 description: "MCP vulnerabilities explained: tool poisoning, credential exposure, server flaws, real CVEs, and practical steps to reduce risk."
 date: 2026-04-07
+lastmod: 2026-11-14
 faq:
   - q: "Are MCP servers safe?"
     a: "MCP servers can be used safely when their source, permissions, configuration, and updates are reviewed. Safety depends on the particular server and client, the data they can access, and the controls around them."
