@@ -4,7 +4,7 @@ linkTitle: "MCP Tool Descriptions Are an Attack Surface"
 date: 2026-03-05
 author: "Josh Waldrep"
 summary: "MCP tool descriptions go straight into your agent's context window. A malicious server hides instructions in them. Your agent reads them and obeys. Here's the attack, three variants, and what catches it at the network layer."
-description: "MCP tool poisoning through hidden instructions in tool descriptions. A malicious server injects commands your agent obeys. The attack and defense."
+description: "Hidden instructions in MCP tool descriptions make server metadata an attack surface. Three attack variants, and where a network proxy stops them."
 tags: ["ai-security", "pipelock"]
 blog_cat: "mcp"
 ---
