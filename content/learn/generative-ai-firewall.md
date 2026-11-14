@@ -56,7 +56,7 @@ The three layers do not replace each other. A production deployment usually runs
 
 ## Do I need a generative AI firewall if I already run a WAF or WAAP?
 
-A web application and API protection (WAAP) service combines controls for web applications and APIs. A WAF checks incoming web and API requests against rules, while AI-specific inspection can examine prompts for risks such as injection. [Cloudflare documents both its WAF and its AI Security for Apps add-on](https://developers.cloudflare.com/waf/detections/ai-security-for-apps/).
+A web application and API protection (WAAP) service combines controls for web applications and APIs. A WAF checks incoming web and API requests against rules. [Cloudflare's AI Security for Apps docs](https://developers.cloudflare.com/waf/detections/ai-security-for-apps/) describe prompt inspection as WAF detection fields. Prompt injection scoring is an Enterprise paid add-on, and the docs say current scans cover JSON requests to endpoints labeled `cf-llm`.
 
 Your WAAP vendor's AI add-on may be enough if it sees the prompts and responses you need to protect, applies the policies you need, and fits your data-handling requirements. Check coverage for outbound agent requests and tool calls too: traffic that doesn't pass through the inspection point won't be inspected. Test the deployed configuration against your own use cases before buying a separate control.
 
@@ -110,21 +110,21 @@ The list below is not exhaustive. Product capabilities and deployment options ch
 
 **NeuralTrust.** Its [Generative Application Firewall](https://neuraltrust.ai/news/introducing-the-generative-application-firewall-gaf) describes runtime protection for AI applications and agent tool interactions. Its [Prompt Guard](https://neuraltrust.ai/prompt-guard) describes analysis of prompt history for multi-turn attacks.
 
-**Cloudflare.** [AI Security for Apps](https://developers.cloudflare.com/waf/detections/ai-security-for-apps/), formerly Firewall for AI, is a WAF add-on with prompt injection scoring and other detection fields. It operates on traffic proxied through Cloudflare. [Cloudflare AI Gateway](/learn/cloudflare-ai-gateway/) provides LLM API management alongside it.
+**Cloudflare.** [AI Security for Apps](https://developers.cloudflare.com/waf/detections/ai-security-for-apps/), formerly Firewall for AI, adds detections to the WAF. Prompt injection scoring and the other AI detection fields are an Enterprise paid add-on. The docs say those scans currently cover JSON requests to endpoints labeled `cf-llm` on a zone where the WAF is enabled. [Cloudflare AI Gateway](/learn/cloudflare-ai-gateway/) provides LLM API management alongside it.
 
-**Akamai Firewall for AI.** Akamai documents [protection for AI applications](https://techdocs.akamai.com/cloud-security/docs/protect-your-ai-apps) through its edge platform, including inspection of prompts and responses. See its [product page](https://www.akamai.com/products/firewall-for-ai) for the threats it covers.
+**Akamai Firewall for AI.** Akamai's [Firewall for AI docs](https://techdocs.akamai.com/cloud-security/docs/protect-your-ai-apps) describe inspection of prompts and responses, including prompt injection on the way in and data leakage on the way out. Apps on Akamai's edge use an edge configuration. Apps elsewhere use the documented API. The page says the feature is in limited availability.
 
 **Prompt Security (SentinelOne).** SentinelOne describes [AI application protection](https://www.sentinelone.com/platform/prompt-security-ai-application-security/) spanning pre-production testing and runtime enforcement, alongside [agent security](https://www.sentinelone.com/platform/prompt-security-agentic-ai-security/). SentinelOne acquired Prompt Security in 2025.
 
 **Radware.** [Agentic AI Protection](https://www.radware.com/) combines AI security posture management with behavioral protection for agents. Specific deployment and inspection coverage should be checked with the vendor.
 
-**F5.** [F5 AI Gateway](https://www.f5.com/products/ai-gateway) lists model routing, semantic caching, and AI guardrails. F5 acquired CalypsoAI in October 2025. Specific detection coverage beyond the published descriptions is not documented in public docs.
+**F5.** [F5 AI Gateway](https://www.f5.com/products/ai-gateway) lists model routing, semantic caching, and AI guardrails, including prompt-injection and jailbreak checks and PII redaction on prompts and responses. F5's fiscal 2025 filing says the CalypsoAI acquisition closed on September 26, 2025 ([business combinations note](https://www.sec.gov/Archives/edgar/data/1048695/000104869525000157/R12.htm)).
 
 **Lakera (Check Point).** Check Point's [AI Agent Security documentation](https://sc1.checkpoint.com/documents/R82.20/WebAdminGuides/EN/CP_R82.20_ThreatPrevention_AdminGuide/Content/Topics-TPG/Lakera_AI_Agent_Security.htm) describes prompt injection protection and content moderation using Lakera policies. Check Point acquired Lakera in 2025.
 
-**Palo Alto Prisma AIRS.** Palo Alto documents [AI Runtime Security](https://docs.paloaltonetworks.com/prisma-airs/ai-runtime-security/airs-vm-firewall) with an inline software firewall, and [model security and other platform components](https://origin-docs.paloaltonetworks.com/prisma-airs/getting-started/prisma-airs-platform-architecture).
+**Palo Alto Prisma AIRS.** Palo Alto documents an [inline software firewall](https://docs.paloaltonetworks.com/prisma-airs/ai-runtime-security/airs-vm-firewall) for AI Runtime Security. The [platform architecture](https://docs.paloaltonetworks.com/prisma-airs/getting-started/prisma-airs-platform-architecture) also describes model and supply-chain scanning, red teaming, and an AI gateway as separate pillars.
 
-**Cisco AI Defense.** Cisco documents [runtime inspection](https://developer.cisco.com/docs/ai-defense-management/getting-started/) and an [agent runtime SDK](https://blogs.cisco.com/ai/securing-ai-agents-with-cisco-ai-defense) for LLM and MCP interactions.
+**Cisco AI Defense.** Cisco's [management API guide](https://developer.cisco.com/docs/ai-defense-management/getting-started/) covers runtime protection setup, policy, event review, and red teaming, and it names a separate Inspection API. Cisco's [June 2026 post](https://blogs.cisco.com/ai/securing-ai-agents-with-cisco-ai-defense) describes an agent runtime SDK that sends LLM calls and MCP tool calls through that inspection.
 
 **The category consolidated quickly in 2025.** Lakera, Prompt Security, and CalypsoAI were all acquired that year, which pushed much of the early standalone market into larger security platforms.
 
