@@ -3,17 +3,25 @@ title: "AI Firewall vs LLM Firewall vs Agent Firewall: Open-Source Options (2026
 linkTitle: "Open Source AI Firewall"
 seoTitle: "AI vs LLM vs Agent Firewall: Open Source (2026)"
 subtitle: "Runtime agent protection you can inspect, modify, and deploy anywhere."
-description: "Free, open source, self-hosted AI firewall options compared: AI firewall vs LLM firewall vs agent firewall, with Pipelock, LlamaFirewall, and NeMo."
+description: "Compare open source AI firewall options, LLM guardrails, and agent egress controls, plus buying criteria and deployment tradeoffs."
 date: 2026-04-11
 lastmod: 2026-10-21
 software_jsonld: true
 faq:
   - q: "What is an open source AI firewall?"
-    a: "An open source AI firewall is a self-hosted security tool that sits between AI agents and the network, scanning traffic for credential leaks, prompt injection, SSRF, and tool poisoning. Because the source code is public, you can audit exactly what it scans, how it decides, and what it logs. No vendor black box."
+    a: "An open source AI firewall is a security tool with source code you can inspect. Depending on the project, it may check model inputs and outputs or mediate agent network and tool traffic for risks such as credential leaks and prompt injection."
   - q: "Why choose open source over SaaS for AI security?"
-    a: "SaaS AI security tools route your agent traffic through a third party's infrastructure. That means your secrets, prompts, and tool calls pass through someone else's servers. Open source AI firewalls run on your infrastructure. You control the data, the deployment, and the update schedule. You can audit the scanning logic and verify there are no backdoors or telemetry you didn't consent to."
+    a: "Open source can let you inspect and modify the available code and, when supported, operate it on your infrastructure. Check the license, telemetry, external dependencies, and deployment configuration. Commercial products can also offer self-hosted deployments."
   - q: "What's the difference between an AI firewall and AI guardrails?"
-    a: "AI guardrails operate at the inference layer, classifying prompts and completions for safety. They analyze text semantics. AI firewalls operate at the network layer, scanning actual HTTP requests, MCP tool calls, and WebSocket frames for credential leaks, injection, and SSRF. Guardrails catch unsafe model outputs. Firewalls catch unsafe agent actions on the wire. They complement each other."
+    a: "AI guardrails apply checks to model interactions or application flows. An agent firewall can inspect supported network traffic and tool calls. AI firewall is also used for model-facing guardrails and AI-powered network firewalls, so check the control point and configuration."
+  - q: "What is an AI firewall?"
+    a: "AI firewall can mean a network firewall that uses machine learning, a filter for prompts and model responses, or a control for an agent's outbound traffic and tool calls. Check where the product runs and what it inspects."
+  - q: "What is the difference between an LLM firewall and a WAF?"
+    a: "A web application firewall filters HTTP traffic to a web application. An LLM firewall applies AI-specific checks to prompts or model responses. Some products combine both functions."
+  - q: "Is there a free open-source AI firewall?"
+    a: "Yes. Pipelock has an Apache-2.0 agent firewall core. LlamaFirewall and NeMo Guardrails are open-source options for application-level guardrails. Check each project's license and deployment requirements."
+  - q: "Can an AI firewall stop every prompt injection or secret leak?"
+    a: "No. Detection has limits, and a control can inspect only the traffic or content it receives. Test your own cases and use isolation, permissions, and monitoring alongside it."
 learn_cat: concepts
 level: intro
 tags:
@@ -24,9 +32,27 @@ AI agents have API keys, shell access, and internet connections. When one gets c
 
 The question is whether that firewall should be a SaaS product you can't inspect, or open source software you control.
 
+## Three meanings of AI firewall
+
+The term describes products at different control points. The boundaries can overlap, so ask what traffic a product sees and where it runs.
+
+| Meaning | Control point | Typical job |
+|---|---|---|
+| AI-powered network firewall | Traffic between hosts or networks | Use machine learning alongside network security policy to identify suspicious traffic. |
+| Prompt or LLM firewall | Inputs and outputs around an AI application or model | Screen prompts, retrieved content, or responses against application policy. |
+| Agent egress and MCP firewall | Traffic and tool calls mediated between an agent and external services | Inspect supported outbound requests and inbound content for risks such as secret leaks and malicious instructions. |
+
+A network firewall controls traffic between networks or hosts. Some vendors use machine learning to help identify threats and add AI traffic controls. [Check Point describes its AI Network Firewall](https://www.checkpoint.com/solutions/ai-network-firewall/) as protecting AI applications, agents, and data across the network. A web application firewall (WAF) focuses on HTTP requests to web applications, often at the application edge. A network firewall can cover a broader set of connections, while a WAF may examine web requests in more application-specific detail.
+
+A prompt or LLM firewall checks content entering or leaving a model-powered application. [Cloudflare's Firewall for AI announcement](https://blog.cloudflare.com/firewall-for-ai/) describes AI-specific protections alongside its WAF. A conventional WAF checks web traffic for web application threats; an LLM firewall adds checks aimed at model-related risks such as attempts to change instructions. Some products combine those functions. A prompt filter can't evaluate actions or traffic that never pass through it.
+
+An agent egress firewall mediates supported traffic between an agent and external services. A WAF generally protects the application receiving web requests. Both can protect different points in the same workflow. [MCP vulnerabilities](/learn/mcp-vulnerabilities/) explains risks in tool descriptions and responses, while [AI agent security](/learn/ai-agent-security/) covers the broader runtime.
+
+Pipelock inspects supported mediated traffic, with checks and outcomes dependent on the path and configuration. HTTPS CONNECT payload inspection requires TLS interception; without it, inspection is limited to hostname and URL information. Network isolation or another containment control is needed to prevent direct proxy bypass. Detection can miss secrets or instructions, even on inspected paths. See [Pipelock](/pipelock/) for deployment options.
+
 ## What is an open source AI firewall?
 
-An open source AI firewall is a self-hosted security tool that sits between AI agents and the network, scanning traffic for credential leaks, prompt injection, SSRF, and tool poisoning. Because the source code is public, you can audit exactly what it scans, how it decides, and what it logs. No vendor black box.
+An open source AI firewall is a security tool with source code you can inspect. Depending on the project, it may check model inputs and outputs or mediate agent network and tool traffic for risks such as credential leaks and prompt injection.
 
 ## LLM firewall vs agent firewall vs AI gateway: what the terms mean
 
@@ -59,7 +85,7 @@ Open-source AI firewall searches mix several boundaries. Read GitHub projects by
 | [Pipelock](https://github.com/pipelab-org/pipelock) | Apache-2.0 core; Enterprise features under ELv2 | Agent egress firewall | Network-enforced HTTP, MCP, and WebSocket inspection with DLP, injection scanning, SSRF defense, signed evidence, and runtime audit. | MCP identity gateways, model-layer moderation, package-manager risk scoring. |
 | [LlamaFirewall](https://github.com/meta-llama/PurpleLlama/tree/main/LlamaFirewall) | See repo | Model and prompt layer | PromptGuard, AlignmentCheck, and CodeShield-style filtering around prompts, completions, and generated code. | Agent network enforcement or MCP traffic inspection. |
 | [NeMo Guardrails](https://github.com/NVIDIA-NeMo/Guardrails) | See repo | Dialog guardrails | Colang policies for conversational behavior, topical rails, and application-level flow control. | Outbound traffic inspection or runtime MCP proxying. |
-| [agentgateway](https://github.com/agentgateway/agentgateway) | Apache 2.0 | Gateway and routing | MCP, A2A, and LLM routing with a central gateway process. | Content-level DLP unless paired with an inspection layer. |
+| [agentgateway](https://github.com/agentgateway/agentgateway) | Apache 2.0 | Gateway and routing | MCP, A2A, and LLM routing with configurable content guardrails. | Check the documented guardrails and integrations against your traffic and policy needs. |
 | [DefenseClaw](https://github.com/cisco-ai-defense/defenseclaw) | Apache 2.0 | Application sidecar | MCP server governance and access-control workflows around agent applications. | A separate network firewall for arbitrary agent egress. |
 | [Prismor](https://github.com/PrismorSec/prismor) | Apache 2.0 | Hooks and supply chain | Tool-call hooks, policy checks, package-manager wrapping, canary tokens, and session telemetry for coding agents. | Capability separation at the network boundary. |
 
@@ -69,7 +95,7 @@ The clean split is: guardrails decide whether text is acceptable, gateways decid
 
 The term gets used loosely. Three categories of tools call themselves AI firewalls or AI security layers, and they work at different points in the stack.
 
-**Network-level inspection (proxy firewalls).** A separate process sits between the agent and the internet. All HTTP, MCP, and WebSocket traffic flows through it. The proxy scans requests and responses for credential leaks, prompt injection, SSRF attempts, and tool poisoning. Because it runs as its own process, prompt injection targeting the agent doesn't directly compromise the proxy. Full isolation requires network controls (firewall rules or container networking) that prevent the agent from bypassing the proxy or killing the process. [Pipelock](/pipelock/) and GitHub's [agent workflow firewall](https://github.com/github/gh-aw-firewall) operate here, though GitHub's tool does domain allowlisting without content scanning.
+**Network-level inspection (proxy firewalls).** A separate process sits between the agent and the internet. Supported HTTP, MCP, and WebSocket traffic must be routed through it for inspection. Checks vary by transport and configuration; HTTPS CONNECT payload inspection requires TLS interception. Because it runs as its own process, prompt injection targeting the agent doesn't directly compromise the proxy. Full isolation requires network controls (firewall rules or container networking) that prevent the agent from bypassing the proxy or killing the process. [Pipelock](/pipelock/) and GitHub's [agent workflow firewall](https://github.com/github/gh-aw-firewall) operate here, though GitHub's tool does domain allowlisting without content scanning.
 
 **Inference guardrails.** Libraries that classify prompts and completions at the model layer. They check whether the model's input or output is "safe" according to a policy. [NeMo Guardrails](https://github.com/NVIDIA-NeMo/Guardrails) and [LlamaFirewall](https://github.com/meta-llama/PurpleLlama/tree/main/LlamaFirewall) operate here. They don't see HTTP traffic or MCP messages. A guardrail can approve a prompt while the agent exfiltrates credentials in the next HTTP request.
 
@@ -101,7 +127,7 @@ Seven open source projects address AI agent security. They solve different probl
 | [Trylon Gateway](https://github.com/trylonai/gateway) | Gateway | Python | Self-hosted firewall for LLM apps | Gateway routing | Container |
 | [Agent Wall](https://github.com/agent-wall/agent-wall) | Network | Node.js | MCP-focused security firewall | MCP-based AI agents | Library / sidecar |
 | [DefenseClaw](https://github.com/cisco-ai-defense/defenseclaw) | Application sidecar | Python | Policy enforcement, access control | MCP server governance | Sidecar container |
-| [agentgateway](https://github.com/agentgateway/agentgateway) | Gateway | Rust | Not documented in public docs | A2A and MCP routing | Binary, Docker |
+| [agentgateway](https://github.com/agentgateway/agentgateway) | Gateway | Rust | Regex and integrations for content guardrails | A2A and MCP routing | Binary, Docker |
 
 **What this means in practice:**
 
@@ -109,9 +135,26 @@ Seven open source projects address AI agent security. They solve different probl
 - **Trylon Gateway** is an LLM-app firewall focused on the application layer rather than agent egress.
 - **Agent Wall** is the closest peer to Pipelock on the MCP side and the most recent entrant. Both target MCP-based agents; Pipelock adds full HTTP, WebSocket, and A2A coverage plus mediator-signed action receipts.
 - **DefenseClaw** governs MCP server access but is not a content-inspecting proxy.
-- **agentgateway** routes agent-to-agent and agent-to-tool traffic but content scanning is not documented in public docs.
+- **agentgateway** routes agent-to-agent and agent-to-tool traffic and documents content guardrails using regex and integrations.
 
-Pipelock is the only option in the table that combines content-inspecting DLP, prompt injection detection, [MCP protocol scanning](/learn/mcp-security/) (tool poisoning + rug-pull + chain detection), SSRF protection, and **mediator-signed action receipts** (cryptographic evidence per decision, with a published cross-language verifier) at the network layer. That's not a knock on the others. They solve different problems.
+Pipelock combines content-inspecting DLP, prompt injection detection, [MCP protocol scanning](/learn/mcp-security/) (tool poisoning + rug-pull + chain detection), SSRF protection, and **mediator-signed action receipts** (cryptographic evidence per decision, with a published cross-language verifier) at the network layer. That's not a knock on the others. They solve different problems.
+
+## Open source or commercial?
+
+Open source lets you inspect and modify the available code, but the license, model weights, dependencies, and optional services can have different terms. Self-hosting can keep inspection on infrastructure you operate, subject to your configuration and any external services you choose. It also puts updates, monitoring, capacity, and incident response on your team.
+
+A commercial service may offer managed operation, support, and centralized administration. Check where prompts and logs go, retention settings, pricing, and what happens if the service is unavailable. Commercial software can also be self-hosted, and open-source projects can offer paid services. Verify the actual deployment and license instead of assuming either from the label.
+
+## How to choose AI firewall software
+
+1. **Draw the path.** Identify the model API, application, tools, and outbound connections. Decide which must pass through the control and how you prevent direct bypass.
+2. **Check visibility.** Ask which protocols, encrypted payloads, streaming responses, and MCP transports are inspected. Find out what happens to content that exceeds limits or can't be parsed.
+3. **Test policy.** Run representative prompts, secret-like test data, tool calls, and legitimate workloads. Measure missed cases and false blocks against your requirements.
+4. **Ask about failure.** Determine whether a timeout or unavailable scanner blocks, allows, or queues traffic, and whether operators can change that behavior.
+5. **Inspect operations.** Review logging and redaction, policy updates, resource costs, integration, data retention, and who can change or bypass the control.
+6. **Use multiple boundaries.** Limit credentials and tool permissions, isolate the runtime, and monitor activity. A firewall supplements those controls.
+
+For a coding agent, the [Claude Code security guide](/learn/claude-code-security/) covers permissions and other controls around the agent itself.
 
 ## Proxy vs in-process
 
@@ -161,7 +204,7 @@ export http_proxy=http://127.0.0.1:8888
 pipelock run --config pipelock.yaml
 ```
 
-Pipelock scans mediated traffic for {{< stat key="dlp_patterns" >}} credential patterns, prompt injection (with 6-pass encoding normalization), SSRF, DNS rebinding, and MCP tool poisoning. Every decision lands in the [flight recorder](/learn/flight-recorder/) audit log, and enabling a signing key adds mediator-signed action receipts on top.
+Pipelock scans mediated traffic for {{< stat key="dlp_patterns" >}} credential patterns, prompt injection (with 6-pass encoding normalization), SSRF, DNS rebinding, and MCP tool poisoning. The configured [flight recorder](/learn/flight-recorder/) records audit evidence; signing requires the appropriate key configuration.
 
 <div class="hero-buttons" style="margin-top: 2rem;">
   <a href="https://github.com/pipelab-org/pipelock" class="btn btn-primary" data-event="github_click" data-event-placement="guide-body" target="_blank" rel="noopener noreferrer">GitHub</a>
