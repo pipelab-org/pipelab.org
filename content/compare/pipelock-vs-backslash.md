@@ -23,6 +23,10 @@ sources:
     url: "https://www.backslash.security/"
     checked: 2026-09-01
     note: "lists coverage for Claude Code, Claude Desktop, Cursor, GitHub Copilot, Devin Desktop (Windsurf), Gemini CLI, Google Antigravity, OpenAI Codex, Kiro, and OpenClaw"
+  - label: "Backslash MCP security page"
+    url: "https://www.backslash.security/use-cases/mcp-security"
+    checked: 2026-11-14
+    note: "describes an endpoint MCP proxy that inspects agent-to-server traffic and blocks malicious instructions, risky tool calls, and policy violations"
 faq:
   - q: "What's the difference between Pipelock and Backslash Security?"
     a: "Pipelock is an open-source agent firewall that runs as a single Go binary on the agent's routed network path and scans HTTP, WebSocket, and MCP traffic for credential leaks, injection, SSRF, and tool poisoning. Backslash Security is a commercial platform that rates and governs the MCP servers, skills, and plugins installed on developer endpoints, and runs an endpoint MCP proxy that inspects traffic between agents and MCP servers. Pipelock self-hosts. Backslash is a vendor platform."
