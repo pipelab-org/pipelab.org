@@ -24,7 +24,7 @@ tags:
   - vendors
   - comparison
 ---
-A generative AI firewall, also called a GenAI firewall, inspects traffic routed through it for risks such as prompt injection and sensitive data leaks. Depending on the product and configuration, it can apply policy to prompts, model responses, or agent tool calls as an inline proxy, gateway, or edge service. Detection has limits, and coverage depends on what traffic reaches the control.
+A generative AI firewall, also called a GenAI firewall, is a security control that inspects traffic moving through generative AI systems and blocks the dangerous parts. Inbound prompts get scanned for jailbreaks and injection. Outbound completions get scanned for data leaks and unsafe content. Agent tool calls get scanned for exfiltration and policy violations. The firewall sits inline as a proxy, gateway, or edge service, and it only sees the traffic that reaches it.
 
 NeuralTrust used the "Generative Application Firewall" (GAF) label in a [2026 paper](https://neuraltrust.ai/news/introducing-the-generative-application-firewall-gaf) and helped popularize it, though vendors now use adjacent names for overlapping runtime controls. Cloudflare, Akamai, F5, Palo Alto, Lakera (Check Point), and Prompt Security (SentinelOne) all ship products that fit parts of the broader description, though the implementations vary significantly.
 
@@ -114,17 +114,19 @@ The list below is not exhaustive. Product capabilities and deployment options ch
 
 **Akamai Firewall for AI.** Akamai documents [protection for AI applications](https://techdocs.akamai.com/cloud-security/docs/protect-your-ai-apps) through its edge platform, including inspection of prompts and responses. See its [product page](https://www.akamai.com/products/firewall-for-ai) for the threats it covers.
 
-**Prompt Security (SentinelOne).** SentinelOne describes [AI application protection](https://www.sentinelone.com/platform/prompt-security-ai-application-security/) spanning pre-production testing and runtime enforcement, alongside [agent security](https://www.sentinelone.com/platform/prompt-security-agentic-ai-security/).
+**Prompt Security (SentinelOne).** SentinelOne describes [AI application protection](https://www.sentinelone.com/platform/prompt-security-ai-application-security/) spanning pre-production testing and runtime enforcement, alongside [agent security](https://www.sentinelone.com/platform/prompt-security-agentic-ai-security/). SentinelOne acquired Prompt Security in 2025.
 
 **Radware.** [Agentic AI Protection](https://www.radware.com/) combines AI security posture management with behavioral protection for agents. Specific deployment and inspection coverage should be checked with the vendor.
 
-**F5.** [F5 AI Gateway](https://www.f5.com/products/ai-gateway) lists model routing, semantic caching, and AI guardrails. Specific detection coverage beyond the published descriptions is not documented in public docs.
+**F5.** [F5 AI Gateway](https://www.f5.com/products/ai-gateway) lists model routing, semantic caching, and AI guardrails. F5 acquired CalypsoAI in October 2025. Specific detection coverage beyond the published descriptions is not documented in public docs.
 
-**Lakera (Check Point).** Check Point's [AI Agent Security documentation](https://sc1.checkpoint.com/documents/R82.20/WebAdminGuides/EN/CP_R82.20_ThreatPrevention_AdminGuide/Content/Topics-TPG/Lakera_AI_Agent_Security.htm) describes prompt injection protection and content moderation using Lakera policies.
+**Lakera (Check Point).** Check Point's [AI Agent Security documentation](https://sc1.checkpoint.com/documents/R82.20/WebAdminGuides/EN/CP_R82.20_ThreatPrevention_AdminGuide/Content/Topics-TPG/Lakera_AI_Agent_Security.htm) describes prompt injection protection and content moderation using Lakera policies. Check Point acquired Lakera in 2025.
 
 **Palo Alto Prisma AIRS.** Palo Alto documents [AI Runtime Security](https://docs.paloaltonetworks.com/prisma-airs/ai-runtime-security/airs-vm-firewall) with an inline software firewall, and [model security and other platform components](https://origin-docs.paloaltonetworks.com/prisma-airs/getting-started/prisma-airs-platform-architecture).
 
 **Cisco AI Defense.** Cisco documents [runtime inspection](https://developer.cisco.com/docs/ai-defense-management/getting-started/) and an [agent runtime SDK](https://blogs.cisco.com/ai/securing-ai-agents-with-cisco-ai-defense) for LLM and MCP interactions.
+
+**The category consolidated quickly in 2025.** Lakera, Prompt Security, and CalypsoAI were all acquired that year, which pushed much of the early standalone market into larger security platforms.
 
 ## Where Pipelock fits
 
