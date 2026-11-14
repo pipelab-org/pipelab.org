@@ -20,7 +20,7 @@ faq:
   - q: "Can MCP vulnerabilities be fixed by the MCP protocol itself?"
     a: "Some flaws are in servers and clients, while others arise when untrusted tool descriptions and responses enter an agent's context. Protocol improvements and runtime inspection can reduce risk, but cannot eliminate every attack."
   - q: "How do I find vulnerabilities in my MCP servers?"
-    a: "Start with the Vulnerable MCP Project CVE tracker and OWASP MCP Top 10. Run a static scanner against tool definitions (Cisco mcp-scanner, Snyk agent-scan, Backslash). Route live traffic through a runtime inspection proxy that scans tool descriptions, arguments, and responses on every call. Audit the inventory for shadow MCP servers. Check binaries against published hashes and SBOMs."
+    a: "Start with the Vulnerable MCP Project CVE tracker and OWASP MCP Top 10. Run a static scanner against tool definitions (Cisco mcp-scanner, Snyk agent-scan). Route live traffic through a runtime inspection proxy that scans tool descriptions, arguments, and responses on every call. Audit the inventory for shadow MCP servers. Check binaries against published hashes and SBOMs."
 learn_cat: mcp
 level: deep
 tags:
@@ -169,7 +169,7 @@ No single tool covers every class above, so the workflow combines four layers.
 
 **Start with the public trackers.** The [Vulnerable MCP Project](https://vulnerablemcp.info/) is the community CVE index. The [OWASP MCP Top 10](https://owasp.org/projects/mcp-top-10) is the category framework in beta as of 2026. Both give you the vocabulary and known-bad list before you scan your own servers.
 
-**Run a static scanner against tool definitions.** Cisco mcp-scanner and Snyk agent-scan (the former Invariant mcp-scan) analyze tool definitions and configs before the server ships. Backslash Security rates MCP servers before install and also runs an endpoint MCP proxy on developer machines. See [MCP security tools](/learn/mcp-security-tools/) for the landscape.
+**Run a static scanner against tool definitions.** Cisco mcp-scanner and Snyk agent-scan (the former Invariant mcp-scan) analyze tool definitions and configs before the server ships. [Backslash Security](https://www.backslash.security/) says it rates MCP servers and allows approval before installation. Its [endpoint MCP proxy](https://www.backslash.security/use-cases/mcp-security) inspects communication between agents and MCP servers. See [MCP security tools](/learn/mcp-security-tools/) for the landscape.
 
 **Route live traffic through a runtime inspection proxy.** Static scanners miss rug-pulls, response injection, credential leaks in arguments, and poisoned data returned at runtime. An inspection proxy ([MCP Proxy](/learn/mcp-proxy/), [Agent Firewall](/agent-firewall/)) scans tool descriptions on every session, arguments on every call, and responses on every reply.
 
@@ -183,7 +183,7 @@ The [State of MCP Security 2026](/blog/state-of-mcp-security-2026/) matrix rates
 |---|---|---|
 | Network egress allowlist | Shadow MCP, SSRF, supply chain destinations | gh-aw-firewall, iron-proxy |
 | MCP gateway | Auth gaps, shadow MCP (within scope), routing and audit | Docker MCP Gateway, MintMCP, agentgateway |
-| Static scanner | Tool poisoning, some supply chain | Cisco mcp-scanner, Snyk agent-scan, Backslash |
+| Static scanner | Tool poisoning, some supply chain | Cisco mcp-scanner, Snyk agent-scan |
 | Runtime inspection | Rug-pull, response injection, credential exfil, argument DLP | [Pipelock](/pipelock/), Nightfall, Operant AI |
 | Identity and audit | Auth gaps, telemetry, incident response | OAuth 2.1 stacks, audit log pipelines |
 
