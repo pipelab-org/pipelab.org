@@ -4,12 +4,16 @@ linkTitle: "AI Agent Data Loss Prevention"
 subtitle: "What DLP for AI agents actually catches, where the leaks happen, and the open-source self-hosted approach."
 description: "AI agent DLP guide: where agents leak credentials and PII, what catches it at the network layer, and the open-source self-hosted approach."
 date: 2026-04-18
-lastmod: 2026-11-09
+lastmod: 2026-11-14
 faq:
   - q: "What is AI agent data loss prevention?"
     a: "AI agent data loss prevention (AI agent DLP) is the practice of detecting and blocking sensitive data (credentials, API keys, PII, payment data, source code, secrets) from leaving an organization through an AI agent's outbound traffic. AI agents introduce new leak channels that traditional DLP was not designed for: prompt injection causes the agent to include secrets in HTTP requests, MCP tool calls forward arguments to third-party servers, response-based exfiltration encodes data in URL paths, and chain-of-tool calls split secrets across multiple requests to evade single-request scanning. AI agent DLP needs to inspect every outbound request and every MCP tool argument in real time, with multiple normalization passes to catch encoded payloads."
   - q: "How is AI agent DLP different from traditional DLP?"
     a: "Traditional DLP focuses on email, file uploads, USB transfers, and known SaaS endpoints. It assumes a human is making the decision to send. AI agent DLP has to handle a fundamentally different threat model: the agent makes decisions at machine speed, can be prompt-injected to do anything in its toolset, encodes data freely, splits payloads across requests, and calls tools the security team has never heard of. Effective AI agent DLP runs at the network proxy layer, sees every outbound HTTP request and every MCP tool call, applies multi-pass normalization (base64, hex, URL encoding, NFKC Unicode, leetspeak, vowel folding) before pattern matching, and tracks cross-request entropy to catch slow-drip exfiltration."
+  - q: "What is MCP data loss prevention?"
+    a: "MCP data loss prevention inspects traffic between an agent and MCP servers for sensitive data. A proxy can check tool call arguments before they reach a server when those calls pass through it. Coverage depends on the transport, configuration, and whether traffic can bypass the proxy."
+  - q: "How do I evaluate AI agent DLP tools?"
+    a: "Test the channels your agents use, including MCP tool calls and HTTPS traffic. Check handling of encoded or split secrets, response scanning, policy actions, logs, and the limits of each deployment. Run representative leak tests and measure false positives before rollout."
   - q: "Where do AI agents leak data?"
     a: "AI agents leak data through five main channels: (1) HTTP request URLs and bodies, secrets included in API calls or POST payloads, sometimes via prompt injection; (2) MCP tool call arguments, credentials forwarded to third-party MCP servers as parameters; (3) DNS queries, secrets encoded in subdomains for exfiltration through DNS lookups; (4) WebSocket frames, streaming exfiltration that bypasses single-request DLP; (5) tool response paths, where the agent acts on a tool result that includes injected instructions to send data somewhere new. Effective AI agent DLP scans HTTP, MCP, and WebSocket traffic, inspects proxied hostnames before DNS resolution, and pairs with OS or network isolation for any direct DNS or raw-socket egress."
   - q: "Can AI DLP catch encoded secrets?"
@@ -76,6 +80,34 @@ AI agent traffic violates every assumption:
 - Decisions need to be sub-100ms to keep up.
 
 Layering an AI-specific DLP on top of traditional DLP closes the gap. The right place for it is at the network layer between the agent and the internet, where every outbound request is visible regardless of which tool or service the agent decided to call.
+
+### Traditional DLP vs AI agent DLP
+
+These are common design priorities, not fixed boundaries. Coverage varies by product and configuration.
+
+| | Traditional DLP | AI agent DLP |
+|---|---|---|
+| Who acts | Often a person using an application | An agent making tool calls and network requests |
+| Channels inspected | Often email, files, endpoints, and SaaS | Agent traffic such as HTTP and MCP, where routed through the control |
+| Where it runs | Endpoints, cloud services, or network controls | May run as an agent-side control or runtime proxy |
+| Encoded or split secrets | Depends on the product and policy | Test decoding and detection across requests |
+| Tool calls and MCP | Coverage depends on integration | Inspect tool arguments on supported, mediated paths |
+| Response to a hit | May alert, block, or quarantine | May alert, block, or redact before a mediated action |
+
+## MCP data loss prevention
+
+An MCP tool call can carry a secret in its arguments, such as a token in a message body sent to a remote server. A tool response can also return private data to the agent. An attacker can put instructions in that response that cause a later tool call to send the data elsewhere. See [MCP vulnerabilities](/learn/mcp-vulnerabilities/) for more examples.
+
+A runtime proxy sees messages routed through it. For MCP traffic routed through Pipelock, input scanning can check tool arguments for sensitive data when enabled. It also scans server responses for prompt injection before they reach the agent. Response injection scanning is not a promise to detect every secret in a response. See the [Pipelock transport documentation](https://github.com/luckyPipewrench/pipelock/blob/main/docs/guides/transport-modes.md) for configuration and transport limits.
+
+A proxy cannot inspect traffic that bypasses it. An ordinary HTTPS CONNECT tunnel also hides its contents unless TLS interception is enabled and trusted. Pair proxy routing with OS or network isolation, and test the actual agent and server paths. The [MCP security guide](/learn/mcp-security/) covers deployment controls; the [Claude Code guide](/learn/securing-claude-code-against-secret-exfiltration/) walks through a practical setup.
+
+## How to evaluate AI agent DLP tools
+
+- **Coverage:** Map the agent's HTTP, MCP, and other channels to the traffic each control can inspect. Check encrypted traffic and bypass paths.
+- **Detection:** Test your own sensitive data in plain text, encoded forms, and fragments across requests. Measure misses and false positives.
+- **Actions:** Check whether policies can alert, block, or redact on the paths you use, and what happens when inspection fails.
+- **Operations:** Review deployment requirements, logs, data handling, and the effort needed to maintain rules and investigate hits.
 
 ## What AI agent DLP needs to do
 
