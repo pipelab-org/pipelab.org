@@ -1,8 +1,9 @@
 ---
 title: "Pipelock vs Backslash Security"
 linkTitle: "Pipelock vs Backslash Security"
+seoTitle: "Backslash Security Alternative: Pipelock Compared"
 subtitle: "A self-hosted agent firewall next to a closed-source platform for governing agents, MCP servers, and skills on developer endpoints."
-description: "Pipelock is an open-source agent firewall for HTTP, WebSocket, and MCP traffic. Backslash Security governs agents on endpoints. Compare both."
+description: "Looking at Backslash Security alternatives? Pipelock is an open-source agent firewall that inspects agent HTTP, WebSocket, and MCP traffic at runtime."
 date: 2026-04-11
 lastmod: 2026-09-01
 reviewed: "September 2026"
