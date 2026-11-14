@@ -2,7 +2,7 @@
 title: "Claude Code Security: Harden the Agent Runtime"
 linkTitle: "Claude Code Security"
 subtitle: "Add an enforcement layer on top of Claude Code: egress inspection, outbound DLP, MCP response scanning, and network containment."
-description: "Claude Code security beyond built-in review. Add egress inspection, outbound DLP, MCP response scanning, and containment you can verify."
+description: "Secure Claude Code deployment with permission rules, sandboxing, MCP server controls, secret handling, and network egress safeguards."
 date: 2026-06-13
 lastmod: 2026-10-28
 learn_cat: ide
@@ -87,6 +87,43 @@ Five failure modes show up over and over:
 5. **Poisoned committed config.** A `.claude/settings.json` or hook checked into a shared repo silently installs a hostile command or an auto-approval rule on every teammate's next checkout.
 
 Each one routes around user approval, because the user already approved the agent.
+
+## Secure Claude Code deployment
+
+Start with the permissions Claude Code needs for one project, then enforce boundaries outside the agent for the files, credentials, and network paths it can reach. The [AI agent security guide](/learn/ai-agent-security/) covers the wider threat model.
+
+### Permission modes and settings
+
+Claude Code's [permission modes](https://code.claude.com/docs/en/permissions) control how tool requests are approved. In manual mode, requests that need permission prompt you; allow rules can approve matching actions without another prompt, while deny rules block matches. Review broad allow rules carefully. A rule for a command's text isn't an operating-system boundary, and shell command matching has [documented limits](https://code.claude.com/docs/en/permissions#bash-rule-limits).
+
+For example, this project `.claude/settings.json` permits a matching test command and denies matching pushes:
+
+```json
+{
+  "permissions": {
+    "allow": ["Bash(npm run *)"],
+    "deny": ["Bash(git push *)"]
+  }
+}
+```
+
+Adapt both rules to your project. This example doesn't prevent another command or process from reaching the network. Review project settings and hooks before trusting a repository. For a team, [managed settings](https://code.claude.com/docs/en/settings#where-settings-live) let administrators distribute policy across managed installations; check `/status` for the active settings source. Managed policy controls Claude Code, so protect its deployment and use OS controls for other processes.
+
+### Sandbox, hooks, secrets, and egress
+
+Enable Claude Code's [sandbox](https://code.claude.com/docs/en/sandboxing) with `/sandbox` or `sandbox.enabled` in settings. It restricts filesystem and network access for shell commands and their child processes. File tools, MCP servers, and hooks run outside that shell sandbox. Review unsandboxed exceptions and failure behavior; the later containment section explains the extra boundary needed for the whole agent environment.
+
+Use [PreToolUse hooks](https://code.claude.com/docs/en/hooks#pretooluse) to check a tool request before it runs and block disallowed actions. Test the hook with an allowed request and a blocked request. Protect the hook executable and configuration from changes by the agent. A hook only covers calls that reach it.
+
+Keep production credentials out of the workspace and process environment when the task doesn't need them. Give any required credential the narrowest practical scope and lifetime, and don't commit it in settings or MCP configuration. Restrict outbound access at the host or container boundary as well as in agent settings. A domain allowlist alone doesn't inspect sensitive data sent to an allowed destination. See [open-source AI firewall](/learn/open-source-ai-firewall/) for egress controls and their limits.
+
+## Claude Code and MCP security
+
+Treat each MCP server as software with its own permissions. Before connecting one, review its publisher, source, launch command, requested access, and updates. Give it only the files and service credentials needed for the job. A server's tool descriptions and responses are untrusted input, even after you've approved the server. The [MCP vulnerabilities guide](/learn/mcp-vulnerabilities/) explains tool poisoning and other failure modes.
+
+Claude Code stores shared project servers in `.mcp.json`; personal and plugin-provided servers can come from other locations. Interactive sessions prompt for approval of project servers, but [non-interactive sessions can load them without that prompt](https://code.claude.com/docs/en/mcp#project-scope). Inventory all server sources, not only the repository file. Administrators can use [managed MCP configuration](https://code.claude.com/docs/en/managed-mcp) to restrict or provide servers, and [permission rules](https://code.claude.com/docs/en/permissions#mcp) can limit MCP tool use. Verify the effective policy in the environment that runs the agent.
+
+[Pipelock](/pipelock/) can wrap an MCP server and scan its mediated responses for prompt-injection patterns. It doesn't inspect a server or connection that bypasses the configured proxy. The next section shows the setup and its limits.
 
 ## How to secure it: three enforcement layers
 
