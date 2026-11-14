@@ -161,7 +161,7 @@ A high-level read of the space at a single point in time. Where a vendor does no
 | TrueFoundry MCP Gateway | Yes | Yes | Not documented in public docs | Yes | Yes |
 | Operant AI | Yes | Yes | Partial | Yes | Not documented in public docs |
 | MintMCP | Yes | Yes | Not documented in public docs | Not documented in public docs | Not documented in public docs |
-| IBM ContextForge | Yes | Yes | Not documented in public docs | Yes | Yes |
+| IBM ContextForge | Yes | Yes | Partial ([plugin framework](https://ibm.github.io/mcp-context-forge/latest/using/plugins/); the documented PII filter hooks tool inputs and outputs, checked 2026-11-13) | Yes | Yes |
 | Pipelock | No (wraps one server) | Via config | Yes | Yes | Yes |
 
 This table is a snapshot, not a review. Vendor docs change. Verify before choosing.

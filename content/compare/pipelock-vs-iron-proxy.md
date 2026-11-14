@@ -101,7 +101,7 @@ From the [iron-proxy README](https://github.com/paradigmxyz/iron-proxy#installat
 | **Boundary secret rewriting** | No, capability separation by deployment instead | Yes, the core feature |
 | **Credential brokering** | No | OAuth2 client credentials, JWT bearer, GCP service accounts, secrets managers |
 | **Fleet control plane** | Conductor, Enterprise tier | Enrollment, fleet policy, audit search; self-hosted via Helm or hosted |
-| **Signed offline-verifiable receipts** | Yes: Ed25519 receipts, shipped verifier, operator-held key | No; audit logs and OTLP export |
+| **Signed offline-verifiable receipts** | Yes, with the flight recorder and signing key configured: Ed25519 receipts, shipped verifier, operator-held key | No; audit logs and OTLP export |
 | **Process sandbox** | Landlock, seccomp, and network namespaces on Linux; sandbox-exec on macOS | Not documented |
 | **Source availability** | Apache-2.0 core; Enterprise features under ELv2 | Apache-2.0 |
 
