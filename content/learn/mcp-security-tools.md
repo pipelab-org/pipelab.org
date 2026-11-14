@@ -40,7 +40,7 @@ The ecosystem has responded with MCP security tools. They vary widely in what th
 
 ## Shortlist by job
 
-Pick the row that matches the failure you're trying to stop. The tools in one row don't do the job in the next row. The sections below say what each tool's own docs describe. Where a control is missing from those pages, the entry says "not documented in public docs."
+Pick the row that matches the failure you're trying to stop. A tool listed in one row doesn't automatically cover the others, though some, such as Runlayer, document more than one job. The sections below say what each tool's own docs describe. Where a control is missing from those pages, the entry says "not documented in public docs."
 
 | Job | Start here |
 |---|---|
