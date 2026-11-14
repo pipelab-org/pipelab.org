@@ -3,7 +3,7 @@ title: "EU AI Act Compliance: Article 26 Deployer Obligations and 6-Month Log Re
 linkTitle: "EU AI Act Compliance"
 seoTitle: "EU AI Act Deployer Log Retention Rules"
 subtitle: "Article 26 deployer duties including the 6-month log retention floor, plus shipped Assess mappings for Articles 12, 13, 14, and 26. Regulation (EU) 2026/1744 defers stand-alone Annex III high-risk obligations to 2 December 2027."
-description: "EU AI Act Article 26(6) sets a six-month minimum for automatically generated logs under a high-risk AI deployer’s control. See the conditions."
+description: "EU AI Act Article 26(6): high-risk AI deployers keep automatically generated logs under their control for at least six months, unless other law applies."
 date: 2026-03-07
 lastmod: 2026-08-24
 faq:

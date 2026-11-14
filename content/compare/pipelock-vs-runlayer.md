@@ -5,7 +5,7 @@ seoTitle: "Runlayer Pricing: Compare Pipelock"
 subtitle: "A self-hosted proxy that inspects routed agent traffic, next to a Runlayer-hosted or self-hosted AI control plane with MCP governance and content inspection."
 description: "Compare Runlayer pricing and MCP governance with Pipelock’s free core and paid plans. Runlayer asks buyers to contact its account team for terms."
 date: 2026-04-05
-lastmod: 2026-10-14
+lastmod: 2026-11-13
 reviewed: "October 2026"
 compare_cat: "platform"
 compare:
@@ -43,9 +43,9 @@ sources:
     checked: 2026-10-14
     note: "logs tool calls, policy and security events, and scan metadata, with export and retention controls; no offline signature-verification format described"
   - label: "Runlayer blog: Runlayer vs. Natoma"
-    url: "https://llms.runlayer.com/blog/runlayer-vs-natoma"
-    checked: 2026-10-14
-    note: "says Runlayer sits between all 300+ MCP clients and their servers; lists rug-pull detection as a ToolGuard capability"
+    url: "https://www.runlayer.com/llms/runlayer-vs-natoma"
+    checked: 2026-11-13
+    note: "says Runlayer sits between every MCP client in an organization and the servers those clients connect to; lists rug-pull detection as a ToolGuard capability"
 faq:
   - q: "What's the difference between Pipelock and Runlayer?"
     a: "Pipelock is an open-source proxy that scans agent traffic routed through it across HTTP, WebSocket, and MCP, and can emit signed receipts when a recorder directory and signing key are configured. Runlayer is an AI control plane with MCP access governance, a large catalog, identity-based access, shadow AI discovery, and configurable inspection of tool definitions, arguments, and outputs. Runlayer offers Runlayer-hosted and self-hosted deployment. Both inspect MCP content; Pipelock also covers routed HTTP and WebSocket traffic."
@@ -59,7 +59,7 @@ faq:
 
 **[Pipelock](/pipelock/)** is an open-source agent firewall. It scans HTTP, MCP, and WebSocket traffic routed through it for credential leaks, injection, SSRF, and tool poisoning, can emit signed action receipts for mediated decisions when a signing key is configured, and runs as a single self-hosted binary.
 
-**[Runlayer](https://www.runlayer.com/)** describes an AI control plane with MCP access governance and configurable inspection of tool definitions, arguments, and outputs. Its site lists a catalog of more than 18,000 MCPs, shadow AI discovery across unmanaged agents and client configs, and SOC 2, HIPAA, and GDPR badges. Its [Natoma comparison post](https://llms.runlayer.com/blog/runlayer-vs-natoma) says it sits between more than 300 MCP clients and their servers. Its [deployment docs](https://docs.runlayer.com/deployment/overview) describe Runlayer-hosted and self-hosted deployment.
+**[Runlayer](https://www.runlayer.com/)** describes an AI control plane with MCP access governance and configurable inspection of tool definitions, arguments, and outputs. Its site lists a catalog of more than 18,000 MCPs, shadow AI discovery across unmanaged agents and client configs, and SOC 2, HIPAA, and GDPR badges. Its [Natoma comparison post](https://www.runlayer.com/llms/runlayer-vs-natoma) says it sits between every MCP client in an organization and the servers those clients connect to. Its [deployment docs](https://docs.runlayer.com/deployment/overview) describe Runlayer-hosted and self-hosted deployment.
 
 Pipelock is a self-hosted proxy for supported HTTP, WebSocket, and MCP paths, with content scanning on traffic routed through it. Inspecting inner HTTPS requests and responses carried through CONNECT tunnels requires TLS interception. Fetch mode can inspect content fetched from HTTPS origins.
 
