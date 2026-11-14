@@ -2,11 +2,11 @@
 title: "Cloudflare AI Gateway: Pricing, Features, Limits & Alternatives (2026)"
 title_brand: "cloudflare"
 linkTitle: "Cloudflare AI Gateway"
-seoTitle: "Cloudflare AI Gateway: Free Tier, Pricing & Limits"
+seoTitle: "Cloudflare AI Gateway: Pricing and Limits"
 subtitle: "Edge-hosted observability, caching, and content scanning for LLM API traffic, with the boundary it does not cross."
-description: "Cloudflare AI Gateway pricing: caching, rate limits, analytics, and DLP are free. Guardrails are billed; log limits and charges depend on the logging plan."
+description: "Cloudflare AI Gateway routes model calls with free core features and paid usage options. See pricing, limits, and where an egress firewall fits."
 date: 2026-05-05
-lastmod: 2026-10-21
+lastmod: 2026-11-13
 faq:
   - q: "What is Cloudflare AI Gateway?"
     a: "Cloudflare AI Gateway is a hosted gateway that sits between an application and one or more LLM providers at Cloudflare's edge. The application points its SDK at the gateway endpoint instead of the provider's endpoint, and Cloudflare relays the request to the upstream model. The gateway adds caching, rate limiting, request retry, model fallback, analytics on tokens and cost, plus Guardrails for harmful-content moderation and DLP profile scanning on prompts and completions."
@@ -115,7 +115,7 @@ A combined deployment is the most common shape for serious agent stacks: AI Gate
 
 ## Pricing and limits
 
-Per Cloudflare's [AI Gateway pricing page](https://developers.cloudflare.com/ai-gateway/reference/pricing/) (checked 2026-10-21; Cloudflare notes prices are subject to change):
+Per Cloudflare's [AI Gateway pricing page](https://developers.cloudflare.com/ai-gateway/reference/pricing/) (checked 2026-11-13; Cloudflare notes prices are subject to change):
 
 - **Core features are free on all plans.** Dashboard analytics, caching, and rate limiting need only a Cloudflare account.
 - **DLP scanning is free on all plans.** Accounts without a Zero Trust subscription get two predefined DLP profiles (Financial Information, and Social / Insurance / National Identifier Numbers). A Zero Trust subscription that includes DLP unlocks the full profile set, custom profiles, datasets, and OCR.

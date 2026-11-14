@@ -1,11 +1,11 @@
 ---
 title: "iron-proxy Review: What It Does, Setup, and Open-Source Alternatives"
 linkTitle: "Pipelock vs iron-proxy"
-seoTitle: "iron-proxy Review: Setup and Alternatives"
+seoTitle: "Iron Proxy vs Pipelock: Egress Comparison"
 subtitle: "Content inspection with signed receipts next to default-deny egress with credential brokering. Two open-source proxies, two halves of the same problem."
-description: "iron-proxy allowlists agent egress and swaps placeholder credentials. What it does, how to set it up, and how it compares to open-source Pipelock."
+description: "Compare iron-proxy and Pipelock for agent egress: destination rules, credential injection, content inspection, MCP security, and signed receipts."
 date: 2026-04-11
-lastmod: 2026-10-22
+lastmod: 2026-11-13
 reviewed: "September 2026"
 compare_cat: "egress"
 compare:
@@ -33,7 +33,7 @@ sources:
     checked: 2026-10-21
   - label: "iron-proxy README"
     url: "https://github.com/paradigmxyz/iron-proxy"
-    checked: 2026-09-01
+    checked: 2026-11-13
     note: "repository now lives under the paradigmxyz organization; the old ironsh path redirects"
   - label: "iron-proxy docs: MCP interception"
     url: "https://docs.iron.sh/policies/mcp-interception"
@@ -94,7 +94,7 @@ From the [iron-proxy README](https://github.com/paradigmxyz/iron-proxy#installat
 | **Credential scanning (DLP)** | {{< stat key="dlp_patterns" >}} built-in patterns, encoding-aware, environment leak detection | Boundary rewriting instead: the sandbox never holds real secrets |
 | **Prompt injection detection** | Deterministic patterns with multi-pass normalization on scanned responses | LLM Judge policy model on outbound requests, not pattern scanning of responses |
 | **Tool poisoning and rug-pull drift** | Yes | Not documented |
-| **SSRF protection** | Private IP, metadata, and DNS rebinding checks | Not documented in public docs |
+| **SSRF protection** | Private IP, metadata, and DNS rebinding checks | Upstream IP deny list blocks configured CIDRs after resolution, including metadata and loopback by default |
 | **MCP control** | Content inspection of descriptions, arguments, and responses; resource and prompt enforcement | Tool authorization: default-deny allowlist, call denial, list filtering |
 | **A2A scanning** | Yes | No |
 | **WebSocket** | Frame-level DLP and injection scanning in both directions | Proxied natively as a stream, per the README; frame-level inspection is not documented |
@@ -125,7 +125,7 @@ From the [iron-proxy README](https://github.com/paradigmxyz/iron-proxy#installat
 
 **iron-proxy asks:** how do we stop the sandbox from ever seeing real secrets? It terminates TLS for ordinary HTTP so it can rewrite headers, relays WebSocket and server-sent-event streams natively, with no frame-level inspection documented, and substitutes real credentials at the edge. A malicious response or a compromised process can't exfiltrate a credential the sandbox never held.
 
-**Pipelock asks:** what is moving across the mediated boundary, and can I prove what I did about it? Routed request bodies are checked for leaked or encoded secrets, routed tool descriptions for poisoning, scanned responses for injection, and SSRF is checked before DNS resolution. With a signing key configured, Pipelock can emit signed receipts for mediated decisions.
+**Pipelock asks:** what is moving across the mediated boundary, and can I prove what I did about it? Routed request bodies are checked for leaked or encoded secrets, routed tool descriptions for poisoning, scanned responses for injection, and destinations are checked against internal address ranges, with DLP running on the hostname before DNS resolution. With a signing key configured, Pipelock can emit signed receipts for mediated decisions.
 
 These compose. Put iron-proxy at the credential boundary and Pipelock on the content path.
 
