@@ -154,7 +154,7 @@ A high-level read of the space at a single point in time. Where a vendor does no
 | Product | Routing / multi-server | Tool-level RBAC | Content inspection | OpenTelemetry | Self-hostable |
 |---|---|---|---|---|---|
 | Docker MCP Gateway | Yes | Partial | Partial (secrets block) | Yes | Yes |
-| agentgateway | Yes | Yes | Guardrails content filtering; MCP scope not stated in the README | Yes | Yes |
+| agentgateway | Yes | Yes | Yes ([MCP guardrail processors](https://agentgateway.dev/docs/standalone/latest/documentation/mcp/guardrails/about/) inspect tool arguments and results, checked 2026-11-13) | Yes | Yes |
 | Lasso open source gateway | Partial | Not documented in public docs | Yes | Not documented in public docs | Yes |
 | Obot | Yes | Partial | MCP request and response filters | Not documented in public docs | Yes |
 | Runlayer | Yes | Yes | Yes (ToolGuard checks on tool definitions, inputs, and outputs) | [Ingests Claude Code OTLP logs](https://docs.runlayer.com/claude-code-otlp-monitoring); its deployment, ToolGuard and OTLP pages don't describe gateway trace export (checked 2026-10-14) | Yes (AWS ECS with Terraform, or Kubernetes) |
