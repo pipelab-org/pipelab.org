@@ -5,7 +5,7 @@ seoTitle: "AI Agent Security & Hardening: 2026 Checklist"
 subtitle: "Identity, scoped tokens, sandboxing, egress allowlists, approvals, logging, and a kill switch, mapped to OWASP and ISACA."
 description: "AI agent security and hardening checklist mapped to OWASP: identity, scoped tokens, sandbox, egress allowlist, approvals, logging, and kill switch."
 date: 2026-04-07
-lastmod: 2026-10-21
+lastmod: 2026-11-14
 faq:
   - q: "How do you secure an AI agent?"
     a: "Give the agent a separate, least-privilege identity, restrict its tools and network access, isolate its runtime and memory, require approval for consequential actions, and test and monitor those controls."
@@ -35,7 +35,7 @@ tags:
   - explainer
 ---
 
-*Last updated: 2026-10-21.*
+*Last updated: 2026-11-14.*
 
 AI agent security is not one tool or one layer. Your agent has API keys, file system access, and an internet connection. When something goes wrong, secrets leave through HTTP requests, MCP tool calls, or DNS queries before anyone notices. The model's built-in safety training helps, but it's not a security boundary. It can be bypassed with the right prompt.
 
