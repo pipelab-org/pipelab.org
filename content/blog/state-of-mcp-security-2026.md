@@ -138,7 +138,7 @@ Sits between agents and multiple MCP servers, centralizing auth, policy, routing
 
 ### Inspection, scanner, and runtime defense
 
-Looks at the content of MCP traffic, split into two sub-camps. Pre-deploy scanners include Cisco mcp-scanner (YARA plus LLM judge), Snyk agent-scan (the former Invariant mcp-scan, now under Snyk), Backslash Security, and Promptfoo. They analyze tool definitions and config files before the server ships. Runtime inspection includes [Pipelock](/pipelock/), Nightfall AI, and parts of Operant AI. Runtime inspection sits in the data path, scanning tool descriptions on every session, arguments on every call, and responses on every reply, with DLP and injection detection against live traffic.
+Looks at the content of MCP traffic, split into two sub-camps. Pre-deploy scanners include Cisco mcp-scanner (YARA plus LLM judge), Snyk agent-scan (the former Invariant mcp-scan, now under Snyk), and Promptfoo. They analyze tool definitions and config files before the server ships. Backslash Security rates MCP servers before install and says its endpoint MCP proxy inspects traffic between agents and MCP servers. Runtime inspection includes [Pipelock](/pipelock/), Nightfall AI, and parts of Operant AI. Runtime inspection sits in the data path, scanning tool descriptions on every session, arguments on every call, and responses on every reply, with DLP and injection detection against live traffic.
 
 Strength: depth. Inspection catches rug-pulls, response injection, credential leaks in arguments, and poisoned data inside legitimate responses. Scanners catch static poisoning and let you block merges before anything ships. Gap: pre-deploy scanners do not see runtime behavior, and runtime inspection does not replace authentication or network allowlists. A pure inspection posture misses shadow MCP if agents can bypass the proxy.
 
@@ -164,7 +164,7 @@ Even with three camps and dozens of vendors, several gaps show up in the public 
 
 This is the operator-facing section. If you run MCP servers or the agents that consume them, this is the floor for 2026. Each item is specific and testable.
 
-**Pre-deploy.** Pin every MCP server version in source control and block CI on unpinned servers. Run a static scanner (Cisco mcp-scanner, Snyk agent-scan, or Backslash) against tool definitions on every config change. Require a code review for any new server added to an agent's allowed list. Maintain an SBOM for every MCP server, including upstream dependencies. Subscribe to the Vulnerable MCP Project and GitHub Security Advisories for the MCP space.
+**Pre-deploy.** Pin every MCP server version in source control and block CI on unpinned servers. Run a static scanner (Cisco mcp-scanner or Snyk agent-scan) against tool definitions on every config change. Require a code review for any new server added to an agent's allowed list. Maintain an SBOM for every MCP server, including upstream dependencies. Subscribe to the Vulnerable MCP Project and GitHub Security Advisories for the MCP space.
 
 **Runtime.** Put a runtime inspection layer in front of every agent that consumes MCP. At minimum, scan tool descriptions on every session (not just first approval), scan tool arguments for credential patterns and encoded payloads, and scan tool responses for injection patterns. Enforce network egress allowlists so agents cannot call MCP servers outside approved endpoints. Fail closed on scanner errors: if a policy check cannot run, the call does not go through.
 
