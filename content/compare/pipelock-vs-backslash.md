@@ -12,7 +12,7 @@ compare:
   subject: "Backslash Security"
   subject_job: "Agentic AI endpoint security platform. Rates MCP servers, skills, and plugins, governs which ones developers may install, and inspects MCP traffic on the endpoint through its own MCP proxy."
   subject_boundary: "Developer endpoints and the AI clients installed on them"
-  subject_source: "Platform source not published"
+  subject_source: "Platform source availability not documented in public materials"
   subject_pricing: "Contact sales; the MCP Server Security Hub and Skills Security Scanner are public and free"
   subject_deploy: "Vendor platform with integrations into named AI coding agents and clients"
   pick_subject: "You want to vet and govern which MCP servers, skills, and plugins developers install across many AI clients, with a vendor and support contract behind it."
@@ -29,7 +29,7 @@ faq:
   - q: "Does Backslash Security scan HTTP traffic?"
     a: "Backslash says its endpoint MCP proxy inspects communication between agents and MCP servers and blocks malicious instructions and risky tool calls. A forward proxy that inspects general HTTP, CONNECT, or WebSocket payloads is not described in the public materials read for this page. Pipelock is that proxy and scans the traffic itself for agents routed through it."
   - q: "Is Backslash Security open source?"
-    a: "Its platform source is not published. Pipelock's core is open source under Apache-2.0, so you can read every DLP pattern and normalization pass in the public repository."
+    a: "Its platform source availability is not documented in the public materials read for this page. Pipelock's core is open source under Apache-2.0, so you can read every DLP pattern and normalization pass in the public repository."
 ---
 
 ## The short version
@@ -46,14 +46,14 @@ Pipelock is a binary you run in your own environment and inspect at runtime. Bac
 |---------|----------|--------------------|
 | **Architecture** | Self-hosted single binary on the network path | Vendor platform with endpoint and client integrations |
 | **Primary job** | Runtime inspection of mediated HTTP, WebSocket, and MCP traffic | Governance of servers, skills, and plugins on endpoints, plus an endpoint MCP proxy |
-| **Credential scanning (DLP)** | {{< stat key="dlp_patterns" >}} built-in patterns, encoding-aware, on mediated traffic | Says it prevents data exfiltration through MCP; credential pattern details not documented in public materials |
+| **Credential scanning (DLP)** | {{< stat key="dlp_patterns" >}} built-in patterns, encoding-aware, on mediated traffic | Lists data exfiltration as an MCP threat; credential scanning details not documented in public materials |
 | **Prompt injection detection** | Deterministic patterns with multi-pass normalization on scanned responses and tool descriptions | Says its MCP proxy blocks malicious instructions; method not documented in public materials |
 | **Tool poisoning** | Mediated description scanning and rug-pull drift detection | Rates servers and skills before installation; MCP proxy inspects agent-to-server traffic |
 | **SSRF protection** | Mediated private-IP, metadata, and DNS rebinding checks | Not described in public materials |
 | **Client coverage** | Any client whose traffic is routed through the proxy | Named list of AI coding agents and desktop clients |
 | **Public catalog** | No | MCP Server Security Hub and Skills Security Scanner, free |
 | **Signed receipts** | Available with a signing key; Ed25519, verifiable offline | Not described in public materials |
-| **Source availability** | Apache-2.0 core; Enterprise under ELv2 | Platform source not published |
+| **Source availability** | Apache-2.0 core; Enterprise under ELv2 | Platform source availability not documented in public materials |
 | **Pricing** | Free core; paid Pro and Enterprise tiers | Contact sales |
 
 ## When to pick Pipelock
