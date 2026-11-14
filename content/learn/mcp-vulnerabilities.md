@@ -3,17 +3,19 @@ title: "MCP Vulnerabilities: Known Risks and Defenses"
 linkTitle: "MCP Vulnerabilities"
 seoTitle: "MCP Vulnerabilities and Security Risks (2026)"
 subtitle: "Every MCP attack vector in one place, with runtime defenses for each."
-description: "MCP vulnerabilities mapped: tool poisoning, rug-pulls, credential theft, SSRF, prompt injection, session hijacking. Runtime defenses for each risk."
+description: "MCP vulnerabilities explained: tool poisoning, credential exposure, server flaws, real CVEs, and practical steps to reduce risk."
 date: 2026-04-07
 faq:
+  - q: "Are MCP servers safe?"
+    a: "MCP servers can be used safely when their source, permissions, configuration, and updates are reviewed. Safety depends on the particular server and client, the data they can access, and the controls around them."
   - q: "What are the main MCP security vulnerabilities?"
     a: "Tool poisoning, rug-pull attacks, credential theft through tool arguments, prompt injection in tool responses, SSRF via tool calls, session hijacking, cross-server exfiltration, path traversal and command injection inside MCP server implementations, supply chain backdoors in published MCP packages, and shadow MCP servers that bypass inspection."
   - q: "How do MCP vulnerabilities differ from general LLM security risks?"
     a: "LLM vulnerabilities exist in the model's input and output. MCP vulnerabilities exist in the protocol layer: tool descriptions that carry hidden instructions, tool arguments that leak secrets, tool responses that contain injection payloads, and server-side bugs (path traversal, argument injection, RCE) that turn agent requests into shell access."
-  - q: "How many MCP CVEs have been published?"
-    a: "The Vulnerable MCP Project tracks over 50 known MCP vulnerabilities as of April 2026, with 13 rated critical. Notable disclosures include the Anthropic mcp-server-git RCE chain (CVE-2025-68143/68144/68145), Anthropic Filesystem MCP EscapeRoute (CVE-2025-53109/53110), MCPoison in Cursor IDE (CVE-2025-54136), mcp-remote command injection (CVE-2025-6514), and MCPJam Inspector RCE (CVE-2026-23744)."
+  - q: "Do MCP servers have CVEs?"
+    a: "Yes. Public advisories include CVE-2025-53109 and CVE-2025-53110 in the MCP filesystem server, and CVE-2025-6514 in mcp-remote. Check the affected versions and fixes in each advisory."
   - q: "Can MCP vulnerabilities be fixed by the MCP protocol itself?"
-    a: "Some are protocol-level gaps (no built-in authentication, no response integrity). Others are architectural: tool descriptions are untrusted text that enters the agent's context. Protocol improvements help but cannot eliminate the core issue that agents execute instructions from content they consume. Runtime inspection at the proxy layer catches attacks regardless of protocol version."
+    a: "Some flaws are in servers and clients, while others arise when untrusted tool descriptions and responses enter an agent's context. Protocol improvements and runtime inspection can reduce risk, but cannot eliminate every attack."
   - q: "How do I find vulnerabilities in my MCP servers?"
     a: "Start with the Vulnerable MCP Project CVE tracker and OWASP MCP Top 10. Run a static scanner against tool definitions (Cisco mcp-scanner, Snyk agent-scan, Backslash). Route live traffic through a runtime inspection proxy that scans tool descriptions, arguments, and responses on every call. Audit the inventory for shadow MCP servers. Check binaries against published hashes and SBOMs."
 learn_cat: mcp
@@ -27,11 +29,17 @@ MCP vulnerabilities are real and growing. The Model Context Protocol gives AI ag
 
 This page is the canonical reference for known MCP vulnerabilities. It catalogs the attack classes, lists the public CVEs, cites primary sources, and shows which runtime defenses exist for each risk. For the full ecosystem snapshot, see the [State of MCP Security 2026](/blog/state-of-mcp-security-2026/) report.
 
+## Are MCP servers safe?
+
+MCP servers can be used safely, but installing one gives software access to whatever its process and credentials can reach. Safety depends on the server's source, the client, its permissions, the data returned by tools, and how updates are handled. A well-maintained server with narrowly scoped access and current patches presents a different risk from an unknown package running with broad filesystem and network access.
+
+Review the command and package before connecting, limit its permissions, and keep it patched. Treat tool descriptions and returned content as untrusted input. The [MCP security best practices](https://modelcontextprotocol.io/specification/2025-11-25/basic/security_best_practices) cover local servers, authorization, and network access. See also [AI agent security](/learn/ai-agent-security/) and [Claude Code security](/learn/claude-code-security/).
+
 ## What are MCP vulnerabilities
 
 An MCP vulnerability is any defect in the Model Context Protocol ecosystem that an attacker can use to steal data, execute code, bypass controls, or manipulate an agent's behavior. The definition covers every layer: the protocol, the servers that implement it, the clients that consume it, the packages that ship those servers, and the configs that wire them together.
 
-Four properties make MCP different from classic web or API security. Tool descriptions are documentation the agent acts on, so they are executable surface. Tool responses are data the agent acts on, so they are executable surface too. Most MCP servers run with broad local filesystem or network access. And the protocol spec stops at transport and message format, so authentication, response integrity, and audit are ecosystem decisions rather than protocol guarantees. Every attack class below follows from one of those four properties.
+Four properties make MCP different from classic web or API security. Tool descriptions are documentation the agent acts on, so they are executable surface. Tool responses are data the agent acts on, so they are executable surface too. Most MCP servers run with broad local filesystem or network access. The specification also defines authorization requirements, but implementation, permissions, response integrity, and audit remain important operational concerns. Every attack class below follows from one of those four properties.
 
 ## The vulnerability landscape in 2026
 
@@ -63,7 +71,7 @@ A malicious MCP server hides instructions in its tool descriptions. When the age
 
 The attack is not limited to the `description` field. Instructions can hide in parameter names, default values, enum options, and example values. CyberArk's ["Poison Everywhere" research](https://web.archive.org/web/20260511055221/https://www.cyberark.com/resources/threat-research-blog/poison-everywhere-no-output-from-your-mcp-server-is-safe) demonstrated encoding exfiltration instructions in MCP tool parameter names. [Invariant Labs](https://invariantlabs.ai/blog/mcp-security-notification-tool-poisoning-attacks) published the canonical tool poisoning disclosure in April 2025, demonstrating that the attack works because tool descriptions enter the context as trusted content.
 
-**Defense.** Pipelock's MCP proxy extracts text recursively from the full tool definition and scans it for injection patterns. The full breakdown lives in [MCP Tool Poisoning](/learn/mcp-tool-poisoning/) and the [tool-poisoning attack surface](/blog/tool-poisoning-mcp-attack-surface/) post.
+**Defense.** For tool definitions routed through its MCP proxy, Pipelock scans text in the definition for injection patterns. The full breakdown lives in [MCP Tool Poisoning](/learn/mcp-tool-poisoning/) and the [tool-poisoning attack surface](/blog/tool-poisoning-mcp-attack-surface/) post.
 
 ## Rug-pull drift attacks
 
@@ -71,17 +79,13 @@ The server returns clean tool descriptions initially. After the agent starts usi
 
 The canonical public demonstration is the [Invariant Labs WhatsApp MCP rug-pull](https://invariantlabs.ai/blog/whatsapp-mcp-exploited). A trivia game MCP server with hidden instructions targeted a legitimate `whatsapp-mcp` server connected to the same agent. The agent pulled WhatsApp history through the trusted server and leaked it as outbound traffic. End-to-end encryption did not help because exfiltration happened above the encryption layer, through the agent's own authorized access.
 
-**Defense.** Pipelock fingerprints every tool description with SHA-256 on first contact. Subsequent responses are compared against the baseline. Any change triggers an alert or block with a diff of what changed. Cross-session drift detection is still an open gap across most of the market.
+**Defense.** Pipelock can compare tool definitions routed through its MCP proxy against a baseline and report drift. Review changes before allowing sensitive actions.
 
 ## Command injection and RCE in MCP servers
 
 Several MCP servers have shipped with input validation bugs severe enough to give an attacker remote code execution. These are not protocol-level bugs, but they are MCP bugs in the sense that the MCP attack surface makes them reachable from agent traffic.
 
-**Anthropic mcp-server-git RCE chain (CVE-2025-68143, 68144, 68145).** Researchers at Cyata reported three flaws in Anthropic's reference Git MCP server. CVE-2025-68145 let an attacker escape the configured repository path because `--repository` was not enforced per-call. CVE-2025-68143 let `git_init` turn any directory (including `.ssh`) into a git repo. CVE-2025-68144 passed user-controlled arguments to GitPython, letting an attacker inject `--output=/path/to/file` in `git_diff` and overwrite arbitrary files. Chained with the Filesystem MCP server, the combination produced RCE through a malicious `.git/config`. Reported in June 2025. Fixed in version 2025.12.18 (path validation, `git_init` removed, arguments sanitized). [Vulnerable MCP Project entry](https://vulnerablemcp.info/vuln/cve-2025-68145-anthropic-git-mcp-rce-chain.html).
-
-**mcp-remote command injection (CVE-2025-6514, CVSS 9.6).** The `mcp-remote` client library, reported as downloaded close to half a million times, passed connection parameters into shell commands without sanitization. Tracked by the [Vulnerable MCP Project](https://vulnerablemcp.info/).
-
-**MCPJam Inspector RCE (CVE-2026-23744).** MCPJam Inspector is an MCP debugging tool. The RCE flaw meant that inspecting a suspect server could compromise the researcher's machine, turning the defender's tool into the attack vector. See [CVE-2026-23744](https://vulnerablemcp.info/vuln/cve-2026-23744-mcpjam-inspector-rce.html) on the Vulnerable MCP Project.
+The [public CVE table](#cve-patterns-and-disclosure-timelines) covers flaws in `mcp-server-git`, the `mcp-remote` client, and MCPJam Inspector. The issues have different prerequisites and fixes; check each advisory against the version and configuration in use.
 
 The common thread is that MCP server code runs with agent-supplied arguments. Any argument that reaches a shell, a subprocess, or an unsafe library call is a potential RCE.
 
@@ -91,7 +95,7 @@ The common thread is that MCP server code runs with agent-supplied arguments. An
 
 Path traversal is the single most common MCP server vulnerability. [Endor Labs found](https://www.endorlabs.com/learn/classic-vulnerabilities-meet-ai-infrastructure-why-mcp-needs-appsec) that 82% of 2,614 MCP implementations use file operations prone to path traversal.
 
-**Anthropic Filesystem MCP EscapeRoute (CVE-2025-53109, 53110).** Cymulate documented two flaws in Anthropic's Filesystem MCP server that let an agent break out of the allowed directory scope. Widely cited as evidence that even reference implementations had not been reviewed against basic traversal defenses. Source: [Cymulate EscapeRoute disclosure](https://cymulate.com/blog/cve-2025-53109-53110-escaperoute-anthropic/).
+The MCP filesystem server has had two published path-validation flaws, [CVE-2025-53109](https://github.com/advisories/GHSA-q66q-fx2p-7w4m) and [CVE-2025-53110](https://github.com/advisories/GHSA-hc55-p739-j48w). The first involved symlinks; the second involved paths sharing an allowed directory prefix. Both advisories recommend upgrading to 2025.7.1.
 
 The pattern repeats across third-party servers. Symlinks, `..` segments, and Windows alternate data streams all defeat naive string checks. Server authors frequently check the path string for `..` before joining, which misses the case where the joined path resolves outside the base.
 
@@ -103,17 +107,23 @@ The pattern repeats across third-party servers. Symlinks, `..` segments, and Win
 
 The postmark-mcp pattern is the template attackers will reuse. A maintainer ships a legitimate MCP server, builds download volume, then inserts the backdoor in a minor release. Agents auto-pull the latest version. Static scanners that checked the package at initial approval miss everything.
 
-**Defense.** Supply chain verification as a first-class control. SBOM on every MCP server, including upstream dependencies. Pin versions by hash and reject unpinned servers in CI. Runtime DLP on outbound content catches exfiltration like the BCC pattern regardless of which version of the server is running.
+**Defense.** Supply chain verification as a first-class control. SBOM on every MCP server, including upstream dependencies. Pin versions by hash and reject unpinned servers in CI. Inspect outbound traffic where practical, recognizing that controls cannot inspect connections that bypass them.
 
 ## Authorization and authentication gaps
 
-MCP does not specify authentication. Individual servers implement it, or they do not. OAuth 2.1 with PKCE is the emerging baseline for servers that need it, but large swaths of the ecosystem still ship with no authentication at all, or with shared service-account tokens that give every agent identical access.
+MCP defines authorization requirements for HTTP-based connections, but implementations and deployments can still have authorization gaps. Shared service-account tokens can also give multiple agents broader access than they need.
 
-**MCPoison in Cursor IDE (CVE-2025-54136, CVSS 7.2).** Check Point Research found that once a user approved an MCP configuration in Cursor IDE, Cursor never re-validated it. An attacker commits a benign `.cursor/rules/mcp.json` to a shared repo, the developer approves the harmless config, and the attacker later swaps in a malicious payload. Every subsequent Cursor launch silently runs the attacker's commands. Reported to Cursor on July 16 2025 and fixed in Cursor 1.3 on July 29 2025. Source: [Check Point Research: MCPoison](https://research.checkpoint.com/2025/cursor-vulnerability-mcpoison/).
-
-MCPoison is not a classic authorization bug, but it lives in the same class. Approval state without revalidation is equivalent to no authorization at all. Every MCP config change should require a fresh approval tied to a current hash of the server and tool definitions.
+Check Point's [MCPoison research](https://research.checkpoint.com/2025/cursor-vulnerability-mcpoison/) describes a configuration approval that remained in effect after an MCP configuration changed. Revalidate configuration changes and tie approval to the current configuration.
 
 **Defense.** Mandatory re-approval on any MCP config change. Per-agent identity with scoped tokens. File integrity monitoring on MCP config paths. The full breakdown lives in [MCP Authorization](/learn/mcp-authorization/).
+
+## Credential exposure, SSRF, and confused deputy attacks
+
+Credentials can leak through tool arguments, logs, server configuration, or outbound requests. Use short-lived, narrowly scoped credentials, keep secrets out of tool descriptions and logs, and rotate exposed tokens. The [MCP security guidance](https://modelcontextprotocol.io/specification/2025-11-25/basic/security_best_practices) warns against passing a client token to a downstream API without validating that it was issued for the MCP server.
+
+Server-side request forgery (SSRF) occurs when an attacker causes a client or server to request an unintended destination. Malicious OAuth discovery metadata can, for example, point an MCP client at an internal service. Restrict destinations and validate redirects and resolved addresses. The same MCP guidance describes these controls and DNS rebinding risks.
+
+An MCP server that proxies access to a third-party API can become a confused deputy when it uses its own authority on behalf of a client without the right consent checks. The MCP guidance describes a flow involving a shared OAuth client ID and a previously stored consent cookie. It calls for per-client consent, exact redirect URI validation, and OAuth state validation.
 
 ## Prompt injection in tool responses
 
@@ -121,7 +131,7 @@ A tool returns content that contains hidden instructions targeting the agent. Th
 
 The canonical public demonstration is Invariant Labs' [GitHub MCP exploit](https://invariantlabs.ai/blog/mcp-github-vulnerability). The widely used GitHub MCP server (reported at around 14,000 stars at disclosure) was hijacked through a malicious GitHub Issue. When the agent read the issue, it followed embedded instructions and exfiltrated contents from private repositories the user had authorized. Tool descriptions were clean. The poisoning sat in the data the tool returned.
 
-**Defense.** Pipelock scans tool response content for {{< stat key="response_patterns" >}} injection patterns through six sequential response-scanning passes: normalized text, invisible-with-space retry, leetspeak, optional-whitespace variants, vowel-folded variants, and base64/hex decode. Patterns cover jailbreak attempts, authority assertions, credential solicitation, and state manipulation in English, Chinese, Japanese, and Korean. Treat inbound tool output as untrusted the way a browser treats HTML.
+**Defense.** For traffic routed through its MCP proxy, Pipelock scans tool responses for known injection patterns, including {{< stat key="response_patterns" >}} response patterns. Detection is not a guarantee that all malicious instructions will be caught. Treat inbound tool output as untrusted the way a browser treats HTML.
 
 ## Shadow MCP and inventory gaps
 
@@ -133,23 +143,19 @@ Shadow MCP is not a single CVE. It is an inventory failure that compounds every 
 
 ## CVE patterns and disclosure timelines
 
-The following table is the quick reference. It lists the CVEs and public incidents cited above along with the affected component, year, CVSS where a public source records one, and the primary mitigation. Every entry is backed by the source links in the preceding sections.
+These public CVEs affect particular implementations and versions, not every MCP deployment. Check each advisory against the version and configuration you run.
 
-| CVE or incident | Affected component | Year | CVSS | Primary mitigation |
-|---|---|---|---|---|
-| CVE-2025-68143 | Anthropic mcp-server-git (`git_init`) | 2025 | Not public | Removed in 2025.12.18 |
-| CVE-2025-68144 | Anthropic mcp-server-git (`git_diff` argument injection) | 2025 | Not public | Argument sanitization in 2025.12.18 |
-| CVE-2025-68145 | Anthropic mcp-server-git (repository path escape) | 2025 | Not public | Path validation in 2025.12.18 |
-| CVE-2025-53109 | Anthropic Filesystem MCP (EscapeRoute) | 2025 | Not public | Canonicalization, chroot, scoping |
-| CVE-2025-53110 | Anthropic Filesystem MCP (EscapeRoute) | 2025 | Not public | Canonicalization, chroot, scoping |
-| CVE-2025-54136 | Cursor IDE (MCPoison) | 2025 | 7.2 | Fixed in Cursor 1.3 |
-| CVE-2025-6514 | mcp-remote client library | 2025 | 9.6 | Input sanitization, sandbox client |
-| CVE-2026-23744 | MCPJam Inspector | 2026 | Not public | Upgrade, sandbox dev tools |
-| postmark-mcp npm backdoor | `postmark-mcp` package v1.0.16 | 2025 | N/A | Package removal, DLP on outbound email |
-| WhatsApp MCP rug-pull (Invariant) | Third-party trivia MCP server | 2025 | N/A | Runtime description scanning, chain detection |
-| GitHub MCP injection (Invariant) | GitHub MCP server response handling | 2025 | N/A | Response scanning, treat tool output as untrusted |
+| CVE and source | Affected package and issue | Fixed version |
+|---|---|---|
+| [CVE-2025-53109](https://github.com/advisories/GHSA-q66q-fx2p-7w4m) | `@modelcontextprotocol/server-filesystem` could access unintended files through symlinks in allowed directories. | 2025.7.1 |
+| [CVE-2025-53110](https://github.com/advisories/GHSA-hc55-p739-j48w) | `@modelcontextprotocol/server-filesystem` could allow unintended file access when a path shared an allowed directory prefix. | 2025.7.1 |
+| [CVE-2025-68143](https://github.com/advisories/GHSA-5cgr-j3jf-jw3v) | `mcp-server-git` allowed `git_init` to create repositories at arbitrary accessible paths. | 2025.9.25; the tool was removed. |
+| [CVE-2025-68144](https://github.com/advisories/GHSA-9xwc-hfwc-8w59) | `mcp-server-git` passed unsanitized arguments to Git, allowing options that could overwrite files. | 2025.12.18 |
+| [CVE-2025-68145](https://github.com/advisories/GHSA-j22h-9j4x-23w5) | `mcp-server-git` did not enforce its configured repository restriction on subsequent tool calls. | 2025.12.18 |
+| [CVE-2025-6514](https://github.com/advisories/GHSA-6xpm-ggf7-wc3p) | `mcp-remote` could execute operating system commands when an untrusted server supplied a crafted authorization URL. | 0.1.16 |
+| [CVE-2026-23744](https://github.com/advisories/GHSA-232v-j27c-5pp6) | `@mcpjam/inspector` exposed an HTTP endpoint that could execute commands. | 1.4.3 |
 
-Year is the disclosure year. CVSS is "Not public" where no rating has been published in a primary source, and N/A for incidents that never got a CVE number. The Vulnerable MCP Project tracks additional entries this page does not enumerate; treat it as the living index. Disclosure rates vary by period and are expected to climb as the ecosystem grows.
+A CVE identifies a disclosed flaw, not proof that your installation is exposed. Check the affected version, configuration, and reachability in the advisory. Other incidents, including tool poisoning demonstrations, may not have a CVE.
 
 ## How to find vulnerabilities in your MCP servers
 
@@ -176,6 +182,17 @@ The [State of MCP Security 2026](/blog/state-of-mcp-security-2026/) matrix rates
 | Identity and audit | Auth gaps, telemetry, incident response | OAuth 2.1 stacks, audit log pipelines |
 
 No layer is a full answer. Runtime inspection is the widest because it sees content, but it does not replace authentication and cannot catch an agent that bypasses the proxy. Static scanning catches static poisoning but misses rug-pulls. Gateways centralize authentication but only for agents that use the gateway. Network allowlists block destinations but do not look inside traffic. Put a layer from each row in front of every agent that speaks MCP. What slips through one row should be caught by the next.
+
+## Practical risk-reduction steps
+
+1. Inventory servers, startup commands, versions, owners, credentials, and reachable data. Remove servers that are no longer needed.
+2. Check client and server advisories, pin reviewed packages, and review updates and dependencies.
+3. Restrict filesystem paths, network destinations, and token scopes. Sandbox local processes and require approval for sensitive actions.
+4. Authenticate remote connections, validate token audiences and redirect URIs, and use per-client consent for third-party authorization flows.
+5. Review tool definitions when they change and inspect calls and responses where appropriate. Detection can miss attacks and only covers traffic routed through the control.
+6. Record approvals and security events without recording secrets. Investigate unexpected destinations, tool changes, and denied actions.
+
+[Pipelock](/pipelock/) can inspect MCP tool definitions, calls, and responses routed through its MCP proxy. It can help detect secret leaks and known prompt-injection and tool-poisoning patterns on that path. It does not patch servers or inspect connections that bypass it. The [open-source AI firewall guide](/learn/open-source-ai-firewall/) explains the deployment pattern.
 
 ## Further reading
 
