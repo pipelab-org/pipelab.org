@@ -222,7 +222,7 @@ Several MCP proxies and proxy-adjacent tools exist in 2026. Different projects o
 
 **Promptfoo MCP proxy.** Promptfoo focuses on red teaming and evaluation. Their MCP proxy runs traffic through scan rules during eval runs to test whether agents misbehave under adversarial inputs. Similar proxy architecture, different primary use case.
 
-**Backslash Security.** Closed-source endpoint security platform for AI coding agents. It rates and governs the MCP servers, skills, and plugins installed on developer machines. A network-path MCP proxy is not described in its public materials as of November 2026. See [Pipelock vs Backslash](/compare/pipelock-vs-backslash/).
+**Backslash Security.** Endpoint security platform for AI agents that assesses and governs MCP servers, skills, and plugins. Backslash says its endpoint MCP proxy inspects agent-to-server communication and blocks malicious activity in real time. See [Backslash's MCP security page](https://www.backslash.security/use-cases/mcp-security).
 
 **agentgateway.** Linux Foundation project (contributed by Solo.io). Rust-based MCP and A2A gateway. Focus is routing, JWT auth, tool-level RBAC, OpenTelemetry. Infrastructure-oriented rather than content-scanning-oriented.
 
