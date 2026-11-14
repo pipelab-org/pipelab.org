@@ -1,11 +1,11 @@
 ---
-title: "MCP Security: Best Practices Checklist (2026)"
+title: "MCP Security Best Practices: 2026 Checklist"
 linkTitle: "MCP Security"
-seoTitle: "MCP Security: Best Practices Checklist (2026)"
+seoTitle: "MCP Security Best Practices: 2026 Checklist"
 subtitle: "Guide to Model Context Protocol risks, best practices, and the runtime defenses that stop tool poisoning, leaks, and injection."
 description: "MCP security best practices checklist for 2026, mapped to the OWASP MCP Top 10: tool poisoning, secret leaks, SSRF, runtime defenses, and audit."
 date: 2026-02-24
-lastmod: 2026-10-21
+lastmod: 2026-11-14
 faq:
   - q: "What is MCP security?"
     a: "MCP security is the practice of protecting AI agents that use the Model Context Protocol to call external tools. It covers threats like tool description poisoning, rug-pull attacks, credential exfiltration through tool arguments, prompt injection in tool responses, SSRF through tool-triggered requests, shadow MCP servers, and supply chain compromise of MCP server packages. MCP security differs from API security because MCP tool descriptions enter the agent's context window and can influence model behavior."
@@ -17,6 +17,8 @@ faq:
     a: "The OWASP MCP Top 10 is a beta threat taxonomy for the Model Context Protocol, published at owasp.org/www-project-mcp-top-10/. It catalogs the most serious MCP risks, including tool poisoning, token mismanagement, shadow MCP servers, and context over-sharing. The project is the closest thing the industry has to a neutral framework for MCP security, and it maps directly to the attacks documented in public disclosures."
   - q: "What does the MCP specification say about security?"
     a: "The MCP documentation has a Security Best Practices page that covers the confused deputy problem, token passthrough, SSRF during OAuth discovery, state handle hijacking, local MCP server compromise, OAuth authorization URL validation, stdio transport security in proxy setups, mix-up attacks, localhost redirect URI impersonation, client ID metadata document trust policies, and scope minimization. It is written mostly for people implementing MCP clients, servers, and authorization flows."
+  - q: "Is there an MCP security standard?"
+    a: "There is no single certified standard yet. Four public documents set the baseline. The MCP project's Security Best Practices page covers protocol and authorization risks for client, server and authorization implementers. The OWASP MCP Top 10 is a threat list, still in beta. OWASP's practical guide covers secure MCP server development. The Cloud Security Alliance's Agentic MCP Security Best Practices Guide, a March 2026 draft, groups controls into four maturity levels, from basic authentication and transport security up to zero-trust continuous verification. The checklist on this page maps each control to the OWASP items and the MCP spec sections."
   - q: "How do you secure MCP connections?"
     a: "MCP security needs multiple layers. Install-time scanners check tool descriptions before first use but miss rug-pulls. Runtime proxies scan every MCP message as it passes through, detecting poisoning, credential leaks, and response injection. Tool allowlists restrict which tools the agent can call. Gateways handle routing and authorization. Shadow MCP discovery catches unauthorized servers. Supply chain scanning catches malicious packages before they run. No single control stops every attack. Defense in depth combines scanning, runtime inspection, allowlists, and authorization."
 learn_cat: mcp
@@ -27,11 +29,11 @@ tags:
   - overview
 ---
 
-*Last updated: 2026-10-21.*
+*Last updated: 2026-11-14.*
 
 MCP security is the practice of protecting AI agents that use the Model Context Protocol from threats originating in tool descriptions, tool arguments, tool responses, and the underlying transport. The four channels each carry different risk: tool descriptions and responses can carry hidden instructions, tool arguments can leak credentials, and transport metadata can hide exfiltration. Static install-time scanners catch some risks but miss rug-pull attacks where a server changes its tools mid-session, so runtime inspection at the proxy layer is necessary.
 
-The risk is already measurable. [Endor Labs analyzed 2,614 MCP implementations](https://www.endorlabs.com/learn/classic-vulnerabilities-meet-ai-infrastructure-why-mcp-needs-appsec) and found that 82% use file operations prone to path traversal, 67% use APIs related to code injection, and 34% use APIs susceptible to command injection. [AgentSeal scanned 1,808 MCP servers](https://agentseal.org/blog/mcp-server-security-findings) and reported security findings in 66% of them. The official [MCP security best practices](https://modelcontextprotocol.io/docs/2026-07-28/tutorials/security/security_best_practices), the [OWASP GenAI secure MCP server guide](https://genai.owasp.org/resource/a-practical-guide-for-secure-mcp-server-development/), and the [OWASP MCP Top 10](https://owasp.org/projects/mcp-top-10) now define the baseline. As of May 2026, practical MCP security means combining install-time scanning, runtime proxy inspection, tool allowlists, authorization, audit, and shadow-server discovery.
+The risk is already measurable. [Endor Labs analyzed 2,614 MCP implementations](https://www.endorlabs.com/learn/classic-vulnerabilities-meet-ai-infrastructure-why-mcp-needs-appsec) and found that 82% use file operations prone to path traversal, 67% use APIs related to code injection, and 34% use APIs susceptible to command injection. [AgentSeal scanned 1,808 MCP servers](https://agentseal.org/blog/mcp-server-security-findings) and reported security findings in 66% of them. The official [MCP security best practices](https://modelcontextprotocol.io/docs/2026-07-28/tutorials/security/security_best_practices), the [OWASP GenAI secure MCP server guide](https://genai.owasp.org/resource/a-practical-guide-for-secure-mcp-server-development/), the [OWASP MCP Top 10](https://owasp.org/projects/mcp-top-10), and the Cloud Security Alliance's draft [Agentic MCP Security Best Practices Guide](https://labs.cloudsecurityalliance.org/agentic/agentic-mcp-security-best-practices-v1/) now define the baseline. As of November 2026, practical MCP security means combining install-time scanning, runtime proxy inspection, tool allowlists, authorization, audit, and shadow-server discovery.
 
 ## What is MCP security?
 
@@ -60,7 +62,7 @@ Agent <──tools/list definitions─ MCP server
 
 The server controls two of the three channels that reach the model: tool definitions and tool results. The agent controls the arguments, but those are built from context the server has already influenced. Transport metadata (HTTP headers, stdio framing) wraps all of it.
 
-## MCP security checklist (2026-10-21)
+## MCP security checklist (2026-11-14)
 
 Each control lists the OWASP MCP Top 10 items it addresses and the matching section of the MCP Security Best Practices page. "None" means the spec page has no section for that control. Several controls, such as runtime content inspection, are operator concerns the spec does not set out to cover.
 
@@ -152,6 +154,8 @@ For production use, the baseline is:
 5. **Restrict tool and network access.** Use allowlists, scoped tokens, OAuth 2.1 with PKCE where available, and process or container isolation for local servers.
 6. **Log enough to investigate.** Keep tool names, server identity, description hashes, argument digests, response sizes, scanner verdicts, and user or agent identity.
 7. **Fail closed on scanner errors.** If a policy check cannot run, the tool call should not pass through silently.
+
+If you want a maturity path rather than a flat list, the Cloud Security Alliance guide stages these controls across four cumulative levels: basic authentication and transport security, then tool integrity and session hardening, then message signing, supply chain controls and behavioral monitoring, then zero-trust continuous verification.
 
 ### 30/60/90-day MCP security rollout
 
