@@ -1,9 +1,9 @@
 ---
 title: "MCP Proxy: How It Scans MCP Traffic Bidirectionally"
 linkTitle: "MCP Proxy"
-seoTitle: "MCP Proxy: Bidirectional Agent Traffic Scanning"
+seoTitle: "What Is an MCP Proxy? Traffic and Security"
 subtitle: "A scanning proxy between your agent and every MCP server."
-description: "An MCP proxy sits between agents and servers, inspecting tool descriptions, arguments, and responses for injection, credentials, and rug-pulls."
+description: "Learn how an MCP proxy works, what it inspects in tool calls and responses, and how it differs from an MCP gateway and other security layers."
 date: 2026-04-07
 lastmod: 2026-08-08
 faq:

@@ -1,8 +1,9 @@
 ---
 title: "Continue.dev MCP Security: Scanning with Pipelock"
 linkTitle: "Continue.dev MCP Security"
+seoTitle: "Continue MCP Server Configuration and Security"
 subtitle: "Wrap the MCP servers in Continue.dev's YAML config with bidirectional scanning."
-description: "Continue.dev MCP security guide. Wrap each MCP server in Continue's config through pipelock mcp proxy for DLP, injection, and tool-poisoning scanning."
+description: "Configure Continue MCP servers with Pipelock to scan tool calls and responses. Follow the YAML setup, manual wrapping, and verification steps."
 date: 2026-05-16
 lastmod: 2026-09-29
 learn_cat: ide

@@ -1,9 +1,9 @@
 ---
 title: "Agent Egress Security: How AI Agents Leak Credentials and How to Stop It"
 linkTitle: "Agent Egress Security"
-seoTitle: "Agent Egress Security: How AI Agents Leak Secrets"
+seoTitle: "Agent Egress Security: Prevent Credential Leaks"
 subtitle: "Your agent has API keys, shell access, and unrestricted network. What could go wrong?"
-description: "How AI agents leak API keys and tokens through HTTP, DNS, and MCP tool calls, why classic DLP misses it, and the egress controls that stop it."
+description: "Learn how AI agents leak credentials through outbound requests, DNS, and MCP tool calls, and explore controls that reduce the risk."
 date: 2026-02-24
 lastmod: 2026-10-22
 faq:

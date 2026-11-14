@@ -1,8 +1,9 @@
 ---
 title: "Grok Build Security: Forward Proxy and Manual MCP Wrap"
 linkTitle: "Grok Build Security"
+seoTitle: "Grok Build Proxy and MCP Security Guide"
 subtitle: "Point Grok Build through Pipelock. Wrap MCP servers by hand. No installer command."
-description: "Grok Build security guide. Point the CLI through Pipelock with HTTPS_PROXY, wrap MCP servers by hand, and see what TLS interception adds."
+description: "Set up a forward proxy for Grok Build, manually wrap MCP servers, and understand the limits of HTTPS inspection and proxy routing."
 date: 2026-09-19
 learn_cat: operator
 level: intro

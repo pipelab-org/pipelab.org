@@ -1,9 +1,9 @@
 ---
 title: "OWASP MCP Top 10 (MCP01:2025 through MCP10:2025): Risks and Practical Defenses"
 linkTitle: "OWASP MCP Top 10"
-seoTitle: "OWASP MCP Top 10 2025: Risks and Defenses"
+seoTitle: "OWASP MCP Top 10: Risks and Practical Controls"
 subtitle: "MCP01:2025 through MCP10:2025 explained, with the runtime controls that actually stop each risk category."
-description: "OWASP MCP Top 10 (MCP01:2025-MCP10:2025): each risk category explained with the scanner, gateway, inspection, and audit controls that stop it."
+description: "Explore the OWASP MCP Top 10 risk categories, a matrix of security controls, and Pipelock coverage with its documented limitations."
 date: 2026-04-12
 lastmod: 2026-08-08
 faq:

@@ -1,8 +1,9 @@
 ---
 title: "About PipeLab: Open Source AI Agent Security"
 linkTitle: "About PipeLab: Open Source Agent Security Company"
+seoTitle: "About PipeLab: Pipelock and Agent Security"
 subtitle: "PipeLab is the company behind Pipelock."
-description: "PipeLab is the company behind Pipelock, an open-source agent firewall for MCP and agent traffic. Public docs, proof, benchmarks, and security research."
+description: "Meet PipeLab, the company behind Pipelock. Explore its open-source agent firewall, public benchmark results, proof pages, and technical guides."
 lastmod: 2026-08-08
 og_image: "https://pipelab.org/images/og/og-about.png"
 disable_cta: true
