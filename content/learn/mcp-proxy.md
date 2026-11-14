@@ -5,7 +5,7 @@ seoTitle: "What Is an MCP Proxy? Traffic and Security"
 subtitle: "A scanning proxy between your agent and every MCP server."
 description: "Learn how an MCP proxy works, what it inspects in tool calls and responses, and how it differs from an MCP gateway and other security layers."
 date: 2026-04-07
-lastmod: 2026-08-08
+lastmod: 2026-11-14
 faq:
   - q: "What is an MCP proxy?"
     a: "An MCP proxy sits between an AI agent and its MCP servers. It intercepts JSON-RPC messages in both directions: tool descriptions, tool call arguments, and tool responses. The proxy scans each message for credential leaks, prompt injection, and tool poisoning before forwarding it to the other side."
@@ -222,7 +222,7 @@ Several MCP proxies and proxy-adjacent tools exist in 2026. Different projects o
 
 **Promptfoo MCP proxy.** Promptfoo focuses on red teaming and evaluation. Their MCP proxy runs traffic through scan rules during eval runs to test whether agents misbehave under adversarial inputs. Similar proxy architecture, different primary use case.
 
-**Backslash Security.** Commercial SaaS MCP proxy with IDE integration. Specific feature details not documented in Backslash's public docs as of April 2026.
+**Backslash Security.** Endpoint security platform for AI agents that assesses and governs MCP servers, skills, and plugins. Backslash says its endpoint MCP proxy inspects agent-to-server communication and blocks malicious activity in real time. See [Backslash's MCP security page](https://www.backslash.security/use-cases/mcp-security).
 
 **agentgateway.** Linux Foundation project (contributed by Solo.io). Rust-based MCP and A2A gateway. Focus is routing, JWT auth, tool-level RBAC, OpenTelemetry. Infrastructure-oriented rather than content-scanning-oriented.
 
