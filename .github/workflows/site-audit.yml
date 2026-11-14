@@ -58,11 +58,14 @@ jobs:
           echo "binary=$RUNNER_TEMP/hugo-pinned-bin/hugo" >> "$GITHUB_OUTPUT"
       # Same installer as the pin (and as indexnow.yml). A raw GitHub Releases
       # download without a token 403s from Actions and never reaches the two-build.
+      # Held at 0.169.0: Hugo 0.170.0 removed the extended edition and LibSass,
+      # which the theme's toCSS calls still use. While held, this step does not
+      # detect newer Hugo releases. Raise it after the theme moves to Dart Sass.
       - uses: peaceiris/actions-hugo@2752ce1d29631191ea3f27c23495fa06139a5b78 # v3
         with:
-          hugo-version: latest
+          hugo-version: 0.169.0
           extended: true
-      - name: Compare pinned Hugo output to latest
+      - name: Compare pinned Hugo output to 0.169.0 (newest release with LibSass)
         env:
           CI_RENDER_DIFF: "1"
           HUGO_PINNED: ${{ steps.hugo-pinned.outputs.binary }}
