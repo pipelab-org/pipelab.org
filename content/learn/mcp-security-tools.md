@@ -115,7 +115,7 @@ A scanner tells you "this MCP server looks safe right now." A proxy enforces "th
 
 ## Scanner landscape: pre-deploy and runtime
 
-The table covers the projects most commonly referenced when teams shop for MCP security. The categories below the table cover what's not in the table (server-side runtime guardrails, static checklists). The Snyk and Cisco scanner names, capabilities, and Apache-2.0 licenses were checked against their linked repository READMEs and licenses on October 22, 2026.
+The table covers the projects most commonly referenced when teams shop for MCP security. The categories below the table cover what's not in the table (server-side runtime guardrails, static checklists). The Snyk and Cisco scanner names, capabilities, and Apache-2.0 licenses were checked against their linked repository READMEs and licenses on October 22, 2026. For a comparison of what the Cisco and Snyk scanners catch versus Pipelock, see the [MCP scanner comparison](/blog/mcp-scanner-comparison-2026/).
 
 | Tool | Lane | License / model | Key strength | Key gap |
 |---|---|---|---|---|
