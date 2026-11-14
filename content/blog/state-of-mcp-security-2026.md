@@ -1,11 +1,11 @@
 ---
 title: "The State of MCP Security 2026: Incidents, Attack Patterns, and Defense Coverage"
 linkTitle: "State of MCP Security 2026"
-seoTitle: "State of MCP Security 2026: Incidents and Fixes"
+seoTitle: "MCP Security in 2026: Incidents and Risks"
 date: 2026-04-12
 author: "Josh Waldrep"
 summary: "A data-backed look at MCP security in 2026: public incidents, disclosed CVEs, OWASP MCP Top 10 mapping, and control coverage across scanners, gateways, and runtime inspection."
-description: "State of MCP Security 2026: public incidents, CVE trends, OWASP MCP Top 10 mapping, and control coverage across scanners, gateways, and inspection tools."
+description: "Explore the April 2026 MCP security snapshot: public incidents, CVE trends, OWASP risks, and coverage across scanners and gateways."
 tags: ["mcp-security", "ai-security", "pipelock", "report"]
 faq:
   - q: "What are the biggest MCP security incidents of 2025-2026?"
