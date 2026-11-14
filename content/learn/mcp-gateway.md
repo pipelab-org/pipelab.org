@@ -4,7 +4,7 @@ linkTitle: "MCP Gateway: Open Source Security Comparison"
 subtitle: "What an MCP gateway does, the open-source vs commercial split, MCP gateway vs MCP proxy, and how to evaluate them."
 description: "MCP gateway guide comparing open source and commercial options, routing, auth, content inspection, proxy differences, and security controls."
 date: 2026-04-11
-lastmod: 2026-10-14
+lastmod: 2026-11-13
 faq:
   - q: "What is an MCP gateway?"
     a: "An MCP gateway sits between AI agents and MCP (Model Context Protocol) servers, centralizing routing, authentication, access control, and policy. Some gateways also scan tool calls and responses for security threats like tool poisoning, credential leaks, and prompt injection. The term covers a range of products with different capabilities."
@@ -15,9 +15,9 @@ faq:
   - q: "What is the difference between content inspection and routing in an MCP gateway?"
     a: "Routing gateways handle which tools an agent can reach, who the agent is, and which backend serves each request. Content inspection gateways read the actual JSON-RPC payloads and flag tool descriptions, arguments, or responses that contain injection, secrets, or poisoned instructions. Both matter, but they solve different problems. Most products do one well and the other partially."
   - q: "Is an MCP gateway open source or commercial?"
-    a: "Both exist. Open source options include Docker MCP Gateway, agentgateway (Linux Foundation project contributed by Solo.io), Lasso Security's open source MCP gateway, and Obot. Commercial options include Runlayer, TrueFoundry MCP Gateway, Operant AI, MintMCP, and IBM Context Forge. Open source covers the core routing and auth patterns. Commercial adds managed control planes, analytics, and support."
+    a: "Both exist. Open source options include Docker MCP Gateway, agentgateway, IBM ContextForge, Microsoft MCP Gateway, Obot, and Lasso Security's open source MCP gateway. Commercial options include Permit MCP Gateway, Runlayer, TrueFoundry MCP Gateway, Operant AI, and MintMCP."
   - q: "What is the best open source MCP gateway?"
-    a: "It depends on what you weigh most. For container isolation and tracing, Docker MCP Gateway is the cleanest fit because it runs MCP servers in containers with per-container resource limits, network restrictions, and a --block-secrets flag. For infrastructure-grade routing with OAuth, JWT, RBAC, and OpenTelemetry, agentgateway (Linux Foundation, Solo.io) is the strongest, with Envoy and Istio roots. For security-first content inspection (tool description scanning, prompt injection detection, credential pattern matching), Lasso Security's open source MCP gateway leads on inspection depth. For agent-platform bundling, Obot ships routing, auth, and a tool catalog as part of a broader internal-platform story. None of the open source gateways alone replace a content-inspecting scanning proxy like Pipelock; the strongest setup pairs a routing gateway with a scanning proxy in front of each MCP server."
+    a: "It depends on what you weigh most. Docker MCP Gateway runs MCP servers in containers, with per-server CPU and memory settings and a --block-secrets option. agentgateway, a Linux Foundation project, documents JWT, API key and OAuth authentication, RBAC with a CEL policy engine, and OpenTelemetry. Lasso Security's open source gateway ships guardrail plugins for PII and secret masking. Obot bundles an MCP gateway with access controls, a server catalog, and request and response filters. Pipelock can inspect traffic on the MCP path alongside a gateway."
   - q: "MCP gateway vs MCP proxy: which one do I need?"
     a: "Both, in most production deployments. An MCP gateway is the right choice when you need to route, authenticate, and authorize agent traffic across multiple MCP servers (a routing problem). An MCP proxy is the right choice when you need to inspect what is actually inside the JSON-RPC payloads (a content problem). The two are complementary, not interchangeable. Routing gateways without content inspection can authorize a connection to a poisoned tool description; content-inspecting proxies without routing have to be configured per server. Combining them gives you one audit surface, two enforcement points, and no single failure mode where a bad payload slips through."
 learn_cat: mcp
@@ -46,7 +46,7 @@ That chokepoint is the whole point. Without it, every agent talks to every serve
 
 The MCP gateway space has a vocabulary problem. Two different categories of product call themselves "MCP gateways," and they do different things. If you read the phrase in a vendor pitch, you cannot tell which one they mean without asking. Both are real. Both are useful. They are not the same.
 
-**Definition 1: Routing and access control.** This is the infrastructure definition. The gateway fronts many MCP servers, handles authentication (OAuth 2.1, JWT, API keys), decides which agent can reach which tool, enforces rate limits, and emits traces and metrics. It treats the JSON-RPC body as opaque most of the time. It cares about who is calling and which tool, not about what is inside the arguments. Docker MCP Gateway, agentgateway, MintMCP, TrueFoundry, and IBM Context Forge sit in this camp.
+**Definition 1: Routing and access control.** This definition focuses on connecting clients to MCP servers, authenticating callers, and controlling access to tools. Gateways can also provide rate limits, traces, and metrics. Docker MCP Gateway, agentgateway, MintMCP, TrueFoundry, and IBM ContextForge offer routing and access controls; some also inspect content.
 
 **Definition 2: Content inspection.** This is the security definition. The gateway reads the actual JSON-RPC payloads, looks at tool descriptions, tool arguments, and tool responses, and flags credential leaks, prompt injection, and [tool poisoning](/learn/mcp-tool-poisoning/). It cares about what is inside the message, not only who sent it. [Pipelock](/pipelock/), Lasso Security's open source gateway, and parts of Operant AI sit in this camp.
 
@@ -120,19 +120,22 @@ Treat these as layers, not alternatives. An allowlist tells you which servers ar
 
 ## Open source MCP gateway options
 
-**[Docker MCP Gateway](https://docs.docker.com/ai/mcp-catalog-and-toolkit/mcp-gateway/).** Docker's answer to the MCP isolation problem. It runs MCP servers in containers with network restrictions, call tracing, and a `--block-secrets` flag. The gateway acts as a single entry point, fans out to containerized servers, and enforces per-container resource limits. Strong on isolation and tracing. Content inspection is limited to the secrets block, which catches obvious credential patterns but does not cover deeper DLP or prompt injection scanning. Good for teams that already run Docker and want container-grade boundaries. See the [Pipelock vs Docker MCP Gateway](/compare/pipelock-vs-docker-mcp-gateway/) comparison for a closer look.
+These projects take different approaches to MCP routing and access. The maintainers' descriptions were checked 2026-11-13.
 
-**[agentgateway](https://agentgateway.dev/).** Linux Foundation project contributed by Solo.io. A Rust-based data-plane gateway with native MCP and A2A support, JWT and OAuth auth, tool-level RBAC, OpenTelemetry tracing, and a control plane API. Built by a team with Envoy and Istio roots. Treats content inspection as an extension point rather than a core feature. Good for teams that want a proven infra-grade data plane.
+- [agentgateway](https://github.com/agentgateway/agentgateway) is a proxy for MCP and agent communication.
+- [Docker MCP Gateway](https://github.com/docker/mcp-gateway) runs MCP servers in containers and exposes them through one gateway.
+- [IBM ContextForge](https://github.com/IBM/mcp-context-forge) is a registry and proxy for MCP, agents, and APIs.
+- [Microsoft MCP Gateway](https://github.com/microsoft/mcp-gateway) routes and manages MCP servers in Kubernetes.
+- [Obot](https://github.com/obot-platform/obot) provides an MCP gateway with access controls and a server catalog.
+- [Lasso MCP Security Gateway](https://www.lasso.security/resources/lasso-releases-first-open-source-security-gateway-for-mcp) focuses on security for MCP interactions.
 
-**Lasso Security open source MCP gateway.** Announced as the first open source security-focused MCP gateway. Leans hard on content inspection: tool description scanning, prompt injection detection, and credential pattern matching are core, not add-ons. Routing and auth exist but are simpler than in infra projects. See [the announcement](https://www.lasso.security/resources/lasso-releases-first-open-source-security-gateway-for-mcp) for scope details. Good for teams focused on content-level threats.
+Pipelock inspects egress and MCP traffic routed through it. With its flight recorder and signing key configured, it can also write signed receipts for mediated decisions.
 
-**Obot.** Open source MCP gateway and agent platform. Covers routing, auth, and a tool catalog. Treats MCP as part of a broader agent-platform story. Good for teams building an internal agent platform who want MCP support bundled in.
-
-Open source covers the common patterns well. The gap tends to be managed control planes, analytics dashboards, and vendor support, which is where commercial products come in.
-
-For a product-by-product view of the open source side of the category, including where Pipelock fits as the scanning complement rather than another routing gateway, see [Pipelock vs Open Source MCP Gateways](/compare/pipelock-vs-open-source-mcp-gateways/).
+For more detail, see [Pipelock vs Docker MCP Gateway](/compare/pipelock-vs-docker-mcp-gateway/) and [Pipelock vs Open Source MCP Gateways](/compare/pipelock-vs-open-source-mcp-gateways/).
 
 ## Commercial MCP gateway options
+
+**[Permit MCP Gateway](https://www.permit.io/mcp-gateway).** Provides authentication, authorization, consent, and audit for tool calls (checked 2026-11-13).
 
 **[Runlayer](https://www.runlayer.com/).** AI control plane with MCP access governance, fine-grained permissions, and audit logs. Its [deployment docs](https://docs.runlayer.com/deployment/overview) (checked 2026-10-14) offer a Runlayer-hosted single-tenant deployment or self-hosting on AWS ECS with Terraform or on Kubernetes. Its [ToolGuard docs](https://docs.runlayer.com/runlayer-toolguard) describe configurable checks on tool definitions, tool inputs, and tool outputs for prompt injection, credentials, and PII. Good for teams that want MCP governance and gateway-side scanning in one product, run by Runlayer or inside their own cloud.
 
@@ -141,8 +144,6 @@ For a product-by-product view of the open source side of the category, including
 **[Operant AI](https://www.operant.ai/solutions/mcp-gateway).** Runtime AI security platform with an MCP gateway offering. Emphasizes runtime visibility, anomaly detection, and data-flow analysis. Strong on observability of how agents behave in production. Good for teams whose threat model centers on runtime behavior.
 
 **MintMCP.** Commercial MCP gateway and management layer. Positioned around making MCP deployment friendlier for enterprises: catalog, access control, audit, and vendor management. Good for teams that want MCP adoption to feel like SaaS procurement with governance attached.
-
-**IBM Context Forge.** IBM's entry in the MCP gateway space, part of their broader agent-governance story. Leans into enterprise controls, catalog, and integration with existing IBM security tooling. Good for IBM-shop customers.
 
 The commercial space is moving fast. Pricing, scope, and feature claims change between quarters. Before committing, ask each vendor the same concrete questions (see the decision matrix below) and compare answers side by side.
 
@@ -153,14 +154,14 @@ A high-level read of the space at a single point in time. Where a vendor does no
 | Product | Routing / multi-server | Tool-level RBAC | Content inspection | OpenTelemetry | Self-hostable |
 |---|---|---|---|---|---|
 | Docker MCP Gateway | Yes | Partial | Partial (secrets block) | Yes | Yes |
-| agentgateway | Yes | Yes | Not documented in public docs | Yes | Yes |
+| agentgateway | Yes | Yes | Yes ([MCP guardrail processors](https://agentgateway.dev/docs/standalone/latest/documentation/mcp/guardrails/about/) inspect tool arguments and results, checked 2026-11-13) | Yes | Yes |
 | Lasso open source gateway | Partial | Not documented in public docs | Yes | Not documented in public docs | Yes |
-| Obot | Yes | Partial | Not documented in public docs | Not documented in public docs | Yes |
+| Obot | Yes | Partial | MCP request and response filters | Not documented in public docs | Yes |
 | Runlayer | Yes | Yes | Yes (ToolGuard checks on tool definitions, inputs, and outputs) | [Ingests Claude Code OTLP logs](https://docs.runlayer.com/claude-code-otlp-monitoring); its deployment, ToolGuard and OTLP pages don't describe gateway trace export (checked 2026-10-14) | Yes (AWS ECS with Terraform, or Kubernetes) |
 | TrueFoundry MCP Gateway | Yes | Yes | Not documented in public docs | Yes | Yes |
 | Operant AI | Yes | Yes | Partial | Yes | Not documented in public docs |
 | MintMCP | Yes | Yes | Not documented in public docs | Not documented in public docs | Not documented in public docs |
-| IBM Context Forge | Yes | Yes | Not documented in public docs | Not documented in public docs | Not documented in public docs |
+| IBM ContextForge | Yes | Yes | Partial ([plugin framework](https://ibm.github.io/mcp-context-forge/latest/using/plugins/); the documented PII filter hooks tool inputs and outputs, checked 2026-11-13) | Yes | Yes |
 | Pipelock | No (wraps one server) | Via config | Yes | Yes | Yes |
 
 This table is a snapshot, not a review. Vendor docs change. Verify before choosing.
