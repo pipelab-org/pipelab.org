@@ -169,7 +169,7 @@ No single tool covers every class above, so the workflow combines four layers.
 
 **Start with the public trackers.** The [Vulnerable MCP Project](https://vulnerablemcp.info/) is the community CVE index. The [OWASP MCP Top 10](https://owasp.org/projects/mcp-top-10) is the category framework in beta as of 2026. Both give you the vocabulary and known-bad list before you scan your own servers.
 
-**Run a static scanner against tool definitions.** Cisco mcp-scanner, Snyk agent-scan (the former Invariant mcp-scan), and Backslash Security analyze tool definitions and configs before the server ships. See [MCP security tools](/learn/mcp-security-tools/) for the landscape.
+**Run a static scanner against tool definitions.** Cisco mcp-scanner and Snyk agent-scan (the former Invariant mcp-scan) analyze tool definitions and configs before the server ships. Backslash Security rates MCP servers before install and also runs an endpoint MCP proxy on developer machines. See [MCP security tools](/learn/mcp-security-tools/) for the landscape.
 
 **Route live traffic through a runtime inspection proxy.** Static scanners miss rug-pulls, response injection, credential leaks in arguments, and poisoned data returned at runtime. An inspection proxy ([MCP Proxy](/learn/mcp-proxy/), [Agent Firewall](/agent-firewall/)) scans tool descriptions on every session, arguments on every call, and responses on every reply.
 

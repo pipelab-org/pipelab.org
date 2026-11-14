@@ -5,7 +5,7 @@ seoTitle: "Agent Firewall: How It Works and What It Blocks"
 subtitle: "A proxy or MCP wrapper between your agent and the systems it reaches. Scans mediated traffic. Blocks the bad stuff."
 description: "An agent firewall inspects AI agent HTTP, WebSocket, and MCP traffic, including wrapped stdio servers, to block leaks and injection."
 layout: "agent-firewall"
-lastmod: 2026-10-14
+lastmod: 2026-11-14
 cta_copy: "Install Pipelock in front of your first agent."
 cta_primary_label: "Install Pipelock"
 cta_primary_href: "/install/"
@@ -16,7 +16,7 @@ faq:
   - q: "What is an agent firewall?"
     a: "An agent firewall is a runtime enforcement layer that sits between an AI agent and the systems it communicates with. It inspects HTTP traffic and MCP tool calls in both directions, including wrapped stdio MCP servers, scanning for credential leaks, prompt injection, and tool poisoning before anything reaches either side."
   - q: "How do the three agent firewall categories compare?"
-    a: "Agent firewalls split into three camps. Network policy firewalls restrict the domains, methods, or paths an agent can reach (Coder Agent Firewall, GitHub gh-aw-firewall, iron-proxy default mode). MCP gateways manage which tools get called and authenticate access (Docker MCP Gateway, Runlayer, agentgateway, TrueFoundry). Content inspection systems scan every request and response for credential leaks, prompt injection, and tool poisoning regardless of destination (Pipelock, Cisco mcp-scanner, Snyk agent-scan, Nightfall AI, Backslash Security, Promptfoo). The three camps catch different attacks. A serious deployment uses controls from all three."
+    a: "Agent firewalls split into three camps. Network policy firewalls restrict the domains, methods, or paths an agent can reach (Coder Agent Firewall, GitHub gh-aw-firewall, iron-proxy default mode). MCP gateways manage which tools get called and authenticate access (Docker MCP Gateway, Runlayer, agentgateway, TrueFoundry). Content inspection systems scan every request and response for credential leaks, prompt injection, and tool poisoning regardless of destination (Pipelock, Cisco mcp-scanner, Snyk agent-scan, Nightfall AI, Backslash Security (endpoint MCP proxy), Promptfoo). The three camps catch different attacks. A serious deployment uses controls from all three."
   - q: "How is an agent firewall different from an MCP gateway?"
     a: "An MCP gateway is one type of agent firewall focused on the Model Context Protocol layer. It routes tool calls, authenticates clients, and applies access controls between agents and MCP servers. A full agent firewall covers more than MCP. It also inspects HTTP traffic, WebSocket frames, and other egress channels. Some MCP gateways do basic content filtering. Most do not scan request and response bodies the way a content inspection agent firewall does. The two categories overlap but are not interchangeable."
   - q: "How is an agent firewall different from a domain allowlist?"
@@ -80,7 +80,7 @@ The term is being used three ways right now. All three are legitimate. They catc
 
 1. **Network allowlist and control-plane.** Restricts which hosts an agent can reach. Examples: GitHub's [gh-aw-firewall](https://github.com/github/gh-aw-firewall), iron-proxy's default mode. Simple to operate. Catches exfil to unknown destinations. Cannot inspect content on approved paths.
 2. **MCP gateway and routing.** Manages which tools get called and which agents can reach which servers. Examples: Docker MCP Gateway, Runlayer, agentgateway, TrueFoundry, Operant AI, Obot, Lasso, MintMCP. Adds auth, access control, and routing. Some do basic content filtering.
-3. **Content inspection and runtime defense.** Scans every request and response regardless of destination. Examples: Pipelock, Cisco mcp-scanner (pre-deploy), Snyk agent-scan (pre-deploy), Nightfall AI, Backslash Security, Promptfoo. DLP, injection detection, tool poisoning scanning, MCP-aware parsing. Higher configuration cost. Catches content threats other camps cannot.
+3. **Content inspection and runtime defense.** Scans every request and response regardless of destination. Examples: Pipelock, Cisco mcp-scanner (pre-deploy), Snyk agent-scan (pre-deploy), Nightfall AI, Backslash Security (endpoint MCP proxy), Promptfoo. DLP, injection detection, tool poisoning scanning, MCP-aware parsing. Higher configuration cost. Catches content threats other camps cannot.
 
 The rest of this page walks each camp in detail. First, here is the side-by-side so you can map a vendor or open source project to the threats it covers.
 
