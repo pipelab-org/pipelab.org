@@ -14,6 +14,8 @@ faq:
     a: "LLM vulnerabilities exist in the model's input and output. MCP vulnerabilities exist in the protocol layer: tool descriptions that carry hidden instructions, tool arguments that leak secrets, tool responses that contain injection payloads, and server-side bugs (path traversal, argument injection, RCE) that turn agent requests into shell access."
   - q: "Do MCP servers have CVEs?"
     a: "Yes. Public advisories include CVE-2025-53109 and CVE-2025-53110 in the MCP filesystem server, and CVE-2025-6514 in mcp-remote. Check the affected versions and fixes in each advisory."
+  - q: "How many MCP CVEs have been published?"
+    a: "The Vulnerable MCP Project tracks over 50 known MCP vulnerabilities as of April 2026, with 13 rated critical. Notable disclosures include the Anthropic mcp-server-git RCE chain (CVE-2025-68143/68144/68145), Anthropic Filesystem MCP EscapeRoute (CVE-2025-53109/53110), MCPoison in Cursor IDE (CVE-2025-54136), mcp-remote command injection (CVE-2025-6514), and MCPJam Inspector RCE (CVE-2026-23744)."
   - q: "Can MCP vulnerabilities be fixed by the MCP protocol itself?"
     a: "Some flaws are in servers and clients, while others arise when untrusted tool descriptions and responses enter an agent's context. Protocol improvements and runtime inspection can reduce risk, but cannot eliminate every attack."
   - q: "How do I find vulnerabilities in my MCP servers?"
@@ -71,7 +73,7 @@ A malicious MCP server hides instructions in its tool descriptions. When the age
 
 The attack is not limited to the `description` field. Instructions can hide in parameter names, default values, enum options, and example values. CyberArk's ["Poison Everywhere" research](https://web.archive.org/web/20260511055221/https://www.cyberark.com/resources/threat-research-blog/poison-everywhere-no-output-from-your-mcp-server-is-safe) demonstrated encoding exfiltration instructions in MCP tool parameter names. [Invariant Labs](https://invariantlabs.ai/blog/mcp-security-notification-tool-poisoning-attacks) published the canonical tool poisoning disclosure in April 2025, demonstrating that the attack works because tool descriptions enter the context as trusted content.
 
-**Defense.** For tool definitions routed through its MCP proxy, Pipelock scans text in the definition for injection patterns. The full breakdown lives in [MCP Tool Poisoning](/learn/mcp-tool-poisoning/) and the [tool-poisoning attack surface](/blog/tool-poisoning-mcp-attack-surface/) post.
+**Defense.** For tool definitions routed through its MCP proxy, Pipelock extracts text recursively from the full tool definition and scans it for injection patterns. The full breakdown lives in [MCP Tool Poisoning](/learn/mcp-tool-poisoning/) and the [tool-poisoning attack surface](/blog/tool-poisoning-mcp-attack-surface/) post.
 
 ## Rug-pull drift attacks
 
@@ -79,7 +81,7 @@ The server returns clean tool descriptions initially. After the agent starts usi
 
 The canonical public demonstration is the [Invariant Labs WhatsApp MCP rug-pull](https://invariantlabs.ai/blog/whatsapp-mcp-exploited). A trivia game MCP server with hidden instructions targeted a legitimate `whatsapp-mcp` server connected to the same agent. The agent pulled WhatsApp history through the trusted server and leaked it as outbound traffic. End-to-end encryption did not help because exfiltration happened above the encryption layer, through the agent's own authorized access.
 
-**Defense.** Pipelock can compare tool definitions routed through its MCP proxy against a baseline and report drift. Review changes before allowing sensitive actions.
+**Defense.** For servers routed through its MCP proxy, Pipelock fingerprints every tool definition with SHA-256 on first contact and compares later responses against that baseline. A change triggers an alert or block with a diff of what changed. Review changes before allowing sensitive actions.
 
 ## Command injection and RCE in MCP servers
 
@@ -113,7 +115,7 @@ The postmark-mcp pattern is the template attackers will reuse. A maintainer ship
 
 MCP defines authorization requirements for HTTP-based connections, but implementations and deployments can still have authorization gaps. Shared service-account tokens can also give multiple agents broader access than they need.
 
-Check Point's [MCPoison research](https://research.checkpoint.com/2025/cursor-vulnerability-mcpoison/) describes a configuration approval that remained in effect after an MCP configuration changed. Revalidate configuration changes and tie approval to the current configuration.
+Check Point's [MCPoison research](https://research.checkpoint.com/2025/cursor-vulnerability-mcpoison/) (CVE-2025-54136) describes a Cursor IDE configuration approval that remained in effect after an MCP configuration changed. Cursor fixed it in version 1.3. Revalidate configuration changes and tie approval to the current configuration.
 
 **Defense.** Mandatory re-approval on any MCP config change. Per-agent identity with scoped tokens. File integrity monitoring on MCP config paths. The full breakdown lives in [MCP Authorization](/learn/mcp-authorization/).
 
@@ -131,7 +133,7 @@ A tool returns content that contains hidden instructions targeting the agent. Th
 
 The canonical public demonstration is Invariant Labs' [GitHub MCP exploit](https://invariantlabs.ai/blog/mcp-github-vulnerability). The widely used GitHub MCP server (reported at around 14,000 stars at disclosure) was hijacked through a malicious GitHub Issue. When the agent read the issue, it followed embedded instructions and exfiltrated contents from private repositories the user had authorized. Tool descriptions were clean. The poisoning sat in the data the tool returned.
 
-**Defense.** For traffic routed through its MCP proxy, Pipelock scans tool responses for known injection patterns, including {{< stat key="response_patterns" >}} response patterns. Detection is not a guarantee that all malicious instructions will be caught. Treat inbound tool output as untrusted the way a browser treats HTML.
+**Defense.** For traffic routed through its MCP proxy, Pipelock scans tool responses for known injection patterns, using {{< stat key="response_patterns" >}} injection patterns across six response-scanning passes: normalized text, invisible-with-space retry, leetspeak, optional-whitespace variants, vowel-folded variants, and base64/hex decode. Detection is not a guarantee that all malicious instructions will be caught. Treat inbound tool output as untrusted the way a browser treats HTML.
 
 ## Shadow MCP and inventory gaps
 
@@ -154,6 +156,7 @@ These public CVEs affect particular implementations and versions, not every MCP 
 | [CVE-2025-68145](https://github.com/advisories/GHSA-j22h-9j4x-23w5) | `mcp-server-git` did not enforce its configured repository restriction on subsequent tool calls. | 2025.12.18 |
 | [CVE-2025-6514](https://github.com/advisories/GHSA-6xpm-ggf7-wc3p) | `mcp-remote` could execute operating system commands when an untrusted server supplied a crafted authorization URL. | 0.1.16 |
 | [CVE-2026-23744](https://github.com/advisories/GHSA-232v-j27c-5pp6) | `@mcpjam/inspector` exposed an HTTP endpoint that could execute commands. | 1.4.3 |
+| [CVE-2025-54136](https://github.com/cursor/cursor/security/advisories/GHSA-24mc-g4xr-4395) | Cursor IDE kept trusting an approved MCP configuration after it changed (MCPoison). | Cursor 1.3 |
 
 A CVE identifies a disclosed flaw, not proof that your installation is exposed. Check the affected version, configuration, and reachability in the advisory. Other incidents, including tool poisoning demonstrations, may not have a CVE.
 
