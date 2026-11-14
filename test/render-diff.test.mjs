@@ -178,7 +178,7 @@ test("CI refuses to claim a two-build comparison with only one binary", () => {
   try {
     const result = runRenderDiff({ localBin: onlyBin, pinnedBin: "", githubActions: true });
     assert.equal(result.status, 1);
-    assert.match(result.message, /needs distinct pinned and latest binaries/);
+    assert.match(result.message, /needs distinct pinned and comparison binaries/);
   } finally {
     if (previous === undefined) {
       delete process.env.CI_RENDER_DIFF;
@@ -227,7 +227,7 @@ test("CI compares explicit pinned and latest binaries", () => {
     githubActions: true,
   });
   assert.equal(result.status, 0);
-  assert.match(result.message, /latest Hugo 0\.162\.1 matches pinned/);
+  assert.match(result.message, /comparison Hugo 0\.162\.1 matches pinned/);
 });
 
 test("a real homepage orbit HTML change fails the two-build comparison", () => {

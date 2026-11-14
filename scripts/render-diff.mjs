@@ -227,19 +227,19 @@ export function compareTrees(pinnedDir, localDir, paths) {
 export function formatReport(diffs, localVersion, pinnedVersion) {
   const noun = diffs.length === 1 ? "path differs" : "paths differ";
   const lines = [
-    `render-diff failed: ${diffs.length} ${noun} (latest Hugo ${localVersion} vs pinned ${pinnedVersion})`,
+    `render-diff failed: ${diffs.length} ${noun} (comparison Hugo ${localVersion} vs pinned ${pinnedVersion})`,
     "",
   ];
   const shown = diffs.slice(0, REPORT_LIMIT);
   for (const diff of shown) {
     lines.push(diff.path);
     if (diff.kind === "added") {
-      lines.push("  only in latest Hugo output");
+      lines.push("  only in comparison Hugo output");
     } else if (diff.kind === "removed") {
       lines.push("  only in pinned hugo output");
     } else {
       lines.push(`  pinned: ${singleLine(diff.pinned)}`);
-      lines.push(`  latest: ${singleLine(diff.local)}`);
+      lines.push(`  comparison: ${singleLine(diff.local)}`);
     }
     lines.push("");
   }
@@ -292,7 +292,7 @@ export function runRenderDiff({
       return {
         status: 1,
         message:
-          "render-diff: CI needs distinct pinned and latest binaries in HUGO_PINNED and HUGO_LOCAL; refusing to claim a two-build comparison.",
+          "render-diff: CI needs distinct pinned and comparison binaries in HUGO_PINNED and HUGO_LOCAL; refusing to claim a two-build comparison.",
       };
     }
     return {
@@ -306,7 +306,7 @@ export function runRenderDiff({
     return {
       status: 0,
       message:
-        `render-diff: vacuous skip: latest Hugo ${localProbe.version} equals pinned ${pinnedVersion}; no two-build comparison ran.`,
+        `render-diff: vacuous skip: comparison Hugo ${localProbe.version} equals pinned ${pinnedVersion}; no two-build comparison ran.`,
     };
   }
 
@@ -328,7 +328,7 @@ export function runRenderDiff({
     return {
       status: 1,
       message:
-        `render-diff: latest Hugo is ${localProbe.version} but .hugo-version pins ${pinnedVersion}, and ${configured} was not found as an extended ${pinnedVersion} build.\n` +
+        `render-diff: comparison Hugo is ${localProbe.version} but .hugo-version pins ${pinnedVersion}, and ${configured} was not found as an extended ${pinnedVersion} build.\n` +
         `Place the extended ${pinnedVersion} binary at ${DEFAULT_PINNED_HUGO} or set HUGO_PINNED.`,
     };
   }
@@ -354,7 +354,7 @@ export function runRenderDiff({
       return {
         status: 1,
         message:
-          `render-diff: latest Hugo ${localProbe.version} (${latestBin}) failed to build.\n` +
+          `render-diff: comparison Hugo ${localProbe.version} (${latestBin}) failed to build.\n` +
           (localBuild.result.stderr || localBuild.result.stdout || `exit ${localBuild.result.status}`),
       };
     }
@@ -365,7 +365,7 @@ export function runRenderDiff({
     }
     return {
       status: 0,
-      message: `render-diff: latest Hugo ${localProbe.version} matches pinned ${pinned.version} across ${CI_COMPARE_PATHS.join(", ")} after normalization.`,
+      message: `render-diff: comparison Hugo ${localProbe.version} matches pinned ${pinned.version} across ${CI_COMPARE_PATHS.join(", ")} after normalization.`,
     };
   } finally {
     rmSync(pinnedDir, { recursive: true, force: true });
