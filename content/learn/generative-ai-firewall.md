@@ -5,7 +5,7 @@ seoTitle: "Generative AI Firewall: Vendors and Open Source"
 subtitle: "The category, the vendors, and where open-source agent firewalls fit."
 description: "Generative AI firewall guide to prompt filtering, output scanning, agent egress control, vendors, and where open-source tools fit."
 date: 2026-04-14
-lastmod: 2026-08-08
+lastmod: 2026-11-14
 faq:
   - q: "What is a generative AI firewall?"
     a: "A generative AI firewall is a security control that inspects traffic to and from generative AI systems (LLMs, chatbots, and AI agents) for prompt injection, sensitive data exfiltration, unsafe completions, and malicious inputs. It sits inline as a proxy, gateway, or edge service and applies detection rules, classifiers, or content filters to prompts and model outputs before they reach their destination."
@@ -13,6 +13,10 @@ faq:
     a: "A WAF inspects HTTP requests for signatures of web attacks like SQL injection, XSS, and path traversal. A generative AI firewall inspects the semantic content of prompts and completions for threats specific to language models: jailbreaks, instruction overrides, data exfiltration prompts, and unsafe model outputs. A WAF looks at structure. A generative AI firewall looks at meaning. Most modern deployments need both."
   - q: "When do you need a generative AI firewall?"
     a: "You need one as soon as an LLM or AI agent has access to sensitive data, external systems, or user input that you do not fully control. Customer-facing chatbots, internal copilots with database access, RAG pipelines over corporate data, and autonomous agents that call tools all benefit. The threshold is not model size. It is trust boundary. Any time an LLM reads or writes data that crosses a trust boundary, a generative AI firewall gives you a place to enforce policy."
+  - q: "Do I need a generative AI firewall if I already run a WAF or WAAP?"
+    a: "Not always. A WAAP protects web applications and APIs, and its AI add-on may cover the prompts and responses your application needs inspected. Check whether it also sees agent tool calls and outbound traffic before adding another control."
+  - q: "Should I choose a managed or self-hosted generative AI firewall?"
+    a: "Choose based on where traffic and logs can reside, the inspection points you need, latency, operating capacity, and total cost. A managed service shifts infrastructure operations to a provider; self-hosting gives your team responsibility for deployment and maintenance."
 learn_cat: concepts
 level: ref
 tags:
@@ -20,7 +24,7 @@ tags:
   - vendors
   - comparison
 ---
-A generative AI firewall is a security control that inspects traffic moving through generative AI systems and blocks the dangerous parts. Inbound prompts get scanned for jailbreaks and injection. Outbound completions get scanned for data leaks and unsafe content. Agent tool calls get scanned for exfiltration and policy violations. The firewall sits inline as a proxy, gateway, or edge service.
+A generative AI firewall, also called a GenAI firewall, is a security control that inspects traffic moving through generative AI systems and blocks the dangerous parts. Inbound prompts get scanned for jailbreaks and injection. Outbound completions get scanned for data leaks and unsafe content. Agent tool calls get scanned for exfiltration and policy violations. The firewall sits inline as a proxy, gateway, or edge service, and it only sees the traffic that reaches it.
 
 NeuralTrust used the "Generative Application Firewall" (GAF) label in a [2026 paper](https://neuraltrust.ai/news/introducing-the-generative-application-firewall-gaf) and helped popularize it, though vendors now use adjacent names for overlapping runtime controls. Cloudflare, Akamai, F5, Palo Alto, Lakera (Check Point), and Prompt Security (SentinelOne) all ship products that fit parts of the broader description, though the implementations vary significantly.
 
@@ -50,6 +54,22 @@ A generative AI firewall works at the semantic layer. The threats it blocks are 
 
 The three layers do not replace each other. A production deployment usually runs a network firewall for transport control, a WAF for HTTP-layer attack patterns, and a generative AI firewall for prompt-and-completion content. See [agent firewall vs WAF](/compare/agent-firewall-vs-waf/) for a head-to-head treatment of where the AI-specific layer fits next to a traditional WAF.
 
+## Do I need a generative AI firewall if I already run a WAF or WAAP?
+
+A web application and API protection (WAAP) service combines controls for web applications and APIs. A WAF checks incoming web and API requests against rules. [Cloudflare's AI Security for Apps docs](https://developers.cloudflare.com/waf/detections/ai-security-for-apps/) describe prompt inspection as WAF detection fields. The AI detection fields, including prompt injection scoring, are an Enterprise paid add-on, and the docs say current scans cover JSON requests to endpoints labeled `cf-llm`.
+
+Your WAAP vendor's AI add-on may be enough if it sees the prompts and responses you need to protect, applies the policies you need, and fits your data-handling requirements. Check coverage for outbound agent requests and tool calls too: traffic that doesn't pass through the inspection point won't be inspected. Test the deployed configuration against your own use cases before buying a separate control.
+
+## Managed vs self-hosted
+
+| Consideration | Managed service | Self-hosted |
+|---|---|---|
+| Data residency | Check the provider's processing regions, retention, and contract. | Choose where to run it and where to store logs; connected services may process data elsewhere. |
+| Latency | Network distance and provider inspection add to the request path. | Placement and local inspection affect latency; measure your workload. |
+| Inspection depth | Check supported traffic, policies, and integrations. | Check supported traffic and policies; local access alone doesn't guarantee deeper inspection. |
+| Cost model | Check subscription, usage, and add-on terms. | Budget for infrastructure, licensing if applicable, and staff time. |
+| Operations | The provider operates the service; your team configures policies and monitors results. | Your team deploys, updates, configures, and monitors it. |
+
 ## The defense layers in practice
 
 Each layer has its own failure modes. Understanding where each one breaks is more useful than a feature checklist.
@@ -58,7 +78,7 @@ Each layer has its own failure modes. Understanding where each one breaks is mor
 
 The attack is prompt injection: text that convinces the model to do something other than what the application intends. Direct injection comes from user input. Indirect injection comes from retrieved context (a web page, a document, a tool response). See [LLM Prompt Injection](/learn/llm-prompt-injection/) for the full taxonomy.
 
-Pattern-based input filters catch the well-known phrasings. They handle variations through normalization: NFKC mapping, confusable character folding, invisible character stripping, leetspeak, base64 or hex decoding. Pipelock runs a 6-pass normalization pipeline before pattern matching (NFKC plus confusable mapping, invisible-to-space, leetspeak, optional-whitespace variants, vowel folding, base64/hex decode) so common obfuscation does not slip through.
+Pattern-based input filters catch the well-known phrasings. They handle variations through normalization: NFKC mapping, confusable character folding, invisible character stripping, leetspeak, base64 or hex decoding. For traffic routed through Pipelock, Pipelock runs a 6-pass normalization pipeline before pattern matching (NFKC plus confusable mapping, invisible-to-space, leetspeak, optional-whitespace variants, vowel folding, base64/hex decode) so common obfuscation does not slip through.
 
 Classifier-based input filters use trained models to score inputs for injection intent. They handle novel phrasings the pattern library never saw, but they cost more latency and have their own adversarial examples. Lakera Guard (now Check Point) and Prompt Security (now SentinelOne) built their reputations on classifier quality. Classifier plus pattern is the common production setup.
 
@@ -70,7 +90,7 @@ The attack is data exfiltration or unsafe content in the model's response. Somet
 
 Output scanning uses the same toolbox as input filtering plus traditional DLP. Regex libraries catch structured secrets (API keys, SSNs, credit card numbers). Classifiers catch unstructured sensitive content. Content-safety models catch hate, violence, and explicit material.
 
-Pipelock ships with {{< stat key="dlp_patterns" >}} DLP patterns covering AWS, GCP, Stripe, Anthropic, OpenAI, Slack, Discord, Twilio, SendGrid, Sentry, GitHub, GitLab, PyPI, npm, Linear, Notion, and others. The patterns are Apache 2.0 and you can read every one of them. Commercial products typically have larger pattern libraries, machine-learning DLP classifiers, and richer content safety taxonomies, though the exact counts and methods are rarely documented in public docs.
+For supported traffic routed through it, Pipelock ships with {{< stat key="dlp_patterns" >}} DLP patterns covering AWS, GCP, Stripe, Anthropic, OpenAI, Slack, Discord, Twilio, SendGrid, Sentry, GitHub, GitLab, PyPI, npm, Linear, Notion, and others. The patterns are Apache 2.0 and you can read every one of them. Commercial products typically have larger pattern libraries, machine-learning DLP classifiers, and richer content safety taxonomies, though the exact counts and methods are rarely documented in public docs.
 
 ### Model guardrails
 
@@ -82,29 +102,29 @@ Dialog policies (NeMo Guardrails' Colang language), topic allowlists, output sch
 
 The attack is an AI agent that has been compromised (through injection, tool poisoning, or a malicious MCP server) and is now trying to exfiltrate data through HTTP requests, DNS queries, or tool calls. Input and output scanning at the model layer miss this. The exfiltration happens at the network layer, after the model produced its output.
 
-Egress control inspects outbound agent traffic. It scans URLs for encoded secrets, headers and bodies for credential leaks, DNS queries for suspicious lookups, MCP tool calls for policy violations. Pipelock focuses here because capability separation puts egress policy outside the agent process when deployment controls enforce the boundary. The proxy may retain sensitive values for leak detection and needs its own protection. See [MCP Security](/learn/mcp-security/) for the MCP-specific attack surface.
+Egress controls can inspect outbound agent traffic routed through them, including URLs, HTTP headers and bodies, and MCP tool calls. Their visibility depends on deployment and protocol. Pipelock focuses here because capability separation puts egress policy outside the agent process when deployment controls enforce the boundary. The proxy may retain sensitive values for leak detection and needs its own protection. See [MCP Security](/learn/mcp-security/) for the MCP-specific attack surface.
 
 ## Vendor landscape
 
-The category has a dozen serious players, with different origins and different strengths. The list below is not exhaustive and the feature claims are either documented publicly or hedged as such. Product capabilities change frequently.
+The list below is not exhaustive. Product capabilities and deployment options change, so check the linked documentation against your own traffic and policy requirements.
 
-**NeuralTrust.** Used the "Generative Application Firewall" (GAF) term in its 2026 paper and focuses on multi-turn attack detection across conversation state, which is a hard problem most single-turn scanners do not address. Commercial SaaS.
+**NeuralTrust.** Its [Generative Application Firewall](https://neuraltrust.ai/news/introducing-the-generative-application-firewall-gaf) describes runtime protection for AI applications and agent tool interactions. Its [Prompt Guard](https://neuraltrust.ai/prompt-guard) describes analysis of prompt history for multi-turn attacks.
 
-**Cloudflare Firewall for AI.** Edge-based AI protection integrated with Cloudflare's network. Inline on the Cloudflare edge rather than sidecar. Pairs with [Cloudflare AI Gateway](/learn/cloudflare-ai-gateway/) for LLM API management (caching, rate limiting, analytics). Serves the "protect my customer-facing LLM app" use case. Data routes through Cloudflare infrastructure by design.
+**Cloudflare.** [AI Security for Apps](https://developers.cloudflare.com/waf/detections/ai-security-for-apps/), formerly Firewall for AI, adds detections to the WAF. Prompt injection scoring and the other AI detection fields are an Enterprise paid add-on. The docs say those scans currently cover JSON requests to endpoints labeled `cf-llm` on a zone where the WAF is enabled. [Cloudflare AI Gateway](/learn/cloudflare-ai-gateway/) provides LLM API management alongside it.
 
-**Akamai Firewall for AI.** Akamai's entry in the same edge-proxy category as Cloudflare. Prompt injection, DLP for AI outputs, content filtering. Inline at edge or via REST API. Server-side protection for LLM APIs.
+**Akamai Firewall for AI.** Akamai's [Firewall for AI docs](https://techdocs.akamai.com/cloud-security/docs/protect-your-ai-apps) describe inspection of prompts and responses, including prompt injection on the way in and data leakage on the way out. Apps on Akamai's edge use an edge configuration. Apps elsewhere use the documented API. The page says the feature is in limited availability.
 
-**Prompt Security (SentinelOne).** Acquired by SentinelOne in 2025 and positioned as the runtime layer for the Singularity platform. Known for classifier-based prompt and completion scanning and early MCP gateway work. Enterprise focus.
+**Prompt Security (SentinelOne).** SentinelOne describes [AI application protection](https://www.sentinelone.com/platform/prompt-security-ai-application-security/) spanning pre-production testing and runtime enforcement, alongside [agent security](https://www.sentinelone.com/platform/prompt-security-agentic-ai-security/). SentinelOne acquired Prompt Security in 2025.
 
-**Radware.** "Agentic AI Protection" product extending Radware's WAF into AI traffic. Traditional network security vendor expanding into the category. Enterprise sales motion.
+**Radware.** Radware describes [Agentic AI Protection](https://www.radware.com/products/agentic-ai-protection/) as mapping and monitoring AI agents and responding to agent attacks based on detected intent. Specific deployment and inspection coverage should be checked with the vendor.
 
-**F5.** F5 AI Gateway is F5's runtime layer for securing and operating AI applications, with model routing, semantic caching, guardrails, and observability. F5's October 2025 CalypsoAI acquisition added adjacent capabilities including AI guardrails, AI red teaming, and an AI safety dashboard. Specific inline detection coverage beyond what F5 publishes is not documented in public docs.
+**F5.** [F5 AI Gateway](https://www.f5.com/products/ai-gateway) lists model routing, semantic caching, and AI guardrails, including prompt-injection and jailbreak checks and PII redaction on prompts and responses. F5's fiscal 2025 filing says the CalypsoAI acquisition closed on September 26, 2025 ([business combinations note](https://www.sec.gov/Archives/edgar/data/1048695/000104869525000157/R12.htm)).
 
-**Lakera (Check Point).** Acquired by Check Point in 2025. Lakera Guard was an early classifier-based prompt firewall that shipped as a SaaS API. Now integrated with Check Point's CloudGuard portfolio. Strong prompt-injection classifiers and a published research track record (Gandalf, prompt injection benchmarks).
+**Lakera (Check Point).** Check Point's [AI Agent Security documentation](https://sc1.checkpoint.com/documents/R82.20/WebAdminGuides/EN/CP_R82.20_ThreatPrevention_AdminGuide/Content/Topics-TPG/Lakera_AI_Agent_Security.htm) describes prompt injection protection and content moderation using Lakera policies. Check Point acquired Lakera in 2025.
 
-**Palo Alto Prisma AIRS 2.0.** Enterprise bundle covering agent security (injection, tool misuse, shadow agent discovery), model security (backdoor detection), and AI runtime firewall. Protect AI fully integrated after the 2025 acquisition. Next-gen firewall inspection posture rather than sidecar proxy.
+**Palo Alto Prisma AIRS.** Palo Alto documents an [inline software firewall](https://docs.paloaltonetworks.com/prisma-airs/ai-runtime-security/airs-vm-firewall) for AI Runtime Security. The [platform architecture](https://docs.paloaltonetworks.com/prisma-airs/getting-started/prisma-airs-platform-architecture) also describes model and supply-chain scanning, red teaming, and an AI gateway as separate pillars.
 
-**Cisco AI Defense.** Multi-part platform announced March 2026: Duo Agentic Identity (agent registration and authentication), DefenseClaw (open-source governance layer that orchestrates skills scanning, MCP scanning, and AI BoM), AI Defense Explorer Edition (self-service developer tooling for prompt injection and jailbreak testing), Agent Runtime SDK (policy enforcement embedded into agent workflows), and Splunk AI SOC Agents. The authorization piece answers "is this agent allowed to do this action?" rather than "is the content dangerous?"
+**Cisco AI Defense.** Cisco's [management API guide](https://developer.cisco.com/docs/ai-defense-management/getting-started/) covers runtime protection setup, policy, event review, and red teaming, and it names a separate Inspection API. Cisco's [June 2026 post](https://blogs.cisco.com/ai/securing-ai-agents-with-cisco-ai-defense) describes an agent runtime SDK that sends LLM calls and MCP tool calls through that inspection.
 
 **The category consolidated quickly in 2025.** Lakera, Prompt Security, and CalypsoAI were all acquired that year, which pushed much of the early standalone market into larger security platforms.
 
@@ -114,7 +134,7 @@ Pipelock is an open-source agent firewall and a single Go binary (Apache-2.0 cor
 
 The architecture is capability separation. In an enforced deployment, the agent has no direct internet access and supported traffic goes through Pipelock. When enabled, leak detection reads selected values from the proxy process environment and any configured `dlp.secrets_file`, retaining them in memory for matching. Treat the proxy process and those inputs as sensitive.
 
-Scanning covers:
+For supported traffic routed through Pipelock, configured scanning can cover:
 
 - **Prompt injection** in HTTP response bodies, MCP tool responses, and tool descriptions. {{< stat key="response_patterns" >}} injection patterns plus the 6-pass normalization pipeline.
 - **Secret exfiltration** in request URLs, headers, and bodies. {{< stat key="dlp_patterns" >}} DLP patterns covering major cloud providers, payment rails, messaging platforms, and observability vendors.
@@ -122,7 +142,9 @@ Scanning covers:
 - **MCP tool poisoning and rug-pulls** through baseline tool inventories per session.
 - **Tool policy** enforcement with pre-execution allow, deny, redirect, or human-in-the-loop rules.
 
-The target audience differs from the commercial generative AI firewalls. Pipelock is for developers and small teams running Claude Code, Cursor, Copilot agents, or custom LangChain and OpenAI SDK workloads. You download the binary, set `HTTPS_PROXY`, wrap your MCP servers, and every decision lands in the audit log. If you enable a signing key, Pipelock also emits mediator-signed action receipts. No SaaS account. No telemetry to a vendor. The scanning rules, the patterns, and the source code are visible.
+HTTPS payload inspection through a CONNECT tunnel requires [TLS interception](https://github.com/luckyPipewrench/pipelock/blob/main/docs/guides/tls-interception.md). Without it, Pipelock sees the destination hostname, not the encrypted path, query, headers, or body. Direct traffic that bypasses Pipelock is outside that inspection.
+
+The target audience differs from the commercial generative AI firewalls. Pipelock is for developers and small teams running Claude Code, Cursor, Copilot agents, or custom LangChain and OpenAI SDK workloads. You download the binary, set `HTTPS_PROXY`, wrap your MCP servers, and configure audit logging for the mediated traffic. If you enable a signing key, Pipelock also emits mediator-signed action receipts. No SaaS account. No telemetry to a vendor. The scanning rules, the patterns, and the source code are visible.
 
 Where Pipelock is weaker: no LLM-based classifiers (the scanner is pattern-plus-normalization, not an ML classifier), no pre-deployment static scanning of AI assets (use Cisco mcp-scanner, Snyk agent-scan in static mode, or similar CI scanners for that), no semantic guardrails on the model itself (use NeMo Guardrails or LlamaFirewall in the model pipeline). Pipelock is the network-layer piece. It complements rather than replaces model-layer guardrails.
 
