@@ -79,7 +79,7 @@ AI agent traffic violates every assumption:
 - Content is encoded, split, embedded in URLs and headers.
 - Decisions need to be sub-100ms to keep up.
 
-Layering an AI-specific DLP on top of traditional DLP closes the gap. The right place for it is at the network layer between the agent and the internet, where every outbound request is visible regardless of which tool or service the agent decided to call.
+Layering an AI-specific DLP on top of traditional DLP closes the gap. The right place for it is at the network layer between the agent and the internet, where outbound requests routed through the control are visible regardless of which tool or service the agent decided to call. HTTPS payloads need TLS interception, and traffic that bypasses the control is not inspected.
 
 ### Traditional DLP vs AI agent DLP
 
