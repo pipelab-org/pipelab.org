@@ -1,9 +1,9 @@
 ---
 title: "Shadow MCP: Find and Lock Down Rogue MCP Servers"
 linkTitle: "Shadow MCP"
-seoTitle: "Shadow MCP: Find and Lock Down Rogue MCP Servers"
+seoTitle: "Shadow MCP: Find Unapproved MCP Servers"
 subtitle: "Undocumented MCP servers connect your agents to unknown code. Here's how to find them, measure the risk, and lock them down."
-description: "Shadow MCP is the unauthorized MCP connectivity hiding in your codebase. How to find rogue MCP servers, score the risk, and enforce policy at runtime."
+description: "Find shadow MCP servers in developer configurations and running processes. Learn how to assess their risks and build an inventory."
 date: 2026-04-12
 lastmod: 2026-08-08
 faq:
