@@ -56,7 +56,7 @@ The three layers do not replace each other. A production deployment usually runs
 
 ## Do I need a generative AI firewall if I already run a WAF or WAAP?
 
-A web application and API protection (WAAP) service combines controls for web applications and APIs. A WAF checks incoming web and API requests against rules. [Cloudflare's AI Security for Apps docs](https://developers.cloudflare.com/waf/detections/ai-security-for-apps/) describe prompt inspection as WAF detection fields. Prompt injection scoring is an Enterprise paid add-on, and the docs say current scans cover JSON requests to endpoints labeled `cf-llm`.
+A web application and API protection (WAAP) service combines controls for web applications and APIs. A WAF checks incoming web and API requests against rules. [Cloudflare's AI Security for Apps docs](https://developers.cloudflare.com/waf/detections/ai-security-for-apps/) describe prompt inspection as WAF detection fields. The AI detection fields, including prompt injection scoring, are an Enterprise paid add-on, and the docs say current scans cover JSON requests to endpoints labeled `cf-llm`.
 
 Your WAAP vendor's AI add-on may be enough if it sees the prompts and responses you need to protect, applies the policies you need, and fits your data-handling requirements. Check coverage for outbound agent requests and tool calls too: traffic that doesn't pass through the inspection point won't be inspected. Test the deployed configuration against your own use cases before buying a separate control.
 
@@ -116,7 +116,7 @@ The list below is not exhaustive. Product capabilities and deployment options ch
 
 **Prompt Security (SentinelOne).** SentinelOne describes [AI application protection](https://www.sentinelone.com/platform/prompt-security-ai-application-security/) spanning pre-production testing and runtime enforcement, alongside [agent security](https://www.sentinelone.com/platform/prompt-security-agentic-ai-security/). SentinelOne acquired Prompt Security in 2025.
 
-**Radware.** [Agentic AI Protection](https://www.radware.com/) combines AI security posture management with behavioral protection for agents. Specific deployment and inspection coverage should be checked with the vendor.
+**Radware.** Radware describes [Agentic AI Protection](https://www.radware.com/products/agentic-ai-protection/) as mapping and monitoring AI agents and responding to agent attacks based on detected intent. Specific deployment and inspection coverage should be checked with the vendor.
 
 **F5.** [F5 AI Gateway](https://www.f5.com/products/ai-gateway) lists model routing, semantic caching, and AI guardrails, including prompt-injection and jailbreak checks and PII redaction on prompts and responses. F5's fiscal 2025 filing says the CalypsoAI acquisition closed on September 26, 2025 ([business combinations note](https://www.sec.gov/Archives/edgar/data/1048695/000104869525000157/R12.htm)).
 
