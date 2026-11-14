@@ -94,7 +94,7 @@ Start with the permissions Claude Code needs for one project, then enforce bound
 
 ### Permission modes and settings
 
-Claude Code's [permission modes](https://code.claude.com/docs/en/permissions) control how tool requests are approved. In manual mode, requests that need permission prompt you; allow rules can approve matching actions without another prompt, while deny rules block matches. Review broad allow rules carefully. A rule for a command's text isn't an operating-system boundary, and shell command matching has [documented limits](https://code.claude.com/docs/en/permissions#bash-rule-limits).
+Claude Code's [permission modes](https://code.claude.com/docs/en/permissions) control how tool requests are approved. In manual mode, requests that need permission prompt you; allow rules can approve matching actions without another prompt, while deny rules block matches. Review broad allow rules carefully. A rule for a command's text isn't an operating-system boundary, and shell command matching has [documented limits](https://code.claude.com/docs/en/permissions#what-a-bash-rule-doesnt-match).
 
 For example, this project `.claude/settings.json` permits a matching test command and denies matching pushes:
 
@@ -107,7 +107,7 @@ For example, this project `.claude/settings.json` permits a matching test comman
 }
 ```
 
-Adapt both rules to your project. This example doesn't prevent another command or process from reaching the network. Review project settings and hooks before trusting a repository. For a team, [managed settings](https://code.claude.com/docs/en/settings#where-settings-live) let administrators distribute policy across managed installations; check `/status` for the active settings source. Managed policy controls Claude Code, so protect its deployment and use OS controls for other processes.
+Adapt both rules to your project. This example doesn't prevent another command or process from reaching the network. Review project settings and hooks before trusting a repository. For a team, [managed settings](https://code.claude.com/docs/en/settings#check-what-your-organization-enforces) let administrators distribute policy across managed installations; check `/status` for the active settings source. Managed policy controls Claude Code, so protect its deployment and use OS controls for other processes.
 
 ### Sandbox, hooks, secrets, and egress
 
