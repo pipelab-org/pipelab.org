@@ -1,10 +1,11 @@
 ---
 title: "MCP Gateway Open Source vs Commercial: Comparison and How to Choose"
 linkTitle: "MCP Gateway: Open Source Security Comparison"
+seoTitle: "Open Source MCP Gateway Options Compared"
 subtitle: "What an MCP gateway does, the open-source vs commercial split, MCP gateway vs MCP proxy, and how to evaluate them."
-description: "MCP gateway guide comparing open source and commercial options, routing, auth, content inspection, proxy differences, and security controls."
+description: "Compare open source and commercial MCP gateway options by routing, auth, and tool access control, and see which ones inspect tool calls for threats."
 date: 2026-04-11
-lastmod: 2026-11-13
+lastmod: 2026-11-14
 faq:
   - q: "What is an MCP gateway?"
     a: "An MCP gateway sits between AI agents and MCP (Model Context Protocol) servers, centralizing routing, authentication, access control, and policy. Some gateways also scan tool calls and responses for security threats like tool poisoning, credential leaks, and prompt injection. The term covers a range of products with different capabilities."
