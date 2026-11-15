@@ -124,7 +124,7 @@ What each field proves:
 - `transport`: which Pipelock surface saw the action. `mcp_stdio` here; could also be `http_forward`, `http_intercept`, `websocket`, `mcp_http_upstream`, `mcp_http_listener`, or `mcp_ws`.
 - `layer`: which scanner layer in the pipeline produced the verdict.
 - `pattern`: which detection fired. Mapped to the [community rules](/learn/community-rules/) and OWASP MCP Top 10 categories where applicable.
-- `policy_hash`: SHA-256 fingerprint of the exact policy bundle in force when the decision was made. Provable policy-versioning.
+- `policy_hash`: SHA-256 fingerprint of the policy-relevant config in force when the receipt was written. See [Policy hash source](/learn/action-receipt-spec/#policy-hash-source) for when it is the request's own snapshot.
 - `chain_prev_hash` + `chain_seq`: hash-links to the prior receipt in the session. After-the-fact removal of any single receipt is detectable from the next one.
 - `signature` + `signer_key`: 128-hex-character Ed25519 signature over the canonical receipt fields plus the 64-hex-character raw public key needed to verify. A third party with this signed JSON and the public key alone can confirm integrity offline.
 

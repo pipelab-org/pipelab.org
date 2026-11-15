@@ -92,7 +92,7 @@ Pipelock also has a separate real-time emit pipeline (webhook, syslog, OTLP) for
 
 ### Analyst review
 
-When a SIEM rule fires or a session looks suspicious, an analyst pulls the full receipt stream for that `session_id` and reconstructs every decision in order. The hash chain confirms the stream has not been edited since it was written. The `policy_hash` confirms which policy was in force. The signature confirms the record came from Pipelock and not from a tampered agent log.
+When a SIEM rule fires or a session looks suspicious, an analyst pulls the full receipt stream for that `session_id` and reconstructs every decision in order. The hash chain confirms the stream has not been edited since it was written. The `policy_hash` names the policy that was in force when each receipt was written. The signature confirms the record came from Pipelock and not from a tampered agent log.
 
 This is the audit-trail use case. Receipts are designed to be presentable to a third party (auditor, incident responder, internal review) without requiring trust in Pipelock itself. The signature and the chain are the trust anchors.
 

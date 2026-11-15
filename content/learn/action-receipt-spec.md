@@ -10,7 +10,7 @@ seoTitle: "Pipelock Action Receipt Format: Signed Evidence"
 subtitle: "The exact wire format for signed, chain-linked action receipts."
 description: "Pipelock signed receipt formats: Ed25519 ActionReceipt v1 for proxy decisions, plus EvidenceReceipt v2 for v2.4 contract lifecycle and shadow evidence."
 date: 2026-04-09
-lastmod: 2026-05-17
+lastmod: 2026-11-14
 learn_cat: operator
 level: ref
 tags:
@@ -112,13 +112,15 @@ These appear in every receipt the binary writes today, but the shipped `Validate
 | `delegation_chain` | array of string or `null` | Ordered list of authority grants from principal to actor. The v2.1.x through v2.3.x emitters set this to `nil`, which Go serializes as `null`; populated arrays appear once delegation tracking ships. Verifiers MUST accept both shapes and MUST re-canonicalize `null` as the literal token `null`, not as `[]`. |
 | `side_effect_class` | string | See [Side effect classes](#side-effect-classes). |
 | `reversibility` | string | See [Reversibility](#reversibility). |
-| `policy_hash` | string | SHA-256 hash of the policy bundle that was evaluated. May be empty. |
+| `policy_hash` | string | SHA-256 hash of the policy-relevant part of the config. Operational settings are excluded. May be empty. See [Policy hash source](#policy-hash-source). |
 | `chain_prev_hash` | string | Hex SHA-256 of the previous receipt's canonical envelope, or the literal string `"genesis"` for the first receipt in a session. |
 | `chain_seq` | integer | Monotonic sequence number within the session, starting at `0`. |
 
 ### Optional fields (omitempty)
 
-These fields are omitted from the canonical form when their value is empty.
+These fields are part of the signed v1 record. Canonical order follows the Go
+struct declaration, not this table. They are omitted from the canonical form
+when their value is empty.
 "Empty" follows Go's `omitempty` rule: `""` for strings, empty array for
 slices. Verifiers MUST accept receipts with any subset of these fields
 present.
@@ -133,6 +135,12 @@ present.
 | `pattern` | string | Specific pattern that triggered (DLP rule name, blocklist entry, etc.). |
 | `severity` | string | Severity classification of the trigger. Free-form. |
 | `request_id` | string | Internal correlation ID. |
+| `decision_phase` | string | Where in the request lifecycle this record was made. See [Decision phases](#decision-phases). |
+| `defer_id` | string | ID that links a deferred decision to its later resolution. |
+| `resolution_policy` | string | Policy applied when a deferred decision resolved. |
+| `resolution_source` | string | What resolved a deferred decision, for example `timeout`, `cancel`, `kill_switch`, or `policy_reload`. Not a closed list. |
+| `session_id` | string | Session the deferred decision belongs to. |
+| `session_id_original` | string | Original or audit session ID kept for deferred-decision attribution. It may equal `session_id`. Whether it is present depends on the emitting path. |
 | `session_taint_level` | string | Adaptive enforcement taint level for the session. Populated when session profiling is active. |
 | `session_contaminated` | boolean | Whether the session is currently flagged contaminated. |
 | `recent_taint_sources` | array of object | References to the recent inputs that contributed taint to the session. |
@@ -171,10 +179,43 @@ One of: `full`, `compensatable`, `irreversible`, `unknown`.
 
 ### Verdicts
 
-One of: `allow`, `block`, `warn`, `ask`, `strip`, `forward`, `redirect`.
-Pipelock's `NormalizeVerdict` function maps internal `config.Action*` strings
-to these. Verifiers MUST NOT reject receipts on verdict value: new verdicts
-may appear in future versions.
+Pipelock emits `allow`, `block`, `warn`, `ask`, `strip`, `forward`, `defer`,
+and `redirect`. Pipelock's `NormalizeVerdict` function maps internal
+`config.Action*` strings to these and passes unknown values through unchanged.
+This is not a closed list. Verifiers MUST NOT reject receipts on verdict value:
+new verdicts may appear in future versions.
+
+`allow` means Pipelock did not block the action at the recorded phase. It does
+not mean every check passed. In audit mode a finding can be logged while the
+verdict stays `allow`. Some findings that do not block produce `warn` instead.
+An `allow` with phase `intent` is recorded before the request goes out, so a
+later phase can still record a block.
+
+### Decision phases
+
+Many single-step decisions omit `decision_phase`. Required `allow` decisions
+normally use an `intent` and `outcome` pair. Legacy single-chain MCP stream
+diagnostics can emit a standalone `outcome` with no `intent`. When present the
+phase is one of:
+
+| Phase | Meaning |
+|-------|---------|
+| `intent` | An `allow` recorded durably before the request is forwarded, when receipts are required. A later `outcome` normally carries the same `action_id`, but it can be missing after a crash or a receipt write failure. An `intent` alone does not show the request completed. |
+| `outcome` | The result after the request completed or failed. |
+| `defer` | The decision was deferred. `defer_id` links it to its resolution. |
+| `resolution` | The final verdict for a deferred decision. Carries `defer_id` and `resolution_source`. |
+
+Verifiers SHOULD accept unknown phase values.
+
+### Policy hash source
+
+`policy_hash` is the canonical SHA-256 of the policy-relevant config. When the
+request path supplies the hash of the config snapshot that decided the request,
+that hash is stamped, and it stays correct after a hot reload. When no snapshot
+hash is supplied, the emitter's current config hash is used instead. The
+receipt does not record which source applied. A non-empty `policy_hash` names
+the policy in force, not proof that the request was evaluated against that exact
+snapshot.
 
 ### Transports
 
@@ -206,8 +247,10 @@ The rules are:
 4. **HTML-safe escaping.** The characters `<`, `>`, `&`, U+2028, and U+2029
    are encoded as `\u003c`, `\u003e`, `\u0026`, `\u2028`, `\u2029` inside
    string values, matching Go's default `encoding/json` behavior.
-5. **Unknown fields dropped.** Fields not in the v1 schema are ignored on
-   re-serialization (matches Go's struct-driven marshalling).
+5. **Unknown fields rejected.** A field not in the v1 schema is an error, not
+   something to drop. The Go, TypeScript, Rust, and Python verifiers all reject
+   unknown `action_record` fields, so a verifier with an older field list fails
+   closed instead of silently breaking the signature.
 
 These rules are mechanical and testable. The Python verifier reproduces them
 in `pipelock_verify/_canonical.py`; any divergence breaks the conformance
