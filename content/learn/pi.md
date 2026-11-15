@@ -1,6 +1,7 @@
 ---
 title: "Pi Security: Route the Coding Agent Through Pipelock"
 linkTitle: "Pi Security"
+seoTitle: "Pi Agent Proxy: Route Pi Through Pipelock"
 subtitle: "Point Pi's global proxy setting at a named Pipelock listener with one command, and undo it just as easily."
 description: "Route the Pi coding agent through Pipelock with pipelock pi install. Set a named proxy listener, preview with --dry-run, verify, and undo with remove."
 date: 2026-09-29
