@@ -3,7 +3,7 @@ title: "Agent Firewall vs WAF: What's the Difference?"
 linkTitle: "Agent Firewall vs WAF"
 seoTitle: "Agent Firewall vs WAF: Do You Need Both?"
 subtitle: "They share the word firewall. A WAF protects servers from users. An agent firewall inspects the traffic an agent sends and receives when that traffic is routed through it."
-description: "Already have a WAF? It guards inbound traffic to your servers. An agent firewall guards what agents send out. See where each fits and when you need both."
+description: "Agent firewall vs WAF: compare inbound web protection with inspection of routed agent traffic, and see when your security setup needs both."
 date: 2026-02-24
 lastmod: 2026-11-14
 reviewed: "September 2026"
