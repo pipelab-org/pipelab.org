@@ -10,7 +10,7 @@ seoTitle: "Pipelock Action Receipt Format: Signed Evidence"
 subtitle: "The exact wire format for signed, chain-linked action receipts."
 description: "Pipelock signed receipt formats: Ed25519 ActionReceipt v1 for proxy decisions, plus EvidenceReceipt v2 for v2.4 contract lifecycle and shadow evidence."
 date: 2026-04-09
-lastmod: 2026-05-17
+lastmod: 2026-11-14
 learn_cat: operator
 level: ref
 tags:
@@ -118,7 +118,9 @@ These appear in every receipt the binary writes today, but the shipped `Validate
 
 ### Optional fields (omitempty)
 
-These fields are omitted from the canonical form when their value is empty.
+These fields are part of the signed v1 record. Canonical order follows the Go
+struct declaration, not this table. They are omitted from the canonical form
+when their value is empty.
 "Empty" follows Go's `omitempty` rule: `""` for strings, empty array for
 slices. Verifiers MUST accept receipts with any subset of these fields
 present.
@@ -245,8 +247,10 @@ The rules are:
 4. **HTML-safe escaping.** The characters `<`, `>`, `&`, U+2028, and U+2029
    are encoded as `\u003c`, `\u003e`, `\u0026`, `\u2028`, `\u2029` inside
    string values, matching Go's default `encoding/json` behavior.
-5. **Unknown fields dropped.** Fields not in the v1 schema are ignored on
-   re-serialization (matches Go's struct-driven marshalling).
+5. **Unknown fields rejected.** A field not in the v1 schema is an error, not
+   something to drop. The Go, TypeScript, Rust, and Python verifiers all reject
+   unknown `action_record` fields, so a verifier with an older field list fails
+   closed instead of silently breaking the signature.
 
 These rules are mechanical and testable. The Python verifier reproduces them
 in `pipelock_verify/_canonical.py`; any divergence breaks the conformance
