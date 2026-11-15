@@ -138,7 +138,7 @@ present.
 | `resolution_policy` | string | Policy applied when a deferred decision resolved. |
 | `resolution_source` | string | What resolved a deferred decision, for example `timeout`, `cancel`, `kill_switch`, or `policy_reload`. Not a closed list. |
 | `session_id` | string | Session the deferred decision belongs to. |
-| `session_id_original` | string | Session ID as first presented, when it differs from `session_id`. |
+| `session_id_original` | string | Original or audit session ID kept for deferred-decision attribution. It may equal `session_id`. Whether it is present depends on the emitting path. |
 | `session_taint_level` | string | Adaptive enforcement taint level for the session. Populated when session profiling is active. |
 | `session_contaminated` | boolean | Whether the session is currently flagged contaminated. |
 | `recent_taint_sources` | array of object | References to the recent inputs that contributed taint to the session. |
@@ -191,11 +191,14 @@ later phase can still record a block.
 
 ### Decision phases
 
-`decision_phase` is omitted on single-step decisions. When present it is one of:
+Many single-step decisions omit `decision_phase`. Required `allow` decisions
+normally use an `intent` and `outcome` pair. Legacy single-chain MCP stream
+diagnostics can emit a standalone `outcome` with no `intent`. When present the
+phase is one of:
 
 | Phase | Meaning |
 |-------|---------|
-| `intent` | An `allow` recorded before the request is forwarded, when receipts are required. It is paired with a later `outcome`. |
+| `intent` | An `allow` recorded durably before the request is forwarded, when receipts are required. A later `outcome` normally carries the same `action_id`, but it can be missing after a crash or a receipt write failure. An `intent` alone does not show the request completed. |
 | `outcome` | The result after the request completed or failed. |
 | `defer` | The decision was deferred. `defer_id` links it to its resolution. |
 | `resolution` | The final verdict for a deferred decision. Carries `defer_id` and `resolution_source`. |
