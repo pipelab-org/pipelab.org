@@ -16,15 +16,15 @@ faq:
   - q: "Does Pipelock emit OpenTelemetry attributes for these decisions?"
     a: "Yes, when you opt in. Set emit.otlp.agent_threat_detection_emit: true and qualifying scanner-decision OTLP log records carry the proposed OTel agent.threat.detection.* attributes. The convention is unstable, so the flag is off by default and attribute names may change in subsequent Pipelock releases. The convention does not touch signed receipts; their schema and verifier conformance tests are separate."
   - q: "What is a signed action receipt?"
-    a: "A JSON record Pipelock emits for every proxy decision when receipt signing is enabled. Each receipt carries the verdict, layer, pattern, transport, session, principal, policy hash, side-effect classification, and a hash-chain link to the previous receipt. Each one is Ed25519-signed. Any deletion or reordering breaks the chain and the verifier rejects the stream."
+    a: "An Ed25519-signed JSON record of a mediated decision. With a configured flight recorder and signing key, Pipelock can emit receipts on supported proxy paths; coverage also depends on flight_recorder.require_receipts. Receipts carry decision fields and hash-chain links. Verifiers check signatures and linkage; proving a complete run also requires supported end-proof checks."
   - q: "How do I enable receipt signing?"
-    a: "Generate a key with `pipelock keygen <name>`, set `flight_recorder.signing_key_path` to the key path in your Pipelock config, then start or restart Pipelock. Receipts begin streaming to `flight_recorder.dir` immediately. The public key portion is what downstream verifiers need; the private key never leaves the host running Pipelock."
+    a: "Enable the flight recorder, configure its directory and signing_key_path, then start or restart Pipelock. The record-verify-receipts recipe provides pinned commands for a signed recording and a tamper check. Keep the private key with the mediator and distribute the public key for verification."
   - q: "How is this different from logs?"
     a: "Logs are unstructured text shaped by whoever wrote the log line. An attacker who can influence the agent reasoning tokens can shape the log narrative. Receipts are fixed-field, signed, and chain-linked. The fields a detector cares about, including verdict, layer, pattern, policy hash, and timestamp, are not up for attacker manipulation."
   - q: "Which detection styles does this support?"
-    a: "Three. SIEM rules (Splunk, Datadog, Elastic, anything that ingests JSONL) for real-time alerting. Analyst review for incident response and audit, where the chain proves the stream is intact. Long-window LLM detection where receipts are the structured input for funnels of cheaper-then-stronger models reasoning over agent history."
+    a: "Three. SIEM rules (Splunk, Datadog, Elastic, anything that ingests JSONL) for real-time alerting. Analyst review for incident response and audit, using verified records and the verifier's stated completeness limits. Long-window LLM detection where receipts are the structured input for funnels of cheaper-then-stronger models reasoning over agent history."
   - q: "How do I verify a stream?"
-    a: "Use the built-in `pipelock verify-receipt`, the standalone `pipelock-verifier`, or an independent verifier listed in the receipt spec. Verifiers exit 0 on success and non-zero on any signature failure, chain break, or reordering. The receipt format is open and conformance vectors let other implementations verify the same streams."
+    a: "Use the built-in pipelock verify-receipt, the standalone pipelock-verifier, or a verifier listed in the receipt spec, with a pinned public key. Check that verifier's version and exit contract: an intact prefix can still have an unproven end. The verify-a-receipt walkthrough documents commands and conformance cases for each implementation."
   - q: "What does this not solve?"
     a: "Compromised mediators can still lie: a signed wrong answer is still a wrong answer. Real-time gateways still miss multi-week attacks. Receipts are input to detection, not a substitute for it. Agent-side attacks (code execution on the agent process, shared memory) are out of scope. And same-user deployments have a known ceiling: an agent running as the same Unix user can truncate the receipt file. Capability separation has to come from the deployment layer."
   - q: "Where is the schema?"
@@ -57,7 +57,7 @@ Long-window detection is the only way to catch attacks designed to look like two
 
 ## The primitive: mediator-signed action receipts
 
-When `flight_recorder.signing_key_path` is set, every proxy decision produces a signed receipt. Receipts are Ed25519-signed, JSON-structured, and linked into a SHA-256 hash chain so any deletion or reordering is detectable after the fact.
+With a configured flight recorder and signing key, Pipelock can emit signed receipts for mediated decisions on supported proxy paths. Coverage also depends on `flight_recorder.require_receipts`. Receipts are Ed25519-signed, JSON-structured, and linked into a SHA-256 hash chain. Signature and linkage checks verify the supplied records; proving the complete end is a separate check.
 
 Each receipt carries the fields a downstream detector needs:
 
@@ -153,22 +153,13 @@ The flag is separate from the OTLP endpoint settings. With the endpoint set and 
 
 ## Verifying a stream
 
-```bash
-pipelock verify-receipt evidence/evidence-proxy-0.jsonl --key <public-key-hex>
-```
+Use the recorder's actual chain path and the public key from the same recording. Current filenames include run identifiers. [Record signed receipts and verify them offline](/learn/record-verify-receipts/) provides pinned release commands, selects the generated chain file and checks both an intact signed prefix and a tampered copy.
 
-Or use another verifier listed in the receipt spec, including the standalone `pipelock-verifier` binary and independent language implementations. The Python package remains available for ActionReceipt v1 streams:
-
-```bash
-pip install pipelock-verify
-python -m pipelock_verify evidence/evidence-proxy-0.jsonl --key <public-key-hex>
-```
-
-All conforming verifiers exit 0 on success and non-zero on any signature failure, chain break, or reordering. The conformance corpus keeps implementations aligned on the same pass/fail vectors.
+For other verifier implementations and public conformance fixtures, follow [Verify a Pipelock receipt](/learn/verify-a-receipt/). Exit contracts differ by verifier and version. The Go verifiers in Pipelock v3.7.1 return `3` for an intact prefix whose end is unproven. Python 0.4.1 verifies signatures and linkage without end-proof or group verification, so its exit `0` does not establish a complete run.
 
 ## Consuming receipts in a detector
 
-Once the stream verifies, a downstream detector reads it like any JSONL source.
+The example below consumes ActionReceipt v1 records after the Python verifier checks the supplied file. It does not prove the complete end of the recording. Use the verifier walkthrough above to select the format and completeness checks your detector requires.
 
 ```python
 import json
@@ -177,7 +168,7 @@ from typing import Callable, Iterator
 
 
 def verified_receipts(path: str, pubkey_hex: str) -> Iterator[dict]:
-    """Yield each receipt only if the full stream verifies."""
+    """Yield receipts after the supplied file passes verification."""
     check = subprocess.run(
         ["pipelock-verify", path, "--key", pubkey_hex],
         capture_output=True,

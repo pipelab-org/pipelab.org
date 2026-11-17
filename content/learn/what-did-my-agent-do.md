@@ -134,27 +134,11 @@ The full schema, including the `data_classes_in`, `data_classes_out`, `session_t
 
 You do not need to call any Pipelock service to verify this receipt. The verifier is a standalone tool. Pipelock ships multiple verifier paths for different review environments.
 
-The Go CLI ships with Pipelock:
+The demo writes files named `evidence-<session>-<sequence>.jsonl`, with a run identifier in the session, and generates a fresh signing key. Choose a chain from that run and use the public key it prints. The key in the receipt above belongs to its original run.
 
-```bash
-pipelock verify-receipt evidence/evidence-proxy-0.jsonl --key 6b4f13acbab4498026e270a8d66e0ef87a8b20708089f173023234580f35de1c
-```
+For copy-paste commands using pinned release binaries, follow [Record signed receipts and verify them offline](/learn/record-verify-receipts/). That recipe selects the generated chain file, verifies its signed prefix and rejects a tampered copy.
 
-The Python reference verifier is on PyPI as [`pipelock-verify`](https://pypi.org/project/pipelock-verify/):
-
-```bash
-pip install pipelock-verify
-python -m pipelock_verify evidence/evidence-proxy-0.jsonl --key 6b4f13acbab4498026e270a8d66e0ef87a8b20708089f173023234580f35de1c
-```
-
-Pipelock v2.5 also ships a self-contained `pipelock-verifier` binary. It provides three subcommands for receipt chains, single receipts, and Audit Packet directories, and accepts the same `--key` flag as the Go and Python verifiers plus a `--json` flag for machine-readable output:
-
-```bash
-# Ships in v2.5.
-pipelock-verifier chain evidence/evidence-proxy-0.jsonl --key <public-key-hex>
-pipelock-verifier receipt path/to/single-receipt.json --key <public-key-hex>
-pipelock-verifier audit-packet path/to/audit-packet-directory/
-```
+The built-in verifier runs as `pipelock verify-receipt`. The Python reference verifier is on PyPI as [`pipelock-verify`](https://pypi.org/project/pipelock-verify/) and runs as `python -m pipelock_verify`. The standalone `pipelock-verifier` provides `chain`, `receipt` and `audit-packet` subcommands. Use the matching receipt file and pinned public key with each verifier.
 
 In v3.8.0, the `pipelock-verifier` commands return `0` for valid and `1` for invalid. `chain` returns `3` for an intact chain whose end isn't proven, runtime errors return `2` and usage errors `64`. Exit `3` for an unproven end arrived in v3.7.0, so upgrade an older binary before relying on it. They slot into CI gates, SIEM ingest pipelines, and procurement-evidence reviews without writing custom code. For a copy-paste walkthrough that runs each command against the public conformance corpus, see [Verify a Pipelock receipt](/learn/verify-a-receipt/).
 
