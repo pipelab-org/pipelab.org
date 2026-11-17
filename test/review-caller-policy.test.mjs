@@ -8,7 +8,12 @@ import test from "node:test";
 const validator = path.resolve("scripts/check_agent_review_workflow.py");
 const checkingWorkflow = readFileSync(".github/workflows/review-caller-contract.yaml", "utf8").replace(/\r\n/g, "\n");
 const previousSource = "e0e5662a0612d24f041130a455f8c8898d6239fc";
-const approvedSource = "ca0e322521d6d0f8b651546a7d935a93026d71f7";
+const retiredSources = [
+  previousSource,
+  "250991344a567c7c0832869ecce9279c8b0084c5",
+  "ca0e322521d6d0f8b651546a7d935a93026d71f7",
+];
+const approvedSource = "1aa9741927ec5546036506a0ec764e1b41b1a241";
 const caller = pins => pins.map((sha, index) =>
   `  job${index}:\n    uses: pipelab-org/agent-review/.github/workflows/agent-review-reusable.yaml@${sha} # main\n`
 ).join("");
@@ -33,7 +38,7 @@ test("trusted source approval accepts one or several uses of the same approved e
   skip: process.platform !== "linux",
 }, t => {
   const validate = fixture(t);
-  for (const pins of [[previousSource], [approvedSource, approvedSource, approvedSource]]) {
+  for (const pins of [[approvedSource], [approvedSource, approvedSource, approvedSource]]) {
     const result = validate(pins);
     assert.equal(result.error, undefined);
     assert.equal(result.status, 0, result.stderr);
@@ -45,6 +50,8 @@ test("trusted source approval refuses missing, mixed and unapproved pins or a ch
 }, t => {
   const validate = fixture(t);
   for (const pins of [[], ["0".repeat(40)],
+    ...retiredSources.map((source) => [source, source, source]),
+    [previousSource],
     [previousSource, approvedSource, approvedSource],
     [approvedSource, previousSource, approvedSource],
     [approvedSource, approvedSource, previousSource]]) {
