@@ -234,6 +234,12 @@
   li + li { margin-top: .45rem; }
 }
 
+.hub-artifact-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
 .hub-panel .hub-external-links, .hub-rules ul { padding-left: 0; }
 .hub-text { white-space: pre-wrap; }
 

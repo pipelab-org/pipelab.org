@@ -777,8 +777,14 @@
 @media (prefers-reduced-motion: reduce) {
   .editorial-index-card,
   .editorial-index-card-arrow,
-  .editorial-index-tab { transition: none; }
+  .editorial-index-tab,
+  .editorial-chooser-route a,
+  .editorial-chooser-arrow { transition: none; }
 
   .editorial-index-card:hover,
-  .editorial-index-card:focus-visible { transform: none; }
+  .editorial-index-card:focus-visible,
+  .editorial-chooser-route a:hover,
+  .editorial-chooser-route a:focus-visible,
+  .editorial-chooser-route a:hover .editorial-chooser-arrow,
+  .editorial-chooser-route a:focus-visible .editorial-chooser-arrow { transform: none; }
 }

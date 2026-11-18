@@ -32,7 +32,7 @@
         {{ end }}
       </ol>
       {{ if $r.config_assessment }}
-      <p><a href="{{ .RelPermalink }}pipelock.yaml" download>Download assessed configuration</a></p>
+      <p><a class="hub-artifact-link" href="{{ .RelPermalink }}pipelock.yaml" download>Download assessed configuration</a></p>
       {{ end }}
 
       <h2 id="evidence">Evidence</h2>
@@ -43,7 +43,7 @@
       </dl>
       <p class="hub-text" data-hub-field="evidence.method">{{ $l.evidence.method }}</p>
       {{ else }}<p>Evidence not supplied.</p>{{ end }}
-      {{ if $r.conformance }}<p><a href="{{ .RelPermalink }}conformance.json">Read the conformance results</a></p>{{ end }}
+      {{ if $r.conformance }}<p><a class="hub-artifact-link" href="{{ .RelPermalink }}conformance.json">Read the conformance results</a></p>{{ end }}
 
       <h2 id="limits">Limitations</h2>
       {{ range $i, $text := $l.limitations }}<p class="hub-text" data-hub-field="limitations.{{ $i }}">{{ $text }}</p>{{ end }}
