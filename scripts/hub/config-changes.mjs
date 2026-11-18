@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { isDeepStrictEqual } from "node:util";
-import { parseDocument } from "yaml";
+import { isNode, parseDocument } from "yaml";
 
 const vocabulary = JSON.parse(readFileSync(new URL("./config-vocabulary.json", import.meta.url)));
 // Match the pinned runtime's host identity. The released config checker
@@ -18,7 +18,8 @@ function normalizedDomains(values) {
 
 function readValue(document, spec, parts) {
   const value = document.getIn(parts);
-  return value === undefined ? spec.default : value;
+  if (value === undefined) return spec.default;
+  return isNode(value) ? value.toJS(document) : value;
 }
 
 function updateValue(current, spec, { op, value, path }) {

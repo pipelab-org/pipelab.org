@@ -7,6 +7,7 @@ import path from "node:path";
 import test from "node:test";
 import { stringify } from "yaml";
 import { preflightContribution, preflightPullRequest } from "../scripts/hub/contribution-preflight.mjs";
+import { generateCatalog } from "../scripts/hub/generate.mjs";
 
 import { sha256 } from "../scripts/hub/evidence.mjs";
 
@@ -53,6 +54,32 @@ function repository(t) {
 
 const failed = report => Object.entries(report.steps).find(([, step]) => step.status === "fail")?.[0];
 const site = root;
+
+test("acquired listing types refuse unsupported evidence artifact paths", t => {
+  const config = structuredClone(fixture);
+  delete config.learn_page;
+  Object.assign(config, { type: "config", id: "example-config", base_preset: "claude-code", changes: [
+    { op: "set", path: "response_scanning.enabled", value: false },
+  ] });
+  const official = { ...listing, id: "pipelock-community", bundle_name: "pipelock-community" };
+  for (const [file, candidate] of [
+    [listingPath, listing],
+    ["hub/listings/bundles/pipelock-community.yaml", official],
+    ["hub/configs/example-config.yaml", config],
+  ]) {
+    const { directory, commit, git } = repository(t);
+    const base = commit({ "hub/README.md": "Guide.\n" });
+    const evidence = { ...candidate.evidence, artifact: "evidence/example.json" };
+    const head = commit({ ...files, [file]: stringify({ ...candidate, evidence }) });
+    const report = preflightContribution({ repository: directory, base, head, site });
+    assert.equal(report.verdict, "REFUSED", file);
+    assert.equal(failed(report), "source-parse", file);
+    assert.match(report.steps["source-parse"].evidence, /evidence\.artifact is unsupported/, file);
+    git("update-ref", "refs/remotes/origin/main", head);
+    const sourceBinding = { siteBase: base, rulesRepository: directory, rulesSHA: head, rulesMain: head };
+    assert.throws(() => generateCatalog({ root: directory, sourceBinding }), /evidence\.artifact is unsupported/, file);
+  }
+});
 
 test("a Hub-only community contribution is locally eligible, never accepted", t => {
   const { directory, commit } = repository(t);

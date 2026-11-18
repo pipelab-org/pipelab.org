@@ -335,6 +335,22 @@ test("config change classification uses the net edit and refuses unsupported tra
   assert.deepEqual(parse(distinct.yaml).response_scanning.exempt_domains, ["example.com", "api.example.com"]);
 });
 
+test("config list changes read existing YAML sequences", () => {
+  const yaml = "response_scanning:\n  enabled: true\n  action: block\n";
+  const path = "response_scanning.exempt_domains";
+  const added = applyConfigChanges(yaml + "  exempt_domains: []\n", [
+    { op: "append", path, value: "example.com" },
+  ], "claude-code");
+  assert.deepEqual(parse(added.yaml).response_scanning.exempt_domains, ["example.com"]);
+  assert.deepEqual(added.changes.map(change => change.transition), ["added"]);
+
+  const removed = applyConfigChanges(yaml + "  exempt_domains: [Example.COM, api.example.com]\n", [
+    { op: "remove", path, value: "example.com" },
+  ], "claude-code");
+  assert.deepEqual(parse(removed.yaml).response_scanning.exempt_domains, ["api.example.com"]);
+  assert.deepEqual(removed.changes.map(change => change.transition), ["removed"]);
+});
+
 test("config audit keeps weaknesses whose score does not move", { skip: !process.env.HUB_RELEASE_BIN }, () => {
   const listing = structuredClone(base);
   delete listing.learn_page;

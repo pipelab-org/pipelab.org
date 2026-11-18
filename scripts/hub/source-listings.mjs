@@ -38,16 +38,21 @@ function publisherRecord(source, file) {
 export function loadAcquiredListings(directory, site) {
   const filePath = file => resolveArtifact(directory, file.relative);
   const read = file => readFileSync(filePath(file), "utf8");
+  const readListing = file => {
+    const listing = parseListing(read(file));
+    if (listing.evidence.artifact) throw new Error("evidence.artifact is unsupported for acquired Hub listings: " + file.relative);
+    return listing;
+  };
   const publishers = yamlFiles(directory, "hub/publishers").map(file => publisherRecord(read(file), file));
   const items = [];
   for (const file of yamlFiles(directory, "hub/listings/bundles")) {
-    const listing = parseListing(read(file));
+    const listing = readListing(file);
     if (listing.type !== "bundle" || listing.bundle_name !== file.name) throw new Error("official listing identity differs");
     const bundle_dir = path.dirname(resolveArtifact(path.join(site, "static"), "rules/" + file.name + "/bundle.yaml"));
     items.push({ listing_file: filePath(file), bundle_dir });
   }
   for (const file of yamlFiles(directory, "hub/listings/community")) {
-    const listing = parseListing(read(file));
+    const listing = readListing(file);
     const matches = publishers.filter(publisher => file.name === publisher.id + "--" + listing.bundle_name);
     if (listing.type !== "bundle" || matches.length !== 1) throw new Error("community listing must identify one publisher and bundle");
     const [publisher] = matches;
@@ -57,7 +62,7 @@ export function loadAcquiredListings(directory, site) {
     items.push({ listing_file: filePath(file), bundle_dir, publisher });
   }
   for (const file of yamlFiles(directory, "hub/configs")) {
-    const listing = parseListing(read(file));
+    const listing = readListing(file);
     if (listing.type !== "config" || listing.id !== file.name) throw new Error("configuration listing identity differs");
     items.push({ listing_file: filePath(file) });
   }
