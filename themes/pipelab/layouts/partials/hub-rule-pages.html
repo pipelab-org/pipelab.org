@@ -1,0 +1,11 @@
+{{- $pages := slice -}}
+{{- $entries := site.Data.hub.generated.routes.entries | default (slice) -}}
+{{- $rules := where $entries "kind" "rule" -}}
+{{- range where $rules "listing_id" .Params.hub.listing.id -}}
+  {{- with site.GetPage .route -}}
+    {{- $pages = $pages | append . -}}
+  {{- else -}}
+    {{- errorf "Hub rule page missing at %s" .route -}}
+  {{- end -}}
+{{- end -}}
+{{- return $pages -}}

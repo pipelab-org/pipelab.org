@@ -1,11 +1,12 @@
 import { readFileSync } from "node:fs";
+import { validateText } from "./validate.mjs";
 import { listingRoute } from "./records.mjs";
 import { sha256, canonical } from "./evidence.mjs";
 const rules = JSON.parse(readFileSync(new URL("./routes.json", import.meta.url)));
 
 // Expected outputs come from source records, not a walk of generated pages.
 // Official registry files are independently published and remain public closed.
-export function routeManifest({ records, publishers = [], core = [], removed = [], baseline = [], policies = rules.policies, schemaBytes }) {
+export function routeManifest({ records, publishers = [], core = [], removed = [], baseline = [], retainedDownloads = [], policies = rules.policies, policyPages = {}, schemaBytes }) {
   const entries = [], refs = [];
   const active = new Set(records.map(record => record.listing.id));
   if (active.size !== records.length) throw new Error("duplicate active listing");
@@ -29,8 +30,13 @@ export function routeManifest({ records, publishers = [], core = [], removed = [
       if (record.badge === "official") for (const rule of record.reader.declared) {
         const facts = Object.fromEntries(Object.entries(record.facts).filter(([key]) => key.startsWith(`rule.${rule.id}.`)));
         facts[`rule.${rule.id}.stock_loaded`] = String(record.reader.policies.stock.loaded.includes(rule.id));
-        reference(`${route}${rule.id}/`, "rule", rule.name, facts);
+        const title = record.withheld_fields?.includes(`rule.${rule.id}.name`) ? rule.id : rule.name;
+        reference(`${route}${rule.id}/`, "rule", title, facts, { listing_id: listing.id });
       }
+    }
+    if (listing.type === "verifier") {
+      if (!record.conformance?.sha256) throw new Error("verifier conformance digest required");
+      add({ route: route + "conformance.json", kind: "verifier-conformance", ownership: "hub", representations: ["json"], sha256: record.conformance.sha256, listing_id: listing.id });
     }
     if (listing.type === "config") {
       if (!record.config_sha256 || record.config_sha256 !== record.assessed_config_sha256) throw new Error("config download differs from assessed bytes");
@@ -48,6 +54,9 @@ export function routeManifest({ records, publishers = [], core = [], removed = [
     for (const key of publisher.keys) { if (typeof key !== "object" || !key.fingerprint || !key.added) throw new Error("publisher key history required"); facts[`publisher.key.${key.fingerprint}.added`] = key.added; }
     reference(`/hub/publishers/${publisher.id}/`, "publisher", publisher.name, facts);
   }
+  for (const retained of retainedDownloads) {
+    add({ ...retained, kind: "retained-download", ownership: "hub", representations: ["raw"], readability: "expected-block" });
+  }
   for (const record of removed) {
     for (const route of new Set([record.route, ...baseline.filter(entry => entry.listing_id === record.id && entry.representations.includes("html")).map(entry => entry.route)])) reference(route, "removal", "Removed component", record.facts, { indexable: false, listing_id: record.id });
   }
@@ -63,7 +72,25 @@ export function routeManifest({ records, publishers = [], core = [], removed = [
     }
   }
   for (const section of sectionPaths) page(`/hub/${section ? section + "/" : ""}`, "section", { children: canonical(records.filter(record => !section || listingRoute(record).startsWith(`/hub/${section}/`)).map(record => record.listing.id).sort()) });
-  for (const policy of policies) page(`/hub/${policy}/`, "policy");
+  for (const policy of policies) {
+    if (!rules.policies.includes(policy)) throw new Error("unexpected policy route");
+    const source = policyPages[policy];
+    if (!source) {
+      page(`/hub/${policy}/`, "policy");
+      continue;
+    }
+    const nonempty = value => typeof value === "string" && value.trim().length > 0;
+    if (!nonempty(source.title) || !source.facts || typeof source.facts !== "object" ||
+        !Object.keys(source.facts).length || Array.isArray(source.facts) ||
+        Object.entries(source.facts).some(([key, value]) => !nonempty(key) || !nonempty(value))) {
+      throw new Error("policy page requires source text");
+    }
+    const title = validateText(source.title, "label");
+    const facts = Object.fromEntries(Object.entries(source.facts).map(([key, value]) => [
+      validateText(key, "label"), validateText(value),
+    ]));
+    reference(`/hub/${policy}/`, "policy", title, facts);
+  }
   add({ route: "/hub/index.json", kind: "index", ownership: "hub", representations: ["json"] });
   add({ route: "/hub/build.json", kind: "build", ownership: "hub", representations: ["json"] });
   if (!schemaBytes) throw new Error("trusted schema bytes required");

@@ -43,6 +43,11 @@
 
     <div class="nav-links" id="nav-links">
       <ul class="nav-primary" role="list">
+        {{ if eq .Section "hub" }}
+        <li class="nav-item"><a class="nav-link" href="{{ "hub/" | relURL }}"{{ if .OutputFormats.Get "hubindex" }} aria-current="page"{{ end }}>Hub</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ "pipelock/" | relURL }}">Pipelock</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ "learn/" | relURL }}">Learn</a></li>
+        {{ else }}
 
         <li class="nav-item nav-item-menu{{ if $projectsActive }} is-current{{ end }}">
           <button class="nav-link nav-menu-btn" type="button" aria-expanded="false" aria-controls="nav-menu-product"{{ if $projectsActive }} data-current-section="true"{{ end }}>
@@ -176,8 +181,10 @@
         </li>
 
         <li class="nav-item"><a class="nav-link" href="/pricing/"{{ if eq .RelPermalink "/pricing/" }} aria-current="page"{{ end }}>Pricing</a></li>
+        {{ end }}
       </ul>
 
+      {{ if ne .Section "hub" }}
       <div class="nav-actions">
         {{ with site.Params.discord }}
         <a class="nav-discord" href="{{ . }}" target="_blank" rel="noopener noreferrer" aria-label="PipeLab community Discord"
@@ -191,6 +198,7 @@
         </a>
         <a class="nav-cta" href="/playground/" data-event="nav_try_demo_click" data-event-placement="nav">Try the live demo</a>
       </div>
+      {{ end }}
     </div>
   </nav>
 </header>

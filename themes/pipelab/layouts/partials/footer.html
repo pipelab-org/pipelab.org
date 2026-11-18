@@ -1,5 +1,6 @@
 <footer class="site-footer" role="contentinfo">
   <div class="footer-container">
+    {{ if ne .Section "hub" }}
     <div class="footer-columns footer-columns-brand" aria-label="Footer navigation">
       <div class="footer-col footer-col-brand">
         <a class="footer-brand" href="/" aria-label="PipeLab home">
@@ -56,8 +57,9 @@
         </nav>
       </div>
     </div>
+    {{ end }}
     <div class="footer-bottom">
-      <p class="footer-copy">&copy; {{ now.Year }} PipeLab. Pipelock is listed in the <a href="https://landscape.cncf.io/?item=provisioning--security-compliance--pipelock" target="_blank" rel="noopener noreferrer">CNCF Landscape</a> under Security &amp; Compliance.</p>
+      <p class="footer-copy">&copy; {{ now.Year }} PipeLab.{{ if ne .Section "hub" }} Pipelock is listed in the <a href="https://landscape.cncf.io/?item=provisioning--security-compliance--pipelock" target="_blank" rel="noopener noreferrer">CNCF Landscape</a> under Security &amp; Compliance.{{ end }}</p>
       <ul class="footer-legal" aria-label="Legal">
         <li><a href="/.well-known/security.txt">Security</a></li>
         <li><a href="/terms/">Terms</a></li>

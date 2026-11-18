@@ -515,6 +515,10 @@
   {{ end }}
   <script type="application/json" id="pl-site-config">{{ dict "googleAnalytics" .Site.Params.google_analytics "posthog" .Site.Params.posthog | jsonify | safeJS }}</script>
   {{ partial "site-base.html" . }}
+  {{ if and (eq .Section "hub") (.OutputFormats.Get "hubindex") }}
+    {{ $search := resources.Get "js/hub-search.js" | minify | fingerprint }}
+    <script src="{{ $search.RelPermalink }}" integrity="{{ $search.Data.Integrity }}" defer></script>
+  {{ end }}
 </head>
 <body>
   <a href="#main-content" class="skip-link">Skip to main content</a>

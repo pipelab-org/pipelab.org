@@ -1,10 +1,18 @@
 {{ define "main" }}
 {{ partial "hub-publish.html" . }}
-<section class="section hub-page">
+{{ $index := .OutputFormats.Get "hubindex" }}
+<section class="section hub-page"{{ with $index }} data-hub-search-index="{{ path.Base .RelPermalink }}"{{ end }}>
   <header data-hero="utility"><p class="eyebrow">COMPONENTS</p><h1>{{ .Title }}</h1><p>Find Pipelock components and read their setup instructions and limits.</p></header>
+  {{ with $index }}
+  <div class="editorial-index-search" role="search">
+    <label class="editorial-index-search-label" for="hub-search-input">Search components</label>
+    <input type="search" id="hub-search-input" data-hub-search-input autocomplete="off" disabled>
+    <p role="status" data-hub-search-status></p>
+  </div>
+  {{ end }}
   <ul class="hub-list">
   {{ range .RegularPagesRecursive.ByTitle }}{{ if .Params.hub.listing }}
-    <li><a href="{{ .RelPermalink }}">{{ .Title }}</a><p>{{ .Params.hub.listing.summary }}</p></li>
+    <li data-hub-component="{{ .Params.hub.listing.id }}"><a href="{{ .RelPermalink }}">{{ .Title }}</a><p>{{ .Params.hub.listing.summary }}</p></li>
   {{ end }}{{ end }}
   </ul>
   {{ partial "hub-facts.html" . }}

@@ -28,7 +28,20 @@ export function markdownFacts(source) {
   return Object.fromEntries(facts);
 }
 export function representationPaths(entry) {
-  return entry.representations.map(representation => ({ representation, route: representation === "html" ? `${entry.route}index.html` : representation === "mirror" ? `${entry.route}index.md` : entry.route }));
+  if (!/^\/(?:[a-z0-9_.-]+\/)*[a-z0-9_.-]+\/?$/.test(entry.route ?? "") ||
+      entry.route.split("/").some(part => part === "." || part === "..")) {
+    throw new Error("invalid Hub manifest path");
+  }
+  return entry.representations.map(representation => {
+    if (representation === "html" || representation === "mirror") {
+      if (!entry.route.endsWith("/")) throw new Error("Hub page representation requires a directory route");
+      return { representation, route: entry.route + (representation === "html" ? "index.html" : "index.md") };
+    }
+    if (!["raw", "json"].includes(representation) || entry.route.endsWith("/")) {
+      throw new Error("invalid Hub representation");
+    }
+    return { representation, route: entry.route };
+  });
 }
 function files(directory, prefix = "") {
   if (!existsSync(directory)) return [];
@@ -47,7 +60,10 @@ export function assertPublication({ directory, manifest, records, open, requireB
         if (existsSync(file)) throw new Error("closed hub output present");
         continue;
       }
-      if (!requireBuild && entry.kind === "build") continue;
+      if (!requireBuild && entry.kind === "build") {
+        if (existsSync(file)) expected.add(route);
+        continue;
+      }
       expected.add(route);
       if (!existsSync(file)) throw new Error("manifest output missing");
       const bytes = readFileSync(file);
@@ -71,7 +87,10 @@ export function assertPublication({ directory, manifest, records, open, requireB
     }
   }
   // Includes the schema outside /hub/ and raw downloads; no orphan files.
-  for (const route of all.filter(route => route.startsWith("/hub/") || route.startsWith("/schemas/pipelab-hub/"))) if (!expected.has(route)) throw new Error(open ? "unmanifested hub output" : "closed hub output present");
+  for (const route of all) {
+    const hubOwned = ["/hub", "/schemas/pipelab-hub"].some(prefix => route === prefix || route.startsWith(prefix + "/"));
+    if (hubOwned && !expected.has(route)) throw new Error(open ? "unmanifested hub output" : "closed hub output present");
+  }
   if (open) {
     const expectedIds = records.map(record => record.listing.id).sort();
     if (canonical(listingIds.sort()) !== canonical(expectedIds) || canonical(mirrorIds.sort()) !== canonical(expectedIds)) throw new Error("listing output bijection differs");

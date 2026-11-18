@@ -38,9 +38,22 @@ License: {{ partial "hub-md-label.html" $l.license }}
 
 {{ partial "hub-md-text.html" $l.evidence.method }}{{ else }}Evidence not supplied.{{ end }}
 
+{{ if .Params.hub.conformance -}}
+{{ with .OutputFormats.Get "html" -}}
+[Read the conformance results]({{ .Permalink }}conformance.json)
+{{ end -}}
+{{ end }}
+
+{{ with partial "hub-rule-pages.html" . }}
+## Rules in this bundle
+{{ range . }}
+- [{{ partial "hub-md-label.html" .Title }}]({{ (.OutputFormats.Get "markdown").Permalink }})
+{{- end }}
+{{ end }}
+
 ## Disclosures
 
-AI assisted: {{ $l.disclosures.ai_assisted }}
+{{ if ne $.Params.hub.badge "first-party" }}AI assisted: {{ $l.disclosures.ai_assisted }}{{ end }}
 {{ with $l.disclosures.ai_text }}
 {{ partial "hub-md-text.html" . }}
 {{ end }}
@@ -54,4 +67,10 @@ PipeLab doesn't review these external destinations.
 {{ end }}
 
 {{ end }}
+{{ if .Params.hub.config_assessment -}}
+{{ with .OutputFormats.Get "html" -}}
+[Download assessed configuration]({{ .Permalink }}pipelock.yaml)
+{{ end }}
+
+{{ end -}}
 {{ partial "hub-facts.markdown" . }}

@@ -1,0 +1,21 @@
+{
+  "format": 1,
+  "tool": "pipelock-verifier",
+  "release": "3.8.0",
+  "binary_sha256": "33c8b4a41715dd4bad2b526291e0f1a0739acf2db29379c4e170ae5503d5be01",
+  "corpus_commit": "556048c1c18d84f7d61d28f686220178a4ff2c4d",
+  "cases": [
+    {
+      "path": "sdk/conformance/testdata/corpus/golden/01-allow-clean-get.json",
+      "sha256": "9e09b65b77ecba26c564b4816ae1d67eec5ff64faf3a1ad83b39ac7276fb890a",
+      "valid": true,
+      "exit": 0
+    },
+    {
+      "path": "sdk/conformance/testdata/corpus/malicious/m01-forged-signature-wrong-key.json",
+      "sha256": "68df7527c93bc17a8bcc8e7fcade56ee3276c0a5b8344ccb2b6b33df9bd84e7e",
+      "valid": false,
+      "exit": 1
+    }
+  ]
+}

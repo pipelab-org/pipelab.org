@@ -90,7 +90,7 @@ pipelock_version = "3.8.0"
   notAlternative = true
 
 [outputs]
-  home = ["html", "rss", "markdown", "productFacts", "redirects", "llms", "llmsfull", "hubheaders"]
+  home = ["html", "rss", "markdown", "productFacts", "redirects", "llms", "llmsfull"]
   page = ["html", "markdown"]
   section = ["html", "rss", "markdown"]
 
@@ -137,14 +137,5 @@ pipelock_version = "3.8.0"
 [outputFormats.hubindex]
   mediaType = "application/json"
   baseName = "index"
-  isPlainText = true
-  notAlternative = true
-
-[mediaTypes."text/headers"]
-  delimiter = ""
-
-[outputFormats.hubheaders]
-  mediaType = "text/headers"
-  baseName = "_headers"
   isPlainText = true
   notAlternative = true

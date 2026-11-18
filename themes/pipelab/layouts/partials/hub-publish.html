@@ -1,13 +1,73 @@
 {{- if partial "hub-open.html" . -}}
-  {{- with resources.Get "hub/schema/listing-v1.json" -}}
-    {{- $schema := resources.Copy "schemas/pipelab-hub/listing-v1.json" . -}}
-    {{- $schema.Publish -}}
-  {{- end -}}
-  {{- range resources.Match "hub/community/**" -}}
-    {{- /* Design §§2.3,4.1 O12: publish only the exact signed pair paths. */ -}}
-    {{- if not (findRE `^hub/community/[a-z0-9][a-z0-9-]{1,62}[a-z0-9]/[a-z0-9][a-z0-9-]{1,62}[a-z0-9]/bundle\.yaml(\.sig)?$` (strings.TrimPrefix "/" .Name)) -}}
-      {{- errorf "unexpected community download path" -}}
+  {{- /* Fingerprint the resolved resource's bytes, then publish at the unfingerprinted path.
+        Hugo exposes the fingerprint as base64 SRI; the catalog stores hex SHA-256. */ -}}
+  {{- $routes := where (site.Data.hub.generated.routes.entries | default (slice)) "ownership" "hub" -}}
+  {{- $schemaPath := "schemas/pipelab-hub/listing-v1.json" -}}
+  {{- $schemaEntries := where (where $routes "route" (printf "/%s" $schemaPath)) "kind" "schema" -}}
+  {{- $schema := resources.Get "hub/schema/listing-v1.json" -}}
+  {{- if not $schema -}}
+    {{- errorf "Hub listing schema is missing" -}}
+  {{- else if ne (len $schemaEntries) 1 -}}
+    {{- errorf "Hub listing schema manifest entry is missing or ambiguous" -}}
+  {{- else -}}
+    {{- $entry := index $schemaEntries 0 -}}
+    {{- $digest := (resources.Fingerprint "sha256" $schema).Data.Integrity | strings.TrimPrefix "sha256-" | base64Decode | printf "%x" -}}
+    {{- if ne $digest $entry.sha256 -}}
+      {{- errorf "Hub listing schema digest differs" -}}
+    {{- else -}}
+      {{- (resources.Copy $schemaPath $schema).Publish -}}
     {{- end -}}
+  {{- end -}}
+  {{- with resources.Get "hub/build.json" -}}
     {{- .Publish -}}
+  {{- end -}}
+  {{- range site.Data.hub.generated.listings -}}
+    {{- if eq .listing.type "verifier" -}}
+      {{- $file := printf "hub/verifiers/%s/conformance.json" .listing.id -}}
+      {{- $report := resources.Get $file -}}
+      {{- if not $report -}}
+        {{- errorf "verifier conformance report missing" -}}
+      {{- else -}}
+        {{- $digest := (resources.Fingerprint "sha256" $report).Data.Integrity | strings.TrimPrefix "sha256-" | base64Decode | printf "%x" -}}
+        {{- if ne $digest .conformance.sha256 -}}
+          {{- errorf "verifier conformance digest differs" -}}
+        {{- else -}}
+          {{- $report.Publish -}}
+        {{- end -}}
+      {{- end -}}
+    {{- end -}}
+    {{- if eq .listing.type "config" -}}
+      {{- $file := printf "hub/configs/%s/pipelock.yaml" .listing.id -}}
+      {{- $config := resources.Get $file -}}
+      {{- if not $config -}}
+        {{- errorf "assessed hub configuration missing" -}}
+      {{- else -}}
+        {{- $digest := (resources.Fingerprint "sha256" $config).Data.Integrity | strings.TrimPrefix "sha256-" | base64Decode | printf "%x" -}}
+        {{- if or (ne $digest .config_sha256) (ne $digest .assessed_config_sha256) -}}
+          {{- errorf "assessed hub configuration digest differs" -}}
+        {{- else -}}
+          {{- $config.Publish -}}
+        {{- end -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+  {{- range $routes -}}
+    {{- if in (slice "bundle-download" "retained-download") .kind -}}
+      {{- if not (findRE `^/hub/community/[a-z0-9][a-z0-9-]{1,62}[a-z0-9]/[a-z0-9][a-z0-9-]{1,62}[a-z0-9]/bundle\.yaml(\.sig)?$` .route) -}}
+        {{- errorf "unexpected community download path" -}}
+      {{- end -}}
+      {{- $file := strings.TrimPrefix "/" .route -}}
+      {{- $resource := resources.Get $file -}}
+      {{- if not $resource -}}
+        {{- errorf "Hub community download is missing" -}}
+      {{- else -}}
+        {{- $digest := (resources.Fingerprint "sha256" $resource).Data.Integrity | strings.TrimPrefix "sha256-" | base64Decode | printf "%x" -}}
+        {{- if ne $digest .sha256 -}}
+          {{- errorf "Hub community download digest differs" -}}
+        {{- else -}}
+          {{- $resource.Publish -}}
+        {{- end -}}
+      {{- end -}}
+    {{- end -}}
   {{- end -}}
 {{- end -}}
