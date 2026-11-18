@@ -5,7 +5,21 @@
   {{- with site.Data.hub.generated.sections -}}{{- range $key, $value := index . $route -}}{{- $facts = $facts | append (dict "key" $key "value" $value) -}}{{- end -}}{{- end -}}
 {{- end -}}
 {{- with $facts -}}
-<h2>{{ if $.Params.hub.config_assessment }}Config assessment{{ else }}Reader facts{{ end }}</h2>
-{{- range . -}}<p><span>{{ .key }}</span> <code data-hub-fact="{{ .key }}">{{ .value }}</code></p>{{- end -}}
-
+{{- $fold := eq $.Kind "section" -}}
+{{- $reference := and (not $fold) (not $.Params.hub.listing) -}}
+{{- if $fold }}
+<details class="hub-panel hub-facts">
+  <summary>Technical details</summary>
+{{- else }}
+  {{ if $reference }}<section class="hub-panel hub-facts">{{ end }}
+  <h2>{{ if $.Params.hub.config_assessment }}Config assessment{{ else if eq $.Params.hub.reference_kind "removal" }}Removal details{{ else }}Technical details{{ end }}</h2>
+{{- end }}
+  {{ range . }}
+  <p class="hub-fact-row"><span>{{ .key }}</span> <code data-hub-fact="{{ .key }}">{{ .value }}</code></p>
+  {{ end }}
+{{- if $fold }}
+</details>
+{{- else if $reference }}
+</section>
+{{- end -}}
 {{- end -}}

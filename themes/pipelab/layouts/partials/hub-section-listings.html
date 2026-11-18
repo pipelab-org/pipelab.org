@@ -1,0 +1,16 @@
+{{- $route := .RelPermalink -}}
+{{- with .OutputFormats.Get "html" -}}{{- $route = .RelPermalink -}}{{- end -}}
+{{- $route = strings.TrimPrefix (strings.TrimSuffix "/" (urls.Parse site.BaseURL).Path) $route -}}
+{{- $type := index (dict "/hub/bundles/" "bundle" "/hub/configs/" "config" "/hub/recipes/" "recipe" "/hub/verifiers/" "verifier") $route -}}
+{{- $source := . -}}
+{{- if $type -}}
+  {{- with site.GetPage "/hub" -}}{{- $source = . -}}{{- end -}}
+{{- end -}}
+{{- $pages := slice -}}
+{{- range $source.RegularPagesRecursive.ByTitle -}}
+  {{- $page := . -}}
+  {{- with .Params.hub.listing -}}
+    {{- if or (not $type) (eq .type $type) -}}{{- $pages = $pages | append $page -}}{{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- return $pages -}}

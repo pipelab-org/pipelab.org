@@ -644,6 +644,8 @@ const heroContracts = [
   ["blog/list.html", "editorial-index", false],
   ["learn/list.html", "editorial-index", false],
   ["compare/list.html", "editorial-index", false],
+  ["hub/list.html", "editorial-index", false],
+  ["hub/single.html", "utility", false],
   ["_default/list.html", "editorial-index", false],
   ["blog/single.html", "editorial-article", false],
   ["learn/single.html", "editorial-article", false],
@@ -683,7 +685,7 @@ for (const template of heroContracts.map(([template]) => template)) {
     issues.push(`${template}: data-hero belongs on the actual hero boundary, not the page article`);
   }
 }
-for (const template of ["blog/list.html", "learn/list.html", "compare/list.html"]) {
+for (const template of ["blog/list.html", "learn/list.html", "compare/list.html", "hub/list.html"]) {
   const source = readFileSync(path.join(repoRoot, "themes", "pipelab", "layouts", ...template.split("/")), "utf8");
   for (const sharedClass of ["editorial-index-inner", "editorial-index-eyebrow", "editorial-index-lead"]) {
     if (!source.includes(sharedClass)) {
@@ -830,10 +832,19 @@ for (const staleModifier of ["brand-field-hero-soft", "brand-field-hero-proof"])
 if (!navTemplateSource.includes('data-current-section="true"') || !navTemplateSource.includes('aria-current="page"')) {
   issues.push("site navigation: grouped sections and exact destinations must expose the current route");
 }
+const launchPath = path.join(repoRoot, "data", "hub", "launch.toml");
+const hubLaunchOpen = existsSync(launchPath) && parseToml(readFileSync(launchPath, "utf8")).open === true;
 for (const menuMatch of navTemplateSource.matchAll(/<div class="nav-menu[^"]*" id="nav-menu-([^"]+)">([\s\S]*?)\n\s*<\/li>/g)) {
   const [, section, menuSource] = menuMatch;
   const destinations = [...menuSource.matchAll(/class="nav-menu-row" href="([^"]+)"/g)].map((match) => match[1]);
   for (const destination of destinations) {
+    if (destination === "/hub/" && !hubLaunchOpen) {
+      const home = pageByRoute.get("/");
+      if (home?.html.includes('class="nav-menu-row" href="/hub/"')) {
+        issues.push("site navigation: the closed Hub must not appear in the Projects menu");
+      }
+      continue;
+    }
     const page = pageByRoute.get(destination);
     if (!page) {
       issues.push(`site navigation: ${destination} has no rendered destination`);

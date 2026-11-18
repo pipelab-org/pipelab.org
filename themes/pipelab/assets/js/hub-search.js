@@ -6,6 +6,9 @@
 
   const input = root.querySelector("[data-hub-search-input]");
   const status = root.querySelector("[data-hub-search-status]");
+  const startHere = root.querySelector("[data-hub-start]");
+  const empty = root.querySelector("[data-hub-search-empty]");
+  const total = status.textContent.trim();
   const cards = [...root.querySelectorAll("[data-hub-component]")];
   const keys = ["badge", "id", "summary", "title", "type", "url"];
   const indexURL = new URL(root.dataset.hubSearchIndex, location.href);
@@ -36,17 +39,21 @@
     if (!response.ok) throw new Error("Hub search index could not be loaded");
     const entries = bindIndex(await response.json());
     input.disabled = false;
-    input.addEventListener("input", () => {
+    function filter() {
       const terms = input.value.toLowerCase().trim().split(/\s+/).filter(Boolean);
       let matches = 0;
       for (const entry of entries) {
         entry.card.hidden = !terms.every(term => entry.terms.includes(term));
         if (!entry.card.hidden) matches++;
       }
+      startHere.hidden = terms.length > 0;
+      if (empty) empty.hidden = !terms.length || matches > 0;
       status.textContent = terms.length
         ? (matches === 0 ? "No matching components." : matches + (matches === 1 ? " matching component." : " matching components."))
-        : "";
-    });
+        : total;
+    }
+    input.addEventListener("input", filter);
+    filter();
   }
 
   start().catch(() => {

@@ -73,17 +73,17 @@
           </div>
           <p>{{ len $cfg.routes }} routes</p>
         </div>
-        <ol class="compare-chooser-list">
+        <ol class="editorial-chooser-list">
           {{ range $i, $route := $cfg.routes }}
-          <li class="compare-chooser-route" data-fx="reveal">
+          <li class="editorial-chooser-route" data-fx="reveal">
             <a href="{{ $route.href }}">
-              <span class="compare-chooser-number" aria-hidden="true">{{ printf "%02d" (add $i 1) }}</span>
-              <span class="compare-chooser-copy">
-                <span class="compare-chooser-situation">{{ $route.situation }}</span>
-                <span class="compare-chooser-label">{{ $route.label }}</span>
-                <span class="compare-chooser-note">{{ $route.note }}</span>
+              <span class="editorial-chooser-number" aria-hidden="true">{{ printf "%02d" (add $i 1) }}</span>
+              <span class="editorial-chooser-copy">
+                <span class="editorial-chooser-situation">{{ $route.situation }}</span>
+                <span class="editorial-chooser-label">{{ $route.label }}</span>
+                <span class="editorial-chooser-note">{{ $route.note }}</span>
               </span>
-              <span class="compare-chooser-arrow" aria-hidden="true">&rarr;</span>
+              <span class="editorial-chooser-arrow" aria-hidden="true">&rarr;</span>
             </a>
           </li>
           {{ end }}

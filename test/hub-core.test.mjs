@@ -279,7 +279,14 @@ test("real Hugo builds enforce omitted/false closed, true open, and invalid swit
   assert.equal(existsSync(path.join(f.dir, "public/hub/recipes/index.xml")), false);
   assert.ok(f.built("hub/recipes/example-recipe/index.md").includes("pipelock run --config <file>"));
   assert.ok(f.built("llms.txt").includes("[PipeLab Hub](https://pipelab.org/hub/)"));
-  assert.ok(f.built("hub/index.html").includes('href="/hub/"'));
+  const catalog = f.built("hub/index.html");
+  const projects = 'aria-controls="nav-menu-product"';
+  const hubMenuLink = 'class="nav-menu-row" href="/hub/"';
+  assert.ok(catalog.includes(projects + ' data-current-section="true"'));
+  assert.ok(catalog.includes(hubMenuLink + ' aria-current="page"'));
+  assert.ok(f.built("learn/mcp-security/index.html").includes(hubMenuLink));
+  assert.ok(catalog.includes('data-fx="reveal spotlight"'));
+  assert.match(catalog, /<script src="\/js\/site-fx\.min\.[a-f0-9]+\.js" integrity="sha256-/);
   assert.equal(f.built("schemas/pipelab-hub/listing-v1.json"), read("scripts/hub/schema/listing-v1.json"));
   assert.equal(f.built("hub/community/example/example-bundle/bundle.yaml"), "fixture: exact-byte-download\n");
   assert.equal(f.built("hub/community/example/example-bundle/bundle.yaml.sig"), "fixture-signature\n");
