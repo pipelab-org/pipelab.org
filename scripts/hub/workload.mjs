@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { execFileSync } from "node:child_process";
+import { readGit } from "./git-source.mjs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "yaml";
@@ -23,9 +23,9 @@ export function producerInputs(text, origin) {
 export function officialOwnInputs({ repository, reader }) {
   const source = sources[reader.name];
   if (!source || source.bundle_sha256 !== reader.bundle_sha256) throw new Error("official fixture mapping is not current for served bytes");
-  const show = file => execFileSync("git", ["-C", repository, "show", `${source.rules_commit}:${file}`], { stdio: ["ignore", "pipe", "ignore"] });
+  const show = file => readGit(repository, ["show", `${source.rules_commit}:${file}`]);
   if (sha256(show(`published/${reader.name}/bundle.yaml`)) !== reader.bundle_sha256) throw new Error("producer bundle differs from served bytes");
-  const tree = new Set(execFileSync("git", ["-C", repository, "ls-tree", "-r", "--name-only", source.rules_commit, "fixtures"], { encoding: "utf8" }).trim().split("\n"));
+  const tree = new Set(readGit(repository, ["ls-tree", "-r", "--name-only", source.rules_commit, "fixtures"], { encoding: "utf8" }).trim().split("\n"));
   const result = [];
   for (const rule of reader.declared.filter(rule => rule.status !== "deprecated")) {
     const input = { rule_id: rule.id };
@@ -47,7 +47,7 @@ export const NEAR_GENERATOR = "site:fixture-span-truncation-v1";
 export function workloadCaps(repository) {
   const presets = ["claude-code", "strict", "hostile-model"].map(name => {
     const file = `configs/${name}.yaml`;
-    const bytes = execFileSync("git", ["-C", repository, "show", `${enginePin.source_commit}:${file}`]);
+    const bytes = readGit(repository, ["show", `${enginePin.source_commit}:${file}`]);
     const config = parse(bytes.toString("utf8"));
     const responseMB = config.fetch_proxy?.max_response_mb;
     if (!Number.isSafeInteger(responseMB) || responseMB <= 0) throw new Error("missing source response cap");

@@ -1,4 +1,4 @@
-import { execFileSync } from "node:child_process";
+import { readGit } from "./git-source.mjs";
 
 const sha = /^[0-9a-f]{40}$/;
 const codeownersPaths = [".github/CODEOWNERS", "CODEOWNERS", "docs/CODEOWNERS"];
@@ -11,15 +11,7 @@ const maxMetadataBytes = maxFileBytes;
 
 function git(repository, args, { input, maxBuffer = maxMetadataBytes } = {}) {
   try {
-    return execFileSync("git", [
-      "-C", repository, "--no-optional-locks", "--no-replace-objects", "--literal-pathspecs", ...args,
-    ], {
-      input,
-      maxBuffer,
-      timeout: 15_000,
-      env: { ...process.env, GIT_NO_LAZY_FETCH: "1", GIT_ALLOW_PROTOCOL: "" },
-      stdio: [input === undefined ? "ignore" : "pipe", "pipe", "ignore"],
-    });
+    return readGit(repository, args, { input, maxBuffer, timeout: 15_000 });
   } catch {
     throw new Error("Git policy object lookup failed or exceeded the output limit (" + args[0] + ")");
   }

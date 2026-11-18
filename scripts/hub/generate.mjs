@@ -8,6 +8,7 @@ import { loadAcquiredListings } from "./source-listings.mjs";
 import { assertCatalogNames } from "./names.mjs";
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync, realpathSync, statSync, mkdtempSync, rmSync } from "node:fs";
 import { execFileSync } from "node:child_process";
+import { readGit } from "./git-source.mjs";
 import path from "node:path";
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
@@ -64,8 +65,7 @@ function generateBoundCatalog(options, downloads) {
     throw new Error("bound source must be the sole contributor data producer");
   }
   const { siteBase, rulesRepository, rulesSHA, rulesMain } = binding;
-  const rulesTip = execFileSync("git", ["-C", rulesRepository, "rev-parse", "refs/remotes/origin/main"],
-    { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+  const rulesTip = readGit(rulesRepository, ["rev-parse", "refs/remotes/origin/main"], { encoding: "utf8" }).trim();
   if (rulesTip !== rulesMain) throw new Error("rules source does not bind the fetched main tip");
   const previous = acceptedSource(options.root, siteBase);
   assertSourceProgress(rulesRepository, previous.rules_sha, rulesSHA, rulesMain);
@@ -86,7 +86,7 @@ function generateFromListings({ root, items, engine, binary, repository, config,
   publishers = [], removed = [], baseline = [], lifecycle, policies, mode = "routine" }, rulesSHA, downloads) {
   if (!["routine", "report"].includes(mode)) throw new Error("unsupported generation mode");
   assertEngineIdentity({ root, engine, binary });
-  const sourceConfig = execFileSync("git", ["-C", repository, "show", `${enginePin.source_commit}:configs/claude-code.yaml`]);
+  const sourceConfig = readGit(repository, ["show", `${enginePin.source_commit}:configs/claude-code.yaml`]);
   if (sha256(readFileSync(config)) !== sha256(sourceConfig)) throw new Error("reader base config differs from pinned preset");
   const tooling = toolingIdentity(root, engine), official = officialKeys(repository), records = [];
   const boundSource = rulesSHA && { rules_sha: rulesSHA, tooling_identity: tooling };

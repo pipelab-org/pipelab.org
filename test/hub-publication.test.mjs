@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { generateKeyPairSync, sign } from "node:crypto";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 import { publicationClearancePayload, publicationIdentity, publishClearedVersion } from "../scripts/hub/deployment-evidence.mjs";
 import { canonical, sha256 } from "../scripts/hub/evidence.mjs";
 
@@ -45,6 +47,26 @@ test("publication checks actual registry bytes and the published build identity"
   write(registry, bundle);
   write(build, canonical({ ...identity, output_set_sha256: "0".repeat(64) }) + "\n");
   assert.throws(() => publicationIdentity(checked), /published build identity differs/);
+
+  const catalog = path.join(directory, "..", path.basename(directory) + "-inputs");
+  mkdirSync(catalog);
+  t.after(() => rmSync(catalog, { recursive: true, force: true }));
+  writeFileSync(path.join(catalog, "routes.json"), JSON.stringify(inputs.manifest));
+  writeFileSync(path.join(catalog, "listings.json"), JSON.stringify(inputs.records));
+  const config = path.join(catalog, "build-config");
+  writeFileSync(config, inputs.buildConfig);
+  const script = fileURLToPath(new URL("../scripts/hub/deployment-evidence.mjs", import.meta.url));
+  const run = (...flags) => spawnSync(process.execPath, [
+    script, ...flags, directory, catalog, inputs.siteSHA, inputs.rulesSHA, config,
+  ], { encoding: "utf8" });
+  const refused = run();
+  assert.equal(refused.status, 1);
+  assert.match(refused.stderr, /published build identity differs/);
+  const derived = run("--derive-build");
+  assert.equal(derived.status, 0, derived.stderr);
+  assert.deepEqual(JSON.parse(derived.stdout), identity);
+  write(build, canonical(identity) + "\n");
+  assert.equal(run().status, 0);
 });
 
 function fixture() {

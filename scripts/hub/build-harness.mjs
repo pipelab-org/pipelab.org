@@ -1,5 +1,7 @@
 import { readFileSync, writeFileSync, mkdirSync, mkdtempSync } from "node:fs";
 import { execFileSync } from "node:child_process";
+import { readGit } from "./git-source.mjs";
+import { materializeGitTree } from "./source-tree.mjs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
@@ -9,7 +11,7 @@ export const sha256 = bytes => createHash("sha256").update(bytes).digest("hex");
 
 export function toolDefinitionLimit(repository) {
   const file = "internal/mcp/tools/tools.go";
-  const source = execFileSync("git", ["-C", repository, "show", `${enginePin.source_commit}:${file}`]);
+  const source = readGit(repository, ["show", `${enginePin.source_commit}:${file}`]);
   const match = source.toString("utf8").match(/^const maxToolDefinitionTextBytes = 1 << (\d+)\b/m);
   const bytes = match ? 2 ** Number(match[1]) : NaN;
   if (!Number.isSafeInteger(bytes) || bytes <= 0) throw new Error("unsupported native tool-definition limit declaration");
@@ -19,15 +21,13 @@ export function toolDefinitionLimit(repository) {
 // Offline build only: caller supplies a local object store and a unique capture
 // directory. Neither the source checkout nor its working tree is modified.
 export function buildHarness({ repository, outputRoot, go = "go" }) {
-  const git = (...args) => execFileSync("git", ["-C", repository, ...args], { encoding: "utf8" }).trim();
+  const git = (...args) => readGit(repository, args, { encoding: "utf8" }).trim();
   if (git("rev-parse", `v${enginePin.version}^{}`) !== enginePin.source_commit) throw new Error("engine tag does not match source pin");
   const version = execFileSync(go, ["version"], { encoding: "utf8" }).trim();
   if (version.split(" ")[2] !== enginePin.go_version) throw new Error("Go toolchain does not match engine pin");
   mkdirSync(outputRoot, { recursive: true });
   const destination = mkdtempSync(path.resolve(outputRoot, "hub-engine-"));
-  const archive = path.join(destination, "source.tar");
-  execFileSync("git", ["-C", repository, "archive", `--output=${archive}`, enginePin.source_commit, "go.mod", "go.sum", "internal", "configs"]);
-  execFileSync("tar", ["-xf", archive, "-C", destination]);
+  materializeGitTree(repository, enginePin.source_commit, destination, ["go.mod", "go.sum", "internal", "configs"]);
   const source = readFileSync(new URL("./pipelock-harness/main.go", import.meta.url));
   const nativeLimit = toolDefinitionLimit(repository);
   const declaredLimit = source.toString("utf8").match(/^const toolDefinitionTextBytes = (\d+)$/m);

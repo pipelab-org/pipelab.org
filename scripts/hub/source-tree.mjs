@@ -1,4 +1,4 @@
-import { execFileSync } from "node:child_process";
+import { readGit as git } from "./git-source.mjs";
 import { lstatSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -20,14 +20,6 @@ const maxFileBytes = 1024 * 1024;
 // GitHub's "List pull request files" contract caps a submission at 3,000 files.
 // The cap also bounds work on a catalog snapshot before reading object bodies.
 const maxFiles = 3000;
-
-function git(repository, args, options = {}) {
-  return execFileSync("git", ["-C", repository, "--no-optional-locks", "--no-replace-objects", ...args], {
-    ...options,
-    env: { ...process.env, GIT_NO_LAZY_FETCH: "1", GIT_ALLOW_PROTOCOL: "" },
-    stdio: ["ignore", "pipe", "ignore"],
-  });
-}
 
 function checkSHA(value) {
   if (typeof value !== "string" || !sha.test(value)) throw new Error("a full Git commit SHA is required");
@@ -76,6 +68,39 @@ export function acceptedSource(site, base) {
 export function assertSourceProgress(repository, previous, candidate, main) {
   requireAncestor(repository, candidate, main);
   if (previous !== null) requireAncestor(repository, previous, candidate);
+}
+
+// The site and pinned engine are trusted source trees. Read regular Git
+// blobs without archive or checkout filters.
+export function materializeGitTree(repository, commit, destination, paths = []) {
+  checkSHA(commit);
+  if (!lstatSync(destination).isDirectory() || readdirSync(destination).length) {
+    throw new Error("source destination must be empty and regular");
+  }
+  if (git(repository, ["cat-file", "-t", commit], { encoding: "utf8" }).trim() !== "commit") {
+    throw new Error("expected an exact commit object");
+  }
+  const listing = git(repository, ["ls-tree", "-r", "-l", "-z", "--full-tree", commit, "--", ...paths]);
+  const entries = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(listing).split("\0");
+  entries.pop();
+  const files = entries.map(entry => {
+    const match = /^(100644|100755) blob ([a-f0-9]{40}) +(\d+)\t([^\x00-\x1f\\:]+)$/.exec(entry);
+    if (!match) throw new Error("source tree entry must be a regular Git blob");
+    const [, mode, object, length, file] = match;
+    const size = Number(length);
+    const parts = file.split("/");
+    if (parts.some(part => !part || part === "." || part === ".." || part.toLowerCase() === ".git") ||
+        !Number.isSafeInteger(size)) {
+      throw new Error("unsupported source tree path or blob size");
+    }
+    return { mode, object, size, target: path.join(destination, ...parts) };
+  });
+  for (const { mode, object, size, target } of files) {
+    const bytes = git(repository, ["cat-file", "blob", object], { maxBuffer: Math.max(1, size) });
+    if (bytes.length !== size) throw new Error("source file differs from its Git blob size");
+    mkdirSync(path.dirname(target), { recursive: true });
+    writeFileSync(target, bytes, { flag: "wx", mode: mode === "100755" ? 0o755 : 0o644 });
+  }
 }
 
 export function acquireHubTree(repository, commit, destination) {

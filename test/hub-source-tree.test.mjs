@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { routineAcceptance } from "../scripts/hub/acceptance.mjs";
 import { loadAcquiredListings } from "../scripts/hub/source-listings.mjs";
-import { acceptedSource, acquireHubTree, assertHubOnly, assertSourceProgress } from "../scripts/hub/source-tree.mjs";
+import { acceptedSource, acquireHubTree, assertHubOnly, assertSourceProgress, materializeGitTree } from "../scripts/hub/source-tree.mjs";
 
 function repository(t) {
   const directory = mkdtempSync(path.join(tmpdir(), "hub-tree-"));
@@ -54,6 +54,26 @@ test("accepted Hub state comes from the base object and requires forward source 
   assert.doesNotThrow(() => assertSourceProgress(directory, base, half, head));
   assert.throws(() => assertSourceProgress(directory, half, base, head), /ancestry/);
   assert.throws(() => assertHubOnly(directory, head, half), /ancestry/);
+});
+
+test("site materialization copies committed bytes independently of export attributes", t => {
+  const { directory, commit } = repository(t);
+  commit(".gitattributes", "version.txt export-subst\nextra.txt export-ignore\n");
+  const contents = "Version $Format:%H$\n";
+  commit("version.txt", contents);
+  const candidate = commit("extra.txt", "Tracked source.\n");
+  writeFileSync(path.join(directory, "version.txt"), "Working copy only.\n");
+
+  const destination = path.join(directory, "output");
+  mkdirSync(destination);
+  materializeGitTree(directory, candidate, destination);
+  assert.equal(readFileSync(path.join(destination, "version.txt"), "utf8"), contents);
+  assert.equal(readFileSync(path.join(destination, "extra.txt"), "utf8"), "Tracked source.\n");
+
+  const subset = path.join(directory, "subset");
+  mkdirSync(subset);
+  materializeGitTree(directory, candidate, subset, ["version.txt"]);
+  assert.deepEqual(readdirSync(subset), ["version.txt"]);
 });
 
 test("routine acceptance refuses a site baseline older than current main", async t => {

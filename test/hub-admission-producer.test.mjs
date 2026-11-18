@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { admissionProducer } from "../scripts/hub/admission-producer.mjs";
+import { admissionProducer, readSiteMain } from "../scripts/hub/admission-producer.mjs";
 
 function fixture(t) {
   const root = mkdtempSync(path.join(tmpdir(), "hub-producer-"));
@@ -28,6 +28,32 @@ function fixture(t) {
   };
   return { root, revision, workflow, git, write, environment, mode: "admission", engine: { version: "fixture" } };
 }
+
+test("site main lookup uses an isolated Git context and keeps the proxy", t => {
+  const { root, revision } = fixture(t);
+  const proxy = "http://proxy.example.invalid:8080";
+  let lookupDirectory;
+  const tip = readSiteMain({
+    environment: { GIT_DIR: path.join(root, ".git"), GIT_CONFIG_COUNT: "1", HTTPS_PROXY: proxy },
+    runGit: (command, args, options) => {
+      assert.equal(command, "git");
+      assert.deepEqual(args, ["-c", "http.followRedirects=false", "ls-remote", "--exit-code",
+        "https://github.com/pipelab-org/pipelab.org", "refs/heads/main"]);
+      lookupDirectory = options.cwd;
+      assert.notEqual(options.cwd, root);
+      assert.equal(existsSync(path.join(options.cwd, ".git")), false);
+      assert.equal(options.env.GIT_CONFIG_NOSYSTEM, "1");
+      assert.equal(options.env.GIT_CONFIG_GLOBAL, path.join(options.cwd, "config"));
+      assert.equal(options.env.GIT_ALLOW_PROTOCOL, "https");
+      assert.equal(options.env.GIT_DIR, undefined);
+      assert.equal(options.env.GIT_CONFIG_COUNT, undefined);
+      assert.equal(options.env.HTTPS_PROXY, proxy);
+      return revision + "\trefs/heads/main\n";
+    },
+  });
+  assert.equal(tip, revision);
+  assert.equal(existsSync(lookupDirectory), false);
+});
 
 test("admission producer binds the current main workflow, exact checkout and tooling", t => {
   const input = fixture(t);

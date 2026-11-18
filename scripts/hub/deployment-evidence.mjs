@@ -123,13 +123,15 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     });
     console.log(identity);
   } else {
-    const [directory, catalog, siteSHA, rulesSHA, configPath] = process.argv.slice(2);
-    if (process.argv.length !== 7 || !configPath) {
-      throw new Error("usage: deployment-evidence.mjs BUILD_DIRECTORY CATALOG_DIRECTORY SITE_SHA RULES_SHA BUILD_CONFIG");
+    const derive = process.argv[2] === "--derive-build";
+    const args = process.argv.slice(derive ? 3 : 2);
+    const [directory, catalog, siteSHA, rulesSHA, configPath] = args;
+    if (args.length !== 5 || !configPath) {
+      throw new Error("usage: deployment-evidence.mjs [--derive-build] BUILD_DIRECTORY CATALOG_DIRECTORY SITE_SHA RULES_SHA BUILD_CONFIG");
     }
     const manifest = JSON.parse(readFileSync(path.join(catalog, "routes.json")));
     const records = JSON.parse(readFileSync(path.join(catalog, "listings.json")));
-    const result = publicationIdentity({ directory, manifest, records, siteSHA, rulesSHA, buildConfig: readFileSync(configPath) });
+    const result = publicationIdentity({ directory, manifest, records, siteSHA, rulesSHA, buildConfig: readFileSync(configPath), checkBuildFile: !derive });
     console.log(canonical(result));
   }
 }

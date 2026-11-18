@@ -1,4 +1,5 @@
 import { execFileSync } from "node:child_process";
+import { readGit as git } from "./git-source.mjs";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -41,13 +42,6 @@ const dependencies = {
   listing: "Listing assertions over the acquired files still need native reader evidence for the derived catalog record.",
   quality: "Measured artifacts are not validated here; section 9 measurement approval applies.",
 };
-
-function git(repository, args) {
-  return execFileSync("git", ["-C", repository, "--no-optional-locks", "--no-replace-objects", ...args], {
-    env: { ...process.env, GIT_NO_LAZY_FETCH: "1", GIT_ALLOW_PROTOCOL: "" },
-    stdio: ["ignore", "pipe", "ignore"],
-  });
-}
 
 const oneLine = error => String(error?.message ?? error).split("\n", 1)[0].replace(/[^\x20-\x7e]/g, "?").slice(0, 200);
 

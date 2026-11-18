@@ -1,8 +1,10 @@
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { sha256, toolingIdentity } from "./evidence.mjs";
+import { readGit, withoutGitOverrides } from "./git-source.mjs";
 
 const repository = "pipelab-org/pipelab.org";
 const server = "https://github.com";
@@ -13,17 +15,27 @@ const workflows = {
   sync: { path: ".github/workflows/sync-pipelab-hub.yml", events: ["schedule", "workflow_dispatch"] },
 };
 
-function git(root, ...args) {
-  return execFileSync("git", ["-C", root, "--no-optional-locks", "--no-replace-objects", ...args], {
-    stdio: ["ignore", "pipe", "ignore"], timeout: 15_000,
-  });
-}
-
-export function readSiteMain(root) {
-  const output = git(root, "ls-remote", "--exit-code", server + "/" + repository, main).toString().trim();
-  const [tip, ref, ...unexpected] = output.split("\t");
-  if (!sha.test(tip) || ref !== main || unexpected.length) throw new Error("invalid site main result");
-  return tip;
+export function readSiteMain({ runGit = execFileSync, environment = process.env } = {}) {
+  // Use an empty Git context so configuration cannot select a different
+  // remote. Keep the caller's HTTP(S) proxy environment.
+  const directory = mkdtempSync(path.join(tmpdir(), "hub-site-main-"));
+  try {
+    const output = runGit("git", [
+      "-c", "http.followRedirects=false", "ls-remote", "--exit-code", server + "/" + repository, main,
+    ], {
+      cwd: directory,
+      env: { ...withoutGitOverrides(environment),
+        GIT_CONFIG_NOSYSTEM: "1", GIT_CONFIG_GLOBAL: path.join(directory, "config"),
+        GIT_CEILING_DIRECTORIES: path.dirname(directory), GIT_ALLOW_PROTOCOL: "https", GIT_TERMINAL_PROMPT: "0",
+      },
+      encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], timeout: 15_000,
+    }).trim();
+    const [tip, ref, ...unexpected] = output.split("\t");
+    if (!sha.test(tip) || ref !== main || unexpected.length) throw new Error("invalid site main result");
+    return tip;
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
 }
 
 // Design 3.2.1. Call from the trusted site checkout before reading any
@@ -40,15 +52,16 @@ export function admissionProducer({ mode, environment, root, engine }, readMain 
     throw new Error("producer context does not identify the expected site main workflow");
   }
 
-  if (readMain(root) !== revision) throw new Error("producer revision differs from current site main");
-  if (git(root, "rev-parse", "HEAD").toString().trim() !== revision ||
-      git(root, "status", "--porcelain=v1", "--untracked-files=normal").length) {
+  if (readMain() !== revision) throw new Error("producer revision differs from current site main");
+  const git = (...args) => readGit(root, args, { timeout: 15_000 });
+  if (git("rev-parse", "HEAD").toString().trim() !== revision ||
+      git("status", "--porcelain=v1", "--untracked-files=normal").length) {
     throw new Error("producer requires the exact clean site checkout");
   }
 
   const tooling = toolingIdentity(root, engine);
-  if (tooling.scripts_tree !== git(root, "rev-parse", revision + ":scripts/hub").toString().trim() ||
-      tooling.package_lock_sha256 !== sha256(git(root, "show", revision + ":package-lock.json"))) {
+  if (tooling.scripts_tree !== git("rev-parse", revision + ":scripts/hub").toString().trim() ||
+      tooling.package_lock_sha256 !== sha256(git("show", revision + ":package-lock.json"))) {
     throw new Error("producer tooling differs from the site commit");
   }
   return { ref, sha: revision, workflow: workflow.path, run_id: runId, tooling_identity: tooling };

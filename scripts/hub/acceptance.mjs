@@ -10,7 +10,8 @@ import { assertCatalogAssets } from "./catalog-assets.mjs";
 import { assertPublication } from "./parity.mjs";
 import { publicationIdentity } from "./deployment-evidence.mjs";
 import { verifyRetrieval } from "./retrieval.mjs";
-import { assertSourceProgress } from "./source-tree.mjs";
+import { assertSourceProgress, materializeGitTree } from "./source-tree.mjs";
+import { readGit } from "./git-source.mjs";
 import { readSiteMain } from "./admission-producer.mjs";
 
 const gitSHA = /^[a-f0-9]{40}$/;
@@ -22,7 +23,7 @@ function child(command, args, options) {
 
 function checkCheckout(root, expected) {
   if (!gitSHA.test(expected ?? "")) throw new Error("exact site candidate SHA required");
-  const git = (...args) => child("git", args, { cwd: root, encoding: "utf8" }).trim();
+  const git = (...args) => readGit(root, args, { encoding: "utf8" }).trim();
   if (git("rev-parse", "HEAD") !== expected || git("status", "--porcelain=v1")) {
     throw new Error("site candidate must be an exact clean source checkout");
   }
@@ -71,7 +72,7 @@ export async function routineAcceptance({ source, siteSHA, rulesSHA }, { readMai
 
     const { siteBase } = source.sourceBinding;
     const assertCurrentBase = () => {
-      if (siteBase !== readMain(root)) throw new Error("site baseline differs from current site main");
+      if (siteBase !== readMain()) throw new Error("site baseline differs from current site main");
     };
     assertCurrentBase();
     assertSourceProgress(root, null, siteBase, siteSHA);
@@ -87,16 +88,12 @@ export async function routineAcceptance({ source, siteSHA, rulesSHA }, { readMai
     current = 3;
     checkGenerated(root, catalog);
     const site = path.join(temporary, "site");
-    const archive = path.join(temporary, "candidate.tar");
     mkdirSync(site);
-    // This archive is the trusted site commit. Contributor objects have already
-    // gone through the blob reader and are never archived or checked out here.
-    child("git", ["archive", "--output=" + archive, siteSHA], { cwd: root });
-    child("tar", ["-xf", archive, "-C", site]);
+    materializeGitTree(root, siteSHA, site);
     assertCatalogAssets(path.join(site, "assets"), assetRoot);
     pass(3, "Regenerated records and staged asset set match the candidate.");
     current = 4;
-    // Build the archived site's configuration without ambient Hugo overrides.
+    // Build the committed site's configuration without ambient Hugo overrides.
     const buildEnv = Object.fromEntries(Object.entries(process.env).filter(([key]) => !/^HUGO[_x]/i.test(key)));
     const build = name => {
       const directory = path.join(temporary, name);
