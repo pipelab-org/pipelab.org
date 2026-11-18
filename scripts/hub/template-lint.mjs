@@ -35,7 +35,7 @@ export function auditHubTemplates(root = ".") {
   };
   for (const file of roots) visit(file);
   const search = path.join(root, "themes/pipelab/assets/js/hub-search.js");
-  if (existsSync(search) && /\b(?:innerHTML|outerHTML|insertAdjacentHTML|createContextualFragment|DOMParser|eval|Function)\b|\bdocument\.write(?:ln)?\b/.test(readFileSync(search, "utf8"))) {
+  if (existsSync(search) && /\b(?:innerHTML|outerHTML|insertAdjacentHTML|createContextualFragment|DOMParser|eval|Function)\b|\bdocument\s*\.\s*write(?:ln)?\b/.test(readFileSync(search, "utf8"))) {
     issues.push("hub search: forbidden executable or HTML sink");
   }
   return issues;

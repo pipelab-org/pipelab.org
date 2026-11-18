@@ -180,6 +180,7 @@ function generateFromListings({ root, items, engine, binary, repository, config,
   if (!records.length || JSON.stringify(officialInventory) !== JSON.stringify(officialRecords)) throw new Error("official served inventory differs from active catalog");
   const retainedDownloads = [];
   let checkedLifecycle;
+  const restoredNames = new Set();
   if (lifecycle) {
     if (removed.length || baseline.length) throw new Error("lifecycle data has multiple producers");
     const listings = records.map(record => ({
@@ -187,8 +188,11 @@ function generateFromListings({ root, items, engine, binary, repository, config,
       route: record.route,
       publisher: record.publisher_id ?? record.badge,
       badge: record.badge,
-      bundle_sha256: record.bundle_sha256,
-      signature_sha256: record.signature_sha256,
+      ...(record.listing.type === "bundle" ? {
+        bundle_name: record.listing.bundle_name,
+        bundle_sha256: record.bundle_sha256,
+        signature_sha256: record.signature_sha256,
+      } : {}),
     }));
     const transitions = reconcileLifecycle(lifecycle.accepted, { listings, history: lifecycle.history });
     for (const { listing, event } of transitions) {
@@ -205,11 +209,15 @@ function generateFromListings({ root, items, engine, binary, repository, config,
     }
     removed = transitions.map(({ listing, event, replacement }) => {
       const id = listing.id.slice(listing.id.indexOf("--") + 2);
+      const bundleName = listing.id.startsWith("bundle--")
+        ? listing.bundle_name ?? path.posix.basename(listing.route)
+        : null;
       return {
         id,
         route: listing.route,
         publisher_id: listing.publisher,
         facts: {
+          ...(bundleName ? { "bundle.name": bundleName } : {}),
           "Removed on": event.at,
           "Reason": event.public_reason,
           "Downloads": event.downloads === "retained" ? "Signed download still available." : "Withdrawn from the Hub.",
@@ -223,13 +231,23 @@ function generateFromListings({ root, items, engine, binary, repository, config,
       history: [...lifecycle.history].sort((a, b) => a.id.localeCompare(b.id)),
     };
     baseline = lifecycle.accepted.routes;
+    const acceptedById = new Map(lifecycle.accepted.listings.map(listing => [listing.id, listing]));
+    const previousTombstones = new Set(lifecycle.accepted.history.map(log => log.id));
+    for (const listing of listings) {
+      // Only a currently active identity with accepted withdrawal history can
+      // reclaim its reserved names. Reconciliation has already verified its
+      // publisher, route and restoration record.
+      if (!previousTombstones.has(listing.id) || !acceptedById.has(listing.id)) continue;
+      restoredNames.add(listing.id.slice(listing.id.indexOf("--") + 2));
+      if (listing.bundle_name) restoredNames.add(listing.bundle_name);
+    }
   }
   const inventoryFile = path.join(root, "data/hub/generated/inventory.json");
   const inventory = existsSync(inventoryFile) ? JSON.parse(readFileSync(inventoryFile)) : { format: 1, removed: [], retained_names: [] };
   if (inventory.format !== 1 || !Array.isArray(inventory.removed) || inventory.retained_names !== undefined && !Array.isArray(inventory.retained_names)) throw new Error("invalid retained name inventory");
-  const retainedNames = [...new Set([...inventory.removed, ...(inventory.retained_names || []), ...removed.flatMap(record => [record.id, record.facts?.["bundle.name"]].filter(Boolean))])].sort();
-  const activeNames = new Set(records.map(record => record.listing.id));
-  assertCatalogNames(records, checkedLifecycle ? retainedNames.filter(name => !activeNames.has(name)) : retainedNames);
+  const withdrawnNames = new Set(removed.flatMap(record => [record.id, record.facts?.["bundle.name"]].filter(Boolean)));
+  const retainedNames = [...new Set([...inventory.removed, ...(inventory.retained_names || []), ...withdrawnNames])].sort();
+  assertCatalogNames(records, retainedNames.filter(name => withdrawnNames.has(name) || !restoredNames.has(name)));
   records.sort((a, b) => a.listing.id.localeCompare(b.listing.id));
   if (mode === "routine" || pipelockBinary) core = filterRuleDisplay(records, core, pipelockBinary);
   const policyFile = path.join(root, "data/hub/policy-pages.json");

@@ -12,8 +12,8 @@ const items = [
 ];
 
 async function start(index) {
-  const status = { textContent: "" };
-  const input = { disabled: true, addEventListener: (_, handler) => { input.change = handler; } };
+  const status = { textContent: "2 components" };
+  const input = { disabled: true, value: "", addEventListener: (_, handler) => { input.change = handler; } };
   const cards = items.map(item => ({
     dataset: { hubComponent: item.id }, hidden: false,
     querySelector: () => ({ href: new URL(item.url.slice(1), new URL("../", pageURL)).href }),
@@ -38,6 +38,7 @@ async function start(index) {
 test("Hub search filters existing links with a path-prefixed index URL", async () => {
   const { input, status, cards } = await start({ format: 1, items });
   assert.equal(input.disabled, false);
+  assert.equal(status.textContent, "2 components");
   input.value = "RECEIPT";
   input.change();
   assert.deepEqual(cards.map(card => card.hidden), [false, true]);

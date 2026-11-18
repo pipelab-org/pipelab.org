@@ -63,11 +63,12 @@ export function verifierEvidence(root, listing) {
   const bytes = readFileSync(resolveArtifact(root, relative));
   const report = JSON.parse(bytes);
   const hex = /^[a-f0-9]{64}$/;
+  const isDigest = value => typeof value === "string" && hex.test(value);
   if (report.format !== 1 || report.tool !== listing.id || report.release !== listing.release ||
-      !hex.test(report.binary_sha256 ?? "") || !/^[a-f0-9]{40}$/.test(report.corpus_commit ?? "") ||
+      !isDigest(report.binary_sha256) || typeof report.corpus_commit !== "string" || !/^[a-f0-9]{40}$/.test(report.corpus_commit) ||
       !Array.isArray(report.cases) || !report.cases.some(test => test?.valid === true) ||
       !report.cases.some(test => test?.valid === false) ||
-      report.cases.some(test => typeof test?.valid !== "boolean" || !hex.test(test.sha256 ?? "") ||
+      report.cases.some(test => typeof test?.valid !== "boolean" || !isDigest(test.sha256) ||
         typeof test.path !== "string" || !test.path.startsWith("sdk/conformance/testdata/corpus/") ||
         test.path.split("/").some(segment => !segment || segment === "." || segment === "..") ||
         test.exit !== (test.valid ? 0 : 1)) ||

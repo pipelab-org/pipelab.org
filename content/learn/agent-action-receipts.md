@@ -110,7 +110,7 @@ For commands you can run from release archives, follow [Record signed receipts a
 
 With a configured flight recorder and receipt signing key, Pipelock can emit signed receipts for mediated decisions on these paths. Coverage depends on the transport and `flight_recorder.require_receipts`:
 
-- **HTTP requests** through the forward proxy and CONNECT tunnel decisions. Inspecting individual requests inside an encrypted tunnel requires TLS interception.
+- **HTTP requests** through the fetch, forward, and reverse proxies, plus CONNECT tunnel decisions. Inspecting individual requests inside an encrypted tunnel requires TLS interception.
 - **MCP tool calls and responses** routed through the MCP proxy, whether stdio or streamable HTTP.
 - **WebSocket frames** in both directions on the WebSocket proxy.
 - **Tool list responses** scanned for poisoning, with the tool baseline

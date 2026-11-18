@@ -3,8 +3,18 @@ import { isDeepStrictEqual } from "node:util";
 import { parseDocument } from "yaml";
 
 const vocabulary = JSON.parse(readFileSync(new URL("./config-vocabulary.json", import.meta.url)));
-const isEntry = value => typeof value === "string" && value.length > 0;
-const isList = value => Array.isArray(value) && value.every(isEntry) && new Set(value).size === value.length;
+// Match the pinned runtime's host identity. The released config checker
+// still validates host spelling and wildcard breadth before scoring.
+function domainIdentity(value) {
+  if (typeof value !== "string" || !/^[\x00-\x7f]+$/.test(value)) return null;
+  return value.trim().toLowerCase().replace(/\.+$/, "") || null;
+}
+
+function normalizedDomains(values) {
+  if (!Array.isArray(values)) return null;
+  const domains = values.map(domainIdentity);
+  return domains.includes(null) || new Set(domains).size !== domains.length ? null : domains;
+}
 
 function readValue(document, spec, parts) {
   const value = document.getIn(parts);
@@ -17,12 +27,15 @@ function updateValue(current, spec, { op, value, path }) {
     if (op !== "set" || !valid) throw new Error("invalid operation for " + path);
     return value;
   }
-  if (!isList(current)) throw new Error("invalid base list for " + path);
-  if (op === "set" && isList(value)) return value;
-  if (isEntry(value)) {
-    if (op === "append" && !current.includes(value)) return [...current, value];
-    if (op === "remove" && current.includes(value)) return current.filter(entry => entry !== value);
+  current = normalizedDomains(current);
+  if (!current) throw new Error("invalid base list for " + path);
+  if (op === "set") {
+    const domains = normalizedDomains(value);
+    if (domains) return domains;
   }
+  const domain = domainIdentity(value);
+  if (domain && op === "append" && !current.includes(domain)) return [...current, domain];
+  if (domain && op === "remove" && current.includes(domain)) return current.filter(entry => entry !== domain);
   throw new Error("invalid list operation for " + path);
 }
 
@@ -60,7 +73,10 @@ export function applyConfigChanges(source, changes, preset) {
   }
   const transitions = [...affected].flatMap(path => {
     const spec = vocabulary[path], parts = path.split(".");
-    return describeChange(spec, path, readValue(original, spec, parts), readValue(generated, spec, parts));
+    const before = readValue(original, spec, parts), after = readValue(generated, spec, parts);
+    return spec.kind === "list"
+      ? describeChange(spec, path, normalizedDomains(before), normalizedDomains(after))
+      : describeChange(spec, path, before, after);
   });
   if (!transitions.length) throw new Error("identical to the " + preset + " preset");
   const before = original.get("response_scanning", true);

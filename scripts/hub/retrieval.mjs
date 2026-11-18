@@ -258,30 +258,39 @@ export async function verifyRetrieval({ directory, manifest, records, binary, re
       const rate = basePreset.fetch_proxy?.monitoring?.max_requests_per_minute;
       if (!Number.isSafeInteger(rate) || rate <= 0) throw new Error("pinned preset is missing a request rate");
       const spacing = Math.ceil(60_000 / rate);
-      const proxy = await startProxy(binary, args, config, cwd);
-      let sent = false;
-      const send = async route => {
-        // Requests are sequential. Start the interval after the preceding
-        // response so transit jitter cannot bunch arrivals at the rate limit.
-        if (sent) await delay(spacing);
-        sent = true;
-        return request(proxy.port, route);
-      };
-      try {
-        for (const control of controls) {
-          await retrieve({ send, origin: port, target: control.route, item: files.get(control.route), binary, args, config, cwd, records, control })
-            .catch(failure => { throw new Error(preset + " " + control.route + ": " + failure.message); });
-        }
-        for (const [target, item] of files) {
-          if (!item.entry) continue;
+      const checkRoute = async (target, item, control) => {
+        // A route gets its own proxy session. Keep the stock preset and
+        // prevent earlier response decisions from affecting this result.
+        const home = mkdtempSync(path.join(cwd, "route-"));
+        const routeArgs = ["--home", home];
+        try {
+          const proxy = await startProxy(binary, routeArgs, config, cwd);
           try {
-            checks.push({ preset, route: target, ...(await retrieve({ send, origin: port, target, item, binary, args, config, cwd, records })) });
-          } catch (failure) {
-            failures.push(preset + " " + target + ": " + failure.message);
+            let sent = false;
+            const send = async route => {
+              if (sent) await delay(spacing);
+              sent = true;
+              return request(proxy.port, route);
+            };
+            return await retrieve({ send, origin: port, target, item, binary, args: routeArgs, config, cwd, records, control });
+          } finally {
+            await proxy.stop();
           }
+        } finally {
+          rmSync(home, { recursive: true, force: true });
         }
-      } finally {
-        await proxy.stop();
+      };
+      for (const control of controls) {
+        await checkRoute(control.route, files.get(control.route), control)
+          .catch(failure => { throw new Error(preset + " " + control.route + ": " + failure.message); });
+      }
+      for (const [target, item] of files) {
+        if (!item.entry) continue;
+        try {
+          checks.push({ preset, route: target, ...(await checkRoute(target, item)) });
+        } catch (failure) {
+          failures.push(preset + " " + target + ": " + failure.message);
+        }
       }
     }
     if (failures.length) throw new Error("Hub retrieval checks failed:\n" + failures.join("\n"));

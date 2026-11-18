@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -64,7 +64,9 @@ export async function routineAcceptance({ source, siteSHA, rulesSHA }, { readMai
   const temporary = mkdtempSync(path.join(tmpdir(), "hub-acceptance-"));
   let current = 1;
   try {
-    const root = path.resolve(source.root);
+    const root = realpathSync(source.root);
+    const verifierRoot = realpathSync(fileURLToPath(new URL("../../", import.meta.url)));
+    if (root !== verifierRoot) throw new Error("run Hub acceptance from the candidate checkout");
     checkCheckout(root, siteSHA);
     if (!gitSHA.test(rulesSHA ?? "") || source.sourceBinding?.rulesSHA !== rulesSHA) {
       throw new Error("exact rules source binding required");

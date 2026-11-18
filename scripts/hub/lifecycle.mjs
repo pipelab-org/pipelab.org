@@ -123,9 +123,10 @@ export function reconcileLifecycle(accepted, current) {
     if (!active.has(listing.id) && !history.has(listing.id)) throw new Error("removal without record");
   }
   for (const listing of active.values()) {
-    if (prior.has(listing.id) && prior.get(listing.id).publisher !== listing.publisher) {
-      throw new Error("listing belongs to a different publisher");
-    }
+    const previous = prior.get(listing.id);
+    if (!previous) continue;
+    if (previous.publisher !== listing.publisher) throw new Error("listing belongs to a different publisher");
+    if (previous.route !== listing.route) throw new Error("accepted listing route cannot change");
   }
 
   const removed = [];

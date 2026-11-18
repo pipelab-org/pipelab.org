@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { pathToFileURL } from "node:url";
 import { routineAcceptance } from "../scripts/hub/acceptance.mjs";
 import { loadAcquiredListings } from "../scripts/hub/source-listings.mjs";
 import { acceptedSource, acquireHubTree, assertHubOnly, assertSourceProgress, materializeGitTree } from "../scripts/hub/source-tree.mjs";
@@ -78,6 +79,12 @@ test("site materialization copies committed bytes independently of export attrib
 
 test("routine acceptance refuses a site baseline older than current main", async t => {
   const { directory, git, commit } = repository(t);
+  const root = path.resolve(import.meta.dirname, "..");
+  cpSync(path.join(root, "scripts/hub"), path.join(directory, "scripts/hub"), { recursive: true });
+  symlinkSync(path.join(root, "node_modules"), path.join(directory, "node_modules"), "dir");
+  mkdirSync(path.join(directory, ".git/info"), { recursive: true });
+  writeFileSync(path.join(directory, ".git/info/exclude"), "/node_modules\n");
+  git("add", "--", "scripts/hub");
   const old = commit("data/hub/launch.toml", "open = false\n");
   const main = commit("data/hub/generated/lifecycle.json", JSON.stringify({
     listings: [], history: [{ id: "fixture-hold" }], routes: [],
@@ -86,7 +93,8 @@ test("routine acceptance refuses a site baseline older than current main", async
   git("update-ref", "refs/remotes/origin/main", main);
   assert.doesNotThrow(() => assertSourceProgress(directory, null, old, candidate));
 
-  const run = siteBase => routineAcceptance({
+  const { routineAcceptance: runCandidate } = await import(pathToFileURL(path.join(directory, "scripts/hub/acceptance.mjs")));
+  const run = (siteBase, verify = runCandidate) => verify({
     source: {
       root: directory,
       sourceBinding: { siteBase, rulesSHA: old, rulesRepository: directory, rulesMain: old },
@@ -94,6 +102,8 @@ test("routine acceptance refuses a site baseline older than current main", async
     siteSHA: candidate,
     rulesSHA: old,
   }, { readMain: () => main });
+  const foreign = await run(main, routineAcceptance);
+  assert.equal(foreign.steps[1].evidence, "run Hub acceptance from the candidate checkout");
   const stale = await run(old);
   assert.equal(stale.steps[1].evidence, "site baseline differs from current site main");
   const current = await run(main);

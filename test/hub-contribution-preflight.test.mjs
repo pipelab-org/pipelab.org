@@ -89,9 +89,9 @@ test("local preflight refuses a changed pair or mismatched listing declaration",
 });
 
 test("changes outside Hub-owned paths fail closed with no further steps", t => {
-  const { directory, commit } = repository(t);
-  const base = commit({ "hub/README.md": "Guide.\n" });
   for (const file of [".github/workflows/ci.yaml", ".github/CODEOWNERS", "scripts/build.sh", "published/acme/bundle.yaml", "hub/.hidden"]) {
+    const { directory, commit } = repository(t);
+    const base = commit({ "hub/README.md": "Guide.\n" });
     const head = commit({ ...files, [file]: "x\n" });
     const report = preflightContribution({ repository: directory, base, head, site });
     assert.equal(report.verdict, "REFUSED", file);
@@ -141,15 +141,17 @@ test("byte, mode and symlink problems are refused by the object reader", t => {
   const executable = commit({ "hub/community/acme/example-bundle/bundle.yaml": "x\n" }, { mode: 0o755 });
   assert.equal(failed(preflightContribution({ repository: directory, base, head: executable, site })), "object-read");
 
+  git("checkout", "--quiet", "--detach", base);
   const huge = commit({ "hub/community/acme/other-bundle/bundle.yaml": "x".repeat(1024 * 1024 + 1) });
-  assert.equal(failed(preflightContribution({ repository: directory, base: executable, head: huge, site })), "object-read");
+  assert.equal(failed(preflightContribution({ repository: directory, base, head: huge, site })), "object-read");
 
+  git("checkout", "--quiet", "--detach", base);
   mkdirSync(path.join(directory, "hub/publishers"), { recursive: true });
   symlinkSync("../README.md", path.join(directory, "hub/publishers/evil.yaml"));
   git("add", "--", "hub/publishers/evil.yaml");
   git("-c", "user.name=Fixture", "-c", "user.email=fixture@example.com", "commit", "-qm", "link");
   const link = git("rev-parse", "HEAD");
-  assert.equal(failed(preflightContribution({ repository: directory, base: huge, head: link, site })), "object-read");
+  assert.equal(failed(preflightContribution({ repository: directory, base, head: link, site })), "object-read");
 });
 
 test("metadata that fails the data-only parse is refused", t => {

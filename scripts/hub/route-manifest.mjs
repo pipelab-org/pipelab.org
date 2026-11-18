@@ -86,10 +86,13 @@ export function routeManifest({ records, publishers = [], core = [], removed = [
       throw new Error("policy page requires source text");
     }
     const title = validateText(source.title, "label");
-    const facts = Object.fromEntries(Object.entries(source.facts).map(([key, value]) => [
-      validateText(key, "label"), validateText(value),
-    ]));
-    reference(`/hub/${policy}/`, "policy", title, facts);
+    const facts = new Map();
+    for (const [key, value] of Object.entries(source.facts)) {
+      const normalized = validateText(key, "label");
+      if (facts.has(normalized)) throw new Error("duplicate normalized policy fact key");
+      facts.set(normalized, validateText(value));
+    }
+    reference(`/hub/${policy}/`, "policy", title, Object.fromEntries(facts));
   }
   add({ route: "/hub/index.json", kind: "index", ownership: "hub", representations: ["json"] });
   add({ route: "/hub/build.json", kind: "build", ownership: "hub", representations: ["json"] });

@@ -43,4 +43,4 @@ Artifacts include all samples, maxima, actual pair count, executed workload dige
 
 Routine generation requires a passing current measurement; report mode can retain failed or unassessed diagnostic verdicts. Community bundle verification and publisher facts use exactly one registered publisher selected by ID. Per-item publisher names and keys do not override the registry.
 
-Routine acceptance reads prior withdrawal history and accepted routes from current site main. Retained IDs and bundle names join the accepted `data/hub/generated/inventory.json` name set and remain reserved in the regenerated inventory. Removal routes use the same manifest path as active records.
+Routine acceptance reads prior withdrawal history and accepted routes from current site main. Retained IDs and bundle names join the accepted `data/hub/generated/inventory.json` name set and remain reserved in the regenerated inventory. Removal routes use the same manifest path as active records. An accepted listing keeps its route when updated or restored.

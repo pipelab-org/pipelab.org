@@ -62,6 +62,13 @@ export function assessConfig(listing, binary) {
       return { name, ...category, delta: category.score - old.score };
     });
     const knownFindings = new Set(previous.findings.map(canonical));
+    const configurableScanningDisabled = generated.changes.some(change =>
+      change.path === "response_scanning.enabled" && change.transition === "true:false");
+    const findings = current.findings.filter(finding => !knownFindings.has(canonical(finding))).map(finding =>
+      configurableScanningDisabled && finding.category === "Response Scanning" &&
+        finding.message === "Response scanning is disabled \u2014 prompt injection in tool results won't be detected"
+        ? { ...finding, message: "Configurable response scanning is disabled. Core response patterns still apply, and MCP proxy and scan modes enforce response scanning." }
+        : finding);
     return {
       bytes: Buffer.from(generated.yaml),
       sha256: sha256(generated.yaml),
@@ -74,7 +81,7 @@ export function assessConfig(listing, binary) {
         total_score: current.total_score,
         max_score: current.max_score,
         categories,
-        findings: current.findings.filter(finding => !knownFindings.has(canonical(finding))),
+        findings,
         changes: generated.changes,
       },
     };

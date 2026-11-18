@@ -328,6 +328,11 @@ test("config change classification uses the net edit and refuses unsupported tra
   assert.throws(() => applyConfigChanges(yaml, [added, removed], "claude-code"), /identical/);
   assert.throws(() => applyConfigChanges(yaml, [edit("set", "action", "ask")], "claude-code"), /unclassified/);
   assert.throws(() => applyConfigChanges(yaml, [added, added], "claude-code"), /invalid list operation/);
+  const sameHost = edit("append", "exempt_domains", "EXAMPLE.COM.");
+  assert.throws(() => applyConfigChanges(yaml, [added, sameHost], "claude-code"), /invalid list operation/);
+  assert.throws(() => applyConfigChanges(yaml, [added, { ...sameHost, op: "remove" }], "claude-code"), /identical/);
+  const distinct = applyConfigChanges(yaml, [sameHost, edit("append", "exempt_domains", "API.EXAMPLE.COM")], "claude-code");
+  assert.deepEqual(parse(distinct.yaml).response_scanning.exempt_domains, ["example.com", "api.example.com"]);
 });
 
 test("config audit keeps weaknesses whose score does not move", { skip: !process.env.HUB_RELEASE_BIN }, () => {
@@ -341,6 +346,10 @@ test("config audit keeps weaknesses whose score does not move", { skip: !process
   assert.equal(result.assessment.grade, result.assessment.base_grade);
   assert.equal(result.assessment.categories.find(category => category.name === "Response Scanning").delta, 0);
   assert.equal(result.assessment.changes[0].effect, "weakens");
+  const disabled = assessConfig({ ...listing, base_preset: "strict", changes: [
+    { op: "set", path: "response_scanning.enabled", value: false },
+  ] }, process.env.HUB_RELEASE_BIN);
+  assert.match(disabled.assessment.findings.find(finding => finding.category === "Response Scanning").message, /Core response patterns still apply/);
 });
 
 test("first-party recipes retain their guide links and documented limitations", () => {
@@ -367,6 +376,13 @@ test("verifier case evidence cannot count the same receipt twice", t => {
     const duplicate = structuredClone(report);
     duplicate.cases[1][field] = duplicate.cases[0][field];
     writeFileSync(artifact, JSON.stringify(duplicate));
+    assert.throws(() => verifierEvidence(directory, listing), /consistent release evidence/);
+  }
+  for (const field of ["binary_sha256", "corpus_commit", "sha256"]) {
+    const invalid = structuredClone(report);
+    const target = field === "sha256" ? invalid.cases[0] : invalid;
+    target[field] = [target[field]];
+    writeFileSync(artifact, JSON.stringify(invalid));
     assert.throws(() => verifierEvidence(directory, listing), /consistent release evidence/);
   }
 });
@@ -818,10 +834,32 @@ test("catalog generation joins lifecycle removals and retains their names", { sk
     lifecycle: { accepted: { listings: [listing], history: [], routes: [] }, history: history(retired) } });
   const retained = retainedCatalog["routes.json"].entries.filter(entry => entry.kind === "retained-download");
   assert.deepEqual(retained.map(entry => entry.route), [listing.route + "bundle.yaml", listing.route + "bundle.yaml.sig"]);
+  assert.ok(retainedCatalog["inventory.json"].retained_names.includes(community.listing.bundle_name));
+  assert.equal(retainedCatalog["routes.json"].entries.find(entry => entry.route === listing.route).facts["bundle.name"], community.listing.bundle_name);
   const withdrawn = generateCatalog({ ...source, items,
     lifecycle: { accepted: retainedCatalog["lifecycle.json"], history: history(retired, security) } });
   assert.ok(!withdrawn["routes.json"].entries.some(entry => retained.some(download => entry.route === download.route)));
   assert.equal(withdrawn["routes.json"].entries.find(entry => entry.route === listing.route).facts.Downloads, "Withdrawn from the Hub.");
+  writeCatalog(generated, withdrawn);
+  const restoredHistory = history(retired, security,
+    { type: "reason-cleared", at: "2026-11-18", reason_id: retired.reason_id },
+    { type: "reason-cleared", at: "2026-11-18", reason_id: security.reason_id },
+    { type: "restored", at: "2026-11-18", public_note: "Restored." });
+  const restored = generateCatalog({ ...source, lifecycle: { accepted: withdrawn["lifecycle.json"], history: restoredHistory } });
+  assert.ok(restored["inventory.json"].retained_names.includes(community.listing.bundle_name));
+  assert.equal(restored["routes.json"].entries.find(entry => entry.route === listing.route).kind, "listing");
+  const renamed = { ...listing, route: "/hub/community/example/new-bundle/", bundle_name: "new-bundle" };
+  assert.throws(() => reconcileLifecycle({ listings: [listing], history: [] }, { listings: [renamed], history: [] }), /accepted listing route cannot change/);
+});
+
+test("policy facts have unique normalized labels", () => {
+  const options = { records: [], policies: ["policies"], schemaBytes: "{}" };
+  const page = facts => ({ policies: { title: "Hub policies", facts } });
+  const facts = { "Café": "First fact", "Topic": "Second fact" };
+  const valid = routeManifest({ ...options, policyPages: page(facts) });
+  assert.deepEqual(valid.entries.find(entry => entry.kind === "policy").facts, facts);
+  const duplicate = { ...facts, ["Cafe\u0301"]: "Repeated fact" };
+  assert.throws(() => routeManifest({ ...options, policyPages: page(duplicate) }), /duplicate normalized policy fact key/);
 });
 
 test("routine catalogs refuse failed or unassessed bound measurements", { skip: !native }, t => {

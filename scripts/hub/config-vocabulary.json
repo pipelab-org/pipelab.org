@@ -5,12 +5,12 @@
       "true:false": {
         "effect": "weakens",
         "text": "Turns off configurable response scanning. Built-in core patterns still apply.",
-        "source": "https://github.com/pipelab-org/pipelock/blob/556048c1c18d84f7d61d28f686220178a4ff2c4d/docs/configuration.md#L1395"
+        "source": "https://github.com/pipelab-org/pipelock/blob/556048c1c18d84f7d61d28f686220178a4ff2c4d/docs/configuration.md#L1360"
       },
       "false:true": {
         "effect": "strengthens",
         "text": "Turns configurable response scanning back on under the configured action.",
-        "source": "https://github.com/pipelab-org/pipelock/blob/556048c1c18d84f7d61d28f686220178a4ff2c4d/docs/configuration.md#L1395"
+        "source": "https://github.com/pipelab-org/pipelock/blob/556048c1c18d84f7d61d28f686220178a4ff2c4d/docs/configuration.md#L1360"
       }
     }
   },
@@ -21,12 +21,12 @@
       "block:warn": {
         "effect": "weakens",
         "text": "Changes the response action from blocking to logging a warning.",
-        "source": "https://github.com/pipelab-org/pipelock/blob/556048c1c18d84f7d61d28f686220178a4ff2c4d/internal/cli/audit/audit_score.go#L234-L240"
+        "source": "https://github.com/pipelab-org/pipelock/blob/556048c1c18d84f7d61d28f686220178a4ff2c4d/internal/cli/audit/audit_score.go#L225-L242"
       },
       "warn:block": {
         "effect": "strengthens",
         "text": "Changes the response action from logging a warning to blocking.",
-        "source": "https://github.com/pipelab-org/pipelock/blob/556048c1c18d84f7d61d28f686220178a4ff2c4d/internal/cli/audit/audit_score.go#L234-L240"
+        "source": "https://github.com/pipelab-org/pipelock/blob/556048c1c18d84f7d61d28f686220178a4ff2c4d/internal/cli/audit/audit_score.go#L225-L242"
       }
     }
   },
@@ -36,13 +36,13 @@
     "transitions": {
       "added": {
         "effect": "weakens",
-        "text": "Skips response-injection scanning for {value}. Outbound secret scanning still applies.",
-        "source": "https://github.com/pipelab-org/pipelock/blob/556048c1c18d84f7d61d28f686220178a4ff2c4d/docs/configuration.md#L1364"
+        "text": "Exempts responses from {value} from injection scanning. On the forward proxy and intercepted TLS, the exemption can also skip the normal scan-size limit, metadata stripping, and Browser Shield rewriting for complete non-SVG responses. Outbound secret scanning still applies.",
+        "source": "https://github.com/pipelab-org/pipelock/blob/556048c1c18d84f7d61d28f686220178a4ff2c4d/docs/configuration.md#L1438-L1442"
       },
       "removed": {
         "effect": "strengthens",
         "text": "Removes the response-injection scanning exemption for {value}.",
-        "source": "https://github.com/pipelab-org/pipelock/blob/556048c1c18d84f7d61d28f686220178a4ff2c4d/docs/configuration.md#L1364"
+        "source": "https://github.com/pipelab-org/pipelock/blob/556048c1c18d84f7d61d28f686220178a4ff2c4d/docs/configuration.md#L1438-L1442"
       }
     }
   }
