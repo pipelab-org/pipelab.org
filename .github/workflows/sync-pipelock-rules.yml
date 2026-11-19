@@ -101,7 +101,7 @@ jobs:
           add-paths: |
             static/rules/**
             static/rules/.pipelock-rules-sync-manifest
-          branch: automation/sync-pipelock-rules
+          branch: pip/sync-pipelock-rules
           delete-branch: true
           commit-message: 'chore: sync Pipelock Rules bundles'
           committer: 'github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>'
