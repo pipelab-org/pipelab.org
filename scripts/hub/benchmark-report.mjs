@@ -3,17 +3,17 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { bindWorkload, measurementBindings, measurementArtifact, writeMeasurement, latencyVerdict, measurementMethod, goWorkloadSHA256, sha256, jsonBytes } from "./evidence.mjs";
 import { runHubcheck, assertEngineIdentity } from "./generate.mjs";
-import { officialWorkload } from "./workload.mjs";
+import { bundleWorkload } from "./workload.mjs";
 
 // Report mode chooses no budget. The pair count is the count actually run.
 // The reader and workload digest come from that same binary and bundle.
-export function benchmarkReport({ binary, request, reader, engine, workloadSpec, repository, rulesRepository, pairs, executionTimeout, limits = {}, output, acceptance = false, root }) {
+export function benchmarkReport({ binary, request, reader, engine, workloadSpec, repository, rulesRepository, publisherId, pairs, executionTimeout, limits = {}, output, acceptance = false, root }) {
   if (reader !== undefined) throw new Error("reader is derived from the executed binary");
   if (!Number.isSafeInteger(pairs) || pairs <= 0) throw new Error("positive measurement pair count required");
   assertEngineIdentity({ root, engine, binary });
   const derived = runHubcheck(binary, "reader", { bundle_dir: request.bundle_dir, config: request.config, trusted_keys: request.trusted_keys });
   if (sha256(readFileSync(path.join(request.bundle_dir, "bundle.yaml"))) !== derived.bundle_sha256) throw new Error("executed bundle digest differs");
-  const spec = workloadSpec ?? officialWorkload({ binary, request, reader: derived, repository, rulesRepository });
+  const spec = workloadSpec ?? bundleWorkload({ binary, request, reader: derived, repository, rulesRepository, publisherId });
   const workload = bindWorkload({ rules: derived.declared, ...spec });
   const method = measurementMethod(root, request.config, pairs);
   const executedWorkloadSHA256 = goWorkloadSHA256(workload.harness);

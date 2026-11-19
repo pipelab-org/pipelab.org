@@ -2,7 +2,7 @@ import { assessConfig } from "./config-assessment.mjs";
 import { firstPartyRecipes, firstPartyVerifierItems, verifierEvidence } from "./first-party.mjs";
 import { filterRuleDisplay } from "./rule-display.mjs";
 import { reconcileLifecycle } from "./lifecycle.mjs";
-import { acceptedSource, acquireHubTree, assertSourceProgress } from "./source-tree.mjs";
+import { acceptedSource, acquireHubTree, assertSourceProgress, materializeGitTree } from "./source-tree.mjs";
 import { stageCatalogAssets } from "./catalog-assets.mjs";
 import { loadAcquiredListings } from "./source-listings.mjs";
 import { assertCatalogNames } from "./names.mjs";
@@ -18,6 +18,7 @@ import { officialKeys, verifyBundle, readBundleFiles } from "./verify-bundle.mjs
 import { parseListing, resolveArtifact } from "./validate.mjs";
 import { toolingIdentity, jsonBytes, acceptedMeasurement, assertRegeneration, bindWorkload, measurementBindings, measurementMethod, goWorkloadSHA256, sha256 } from "./evidence.mjs";
 import { routeManifest } from "./route-manifest.mjs";
+import { bundleWorkload } from "./workload.mjs";
 
 export function runHubcheck(binary, mode, request, { timeout = 120000 } = {}) {
   const output = execFileSync(binary, [mode], { input: JSON.stringify(request), encoding: "utf8", timeout, maxBuffer: 16 * 1024 * 1024, env: { ...process.env, GOMAXPROCS: "1" } });
@@ -58,6 +59,30 @@ export function prepareBoundCatalog(options, scratchDirectory) {
   return { catalog, assetRoot };
 }
 
+function committedMeasurements(root, destination) {
+  const commit = readGit(root, ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
+  const directory = "data/hub/measurements";
+  mkdirSync(destination);
+  materializeGitTree(root, commit, destination, [
+    directory, "data/hub/benchmark-method.json", "data/hub/latency-limits.json",
+  ]);
+  const file = path.join(destination, directory, "index.json");
+  if (!existsSync(file)) return new Map();
+  const index = JSON.parse(readFileSync(file));
+  const hash = value => typeof value === "string" && /^[a-f0-9]{64}$/.test(value);
+  if (!index || typeof index !== "object" || Array.isArray(index)) {
+    throw new Error("invalid committed measurement index");
+  }
+  const entries = Object.entries(index);
+  for (const [digest, reference] of entries) {
+    if (!hash(digest) || !reference || Object.keys(reference).length !== 3 ||
+        ![reference.artifact_id, reference.artifact_sha256, reference.bindings_sha256].every(hash)) {
+      throw new Error("invalid committed measurement reference");
+    }
+  }
+  return new Map(entries);
+}
+
 function generateBoundCatalog(options, downloads) {
   const binding = options.sourceBinding;
   if (options.items?.length || options.publishers?.length || options.lifecycle ||
@@ -73,17 +98,19 @@ function generateBoundCatalog(options, downloads) {
   try {
     acquireHubTree(rulesRepository, rulesSHA, directory);
     const { items, publishers, history } = loadAcquiredListings(directory, options.root);
+    const evidenceRoot = path.join(directory, "site-evidence");
+    const references = committedMeasurements(options.root, evidenceRoot);
     return generateFromListings({
       ...options, items, publishers,
       lifecycle: { accepted: previous.lifecycle, history },
-    }, rulesSHA, downloads);
+    }, { rulesSHA, downloads, measurements: { evidenceRoot, references, rulesRepository } });
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }
 }
 
 function generateFromListings({ root, items, engine, binary, repository, config, pipelockBinary,
-  publishers = [], removed = [], baseline = [], lifecycle, policies, mode = "routine" }, rulesSHA, downloads) {
+  publishers = [], removed = [], baseline = [], lifecycle, policies, mode = "routine" }, { rulesSHA, downloads, measurements } = {}) {
   if (!["routine", "report"].includes(mode)) throw new Error("unsupported generation mode");
   assertEngineIdentity({ root, engine, binary });
   const sourceConfig = readGit(repository, ["show", `${enginePin.source_commit}:configs/claude-code.yaml`]);
@@ -91,7 +118,9 @@ function generateFromListings({ root, items, engine, binary, repository, config,
   const tooling = toolingIdentity(root, engine), official = officialKeys(repository), records = [];
   const boundSource = rulesSHA && { rules_sha: rulesSHA, tooling_identity: tooling };
   let core = [];
-  const limits = JSON.parse(readFileSync(path.join(root, "data/hub/latency-limits.json")));
+  const evidenceRoot = measurements?.evidenceRoot ?? root;
+  const limits = measurements && !measurements.references.size
+    ? null : JSON.parse(readFileSync(path.join(evidenceRoot, "data/hub/latency-limits.json")));
   for (const item of [...items, ...firstPartyVerifierItems(root).filter(entry => !items.some(item => path.resolve(item.listing_file) === path.resolve(entry.listing_file)))]) {
     const listing = parseListing(readFileSync(item.listing_file, "utf8"));
     const source = listing.type === "recipe" || listing.type === "verifier" ? "first-party" : "catalog";
@@ -105,16 +134,27 @@ function generateFromListings({ root, items, engine, binary, repository, config,
     if (listing.type === "bundle") {
       pair = readBundleFiles(item.bundle_dir);
       independent = verifyBundle({ ...pair, official, publisher: (publisher?.keys || []).map(key => typeof key === "string" ? key : key.fingerprint) });
-      reader = runHubcheck(binary, "reader", { bundle_dir: item.bundle_dir, config, trusted_keys: (publisher?.keys || []).map((key, i) => ({ name: `${publisher.id}-${i}`, public_key: typeof key === "string" ? key : key.fingerprint })) });
+      const request = {
+        bundle_dir: item.bundle_dir,
+        config,
+        trusted_keys: (publisher?.keys || []).map((key, index) => ({
+          name: `${publisher.id}-${index}`, public_key: typeof key === "string" ? key : key.fingerprint,
+        })),
+      };
+      reader = runHubcheck(binary, "reader", request);
       core = reader.core;
-      if (item.measurement_reference && item.workload_spec) {
-        const workload = bindWorkload({ rules: reader.declared, ...item.workload_spec });
-        const method = measurementMethod(root, config, JSON.parse(readFileSync(path.join(root, "data/hub/benchmark-method.json"))).pairs);
+      const reference = measurements ? measurements.references.get(reader.bundle_sha256) : item.measurement_reference;
+      if (reference && (measurements || item.workload_spec)) {
+        const method = measurementMethod(evidenceRoot, config,
+          JSON.parse(readFileSync(path.join(evidenceRoot, "data/hub/benchmark-method.json"))).pairs);
+        const spec = measurements
+          ? bundleWorkload({ binary, request, reader, repository, rulesRepository: measurements.rulesRepository, publisherId: publisher?.id })
+          : item.workload_spec;
+        const workload = bindWorkload({ rules: reader.declared, ...spec });
         const currentBindings = measurementBindings({ reader, workload, engine, method, executedWorkloadSHA256: goWorkloadSHA256(workload.harness) });
-        measurement = { reference: item.measurement_reference, ...acceptedMeasurement(path.join(root, "data/hub/measurements"), item.measurement_reference, currentBindings, limits, { acceptance: false }) };
-        if (mode === "routine" && measurement.verdict.status !== "pass") throw new Error("passing latency measurement required");
-        // Records bind evidence by digest; samples remain in immutable artifacts.
-        measurement = { reference: measurement.reference, verdict: measurement.verdict };
+        const { verdict } = acceptedMeasurement(path.join(evidenceRoot, "data/hub/measurements"), reference, currentBindings, limits, { acceptance: false });
+        if (mode === "routine" && verdict.status !== "pass") throw new Error("passing latency measurement required");
+        measurement = { reference, verdict };
       } else if (mode !== "report") throw new Error("current accepted measurement required");
     }
     let evidencePresent = false;

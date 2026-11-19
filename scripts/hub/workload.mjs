@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { readGit } from "./git-source.mjs";
+import { resolveArtifact } from "./validate.mjs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "yaml";
@@ -111,8 +112,23 @@ export function nearInput({ binary, request, rule, positive, bytes, toolTextLimi
   return { origin: `${NEAR_GENERATOR}:${contentDigest(evidence)}`, text, evidence };
 }
 
-export function officialWorkload({ binary, request, reader, repository, rulesRepository }) {
-  const own = officialOwnInputs({ repository: rulesRepository, reader });
+function communityOwnInputs({ request, reader, publisherId }) {
+  return reader.declared.filter(rule => rule.status !== "deprecated").map(rule => {
+    const load = suffix => {
+      const file = `fixtures/${rule.type}/${rule.id}-${suffix}-positive.txt`;
+      const bytes = readFileSync(resolveArtifact(request.bundle_dir, file));
+      const origin = `rules:hub/community/${publisherId}/${reader.name}/${file}:${sha256(bytes)}`;
+      return producerInputs(new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(bytes), origin);
+    };
+    return { rule_id: rule.id, positive: load("true"), negative: load("false") };
+  });
+}
+
+export function bundleWorkload({ binary, request, reader, repository, rulesRepository, publisherId }) {
+  const own = publisherId === undefined
+    ? officialOwnInputs({ repository: rulesRepository, reader })
+    : communityOwnInputs({ request, reader, publisherId });
+  const source = publisherId === undefined ? sources[reader.name] : { publisher_id: publisherId, bundle_sha256: reader.bundle_sha256 };
   const caps = workloadCaps(repository), clean = versionedCleanInputs();
   caps.config_sha256 = reader.config_sha256;
   caps.effective_config = reader.workload_caps;
@@ -130,7 +146,7 @@ export function officialWorkload({ binary, request, reader, repository, rulesRep
   }
   return {
     generator: "site:fixture-span-workload-v1",
-    parameters: { source: sources[reader.name], caps, derivations },
+    parameters: { source, caps, derivations },
     inputs: own.map(input => ({ ...input, clean, near: near[input.rule_id] })),
   };
 }
