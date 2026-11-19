@@ -861,18 +861,19 @@ test("bound generation checks the committed latency selection against the acquir
   };
   const rulesSHA = commitRules();
   const { items, publishers, ...trusted } = source;
-  const generate = revision => generateCatalog({
-    ...trusted, mode: "routine", pipelockBinary: process.env.HUB_RELEASE_BIN,
+  const generate = (revision, mode = "routine") => generateCatalog({
+    ...trusted, mode, pipelockBinary: mode === "routine" ? process.env.HUB_RELEASE_BIN : undefined,
     sourceBinding: { siteBase, rulesSHA: revision, rulesMain: revision, rulesRepository: rules },
   });
 
   const methodFile = path.join(dir, "data/hub/benchmark-method.json");
   const methodInput = JSON.parse(readFileSync(methodFile));
-  methodInput.pairs = 3;
+  methodInput.pairs = null;
+  const pairs = 3;
   write(methodFile, jsonBytes(methodInput));
   const limits = path.join(dir, "data/hub/latency-limits.json");
-  write(limits, jsonBytes({ rule_ratio: 1, bundle_ratio: 1, deadline_ns: 15 }));
-  const method = measurementMethod(dir, source.config, methodInput.pairs);
+  write(limits, jsonBytes({ rule_ratio: null, bundle_ratio: null, deadline_ns: null }));
+  const method = measurementMethod(dir, source.config, pairs);
   const request = { ...staged.request, bundle_dir: bundleDir };
   const spec = bundleWorkload({ binary, request, reader, repository, rulesRepository: rules, publisherId: publisher.id });
   const workload = bindWorkload({ rules: reader.declared, ...spec });
@@ -886,7 +887,22 @@ test("bound generation checks the committed latency selection against the acquir
 
   assert.throws(() => generate(rulesSHA), /current accepted measurement required/);
   git(dir, "add", "--", "data/hub/measurements", "data/hub/benchmark-method.json", "data/hub/latency-limits.json");
-  git(dir, "commit", "-qm", "committed measurement fixture");
+  git(dir, "commit", "-qm", "diagnostic measurement fixture");
+  const reported = generate(rulesSHA, "report")["listings.json"].find(record => record.badge === "community");
+  assert.equal(reported.measurement.verdict.status, "unassessed");
+  assert.deepEqual(reported.measurement.reference, reference);
+  assert.throws(() => generate(rulesSHA), /benchmark pair count must be committed/);
+
+  write(methodFile, jsonBytes({ ...methodInput, pairs: pairs + 1 }));
+  git(dir, "add", "--", "data/hub/benchmark-method.json");
+  git(dir, "commit", "-qm", "different pair count fixture");
+  assert.throws(() => generate(rulesSHA, "report"), /pair count differs from the committed method/);
+  assert.throws(() => generate(rulesSHA), /pair count differs from the committed method/);
+
+  write(methodFile, jsonBytes({ ...methodInput, pairs }));
+  write(limits, jsonBytes({ rule_ratio: 1, bundle_ratio: 1, deadline_ns: 15 }));
+  git(dir, "add", "--", "data/hub/benchmark-method.json", "data/hub/latency-limits.json");
+  git(dir, "commit", "-qm", "accepted benchmark method and limits fixture");
   write(limits, jsonBytes({ rule_ratio: 1, bundle_ratio: 1, deadline_ns: 11 }));
   const accepted = generate(rulesSHA)["listings.json"].find(record => record.badge === "community");
   assert.equal(accepted.measurement.verdict.status, "pass");

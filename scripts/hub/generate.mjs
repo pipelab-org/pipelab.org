@@ -16,7 +16,7 @@ import { enginePin } from "./build-harness.mjs";
 import { deriveRecord } from "./records.mjs";
 import { officialKeys, verifyBundle, readBundleFiles } from "./verify-bundle.mjs";
 import { parseListing, resolveArtifact } from "./validate.mjs";
-import { toolingIdentity, jsonBytes, acceptedMeasurement, assertRegeneration, bindWorkload, measurementBindings, measurementMethod, goWorkloadSHA256, sha256 } from "./evidence.mjs";
+import { toolingIdentity, jsonBytes, readMeasurement, assessMeasurement, assertRegeneration, bindWorkload, measurementBindings, measurementMethod, goWorkloadSHA256, sha256 } from "./evidence.mjs";
 import { routeManifest } from "./route-manifest.mjs";
 import { bundleWorkload } from "./workload.mjs";
 
@@ -145,14 +145,16 @@ function generateFromListings({ root, items, engine, binary, repository, config,
       core = reader.core;
       const reference = measurements ? measurements.references.get(reader.bundle_sha256) : item.measurement_reference;
       if (reference && (measurements || item.workload_spec)) {
-        const method = measurementMethod(evidenceRoot, config,
-          JSON.parse(readFileSync(path.join(evidenceRoot, "data/hub/benchmark-method.json"))).pairs);
+        const artifact = readMeasurement(path.join(evidenceRoot, "data/hub/measurements"), reference);
+        const method = measurementMethod(evidenceRoot, config, artifact.bindings?.method?.pairs, {
+          requireCommittedPairs: mode === "routine",
+        });
         const spec = measurements
           ? bundleWorkload({ binary, request, reader, repository, rulesRepository: measurements.rulesRepository, publisherId: publisher?.id })
           : item.workload_spec;
         const workload = bindWorkload({ rules: reader.declared, ...spec });
         const currentBindings = measurementBindings({ reader, workload, engine, method, executedWorkloadSHA256: goWorkloadSHA256(workload.harness) });
-        const { verdict } = acceptedMeasurement(path.join(evidenceRoot, "data/hub/measurements"), reference, currentBindings, limits, { acceptance: false });
+        const { verdict } = assessMeasurement(artifact, reference, currentBindings, limits);
         if (mode === "routine" && verdict.status !== "pass") throw new Error("passing latency measurement required");
         measurement = { reference, verdict };
       } else if (mode !== "report") throw new Error("current accepted measurement required");

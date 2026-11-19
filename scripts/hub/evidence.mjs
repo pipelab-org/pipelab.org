@@ -27,9 +27,11 @@ export function goWorkloadSHA256(harness) {
   }
   return hash.update("]").digest("hex");
 }
-export function measurementMethod(root, configPath, pairs) {
+export function measurementMethod(root, configPath, pairs, { requireCommittedPairs = false } = {}) {
   const committed = JSON.parse(readFileSync(path.join(root, "data/hub/benchmark-method.json")));
+  if (requireCommittedPairs && committed.pairs == null) throw new Error("benchmark pair count must be committed for routine generation");
   if (committed.pairs != null && committed.pairs !== pairs) throw new Error("measurement pair count differs from the committed method");
+  if (!Number.isSafeInteger(pairs) || pairs <= 0) throw new Error("positive measurement pair count required");
   return { ...committed, pairs, base_config_sha256: sha256(readFileSync(configPath)) };
 }
 export function canonical(value) {
@@ -139,14 +141,20 @@ export function writeMeasurement(directory, measured) {
   else writeFileSync(file, bytes, { flag: "wx" });
   return { artifact_id: measured.id, artifact_sha256: sha256(bytes), bindings_sha256: contentDigest(measured.artifact.bindings) };
 }
-export function acceptedMeasurement(directory, reference, bindings, limits, options) {
+export function readMeasurement(directory, reference) {
   if (!/^[a-f0-9]{64}$/.test(reference?.artifact_id || "")) throw new Error("missing accepted measurement reference");
   const bytes = readFileSync(path.join(directory, `${reference.artifact_id}.json`));
   const artifact = JSON.parse(bytes);
   if (contentDigest(artifact) !== reference.artifact_id || sha256(bytes) !== reference.artifact_sha256) throw new Error("measurement content mismatch");
+  return artifact;
+}
+export function assessMeasurement(artifact, reference, bindings, limits, options) {
   if (canonical(artifact.bindings) !== canonical(bindings) || contentDigest(bindings) !== reference.bindings_sha256) throw new Error("measurement stale");
   measurementArtifact(artifact.bindings, artifact.results, artifact.provenance);
   return { artifact, verdict: latencyVerdict(artifact.results, limits, options) };
+}
+export function acceptedMeasurement(directory, reference, bindings, limits, options) {
+  return assessMeasurement(readMeasurement(directory, reference), reference, bindings, limits, options);
 }
 export function assertRegeneration(committed, regenerated) {
   if (!Buffer.from(committed).equals(Buffer.from(regenerated))) throw new Error("generated hub records differ");
