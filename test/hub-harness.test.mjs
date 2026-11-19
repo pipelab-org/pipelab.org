@@ -13,7 +13,7 @@ import { deriveRecord, indexProjection, assertIndex } from "../scripts/hub/recor
 import { canonical, contentDigest, bindWorkload, measurementArtifact, writeMeasurement, acceptedMeasurement, latencyVerdict, assertRegeneration, treeIdentity, jsonBytes, sha256, goWorkloadSHA256, measurementBindings, measurementMethod } from "../scripts/hub/evidence.mjs";
 import { routeManifest } from "../scripts/hub/route-manifest.mjs";
 import { assertPublication, htmlFacts, markdownFacts, representationPaths } from "../scripts/hub/parity.mjs";
-import { officialOwnInputs, producerInputs, nearInput, repeatNear, workloadCaps, NEAR_GENERATOR } from "../scripts/hub/workload.mjs";
+import { bundleWorkload, officialOwnInputs, producerInputs, nearInput, repeatNear, workloadCaps, NEAR_GENERATOR } from "../scripts/hub/workload.mjs";
 import { runHubcheck, generateCatalog, prepareBoundCatalog, writeCatalog, assertFirstPartyListing } from "../scripts/hub/generate.mjs";
 import { benchmarkReport } from "../scripts/hub/benchmark-report.mjs";
 import { buildHarness, toolDefinitionLimit } from "../scripts/hub/build-harness.mjs";
@@ -819,6 +819,101 @@ test("bound generation stages the exact signed contribution from committed rules
   }
   assert.ok(!existsSync(path.join(assetRoot, "rules")));
   assert.throws(() => prepareBoundCatalog({ ...options, mode: "routine" }, scratch), /current accepted measurement required/);
+});
+
+test("bound generation checks the committed latency selection against the acquired workload",
+  { skip: !native || !process.env.HUB_RELEASE_BIN }, t => {
+  const { dir, source } = catalogSource(t);
+  rmSync(path.join(dir, "static"));
+  mkdirSync(path.join(dir, "static/rules"), { recursive: true });
+  const rules = temp(t);
+  const git = (cwd, ...args) => execFileSync("git", ["-C", cwd,
+    "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", ...args],
+  { encoding: "utf8", stdio: "pipe" }).trim();
+  git(dir, "init", "-q", "-b", "main");
+  git(dir, "commit", "-qm", "accepted empty fixture", "--allow-empty");
+  const siteBase = git(dir, "rev-parse", "HEAD");
+  git(rules, "init", "-q", "-b", "main");
+
+  const staged = stage(t, bundle => ({ ...bundle, rules: bundle.rules.filter(rule => rule.type === "dlp") }));
+  const reader = runHubcheck(binary, "reader", staged.request);
+  const publisher = { id: "example", name: "Example maintainer", keys: [
+    { fingerprint: staged.key.hex, added: "2026-11-05" },
+  ] };
+  const bundleDir = path.join(rules, "hub/community/example", reader.name);
+  const write = (file, contents) => {
+    mkdirSync(path.dirname(file), { recursive: true });
+    writeFileSync(file, contents);
+  };
+  write(path.join(rules, "hub/publishers/example.yaml"), stringify(publisher));
+  write(path.join(rules, "hub/listings/community", "example--" + reader.name + ".yaml"), stringify(listingFor(reader)));
+  write(path.join(bundleDir, "bundle.yaml"), staged.bytes);
+  write(path.join(bundleDir, "bundle.yaml.sig"), staged.signature);
+  const negative = path.join(bundleDir, "fixtures/dlp/stable-rule-long-false-positive.txt");
+  write(path.join(bundleDir, "fixtures/dlp/stable-rule-long-true-positive.txt"), "fixture-secret\n");
+  write(negative, "fixture-public\n");
+  const commitRules = () => {
+    git(rules, "add", "--", "hub");
+    git(rules, "commit", "-qm", "producer fixture");
+    const revision = git(rules, "rev-parse", "HEAD");
+    git(rules, "update-ref", "refs/remotes/origin/main", revision);
+    return revision;
+  };
+  const rulesSHA = commitRules();
+  const { items, publishers, ...trusted } = source;
+  const generate = (revision, mode = "routine") => generateCatalog({
+    ...trusted, mode, pipelockBinary: mode === "routine" ? process.env.HUB_RELEASE_BIN : undefined,
+    sourceBinding: { siteBase, rulesSHA: revision, rulesMain: revision, rulesRepository: rules },
+  });
+
+  const methodFile = path.join(dir, "data/hub/benchmark-method.json");
+  const methodInput = JSON.parse(readFileSync(methodFile));
+  methodInput.pairs = null;
+  const pairs = 3;
+  write(methodFile, jsonBytes(methodInput));
+  const limits = path.join(dir, "data/hub/latency-limits.json");
+  write(limits, jsonBytes({ rule_ratio: null, bundle_ratio: null, deadline_ns: null }));
+  const method = measurementMethod(dir, source.config, pairs);
+  const request = { ...staged.request, bundle_dir: bundleDir };
+  const spec = bundleWorkload({ binary, request, reader, repository, rulesRepository: rules, publisherId: publisher.id });
+  const workload = bindWorkload({ rules: reader.declared, ...spec });
+  const executed = goWorkloadSHA256(workload.harness);
+  const bindings = measurementBindings({ reader, workload, engine: source.engine, method, executedWorkloadSHA256: executed });
+  const measured = { ...results(12, executed), bundle_sha256: reader.bundle_sha256, config_sha256: method.base_config_sha256 };
+  measured.rules = Object.fromEntries(bindings.measured_rule_ids.map(id => [id, measured.bundle]));
+  const artifacts = path.join(dir, "data/hub/measurements");
+  const reference = writeMeasurement(artifacts, measurementArtifact(bindings, measured, { synthetic: true }));
+  write(path.join(artifacts, "index.json"), jsonBytes({ [reader.bundle_sha256]: reference }));
+
+  assert.throws(() => generate(rulesSHA), /current accepted measurement required/);
+  git(dir, "add", "--", "data/hub/measurements", "data/hub/benchmark-method.json", "data/hub/latency-limits.json");
+  git(dir, "commit", "-qm", "diagnostic measurement fixture");
+  const reported = generate(rulesSHA, "report")["listings.json"].find(record => record.badge === "community");
+  assert.equal(reported.measurement.verdict.status, "unassessed");
+  assert.deepEqual(reported.measurement.reference, reference);
+  assert.throws(() => generate(rulesSHA), /benchmark pair count must be committed/);
+
+  write(methodFile, jsonBytes({ ...methodInput, pairs: pairs + 1 }));
+  git(dir, "add", "--", "data/hub/benchmark-method.json");
+  git(dir, "commit", "-qm", "different pair count fixture");
+  assert.throws(() => generate(rulesSHA, "report"), /pair count differs from the committed method/);
+  assert.throws(() => generate(rulesSHA), /pair count differs from the committed method/);
+
+  write(methodFile, jsonBytes({ ...methodInput, pairs }));
+  write(limits, jsonBytes({ rule_ratio: 1, bundle_ratio: 1, deadline_ns: 15 }));
+  git(dir, "add", "--", "data/hub/benchmark-method.json", "data/hub/latency-limits.json");
+  git(dir, "commit", "-qm", "accepted benchmark method and limits fixture");
+  write(limits, jsonBytes({ rule_ratio: 1, bundle_ratio: 1, deadline_ns: 11 }));
+  const accepted = generate(rulesSHA)["listings.json"].find(record => record.badge === "community");
+  assert.equal(accepted.measurement.verdict.status, "pass");
+  assert.deepEqual(accepted.measurement.reference, reference);
+
+  write(negative, "a different fixture input\n");
+  assert.throws(() => generate(commitRules()), /measurement stale/);
+  git(rules, "update-ref", "refs/remotes/origin/main", rulesSHA);
+  git(dir, "add", "--", "data/hub/latency-limits.json");
+  git(dir, "commit", "-qm", "changed limits fixture");
+  assert.throws(() => generate(rulesSHA), /passing latency measurement required/);
 });
 
 test("catalog generation joins lifecycle removals and retains their names", { skip: !native }, t => {

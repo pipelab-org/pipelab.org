@@ -39,8 +39,12 @@ The derivation records the fixture origin and digest, match offsets, seed, remov
 
 Artifacts include all samples, maxima, actual pair count, executed workload digest, staged bundle and configuration digests, engine identity and method. The native process snapshots the configuration alongside the verified bundle before scanning; the report rejects digests that differ from its bindings. Content-addressed artifacts can coexist when reruns produce different samples. Regeneration reuses only matching bindings and recomputes the verdict from the separate limits. A timeout or incomplete evidence cannot become a pass. Unset latency limits remain unassessed in report mode and fail acceptance; no default admission budget is supplied.
 
+Bound generation reads `data/hub/measurements/index.json` and its referenced artifacts from the site commit. Each key in the index is the exact signed bundle's SHA-256. The value is the `artifact_id`, `artifact_sha256`, and `bindings_sha256` reference returned by the benchmark reporter. A new run can write a new artifact without changing which one generation uses until the index is updated.
+
+Official workloads read the pinned rules Git objects. Community workloads read both fixture files for each non-deprecated rule from the acquired bundle's `fixtures/` tree. To measure a community bundle, set `publisherId` in the benchmark input and point `request.bundle_dir` at the acquired signed pair and its fixture tree. Routine generation rebuilds the workload before it accepts a measurement.
+
 ## Catalog admission
 
-Routine generation requires a passing current measurement; report mode can retain failed or unassessed diagnostic verdicts. Community bundle verification and publisher facts use exactly one registered publisher selected by ID. Per-item publisher names and keys do not override the registry.
+Routine generation requires a committed benchmark pair count and a passing current measurement. Report mode can use the verified artifact's pair count while the method is unset, and can retain failed or unassessed diagnostic verdicts. A committed count must match the artifact in both modes. Community bundle verification and publisher facts use exactly one registered publisher selected by ID. Per-item publisher names and keys do not override the registry.
 
 Routine acceptance reads prior withdrawal history and accepted routes from current site main. Retained IDs and bundle names join the accepted `data/hub/generated/inventory.json` name set and remain reserved in the regenerated inventory. Removal routes use the same manifest path as active records. An accepted listing keeps its route when updated or restored.
