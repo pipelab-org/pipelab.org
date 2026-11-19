@@ -108,13 +108,11 @@ documents the exact policy assumptions the public verifiers use.
 
 For commands you can run from release archives, follow [Record signed receipts and verify them offline](/learn/record-verify-receipts/). The recipe records a synthetic-secret block, verifies its signed prefix and rejects a tampered copy.
 
-With a configured flight recorder and receipt signing key, the Pipelock proxy emits a receipt for every mediated action. Sources:
+With a configured flight recorder and receipt signing key, Pipelock can emit signed receipts for mediated decisions on these paths. Coverage depends on the transport and `flight_recorder.require_receipts`:
 
-- **Every HTTP request** the agent issues through the forward proxy or
-  CONNECT tunnel.
-- **Every MCP tool call** routed through the MCP proxy, whether stdio
-  or streamable HTTP.
-- **Every WebSocket frame** in both directions on the WebSocket proxy.
+- **HTTP requests** through the fetch, forward, and reverse proxies, plus CONNECT tunnel decisions. Inspecting individual requests inside an encrypted tunnel requires TLS interception.
+- **MCP tool calls and responses** routed through the MCP proxy, whether stdio or streamable HTTP.
+- **WebSocket frames** in both directions on the WebSocket proxy.
 - **Tool list responses** scanned for poisoning, with the tool baseline
   pinned per session for rug-pull detection.
 

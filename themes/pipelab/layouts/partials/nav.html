@@ -7,6 +7,7 @@
   (hasPrefix $path "/enterprise/")
   (hasPrefix $path "/agent-egress-bench/")
   (hasPrefix $path "/pipelock-rules/")
+  (eq .Section "hub")
   (hasPrefix $path "/learn/agent-evidence-levels/")
 -}}
 {{- $proofActive := or
@@ -43,7 +44,6 @@
 
     <div class="nav-links" id="nav-links">
       <ul class="nav-primary" role="list">
-
         <li class="nav-item nav-item-menu{{ if $projectsActive }} is-current{{ end }}">
           <button class="nav-link nav-menu-btn" type="button" aria-expanded="false" aria-controls="nav-menu-product"{{ if $projectsActive }} data-current-section="true"{{ end }}>
             Projects <span class="nav-caret" aria-hidden="true"></span>
@@ -79,6 +79,14 @@
                   <span class="nav-menu-title">Pipelock Rules</span>
                   <span class="nav-menu-desc">Signed detection bundles that extend Pipelock.</span>
                 </a>
+                {{ if partial "hub-open.html" . }}
+                {{ with site.GetPage "/hub" }}
+                <a class="nav-menu-row" href="/hub/"{{ if eq $path .RelPermalink }} aria-current="page"{{ end }}>
+                  <span class="nav-menu-title">PipeLab Hub</span>
+                  <span class="nav-menu-desc">Rule packs, configs, recipes, and receipt verifiers.</span>
+                </a>
+                {{ end }}
+                {{ end }}
                 <a class="nav-menu-row" href="/learn/agent-evidence-levels/"{{ if eq $path "/learn/agent-evidence-levels/" }} aria-current="page"{{ end }}>
                   <span class="nav-menu-title">Agent Evidence Level</span>
                   <span class="nav-menu-desc">Open draft standard for grading audit evidence.</span>

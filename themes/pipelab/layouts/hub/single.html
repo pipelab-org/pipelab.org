@@ -1,33 +1,98 @@
 {{ define "main" }}
-{{ $r := .Params.hub }}{{ $l := $r.listing }}
+{{ $r := .Params.hub }}
+{{ $l := $r.listing }}
+{{ $hub := site.GetPage "/hub" }}
 {{ if $l }}
-<article class="section hub-page" data-hub-id="{{ $l.id }}">
-  <header data-hero="utility"><p class="eyebrow">{{ $l.type }}</p><h1 data-hub-field="title">{{ $l.title }}</h1><p class="hub-text" data-hub-field="summary">{{ $l.summary }}</p></header>
-  <h2>Maintainer</h2>
-  <p data-hub-field="maintainer.name">{{ $l.maintainer.name }}</p>
-  <p data-hub-field="maintainer.github">{{ $l.maintainer.github }}</p>
-  <p>License: <span data-hub-field="license">{{ $l.license }}</span></p>
-  <h2>Setup</h2>
-  {{ range $i, $step := $l.setup }}<p class="hub-text" data-hub-field="setup.{{ $i }}.text">{{ $step.text }}</p>{{ with $step.command }}<pre><code data-hub-field="setup.{{ $i }}.command">{{ . }}</code></pre>{{ end }}{{ end }}
-  <h2>Limitations</h2>
-  <ul>{{ range $i, $text := $l.limitations }}<li class="hub-text" data-hub-field="limitations.{{ $i }}">{{ $text }}</li>{{ end }}</ul>
-  <h2>Not claimed</h2>
-  <ul>{{ range $i, $text := $l.not_claimed }}<li class="hub-text" data-hub-field="not_claimed.{{ $i }}">{{ $text }}</li>{{ end }}</ul>
-  <h2>Evidence</h2>
-  {{ if $r.evidence_present }}
-  <p data-hub-field="evidence.date">{{ $l.evidence.date }}</p><p data-hub-field="evidence.pipelock_version">{{ $l.evidence.pipelock_version }}</p><p class="hub-text" data-hub-field="evidence.method">{{ $l.evidence.method }}</p>
-  {{ else }}<p>Evidence not supplied.</p>{{ end }}
-  <h2>Disclosures</h2>
-  <p>AI assisted: <span data-hub-field="disclosures.ai_assisted">{{ $l.disclosures.ai_assisted }}</span></p>
-  {{ with $l.disclosures.ai_text }}<p class="hub-text" data-hub-field="disclosures.ai_text">{{ . }}</p>{{ end }}
-  <p class="hub-text" data-hub-field="disclosures.conflict_of_interest">{{ $l.disclosures.conflict_of_interest }}</p>
-  <h2>External links</h2><p>PipeLab doesn't review these external destinations.</p>
-  <ul>{{ range $name, $url := $l.links }}<li><a href="{{ $url }}" target="_blank" rel="ugc nofollow noopener noreferrer"><span>{{ $name }} ({{ partial "hub-link-host.html" (dict "url" $url "name" $name "record" $r) }})</span>: <span data-hub-field="links.{{ $name }}">{{ $url }}</span></a></li>{{ end }}</ul>
-  <p><a href="/hub/">All components</a></p>
-  {{ partial "hub-facts.html" . }}
+{{ $labels := dict "bundle" "Rule pack" "config" "Configuration" "recipe" "Recipe" "verifier" "Verifier" }}
+{{ $rules := partial "hub-rule-pages.html" . }}
+<article class="section hub-page hub-detail" data-hub-id="{{ $l.id }}">
+  <header class="hub-intro" data-hero="utility">
+    {{ with $hub }}<a class="hub-back" href="{{ .RelPermalink }}">← All components</a>{{ end }}
+    <div><span class="hub-type">{{ index $labels $l.type }}</span></div>
+    <h1 data-hub-field="title">{{ $l.title }}</h1>
+    <p class="hub-text" data-hub-field="summary">{{ $l.summary }}</p>
+  </header>
+
+  <nav class="hub-jump-links" aria-label="On this listing">
+    <a href="#setup">Setup</a>
+    <a href="#evidence">Evidence</a>
+    <a href="#limits">Limits</a>
+    {{ if $rules }}<a href="#rules">Rules in this bundle</a>{{ end }}
+  </nav>
+
+  <div class="hub-detail-grid">
+    <div class="hub-panel hub-detail-main">
+      <h2 id="setup">Setup</h2>
+      <ol class="hub-steps">
+        {{ range $i, $step := $l.setup }}
+        <li>
+          <p class="hub-text" data-hub-field="setup.{{ $i }}.text">{{ $step.text }}</p>
+          {{ with $step.command }}<pre><code data-hub-field="setup.{{ $i }}.command">{{ . }}</code></pre>{{ end }}
+        </li>
+        {{ end }}
+      </ol>
+      {{ if $r.config_assessment }}
+      <p><a class="hub-artifact-link" href="{{ .RelPermalink }}pipelock.yaml" download>Download assessed configuration</a></p>
+      {{ end }}
+
+      <h2 id="evidence">Evidence</h2>
+      {{ if $r.evidence_present }}
+      <dl class="hub-meta hub-evidence-meta">
+        <div><dt>Checked on</dt><dd data-hub-field="evidence.date">{{ $l.evidence.date }}</dd></div>
+        <div><dt>Pipelock version</dt><dd data-hub-field="evidence.pipelock_version">{{ $l.evidence.pipelock_version }}</dd></div>
+      </dl>
+      <p class="hub-text" data-hub-field="evidence.method">{{ $l.evidence.method }}</p>
+      {{ else }}<p>Evidence not supplied.</p>{{ end }}
+      {{ if $r.conformance }}<p><a class="hub-artifact-link" href="{{ .RelPermalink }}conformance.json">Read the conformance results</a></p>{{ end }}
+
+      <h2 id="limits">Limitations</h2>
+      {{ range $i, $text := $l.limitations }}<p class="hub-text" data-hub-field="limitations.{{ $i }}">{{ $text }}</p>{{ end }}
+      <h3>Not claimed</h3>
+      {{ range $i, $text := $l.not_claimed }}<p class="hub-text" data-hub-field="not_claimed.{{ $i }}">{{ $text }}</p>{{ end }}
+      {{ with $rules }}
+      <section class="hub-rules" id="rules">
+        <h2>Rules in this bundle</h2>
+        <ul>{{ range . }}<li><a href="{{ .RelPermalink }}">{{ .Title }}</a></li>{{ end }}</ul>
+      </section>
+      {{ end }}
+      {{ partial "hub-facts.html" . }}
+    </div>
+
+    <aside class="hub-panel hub-sidebar">
+      <h2>Maintainer</h2>
+      <dl class="hub-meta">
+        <div><dt>Name</dt><dd data-hub-field="maintainer.name">{{ $l.maintainer.name }}</dd></div>
+        <div><dt>GitHub</dt><dd data-hub-field="maintainer.github">{{ $l.maintainer.github }}</dd></div>
+        <div><dt>License</dt><dd data-hub-field="license">{{ $l.license }}</dd></div>
+      </dl>
+      <h3>External links</h3>
+      <p>PipeLab doesn't review these external destinations.</p>
+      <ul class="hub-external-links">
+        {{ range $name, $url := $l.links }}
+        <li><a href="{{ $url }}" target="_blank" rel="ugc nofollow noopener noreferrer"><span>{{ $name }} ({{ partial "hub-link-host.html" (dict "url" $url "name" $name "record" $r) }})</span><span class="hub-external-url" data-hub-field="links.{{ $name }}">{{ $url }}</span></a></li>
+        {{ end }}
+      </ul>
+      <h3>Disclosures</h3>
+      {{ if ne $r.badge "first-party" }}<p>AI assisted: <span data-hub-field="disclosures.ai_assisted">{{ $l.disclosures.ai_assisted }}</span></p>{{ end }}
+      {{ with $l.disclosures.ai_text }}<p class="hub-text" data-hub-field="disclosures.ai_text">{{ . }}</p>{{ end }}
+      <p class="hub-text" data-hub-field="disclosures.conflict_of_interest">{{ $l.disclosures.conflict_of_interest }}</p>
+    </aside>
+  </div>
+
   {{ partial "page-formats.html" . }}
 </article>
 {{ else }}
-<article class="section hub-page"><header data-hero="utility"><h1>{{ .Title }}</h1></header>{{ partial "hub-facts.html" . }}{{ partial "page-formats.html" . }}</article>
+<article class="section hub-page hub-reference">
+  <header class="hub-intro" data-hero="utility">
+    {{ with $hub }}<a class="hub-back" href="{{ .RelPermalink }}">← All components</a>{{ end }}
+    {{ if eq $r.reference_kind "removal" }}<span class="hub-type">Removed listing</span>{{ end }}
+    <h1>{{ .Title }}</h1>
+    {{ if eq $r.reference_kind "removal" }}
+    <p>This component was removed from the PipeLab Hub. If you already use it, read the reason below before relying on your installed copy.</p>
+    {{ end }}
+  </header>
+  {{ partial "hub-facts.html" . }}
+  {{ partial "page-formats.html" . }}
+</article>
 {{ end }}
 {{ end }}

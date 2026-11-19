@@ -1,0 +1,29 @@
+schema_version: 1
+type: verifier
+id: pipelock-verifier
+title: Pipelock receipt verifier
+summary: Verify a signed Pipelock receipt offline with the signer public key.
+maintainer:
+  name: PipeLab
+  github: pipelab-org
+license: Apache-2.0
+evidence:
+  date: "2026-11-17"
+  pipelock_version: "3.8.0"
+  method: The verifier accepted a signed fixture and rejected a fixture signed by a different key.
+  artifact: verifiers/pipelock-verifier/conformance.json
+setup:
+  - text: Follow the linked receipt walkthrough to pin the signer public key and verify a receipt.
+limitations:
+  - "The recorded check covers two single-receipt fixtures on Linux x86-64."
+not_claimed:
+  - Completeness of a recording or coverage of every mediation path.
+links:
+  source: https://github.com/pipelab-org/pipelock/releases/tag/v3.8.0
+  homepage: https://pipelab.org/learn/verify-a-receipt/
+disclosures:
+  ai_assisted: true
+  conflict_of_interest: Maintained by PipeLab.
+language: golang
+release: "3.8.0"
+conformance_artifact: verifiers/pipelock-verifier/conformance.json

@@ -1,5 +1,5 @@
 import { createPublicKey, verify } from "node:crypto";
-import { execFileSync } from "node:child_process";
+import { readGit } from "./git-source.mjs";
 import { readFileSync } from "node:fs";
 import { enginePin } from "./build-harness.mjs";
 import { sha256 } from "./evidence.mjs";
@@ -7,7 +7,7 @@ import { sha256 } from "./evidence.mjs";
 // Trust source is pinned production keyring bytes, never a listing assertion or
 // the harness's claimed signer. No contributor-selected key URL is fetched.
 export function officialKeys(repository) {
-  const source = execFileSync("git", ["-C", repository, "show", `${enginePin.source_commit}:internal/rules/keyring.go`], { encoding: "utf8" });
+  const source = readGit(repository, ["show", `${enginePin.source_commit}:internal/rules/keyring.go`], { encoding: "utf8" });
   const match = source.match(/^var DefaultKeyringHex = "([a-f0-9,]+)"$/m);
   if (!match) throw new Error("unsupported official keyring declaration");
   return match[1].split(",");

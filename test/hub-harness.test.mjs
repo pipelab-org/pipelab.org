@@ -14,9 +14,16 @@ import { canonical, contentDigest, bindWorkload, measurementArtifact, writeMeasu
 import { routeManifest } from "../scripts/hub/route-manifest.mjs";
 import { assertPublication, htmlFacts, markdownFacts, representationPaths } from "../scripts/hub/parity.mjs";
 import { officialOwnInputs, producerInputs, nearInput, repeatNear, workloadCaps, NEAR_GENERATOR } from "../scripts/hub/workload.mjs";
-import { runHubcheck, generateCatalog, writeCatalog, assertFirstPartyListing } from "../scripts/hub/generate.mjs";
+import { runHubcheck, generateCatalog, prepareBoundCatalog, writeCatalog, assertFirstPartyListing } from "../scripts/hub/generate.mjs";
 import { benchmarkReport } from "../scripts/hub/benchmark-report.mjs";
 import { buildHarness, toolDefinitionLimit } from "../scripts/hub/build-harness.mjs";
+import { assertExtractedPage, verifyRetrieval, withTestDestination } from "../scripts/hub/retrieval.mjs";
+import { applyConfigChanges } from "../scripts/hub/config-changes.mjs";
+import { assessConfig } from "../scripts/hub/config-assessment.mjs";
+import { firstPartyRecipes, verifierEvidence } from "../scripts/hub/first-party.mjs";
+import { reconcileLifecycle } from "../scripts/hub/lifecycle.mjs";
+import { assertClosedDiscovery } from "../scripts/hub/acceptance.mjs";
+import { publicationClearancePayload, publicationIdentity } from "../scripts/hub/deployment-evidence.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
 const read = file => readFileSync(path.join(root, file), "utf8");
@@ -198,6 +205,48 @@ test("manifest owns schema/config files, rejects absent or stale output, and sco
   assertPublication({ directory: closedDir, manifest: closedManifest, records: [record], open: false });
 });
 
+test("closed discovery and file checks cover bare Hub and schema routes", t => {
+  const dir = temp(t);
+  const manifest = { entries: [] };
+  const closed = () => assertPublication({ directory: dir, manifest, records: [], open: false });
+  for (const relative of ["sitemap.xml", "_redirects", "index.xml", "llms.txt", "llms-full.txt",
+      ".well-known/product-facts.json", "index.md"]) {
+    mkdirSync(path.dirname(path.join(dir, relative)), { recursive: true });
+    writeFileSync(path.join(dir, relative), "");
+  }
+
+  const redirects = path.join(dir, "_redirects");
+  writeFileSync(redirects, "/hubspot /partners/ 302\n");
+  assert.doesNotThrow(() => assertClosedDiscovery(dir));
+  for (const route of ["/hub", "/schemas/pipelab-hub"]) {
+    const file = path.join(dir, route.slice(1));
+    mkdirSync(path.dirname(file), { recursive: true });
+    writeFileSync(file, "unmanifested");
+    assert.throws(closed, /closed hub output present/);
+    rmSync(file);
+    writeFileSync(redirects, "/alias " + route + " 302\n");
+    assert.throws(() => assertClosedDiscovery(dir), /closed site exposes a Hub route in _redirects/);
+  }
+  assert.doesNotThrow(closed);
+});
+
+test("recorded rule routes become removal pages with their parent listing", () => {
+  const schemaBytes = read("scripts/hub/schema/listing-v1.json");
+  const id = "official-fixture";
+  const parent = { listing: { id, type: "bundle", bundle_name: id }, badge: "official",
+    route: "/hub/bundles/" + id + "/", bundle_sha256: "a".repeat(64), signature_sha256: "b".repeat(64),
+    facts: {}, reader: { declared: [{ id: "example-rule", name: "Example rule" }], policies: { stock: { loaded: [] } } } };
+  const active = routeManifest({ records: [parent], policies: [], schemaBytes });
+  const rule = active.entries.find(entry => entry.kind === "rule");
+  const removed = { id, route: parent.route, publisher_id: "official", facts: { Reason: "Withdrawn." } };
+
+  const withdrawn = routeManifest({ records: [], removed: [removed], baseline: active.entries, policies: [], schemaBytes });
+  const removal = withdrawn.entries.find(entry => entry.route === rule.route);
+  assert.equal(removal?.kind, "removal");
+  assert.equal(removal.indexable, false);
+  assert.deepEqual(removal.representations, ["html", "mirror"]);
+});
+
 test("displayed-fact parsers preserve literal syntax and reject duplicate facts", () => {
   assert.deepEqual(htmlFacts('<code data-hub-fact="regex">&lt;x&gt; &amp; &quot;y&quot;</code>'), { regex: '<x> & "y"' });
   assert.deepEqual(markdownFacts('```\n{"hub_fact":"regex","value":"<x> & \\\"y\\\""}\n```'), { regex: '<x> & \\"y\\"'.replaceAll('\\"', '"') });
@@ -241,12 +290,239 @@ function catalogSource(t) {
   return { dir, source };
 }
 
-test("real Hugo joins reader facts, rule/core routes, exact mirrors and digest guards", { skip: !native }, t => {
+test("retrieval keeps exact commands and checks the end of a listing", () => {
+  const listing = {
+    title: "Example recipe",
+    setup: [{ text: "Verify the recording.", command: "pipelock  verify-receipt" }],
+    limitations: ["Coverage depends on the transport."],
+    not_claimed: ["This evidence applies to the supplied recording."],
+  };
+  const entry = { facts: { "bundle.signer_fingerprint": "ab".repeat(32) } };
+  const clean = {
+    title: listing.title,
+    content: [listing.setup[0].text, listing.setup[0].command, entry.facts["bundle.signer_fingerprint"],
+      ...listing.limitations, ...listing.not_claimed].join("\n"),
+  };
+  assert.doesNotThrow(() => assertExtractedPage(clean, entry, listing));
+  assert.throws(() => assertExtractedPage({ ...clean, content: clean.content.replace("pipelock  ", "pipelock ") }, entry, listing), /exact command/);
+  assert.throws(() => assertExtractedPage({ ...clean, content: clean.content.split("\n").slice(0, -1).join("\n") }, entry, listing), /not_claimed/);
+});
+
+test("retrieval changes only the exact destination in a real preset", () => {
+  const original = "mode: strict\nresponse_scanning: {enabled: true, action: block}\ndestination_grants: []\n";
+  assert.deepEqual(parse(withTestDestination(original, 1314)), {
+    ...parse(original), destination_grants: [{ protocol: "tcp", host: "127.0.0.1", port: 1314 }],
+  });
+  assert.throws(() => withTestDestination(original.replace("[]", "[{host: example.com}]"), 1314), /unexpected base preset/);
+});
+
+test("config change classification uses the net edit and refuses unsupported transitions", () => {
+  const yaml = "response_scanning:\n  enabled: true\n  action: block\n";
+  const edit = (op, path, value) => ({ op, path: "response_scanning." + path, value });
+  const added = edit("append", "exempt_domains", "example.com");
+  const removed = edit("remove", "exempt_domains", "example.com");
+  const warn = edit("set", "action", "warn"), block = edit("set", "action", "block");
+  const result = applyConfigChanges(yaml, [added, warn, block], "claude-code");
+  assert.equal(result.changes.length, 1);
+  assert.equal(result.changes[0].effect, "weakens");
+  assert.throws(() => applyConfigChanges(yaml, [added, removed], "claude-code"), /identical/);
+  assert.throws(() => applyConfigChanges(yaml, [edit("set", "action", "ask")], "claude-code"), /unclassified/);
+  assert.throws(() => applyConfigChanges(yaml, [added, added], "claude-code"), /invalid list operation/);
+  const sameHost = edit("append", "exempt_domains", "EXAMPLE.COM.");
+  assert.throws(() => applyConfigChanges(yaml, [added, sameHost], "claude-code"), /invalid list operation/);
+  assert.throws(() => applyConfigChanges(yaml, [added, { ...sameHost, op: "remove" }], "claude-code"), /identical/);
+  const distinct = applyConfigChanges(yaml, [sameHost, edit("append", "exempt_domains", "API.EXAMPLE.COM")], "claude-code");
+  assert.deepEqual(parse(distinct.yaml).response_scanning.exempt_domains, ["example.com", "api.example.com"]);
+});
+
+test("config list changes read existing YAML sequences", () => {
+  const yaml = "response_scanning:\n  enabled: true\n  action: block\n";
+  const path = "response_scanning.exempt_domains";
+  const added = applyConfigChanges(yaml + "  exempt_domains: []\n", [
+    { op: "append", path, value: "example.com" },
+  ], "claude-code");
+  assert.deepEqual(parse(added.yaml).response_scanning.exempt_domains, ["example.com"]);
+  assert.deepEqual(added.changes.map(change => change.transition), ["added"]);
+
+  const removed = applyConfigChanges(yaml + "  exempt_domains: [Example.COM, api.example.com]\n", [
+    { op: "remove", path, value: "example.com" },
+  ], "claude-code");
+  assert.deepEqual(parse(removed.yaml).response_scanning.exempt_domains, ["api.example.com"]);
+  assert.deepEqual(removed.changes.map(change => change.transition), ["removed"]);
+});
+
+test("config audit keeps weaknesses whose score does not move", { skip: !process.env.HUB_RELEASE_BIN }, () => {
+  const listing = structuredClone(base);
+  delete listing.learn_page;
+  Object.assign(listing, { type: "config", base_preset: "claude-code", changes: [
+    { op: "append", path: "response_scanning.exempt_domains", value: "example.com" },
+  ] });
+  const result = assessConfig(listing, process.env.HUB_RELEASE_BIN);
+  assert.equal(result.sha256, sha256(result.bytes));
+  assert.equal(result.assessment.grade, result.assessment.base_grade);
+  assert.equal(result.assessment.categories.find(category => category.name === "Response Scanning").delta, 0);
+  assert.equal(result.assessment.changes[0].effect, "weakens");
+  const disabled = assessConfig({ ...listing, base_preset: "strict", changes: [
+    { op: "set", path: "response_scanning.enabled", value: false },
+  ] }, process.env.HUB_RELEASE_BIN);
+  assert.match(disabled.assessment.findings.find(finding => finding.category === "Response Scanning").message, /Core response patterns still apply/);
+});
+
+test("first-party recipes retain their guide links and documented limitations", () => {
+  const recipes = firstPartyRecipes(root);
+  assert.ok(recipes.length >= 4);
+  for (const { listing } of recipes) {
+    assert.ok(listing.limitations.length);
+    assert.ok(listing.not_claimed.length);
+    assert.equal(listing.links.homepage, "https://pipelab.org" + listing.learn_page);
+  }
+});
+
+test("verifier case evidence cannot count the same receipt twice", t => {
+  const directory = temp(t);
+  const relative = "verifiers/pipelock-verifier/conformance.json";
+  const artifact = path.join(directory, relative);
+  const listing = { id: "pipelock-verifier", release: "3.8.0", conformance_artifact: relative,
+    evidence: { artifact: relative, pipelock_version: "3.8.0" } };
+  const report = JSON.parse(read("assets/hub/" + relative));
+  mkdirSync(path.dirname(artifact), { recursive: true });
+  writeFileSync(artifact, JSON.stringify(report));
+  assert.equal(verifierEvidence(directory, listing).cases, 2);
+  for (const field of ["path", "sha256"]) {
+    const duplicate = structuredClone(report);
+    duplicate.cases[1][field] = duplicate.cases[0][field];
+    writeFileSync(artifact, JSON.stringify(duplicate));
+    assert.throws(() => verifierEvidence(directory, listing), /consistent release evidence/);
+  }
+  for (const field of ["binary_sha256", "corpus_commit", "sha256"]) {
+    const invalid = structuredClone(report);
+    const target = field === "sha256" ? invalid.cases[0] : invalid;
+    target[field] = [target[field]];
+    writeFileSync(artifact, JSON.stringify(invalid));
+    assert.throws(() => verifierEvidence(directory, listing), /consistent release evidence/);
+  }
+});
+
+test("publication clearance binds the exact artifact, current ledger revision and trusted key", t => {
+  const directory = temp(t);
+  const artifact = path.join(directory, "candidate.bin"), revision = path.join(directory, "record-revision");
+  const signature = path.join(directory, "approval.sig"), trustedKey = path.join(directory, "approval.der");
+  const original = Buffer.from("staged Hub build");
+  const authority = "a".repeat(64);
+  const signer = generateKeyPairSync("ed25519");
+  const other = generateKeyPairSync("ed25519");
+  const keyBytes = signer.publicKey.export({ format: "der", type: "spki" });
+  writeFileSync(artifact, original);
+  writeFileSync(revision, authority + "\n");
+  writeFileSync(signature, sign(null, publicationClearancePayload(sha256(original), authority), signer.privateKey));
+  writeFileSync(trustedKey, keyBytes);
+  const check = () => spawnSync(process.execPath, [
+    path.join(root, "scripts/hub/deployment-evidence.mjs"), "verify-clearance", artifact, revision, signature, trustedKey,
+  ], { encoding: "utf8", timeout: 5000 });
+  const good = check();
+  assert.equal(good.status, 0, good.stderr);
+  assert.equal(good.stdout.trim(), sha256(original));
+
+  const denied = () => {
+    const result = check();
+    assert.equal(result.status, 1, result.stderr);
+    assert.equal(result.stdout, "");
+  };
+  writeFileSync(revision, "b".repeat(64));
+  denied();
+  writeFileSync(revision, authority);
+  writeFileSync(artifact, "different deployment");
+  denied();
+  writeFileSync(artifact, original);
+  writeFileSync(trustedKey, other.publicKey.export({ format: "der", type: "spki" }));
+  denied();
+  writeFileSync(trustedKey, signer.privateKey.export({ format: "der", type: "pkcs8" }));
+  denied();
+  writeFileSync(trustedKey, keyBytes);
+  writeFileSync(revision, "");
+  denied();
+});
+
+test("removal history binds old listings, retained bytes and restoration", () => {
+  const listing = { id: "bundle--example", publisher: "maintainer", bundle_sha256: "a".repeat(64), signature_sha256: "c".repeat(64) };
+  const removed = { type: "removed", at: "2026-11-17", reason_id: "1".repeat(32), reason_class: "security",
+    public_reason: "This rule set has been withdrawn.", bundle_sha256: listing.bundle_sha256 };
+  const cleared = { type: "reason-cleared", at: "2026-11-18", reason_id: removed.reason_id };
+  const restored = { type: "restored", at: "2026-11-18", public_note: "Listing restored." };
+  const accepted = { listings: [listing], history: [] };
+  assert.throws(() => reconcileLifecycle(accepted, { listings: [], history: [] }), /removal without record/);
+  const history = [{ id: listing.id, events: [removed] }];
+  const baseline = { ...accepted, history };
+  assert.equal(reconcileLifecycle(accepted, { listings: [], history }).length, 1);
+  assert.throws(() => reconcileLifecycle(baseline, { listings: [], history: [] }), /history was deleted/);
+  const restore = [{ id: listing.id, events: [removed, cleared, restored] }];
+  assert.deepEqual(reconcileLifecycle(baseline, { listings: [listing], history: restore }), []);
+  for (const key of ["bundle_sha256", "signature_sha256"]) {
+    assert.throws(() => reconcileLifecycle(baseline, {
+      listings: [{ ...listing, [key]: "b".repeat(64) }], history: restore,
+    }), /changed bytes requires verified admission/);
+  }
+  assert.throws(() => reconcileLifecycle(baseline, {
+    listings: [{ ...listing, publisher: "different-publisher" }], history: restore,
+  }), /different publisher/);
+  assert.throws(() => reconcileLifecycle(accepted, {
+    listings: [], history: [{ id: listing.id, events: [{ ...removed, downloads: "retained" }] }],
+    retained: { [listing.id]: listing.bundle_sha256 },
+  }), /retention is not permitted/);
+  const { reason_id, ...legacy } = removed;
+  const legacyHistory = [{ id: listing.id, events: [legacy] }];
+  const legacyBaseline = { ...accepted, history: legacyHistory };
+  assert.equal(reconcileLifecycle(legacyBaseline, { listings: [], history: legacyHistory }).length, 1);
+  const legacyRestore = [{ id: listing.id, events: [legacy, restored] }];
+  assert.deepEqual(reconcileLifecycle({ ...accepted, history: legacyRestore }, { listings: [listing], history: legacyRestore }), []);
+  assert.throws(() => reconcileLifecycle(legacyBaseline, { listings: [listing], history: legacyRestore }), /clearing every removal reason/);
+  assert.deepEqual(reconcileLifecycle(legacyBaseline, {
+    listings: [listing], history: [{ id: listing.id, events: [legacy, { ...cleared, reason_id: "legacy" }, restored] }],
+  }), []);
+});
+
+test("independent removal reasons block restoration and end retained downloads", () => {
+  const listing = { id: "bundle--example", publisher: "maintainer", bundle_sha256: "a".repeat(64) };
+  const removed = { type: "removed", at: "2026-11-17", bundle_sha256: listing.bundle_sha256 };
+  const retired = { ...removed, reason_id: "1".repeat(32), reason_class: "retired", public_reason: "Retired.", downloads: "retained" };
+  const copyright = { ...removed, reason_id: "2".repeat(32), reason_class: "copyright", public_reason: "Copyright notice." };
+  const security = { ...removed, reason_id: "3".repeat(32), reason_class: "security", public_reason: "Security review." };
+  const clear = reason => ({ type: "reason-cleared", at: "2026-11-18", reason_id: reason.reason_id });
+  const restored = { type: "restored", at: "2026-11-18", public_note: "Listing restored." };
+  const history = (...events) => [{ id: listing.id, events }];
+  const accepted = events => ({ listings: [listing], history: events });
+  const retiredBaseline = accepted(history(retired));
+  const retained = { [listing.id]: listing.bundle_sha256 };
+  assert.equal(reconcileLifecycle(retiredBaseline, { listings: [], history: history(retired), retained })[0].event.downloads, "retained");
+  assert.throws(() => reconcileLifecycle(retiredBaseline, {
+    listings: [], history: history(retired), retained: {},
+  }), /retained download digest differs/);
+  const escalated = history(retired, security);
+  assert.equal(reconcileLifecycle(retiredBaseline, { listings: [], history: escalated, retained: {} })[0].event.downloads, "removed");
+  assert.throws(() => reconcileLifecycle(retiredBaseline, { listings: [], history: escalated, retained }), /unowned retained download/);
+  assert.equal(reconcileLifecycle(accepted(escalated), {
+    listings: [], history: history(retired, security, clear(security)), retained: {},
+  })[0].event.downloads, "removed");
+
+  const baseline = accepted(history(copyright, security));
+  const unresolved = history(copyright, security, clear(copyright));
+  const [notice] = reconcileLifecycle(baseline, { listings: [], history: unresolved });
+  assert.equal(notice.event.public_reason, "Security review.");
+  assert.equal(notice.event.downloads, "removed");
+  assert.throws(() => reconcileLifecycle(baseline, { listings: [listing], history: history(...unresolved[0].events, restored) }), /clearing every removal reason/);
+  assert.throws(() => reconcileLifecycle(baseline, { listings: [], history: history(...unresolved[0].events, clear(copyright)) }), /reason is not open/);
+  const closed = history(...unresolved[0].events, clear(security));
+  assert.equal(reconcileLifecycle(baseline, { listings: [], history: closed })[0].event.downloads, "removed");
+  assert.deepEqual(reconcileLifecycle(baseline, { listings: [listing], history: history(...closed[0].events, restored) }), []);
+});
+
+test("real Hugo joins reader facts, rule/core routes, exact mirrors and digest guards", { skip: !native }, async t => {
   const { dir, source } = catalogSource(t);
   const removed = { id: "retired-listing", publisher_id: "former", route: "/hub/community/former/older-bundle/", facts: { "removal.reason": '<gone> & "retained"' } };
   const baseline = [removed.route + "old-rule/", "/hub/bundles/older-bundle/"].map(route => ({ listing_id: removed.id, route, representations: ["html", "mirror"] }));
   source.publishers.push({ ...source.publishers[0], id: "former", name: "Former maintainer" });
   Object.assign(source, { removed: [removed], baseline });
+  if (process.env.HUB_VERIFY_RETRIEVAL === "1") source.pipelockBinary = process.env.HUB_RELEASE_BIN;
   const catalog = generateCatalog(source), generated = path.join(dir, "data/hub/generated"); writeCatalog(generated, catalog); writeCatalog(generated, generateCatalog(source), { check: true });
   assert.equal(catalog["listings.json"].find(record => record.listing.id === "pipelock-community").badge, "official");
   const overlay = `themesDir = ${JSON.stringify(path.join(root, "themes"))}\ncontentDir = ${JSON.stringify(path.join(dir, "content"))}\nassetDir = ${JSON.stringify(path.join(dir, "assets"))}\ndataDir = ${JSON.stringify(path.join(dir, "data"))}\nstaticDir = ${JSON.stringify(path.join(dir, "distribution"))}\n`;
@@ -255,6 +531,35 @@ test("real Hugo joins reader facts, rule/core routes, exact mirrors and digest g
   const built = build(true); assert.equal(built.status, 0, built.output);
   const manifest = catalog["routes.json"], records = catalog["listings.json"];
   assertPublication({ directory: path.join(dir, "public"), manifest, records, open: true, requireBuild: false });
+  const rules = manifest.entries.filter(entry => entry.kind === "rule");
+  assert.ok(rules.length, "the fixture must contain rule pages");
+  for (const bundle of records.filter(record => record.badge === "official")) {
+    const html = readFileSync(path.join(dir, "public", bundle.route, "index.html"), "utf8");
+    const mirror = readFileSync(path.join(dir, "public", bundle.route, "index.md"), "utf8");
+    for (const rule of rules) {
+      const belongs = rule.listing_id === bundle.listing.id;
+      assert.equal(html.includes('href="' + rule.route + '"'), belongs, "HTML rule link for " + rule.route);
+      assert.equal(mirror.includes(rule.route + "index.md)"), belongs, "Markdown rule link for " + rule.route);
+    }
+  }
+  const buildInputs = { directory: path.join(dir, "public"), manifest, records,
+    siteSHA: "a".repeat(40), rulesSHA: "b".repeat(40), buildConfig: Buffer.from(overlay) };
+  const identity = publicationIdentity(buildInputs);
+  assert.match(identity.output_set_sha256, /^[a-f0-9]{64}$/);
+  assert.notEqual(publicationIdentity({ ...buildInputs, buildConfig: Buffer.from(overlay + "# fixture") }).build_config_sha256,
+    identity.build_config_sha256);
+  assert.throws(() => publicationIdentity({ ...buildInputs, siteSHA: "main" }), /candidate SHAs/);
+
+  if (process.env.HUB_VERIFY_RETRIEVAL === "1") {
+    const result = await verifyRetrieval({
+      directory: path.join(dir, "public"), manifest, records, binary: process.env.HUB_RELEASE_BIN,
+      requireBuild: false,
+    });
+    assert.deepEqual(result.deferred, ["/hub/build.json"]);
+    assert.equal(result.checks.length, manifest.entries.filter(entry => entry.kind !== "build")
+      .reduce((count, entry) => count + entry.representations.length, 0) * 3);
+  }
+
   const removalRoutes = manifest.entries.filter(entry => entry.kind === "removal");
   assert.equal(removalRoutes.length, 3);
   for (const entry of removalRoutes) {
@@ -469,6 +774,53 @@ test("catalog verification uses exactly one registered publisher", { skip: !nati
   assert.equal(catalog["references.json"].find(record => record.reference_kind === "publisher").facts["publisher.name"], source.publishers[0].name);
 });
 
+test("bound generation stages the exact signed contribution from committed rules objects", { skip: !native }, t => {
+  const { dir, source } = catalogSource(t);
+  const rulesRepo = temp(t);
+  const scratch = temp(t);
+  const git = (cwd, ...args) => execFileSync("git", ["-C", cwd,
+    "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", ...args],
+  { encoding: "utf8", stdio: "pipe" }).trim();
+  git(dir, "init", "-q", "-b", "main");
+  git(dir, "commit", "-qm", "accepted empty fixture", "--allow-empty");
+  const siteBase = git(dir, "rev-parse", "HEAD");
+  git(rulesRepo, "init", "-q", "-b", "main");
+
+  const writeListing = (relative, bytes) => {
+    const file = path.join(rulesRepo, "hub", relative);
+    mkdirSync(path.dirname(file), { recursive: true });
+    writeFileSync(file, bytes);
+  };
+  const { items, publishers, ...trusted } = source;
+  const [publisher] = publishers;
+  writeListing("publishers/" + publisher.id + ".yaml", stringify(publisher));
+  const signed = items.find(item => item.publisher);
+  for (const item of items.filter(item => item.bundle_dir)) {
+    const listing = parse(readFileSync(item.listing_file, "utf8"));
+    const name = listing.bundle_name;
+    const relative = item.publisher ? "community/" + publisher.id + "--" + name : "bundles/" + name;
+    writeListing("listings/" + relative + ".yaml", readFileSync(item.listing_file));
+    if (item.publisher) {
+      for (const file of ["bundle.yaml", "bundle.yaml.sig"]) {
+        writeListing("community/" + publisher.id + "/" + name + "/" + file, readFileSync(path.join(item.bundle_dir, file)));
+      }
+    }
+  }
+  git(rulesRepo, "add", "--", "hub");
+  git(rulesRepo, "commit", "-qm", "producer fixture");
+  const rulesSHA = git(rulesRepo, "rev-parse", "HEAD");
+  git(rulesRepo, "update-ref", "refs/remotes/origin/main", rulesSHA);
+  const options = { ...trusted, sourceBinding: { siteBase, rulesSHA, rulesMain: rulesSHA, rulesRepository: rulesRepo } };
+  const { catalog, assetRoot } = prepareBoundCatalog(options, scratch);
+  const admitted = catalog["listings.json"].find(record => record.badge === "community");
+  assert.ok(admitted);
+  for (const file of ["bundle.yaml", "bundle.yaml.sig"]) {
+    assert.deepEqual(readFileSync(path.join(assetRoot, admitted.route, file)), readFileSync(path.join(signed.bundle_dir, file)));
+  }
+  assert.ok(!existsSync(path.join(assetRoot, "rules")));
+  assert.throws(() => prepareBoundCatalog({ ...options, mode: "routine" }, scratch), /current accepted measurement required/);
+});
+
 test("catalog generation joins lifecycle removals and retains their names", { skip: !native }, t => {
   const { dir, source } = catalogSource(t);
   const removed = { id: "retired-listing", publisher_id: "example", route: "/hub/community/example/older-bundle/", facts: { "bundle.name": "example-bund1e" } };
@@ -483,6 +835,47 @@ test("catalog generation joins lifecycle removals and retains their names", { sk
   assert.deepEqual(catalog["inventory.json"].removed, [removed.id]);
   assert.deepEqual(catalog["inventory.json"].retained_names, ["older-bundle", removed.id]);
   assert.ok(catalog["routes.json"].entries.some(entry => entry.route === removed.route + "old-rule/" && entry.kind === "removal"));
+
+  const community = generateCatalog(source)["listings.json"].find(record => record.badge === "community");
+  const listing = { id: "bundle--" + community.listing.id, route: community.route,
+    publisher: community.publisher_id, badge: community.badge, bundle_sha256: community.bundle_sha256,
+    signature_sha256: community.signature_sha256 };
+  const retired = { type: "removed", at: "2026-11-17", reason_id: "1".repeat(32), reason_class: "retired",
+    public_reason: "Retired.", bundle_sha256: listing.bundle_sha256, downloads: "retained" };
+  const security = { ...retired, reason_id: "2".repeat(32), reason_class: "security",
+    public_reason: "Security review.", downloads: "removed" };
+  const history = (...events) => [{ id: listing.id, events }];
+  const items = source.items.filter(item => !item.publisher);
+  const retainedCatalog = generateCatalog({ ...source, items,
+    lifecycle: { accepted: { listings: [listing], history: [], routes: [] }, history: history(retired) } });
+  const retained = retainedCatalog["routes.json"].entries.filter(entry => entry.kind === "retained-download");
+  assert.deepEqual(retained.map(entry => entry.route), [listing.route + "bundle.yaml", listing.route + "bundle.yaml.sig"]);
+  assert.ok(retainedCatalog["inventory.json"].retained_names.includes(community.listing.bundle_name));
+  assert.equal(retainedCatalog["routes.json"].entries.find(entry => entry.route === listing.route).facts["bundle.name"], community.listing.bundle_name);
+  const withdrawn = generateCatalog({ ...source, items,
+    lifecycle: { accepted: retainedCatalog["lifecycle.json"], history: history(retired, security) } });
+  assert.ok(!withdrawn["routes.json"].entries.some(entry => retained.some(download => entry.route === download.route)));
+  assert.equal(withdrawn["routes.json"].entries.find(entry => entry.route === listing.route).facts.Downloads, "Withdrawn from the Hub.");
+  writeCatalog(generated, withdrawn);
+  const restoredHistory = history(retired, security,
+    { type: "reason-cleared", at: "2026-11-18", reason_id: retired.reason_id },
+    { type: "reason-cleared", at: "2026-11-18", reason_id: security.reason_id },
+    { type: "restored", at: "2026-11-18", public_note: "Restored." });
+  const restored = generateCatalog({ ...source, lifecycle: { accepted: withdrawn["lifecycle.json"], history: restoredHistory } });
+  assert.ok(restored["inventory.json"].retained_names.includes(community.listing.bundle_name));
+  assert.equal(restored["routes.json"].entries.find(entry => entry.route === listing.route).kind, "listing");
+  const renamed = { ...listing, route: "/hub/community/example/new-bundle/", bundle_name: "new-bundle" };
+  assert.throws(() => reconcileLifecycle({ listings: [listing], history: [] }, { listings: [renamed], history: [] }), /accepted listing route cannot change/);
+});
+
+test("policy facts have unique normalized labels", () => {
+  const options = { records: [], policies: ["policies"], schemaBytes: "{}" };
+  const page = facts => ({ policies: { title: "Hub policies", facts } });
+  const facts = { "Café": "First fact", "Topic": "Second fact" };
+  const valid = routeManifest({ ...options, policyPages: page(facts) });
+  assert.deepEqual(valid.entries.find(entry => entry.kind === "policy").facts, facts);
+  const duplicate = { ...facts, ["Cafe\u0301"]: "Repeated fact" };
+  assert.throws(() => routeManifest({ ...options, policyPages: page(duplicate) }), /duplicate normalized policy fact key/);
 });
 
 test("routine catalogs refuse failed or unassessed bound measurements", { skip: !native }, t => {
@@ -500,7 +893,12 @@ test("routine catalogs refuse failed or unassessed bound measurements", { skip: 
   }
   // Synthetic limits exercise admission; they are never site policy.
   writeFileSync(limitsFile, jsonBytes({ rule_ratio: 1, bundle_ratio: 1, deadline_ns: 15 }));
-  assert.ok(generateCatalog({ ...source, mode: "routine" })["listings.json"].length);
+  if (process.env.HUB_RELEASE_BIN) {
+    const admitted = generateCatalog({ ...source, mode: "routine", pipelockBinary: process.env.HUB_RELEASE_BIN });
+    assert.ok(admitted["listings.json"].length);
+  } else {
+    assert.throws(() => generateCatalog({ ...source, mode: "routine" }), /pinned Pipelock executable is required/);
+  }
   for (const [limits, status] of [[{ rule_ratio: 0.1, bundle_ratio: 0.1, deadline_ns: 15 }, "fail"], [{}, "unassessed"]]) {
     writeFileSync(limitsFile, jsonBytes(limits));
     assert.throws(() => generateCatalog({ ...source, mode: "routine" }), /passing latency measurement required/);

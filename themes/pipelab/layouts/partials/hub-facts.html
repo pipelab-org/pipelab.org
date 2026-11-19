@@ -1,10 +1,25 @@
 {{- $facts := .Params.hub.display_facts | default slice -}}
 {{- if eq .Kind "section" -}}
   {{- $route := .RelPermalink -}}{{- with .OutputFormats.Get "html" -}}{{- $route = .RelPermalink -}}{{- end -}}
+  {{- $route = strings.TrimPrefix (strings.TrimSuffix "/" (urls.Parse site.BaseURL).Path) $route -}}
   {{- with site.Data.hub.generated.sections -}}{{- range $key, $value := index . $route -}}{{- $facts = $facts | append (dict "key" $key "value" $value) -}}{{- end -}}{{- end -}}
 {{- end -}}
 {{- with $facts -}}
-<section><h2>Reader facts</h2><dl>
-{{- range . -}}<dt>{{ .key }}</dt><dd><code data-hub-fact="{{ .key }}">{{ .value }}</code></dd>{{- end -}}
-</dl></section>
+{{- $fold := eq $.Kind "section" -}}
+{{- $reference := and (not $fold) (not $.Params.hub.listing) -}}
+{{- if $fold }}
+<details class="hub-panel hub-facts">
+  <summary>Technical details</summary>
+{{- else }}
+  {{ if $reference }}<section class="hub-panel hub-facts">{{ end }}
+  <h2>{{ if $.Params.hub.config_assessment }}Config assessment{{ else if eq $.Params.hub.reference_kind "removal" }}Removal details{{ else }}Technical details{{ end }}</h2>
+{{- end }}
+  {{ range . }}
+  <p class="hub-fact-row"><span>{{ .key }}</span> <code data-hub-fact="{{ .key }}">{{ .value }}</code></p>
+  {{ end }}
+{{- if $fold }}
+</details>
+{{- else if $reference }}
+</section>
+{{- end -}}
 {{- end -}}

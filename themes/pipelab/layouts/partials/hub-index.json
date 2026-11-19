@@ -1,9 +1,10 @@
-{{- /* Exact summary projection: design §7.3. No browser search in hub-core. */ -}}
+{{- /* Exact summary projection shared with the Hub route and retrieval checks. */ -}}
 {{- $items := slice -}}
+{{- $base := strings.TrimSuffix "/" (urls.Parse site.BaseURL).Path -}}
 {{- range sort .RegularPagesRecursive "Params.hub.listing.id" -}}
   {{- if .Params.hub.listing -}}
   {{- $r := .Params.hub -}}{{- $l := $r.listing -}}
-  {{- $items = $items | append (dict "id" $l.id "type" $l.type "title" $l.title "summary" $l.summary "badge" ($r.badge | default "none") "url" .RelPermalink) -}}
+  {{- $items = $items | append (dict "id" $l.id "type" $l.type "title" $l.title "summary" $l.summary "badge" ($r.badge | default "none") "url" ($r.route | default (strings.TrimPrefix $base .RelPermalink))) -}}
 {{- end -}}
 {{- end -}}
 {{- return (dict "format" 1 "items" $items) -}}

@@ -1,4 +1,4 @@
-.PHONY: brand check-brand check-rules-sync preflight
+.PHONY: brand check-brand check-rules-sync preflight hub-acceptance
 
 brand:
 	python3 scripts/render_pipelab_brand.py
@@ -13,3 +13,7 @@ check-rules-sync:
 
 preflight:
 	node scripts/preflight.mjs "$(MAKE)"
+
+# Inputs bind the candidate, rules source, tooling pins, and reviewed baseline.
+hub-acceptance:
+	node scripts/hub/acceptance.mjs "$(HUB_ACCEPTANCE_INPUT)"

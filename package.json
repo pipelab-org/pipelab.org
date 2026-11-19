@@ -15,7 +15,9 @@
     "indexnow:submit": "node scripts/indexnow-submit.mjs",
     "hub:build-harness": "node scripts/hub/build-harness.mjs",
     "hub:generate": "node scripts/hub/generate.mjs",
-    "hub:bench": "node scripts/hub/benchmark-report.mjs"
+    "hub:bench": "node scripts/hub/benchmark-report.mjs",
+    "hub:retrieval": "node scripts/hub/retrieval.mjs",
+    "hub:publication-identity": "node scripts/hub/deployment-evidence.mjs"
   },
   "dependencies": {
     "pg": "^8.13.1"

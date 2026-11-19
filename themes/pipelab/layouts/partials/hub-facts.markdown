@@ -2,6 +2,7 @@
 {{- $facts := .Params.hub.display_facts | default slice -}}
 {{- if eq .Kind "section" -}}
   {{- $route := .RelPermalink -}}{{- with .OutputFormats.Get "html" -}}{{- $route = .RelPermalink -}}{{- end -}}
+  {{- $route = strings.TrimPrefix (strings.TrimSuffix "/" (urls.Parse site.BaseURL).Path) $route -}}
   {{- with site.Data.hub.generated.sections -}}{{- range $key, $value := index . $route -}}{{- $facts = $facts | append (dict "key" $key "value" $value) -}}{{- end -}}{{- end -}}
 {{- end -}}
 {{- range $facts -}}

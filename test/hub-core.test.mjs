@@ -97,6 +97,10 @@ const shape = html => elements(parseHTML(html)).map(node => [node.tagName, node.
 const scripts = html => elements(parseHTML(html)).filter(node => node.tagName === "script");
 const executable = html => scripts(html).filter(node => !["application/ld+json", "application/json"].includes(attr(node, "type"))).map(node => [node.attrs, textContent(node)]);
 
+const schemaAsset = "hub/schema/listing-v1.json";
+const schemaRoute = "/schemas/pipelab-hub/listing-v1.json";
+const sha256 = bytes => createHash("sha256").update(bytes).digest("hex");
+
 function buildFixture(t) {
   const dir = temp(t);
   cpSync(path.join(root, "data"), path.join(dir, "data"), { recursive: true });
@@ -110,6 +114,17 @@ function buildFixture(t) {
   mkdirSync(path.join(dir, "assets/hub/community/example/example-bundle"), { recursive: true });
   writeFileSync(path.join(dir, "assets/hub/community/example/example-bundle/bundle.yaml"), "fixture: exact-byte-download\n");
   writeFileSync(path.join(dir, "assets/hub/community/example/example-bundle/bundle.yaml.sig"), "fixture-signature\n");
+  const community = "/hub/community/example/example-bundle/";
+  const routesFile = path.join(dir, "data/hub/generated/routes.json");
+  const downloadEntries = ["bundle.yaml", "bundle.yaml.sig"].map(name => ({
+    route: community + name, kind: "bundle-download", ownership: "hub",
+    sha256: sha256(readFileSync(path.join(dir, "assets", community, name))),
+  }));
+  const schemaEntry = {
+    route: schemaRoute, kind: "schema", ownership: "hub",
+    sha256: sha256(readFileSync(path.join(root, "scripts", schemaAsset))),
+  };
+  writeFileSync(routesFile, JSON.stringify({ entries: [schemaEntry, ...downloadEntries] }));
   // Keep a real source root for the repository-file launch switch. Templates
   // read unchanged public evidence through the symlink; distribute only the
   // small static control set in these repeated builds.
@@ -154,6 +169,84 @@ async function staticServing(t, directory) {
   return `http://127.0.0.1:${server.address().port}`;
 }
 
+test("open builds publish only the signed community downloads selected by the catalog", t => {
+  const f = buildFixture(t);
+  const artifact = "hub/community/example/example-bundle/bundle.yaml";
+  const routes = path.join(f.dir, "data/hub/generated/routes.json");
+  const manifest = JSON.parse(readFileSync(routes, "utf8"));
+  const withdrawal = { entries: manifest.entries.filter(entry => entry.kind !== "bundle-download") };
+  writeFileSync(routes, JSON.stringify(withdrawal));
+  const withdrawn = f.build("true");
+  assert.equal(withdrawn.status, 0, withdrawn.output);
+  assert.equal(existsSync(path.join(f.dir, "public", artifact)), false);
+  assert.equal(existsSync(path.join(f.dir, "public", artifact + ".sig")), false);
+
+  const retained = {
+    entries: manifest.entries.map(entry => entry.kind === "bundle-download" ? { ...entry, kind: "retained-download" } : entry),
+  };
+  writeFileSync(routes, JSON.stringify(retained));
+  const kept = f.build("true");
+  assert.equal(kept.status, 0, kept.output);
+  assert.equal(f.built(artifact), "fixture: exact-byte-download\n");
+  assert.equal(f.built(artifact + ".sig"), "fixture-signature\n");
+
+  writeFileSync(path.join(f.dir, "assets", artifact + ".sig"), "different signature\n");
+  const changed = f.build("true");
+  assert.notEqual(changed.status, 0);
+  assert.match(changed.output, /Hub community download digest differs/);
+});
+
+test("Hugo checks digests against the configured resources it publishes", t => {
+  const f = buildFixture(t);
+  const assets = path.join(f.dir, "assets");
+  const alternate = path.join(f.dir, "alternate-assets");
+  const config = "hub/configs/example-config/pipelock.yaml";
+  const report = "hub/verifiers/example-verifier/conformance.json";
+  const signature = "hub/community/example/example-bundle/bundle.yaml.sig";
+  const configBytes = Buffer.from("fixture: exact configuration\r\n");
+  const reportBytes = Buffer.from('{"fixture":"example report"}\n');
+  for (const [file, bytes] of [[config, configBytes], [report, reportBytes]]) {
+    const filename = path.join(assets, file);
+    mkdirSync(path.dirname(filename), { recursive: true });
+    writeFileSync(filename, bytes);
+  }
+  cpSync(assets, alternate, { recursive: true });
+
+  const files = [
+    [schemaAsset, schemaRoute.slice(1), '{"title":"Alternate fixture"}\n', /Hub listing schema digest differs/],
+    [config, config, "fixture: alternate configuration\n", /assessed hub configuration digest differs/],
+    [report, report, '{"fixture":"alternate report"}\n', /verifier conformance digest differs/],
+    [signature, signature, "alternate fixture signature\n", /Hub community download digest differs/],
+  ];
+  for (const [file, , changed] of files) writeFileSync(path.join(alternate, file), changed);
+  const listings = [
+    { ...base, id: "example-config", type: "config" },
+    { ...base, id: "example-verifier", type: "verifier" },
+  ];
+  const build = () => f.build("true", listings, {
+    config_sha256: sha256(configBytes), assessed_config_sha256: sha256(configBytes),
+    conformance: { sha256: sha256(reportBytes) },
+  }, { HUGO_ASSETDIR: alternate });
+  const refused = build();
+  assert.equal(refused.status, 1, refused.output);
+  for (const [, , , error] of files) assert.match(refused.output, error);
+
+  for (const [file, , changed] of files) {
+    cpSync(path.join(assets, file), path.join(alternate, file));
+    writeFileSync(path.join(assets, file), changed);
+  }
+  const accepted = build();
+  assert.equal(accepted.status, 0, accepted.output);
+  const publicDir = path.join(f.dir, "public");
+  for (const [file, output] of files) {
+    const bytes = readFileSync(path.join(alternate, file));
+    assert.deepEqual(readFileSync(path.join(publicDir, output)), bytes, output);
+    const { dir, name, ext } = path.parse(file);
+    assert.equal(existsSync(path.join(publicDir, dir, name + "." + sha256(bytes) + ext)), false, file);
+  }
+  assert.equal(existsSync(path.join(publicDir, schemaAsset)), false);
+});
+
 test("real Hugo builds enforce omitted/false closed, true open, and invalid switch errors", async t => {
   const f = buildFixture(t);
   const origin = await staticServing(t, path.join(f.dir, "public"));
@@ -186,7 +279,14 @@ test("real Hugo builds enforce omitted/false closed, true open, and invalid swit
   assert.equal(existsSync(path.join(f.dir, "public/hub/recipes/index.xml")), false);
   assert.ok(f.built("hub/recipes/example-recipe/index.md").includes("pipelock run --config <file>"));
   assert.ok(f.built("llms.txt").includes("[PipeLab Hub](https://pipelab.org/hub/)"));
-  assert.ok(f.built("hub/index.html").includes('href="/hub/"'));
+  const catalog = f.built("hub/index.html");
+  const projects = 'aria-controls="nav-menu-product"';
+  const hubMenuLink = 'class="nav-menu-row" href="/hub/"';
+  assert.ok(catalog.includes(projects + ' data-current-section="true"'));
+  assert.ok(catalog.includes(hubMenuLink + ' aria-current="page"'));
+  assert.ok(f.built("learn/mcp-security/index.html").includes(hubMenuLink));
+  assert.ok(catalog.includes('data-fx="reveal spotlight"'));
+  assert.match(catalog, /<script src="\/js\/site-fx\.min\.[a-f0-9]+\.js" integrity="sha256-/);
   assert.equal(f.built("schemas/pipelab-hub/listing-v1.json"), read("scripts/hub/schema/listing-v1.json"));
   assert.equal(f.built("hub/community/example/example-bundle/bundle.yaml"), "fixture: exact-byte-download\n");
   assert.equal(f.built("hub/community/example/example-bundle/bundle.yaml.sig"), "fixture-signature\n");
