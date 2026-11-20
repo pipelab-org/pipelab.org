@@ -1,5 +1,5 @@
 import { readGit as git, readRemoteRefs } from "./git-source.mjs";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -110,7 +110,7 @@ export function preflightContribution({ repository, base, head, maintenance = fa
     report.categories = categories.filter(([, pattern]) => report.changes.some(change => pattern.test(change.path))).map(([name]) => name);
 
     // Exact blob reader: regular 100644 blobs only, size-checked, no checkout.
-    const tree = path.join(directory, "tree");
+    const tree = path.join(realpathSync(directory), "tree");
     mkdirSync(tree);
     if (!run("object-read", () => acquireHubTree(repository, head, tree))) return report;
 

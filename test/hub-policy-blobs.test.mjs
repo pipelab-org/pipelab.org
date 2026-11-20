@@ -174,6 +174,10 @@ jobs:
   assert.throws(() => check(policy.replace("contents: read", "contents: write")), /must be read-only/);
   assert.throws(() => check(policy.replace("hub/**", "**")), /must be read-only/);
   assert.throws(() => check(policy, [file(".github/workflows/other.yml", "on: pull_request_target")]), /unreviewed privileged trigger/);
+  for (const name of ["agent-review.yaml", "review-caller-contract.yaml"]) {
+    const changed = file(".github/workflows/" + name, "on: push");
+    assert.throws(() => check(policy, [changed]), /protected Rules workflow revision has not been reviewed/);
+  }
 });
 
 test("candidate rehearsal refuses untracked catalog data and hidden tooling changes before acquisition", t => {

@@ -47,10 +47,14 @@ function contentsRead(permissions) {
 export function assertRulesWorkflowPolicy({ workflows, codeowners }) {
   checkCodeowners(codeowners);
   for (const { path, object, bytes } of workflows) {
+    const reviewed = reviewedWorkflows.get(path);
+    if (reviewed !== undefined && object !== reviewed) {
+      throw new HubCheckFailure("protected Rules workflow revision has not been reviewed");
+    }
     const source = decode(bytes);
     const workflow = parse(source, { maxAliasCount: 0 });
     const events = eventsOf(workflow?.on);
-    if (events.some(event => privilegedEvents.has(event)) && reviewedWorkflows.get(path) !== object) {
+    if (reviewed === undefined && events.some(event => privilegedEvents.has(event))) {
       throw new HubCheckFailure("Rules workflow has an unreviewed privileged trigger");
     }
     if (path !== advisoryPath) continue;

@@ -7,6 +7,7 @@ import path from "node:path";
 import test from "node:test";
 import { stringify } from "yaml";
 import { preflightContribution, preflightPullRequest } from "../scripts/hub/contribution-preflight.mjs";
+import { changedCandidatePacks } from "../scripts/hub/candidate-measurements.mjs";
 import { generateCatalog } from "../scripts/hub/generate.mjs";
 
 import { sha256 } from "../scripts/hub/evidence.mjs";
@@ -96,6 +97,26 @@ test("a Hub-only community contribution is locally eligible, never accepted", t 
   // The dependencies are named, not silently assumed away.
   const text = report.remaining.join("\n");
   for (const needle of ["Producer", "Workflow", "Final acceptance", "Publisher owner", "hubcheck"]) assert.match(text, new RegExp(needle));
+});
+
+test("measurement selects a changed listing when the temporary directory is a symlink", t => {
+  const { directory, commit } = repository(t);
+  const base = commit(files);
+  const head = commit({ [listingPath]: stringify({ ...listing, title: "Updated example bundle" }) });
+  const alias = path.join(directory, "temp-alias");
+  symlinkSync(directory, alias, "dir");
+
+  const previous = process.env.TMPDIR;
+  process.env.TMPDIR = alias;
+  try {
+    const report = preflightContribution({ repository: directory, base, head, site },
+      candidate => changedCandidatePacks(candidate).length);
+    assert.equal(report.verdict, "LOCAL-ELIGIBLE");
+    assert.equal(report.steps.candidate.evidence, 1);
+  } finally {
+    if (previous === undefined) delete process.env.TMPDIR;
+    else process.env.TMPDIR = previous;
+  }
 });
 
 test("local preflight refuses a changed pair or mismatched listing declaration", t => {
