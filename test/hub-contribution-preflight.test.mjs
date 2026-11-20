@@ -368,9 +368,24 @@ test("Rules PR acquisition fetches only selected blobs before offline preflight"
 
   writeFileSync(path.join(directory, "curl"), [
     "#!/bin/sh",
-    'case "$*" in',
-    '  "-q --silent --show-error --fail --proto =https --max-time 15 --max-filesize 1048576 --header Accept: application/vnd.github+json --url https://api.github.com/repos/pipelab-org/pipelock-rules/pulls/2") cat "$HUB_STUB_DIR/pr.json";;',
-    '  "-q --silent --show-error --fail --proto =https --max-time 15 --max-filesize 7340032 --header Accept: application/vnd.github+json --url https://api.github.com/repos/pipelab-org/pipelock-rules/git/trees/$HUB_STUB_TREE?recursive=1") cat "$HUB_STUB_DIR/tree.json";;',
+    'case " $* " in *" --header Cache-Control: no-cache "*) ;; *) exit 1;; esac',
+    'for url do :; done',
+    'case "$url" in',
+    '  "https://api.github.com/repos/pipelab-org/pipelock-rules/pulls/2?hub_preflight_nonce="*)',
+    '    if [ "$HUB_STUB_API_FAULT" = first ]; then exit 22; fi',
+    '    if [ -f "$HUB_STUB_DIR/pr-url" ]; then',
+    '      test "$url" != "$(cat "$HUB_STUB_DIR/pr-url")" || exit 1',
+    '      if [ "$HUB_STUB_API_FAULT" = last ]; then exit 22; fi',
+    '      if [ "$HUB_STUB_API_FAULT" = closed ]; then',
+    '        sed \'s/"state":"open"/"state":"closed"/\' "$HUB_STUB_DIR/pr.json"; printf "\\n200"; exit 0',
+    '      fi',
+    '    fi',
+    '    printf "%s" "$url" > "$HUB_STUB_DIR/pr-url"',
+    '    cat "$HUB_STUB_DIR/pr.json"',
+    '    if [ "$HUB_STUB_API_FAULT" = redirect ]; then printf "\\n301"; else printf "\\n200"; fi;;',
+    '  "https://api.github.com/repos/pipelab-org/pipelock-rules/git/trees/$HUB_STUB_TREE?recursive=1")',
+    '    if [ "$HUB_STUB_API_FAULT" = tree ]; then exit 22; fi',
+    '    cat "$HUB_STUB_DIR/tree.json"; printf "\\n200";;',
     '  *) exit 1;;',
     "esac",
     "",
@@ -397,12 +412,15 @@ test("Rules PR acquisition fetches only selected blobs before offline preflight"
 
   const script = path.join(root, "scripts/hub/contribution-preflight.mjs");
   const wanted = path.join(directory, "wanted");
-  const run = (metadata, { drop = false, overrun = false, publicAPI = false } = {}) => {
+  const run = (metadata, { drop = false, overrun = false, publicAPI = false, apiFault = "" } = {}) => {
     rmSync(wanted, { force: true });
+    rmSync(path.join(directory, "pr-url"), { force: true });
     writeFileSync(path.join(directory, "tree.json"), JSON.stringify(metadata));
     const result = spawnSync(process.execPath, [script, "--fetch-pr", "2", base, head, site], {
       encoding: "utf8", env: { ...process.env, PATH: directory + path.delimiter + process.env.PATH,
-        HUB_ORIGINAL_PATH: process.env.PATH, HUB_STUB_DIR: directory, HUB_STUB_TREE: tree, HUB_STUB_DROP: drop ? "1" : "0", HUB_STUB_OVERRUN: overrun ? "1" : "0", HUB_RULES_PUBLIC_API: publicAPI ? "1" : "0" },
+        HUB_ORIGINAL_PATH: process.env.PATH, HUB_STUB_DIR: directory, HUB_STUB_TREE: tree,
+        HUB_STUB_DROP: drop ? "1" : "0", HUB_STUB_OVERRUN: overrun ? "1" : "0",
+        HUB_RULES_PUBLIC_API: publicAPI ? "1" : "0", HUB_STUB_API_FAULT: apiFault },
     });
     assert.equal(result.signal, null, result.stderr);
     return { code: result.status, report: JSON.parse(result.stdout) };
@@ -418,6 +436,20 @@ test("Rules PR acquisition fetches only selected blobs before offline preflight"
   const published = run(metadata, { publicAPI: true });
   assert.equal(published.code, 0, JSON.stringify(published.report));
   assert.deepEqual(published.report, eligible.report);
+
+  for (const [apiFault, step] of [["first", "pull-request"], ["last", "pull-request"],
+    ["tree", "rules-acquisition"], ["redirect", "pull-request"]]) {
+    const unavailable = run(metadata, { publicAPI: true, apiFault });
+    assert.equal(unavailable.code, 3, apiFault);
+    assert.equal(unavailable.report.verdict, "UNAVAILABLE");
+    assert.equal(failed(unavailable.report), step);
+    assert.deepEqual(unavailable.report.changes, []);
+  }
+
+  const closed = run(metadata, { publicAPI: true, apiFault: "closed" });
+  assert.equal(closed.code, 1);
+  assert.equal(closed.report.verdict, "REFUSED");
+  assert.equal(failed(closed.report), "pull-request");
 
   const wrongFiles = [
     treeEntries.slice(1),

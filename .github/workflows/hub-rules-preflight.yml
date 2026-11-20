@@ -62,6 +62,9 @@ jobs:
           }
           {
             printf '%s\n\n' '## Rules contribution eligibility'
+            if (( status == 3 )); then
+              printf '%s\n\n' 'The Rules check could not run. Retry when the public GitHub API is available.'
+            fi
             if [[ -s "$report" ]]; then
               printf '%s\n' '```json'
               cat "$report"

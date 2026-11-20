@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { acquireRulesObjects, readRulesAPI, rulesRepository } from "./rules-acquisition.mjs";
+import { acquireRulesObjects, readRulesAPI, RulesAPIUnavailable, rulesRepository } from "./rules-acquisition.mjs";
 import { loadAcquiredListings } from "./source-listings.mjs";
 import { acquirePolicyBlobs } from "./policy-blobs.mjs";
 import { parseListing } from "./validate.mjs";
@@ -51,7 +51,7 @@ const commitSHA = /^[a-f0-9]{40}$/;
 class RulesRefMismatch extends Error {}
 
 function pullRequest(number) {
-  const pr = readRulesAPI("pulls/" + number);
+  const pr = readRulesAPI("pulls/" + number, { fresh: true });
   const baseRef = "refs/heads/main";
   const headRef = `refs/pull/${number}/head`;
   const tips = readRemoteRefs(`https://github.com/${rulesRepository}`, [baseRef, headRef], "invalid rules ref result");
@@ -138,9 +138,9 @@ export function preflightContribution({ repository, base, head, maintenance = fa
 export function preflightPullRequest({ number, fetchRules = false, ...options }, readPull = pullRequest) {
   const { base, head } = options;
   const binding = { repository: rulesRepository, number, base, head };
-  const refused = (evidence, step = "pull-request") => ({
-    mode: "contribution", base, head, verdict: "REFUSED", pull_request: binding,
-    steps: { [step]: { status: "fail", evidence } }, changes: [], categories: [], remaining: [],
+  const refused = (error, step = "pull-request") => ({
+    mode: "contribution", base, head, verdict: error instanceof RulesAPIUnavailable ? "UNAVAILABLE" : "REFUSED", pull_request: binding,
+    steps: { [step]: { status: "fail", evidence: oneLine(error) } }, changes: [], categories: [], remaining: [],
   });
   if (!Number.isSafeInteger(number) || number < 1 || typeof base !== "string" || typeof head !== "string" ||
       !commitSHA.test(base) || !commitSHA.test(head)) {
@@ -151,7 +151,8 @@ export function preflightPullRequest({ number, fetchRules = false, ...options },
       return matchesPullRequest(readPull(number), number, base, head) ? null :
         "open pull request does not match the requested repository, base and head";
     } catch (error) {
-      return error instanceof RulesRefMismatch ? error.message : "published Rules pull request could not be verified";
+      if (error instanceof RulesRefMismatch || error instanceof RulesAPIUnavailable) return error;
+      return "published Rules pull request could not be verified";
     }
   };
   const initial = mismatch();
@@ -164,7 +165,7 @@ export function preflightPullRequest({ number, fetchRules = false, ...options },
     try {
       repository = acquireRulesObjects(directory, binding);
     } catch (error) {
-      return refused(oneLine(error), "rules-acquisition");
+      return refused(error, "rules-acquisition");
     }
     return inspectPullRequest({ ...options, repository }, binding, mismatch, refused);
   } finally {
@@ -208,7 +209,9 @@ function inspectPullRequest(options, binding, mismatch, refused) {
     report.steps["policy-inputs"] = { status: "fail", evidence: oneLine(error) };
   }
   if (report.verdict !== "LOCAL-ELIGIBLE") return report;
-  if (mismatch()) {
+  const final = mismatch();
+  if (final instanceof RulesAPIUnavailable) return refused(final);
+  if (final) {
     report.verdict = "REFUSED";
     report.remaining = [];
     report.steps["pull-request"] = { status: "fail", evidence: "pull request moved, closed or became unavailable during the check" };
@@ -237,5 +240,6 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const options = { repository, base, head, maintenance, site };
   const report = bound ? preflightPullRequest({ ...options, number, fetchRules }) : preflightContribution(options);
   console.log(JSON.stringify(report, null, 2));
-  if (report.verdict !== "LOCAL-ELIGIBLE") process.exitCode = 1;
+  if (report.verdict === "UNAVAILABLE") process.exitCode = 3;
+  else if (report.verdict !== "LOCAL-ELIGIBLE") process.exitCode = 1;
 }
