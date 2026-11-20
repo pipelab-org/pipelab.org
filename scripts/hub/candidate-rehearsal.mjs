@@ -5,86 +5,83 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse as toml } from "smol-toml";
 import { assertClosedDiscovery } from "./acceptance.mjs";
+import { assertSiteCheckoutIdentity } from "./admission-producer.mjs";
 import { measureCandidatePacks } from "./candidate-measurements.mjs";
 import { preflightPullRequest } from "./contribution-preflight.mjs";
 import { canonical, sha256 } from "./evidence.mjs";
 import { prepareCandidateCatalog, writeCatalog } from "./generate.mjs";
-import { readGit } from "./git-source.mjs";
 import { assertPublication } from "./parity.mjs";
 import { materializeGitTree } from "./source-tree.mjs";
 
 const { policies } = JSON.parse(readFileSync(new URL("./routes.json", import.meta.url)));
 
-export function rehearseCandidate({ number, base, head, siteBase, rulesFixtureRepository, source, measure = false }) {
+export function rehearseCandidate({ number, base, head, siteBase, rulesFixtureRepository, source, measure = false }, checkCandidate) {
   const { root } = source;
-  if (readGit(root, ["rev-parse", "HEAD"], { encoding: "utf8" }).trim() !== siteBase) {
-    throw new Error("rehearsal requires the exact site base checkout");
-  }
-
-  return preflightPullRequest({ number, base, head, fetchRules: true, site: root }, undefined,
-    candidate => {
+  const tooling = assertSiteCheckoutIdentity(root, siteBase, source.engine);
+  const scratch = mkdtempSync(path.join(tmpdir(), "hub-candidate-"));
+  try {
+    const site = path.join(scratch, "site");
+    mkdirSync(site);
+    materializeGitTree(root, siteBase, site);
+    const snapshot = { ...source, root: site };
+    return preflightPullRequest({ number, base, head, fetchRules: true, site }, undefined, candidate => {
       const { loaded, repository } = candidate;
-      const scratch = mkdtempSync(path.join(tmpdir(), "hub-candidate-"));
-      try {
-        // The policy copy has its own approval before an opening candidate.
-        // Rehearse every policy page with committed source text and record any
-        // absent pages alongside the results for this disposable preview.
-        const policyFile = path.join(root, "data/hub/policy-pages.json");
-        const pages = existsSync(policyFile) ? JSON.parse(readFileSync(policyFile, "utf8")) : {};
-        const previewPolicies = policies.filter(name => Object.hasOwn(pages, name));
-        const prepared = prepareCandidateCatalog({ ...source, policies: previewPolicies }, loaded, {
-          siteBase, rulesSHA: head, rulesRepository: rulesFixtureRepository, candidateRepository: repository,
-        }, scratch);
-        const site = path.join(scratch, "site");
-        mkdirSync(site);
-        materializeGitTree(root, siteBase, site);
+      const policy = checkCandidate?.(candidate);
+      const policyFile = path.join(site, "data/hub/policy-pages.json");
+      const pages = existsSync(policyFile) ? JSON.parse(readFileSync(policyFile, "utf8")) : {};
+      const previewPolicies = policies.filter(name => Object.hasOwn(pages, name));
+      const prepared = prepareCandidateCatalog({ ...snapshot, policies: previewPolicies }, loaded, {
+        siteBase, siteRepository: root, rulesSHA: head, rulesRepository: rulesFixtureRepository,
+        candidateRepository: repository,
+      }, scratch);
 
-        const launch = path.join(site, "data/hub/launch.toml");
-        if (toml(readFileSync(launch, "utf8")).open !== false) {
-          throw new Error("rehearsal requires a closed site baseline");
-        }
-
-        const { catalog, assetRoot } = prepared;
-        const generated = path.join(site, "data/hub/generated");
-        rmSync(generated, { recursive: true, force: true });
-        writeCatalog(generated, catalog);
-        for (const name of ["community", "configs"]) {
-          const relative = path.join("hub", name);
-          const destination = path.join(site, "assets", relative);
-          rmSync(destination, { recursive: true, force: true });
-          const assets = path.join(assetRoot, relative);
-          if (existsSync(assets)) cpSync(assets, destination, { recursive: true });
-        }
-
-        const manifest = catalog["routes.json"], records = catalog["listings.json"];
-        const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => !/^HUGO[_x]/i.test(key)));
-        const build = (name, open) => {
-          const directory = path.join(scratch, name);
-          execFileSync("hugo", ["--gc", "--minify", "--destination", directory], {
-            cwd: site, env, stdio: ["ignore", "pipe", "pipe"],
-          });
-          assertPublication({ directory, manifest, records, open, requireBuild: false });
-          return directory;
-        };
-        assertClosedDiscovery(build("closed", false));
-        writeFileSync(launch, "open = true\n");
-        build("preview", true);
-        const fresh = measure === true && measureCandidatePacks({
-          candidate, source, rulesFixtureRepository, output: path.join(scratch, "fresh-measurements"),
-        });
-        return {
-          site_sha: siteBase,
-          tooling_identity: catalog["source.json"].tooling_identity,
-          manifest_sha256: sha256(canonical(manifest)),
-          listings: records.length,
-          routes: manifest.entries.length,
-          missing_policy_pages: policies.filter(name => !previewPolicies.includes(name)),
-          ...(fresh ? { fresh_measurements: fresh } : {}),
-        };
-      } finally {
-        rmSync(scratch, { recursive: true, force: true });
+      const launch = path.join(site, "data/hub/launch.toml");
+      if (toml(readFileSync(launch, "utf8")).open !== false) {
+        throw new Error("rehearsal requires a closed site baseline");
       }
+
+      const { catalog, assetRoot } = prepared;
+      const generated = path.join(site, "data/hub/generated");
+      rmSync(generated, { recursive: true, force: true });
+      writeCatalog(generated, catalog);
+      for (const name of ["community", "configs"]) {
+        const relative = path.join("hub", name);
+        const destination = path.join(site, "assets", relative);
+        rmSync(destination, { recursive: true, force: true });
+        const assets = path.join(assetRoot, relative);
+        if (existsSync(assets)) cpSync(assets, destination, { recursive: true });
+      }
+
+      const manifest = catalog["routes.json"], records = catalog["listings.json"];
+      const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => !/^HUGO[_x]/i.test(key)));
+      const build = (name, open) => {
+        const directory = path.join(scratch, name);
+        execFileSync("hugo", ["--gc", "--minify", "--destination", directory], {
+          cwd: site, env, stdio: ["ignore", "pipe", "pipe"],
+        });
+        assertPublication({ directory, manifest, records, open, requireBuild: false });
+        return directory;
+      };
+      assertClosedDiscovery(build("closed", false));
+      writeFileSync(launch, "open = true\n");
+      build("preview", true);
+      const fresh = measure === true && measureCandidatePacks({
+        candidate, source: snapshot, rulesFixtureRepository, output: path.join(scratch, "fresh-measurements"),
+      });
+      return {
+        site_sha: siteBase,
+        tooling_identity: tooling,
+        manifest_sha256: sha256(canonical(manifest)),
+        listings: records.length,
+        routes: manifest.entries.length,
+        missing_policy_pages: policies.filter(name => !previewPolicies.includes(name)),
+        ...(fresh ? { fresh_measurements: fresh } : {}),
+        ...(policy ? { policy } : {}),
+      };
     });
+  } finally {
+    rmSync(scratch, { recursive: true, force: true });
+  }
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

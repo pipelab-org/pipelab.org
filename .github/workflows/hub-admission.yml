@@ -1,0 +1,141 @@
+name: Hub admission
+
+on:
+  workflow_dispatch:
+    inputs:
+      rules_pr:
+        description: Pull request number in pipelab-org/pipelock-rules
+        required: true
+        type: string
+      rules_base:
+        description: Full Rules base commit SHA
+        required: true
+        type: string
+      rules_head:
+        description: Full Rules head commit SHA
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  admission:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - name: Require site main
+        env:
+          REPOSITORY: ${{ github.repository }}
+          REF: ${{ github.ref }}
+        run: |
+          test "$REPOSITORY" = pipelab-org/pipelab.org
+          test "$REF" = refs/heads/main
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          # Hub naming checks Unicode 17.0 and ICU 78.3.
+          node-version: 24.21.0
+      - run: npm ci --ignore-scripts
+      - id: pins
+        name: Read the committed tool versions
+        run: |
+          printf 'go=%s\n' "$(jq -er '.go_version | sub("^go"; "")' scripts/hub/engine.json)" >> "$GITHUB_OUTPUT"
+          printf 'hugo=%s\n' "$(tr -d '\n' < .hugo-version)" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: ${{ steps.pins.outputs.go }}
+          cache: false
+      - uses: peaceiris/actions-hugo@2752ce1d29631191ea3f27c23495fa06139a5b78 # v3
+        with:
+          hugo-version: ${{ steps.pins.outputs.hugo }}
+          extended: true
+      - name: Prepare the pinned reader and released CLI
+        env:
+          GOTOOLCHAIN: local
+        run: |
+          scratch="$RUNNER_TEMP/hub-admission"
+          mkdir -p "$scratch/modules" "$scratch/bin"
+          engine_version="$(jq -er '.version' scripts/hub/engine.json)"
+          engine_sha="$(jq -er '.source_commit' scripts/hub/engine.json)"
+          tag="refs/tags/v$engine_version"
+          engine="$scratch/engine.git"
+          git init --bare --quiet --template= "$engine"
+          git -C "$engine" fetch --no-tags --no-recurse-submodules --depth=1 \
+            https://github.com/pipelab-org/pipelock "+$tag:$tag"
+          test "$(git -C "$engine" rev-parse "$tag^{}")" = "$engine_sha"
+          git -C "$engine" show "$engine_sha:go.mod" > "$scratch/modules/go.mod"
+          git -C "$engine" show "$engine_sha:go.sum" > "$scratch/modules/go.sum"
+          go -C "$scratch/modules" mod download
+          node scripts/hub/build-harness.mjs "$engine" "$scratch" > "$scratch/engine.json"
+
+          release="$(jq -er '.version' scripts/hub/retrieval-pin.json)"
+          asset="$(jq -er '.asset' scripts/hub/retrieval-pin.json)"
+          digest="$(jq -er '.archive_sha256' scripts/hub/retrieval-pin.json)"
+          curl -q --fail --silent --show-error --location --proto '=https' --proto-redir '=https' \
+            "https://github.com/pipelab-org/pipelock/releases/download/v$release/$asset" \
+            --output "$scratch/release.tar.gz"
+          printf '%s  %s\n' "$digest" "$scratch/release.tar.gz" | sha256sum --check --status
+          tar -xzf "$scratch/release.tar.gz" -C "$scratch/bin" pipelock
+      - name: Bind the producer and acquire the pinned benchmark fixtures
+        run: |
+          scratch="$RUNNER_TEMP/hub-admission"
+          jq -e '.identity' "$scratch/engine.json" > "$scratch/engine-identity.json"
+          node scripts/hub/admission-producer.mjs admission "$scratch/engine-identity.json"
+
+          fixtures="$scratch/fixtures.git"
+          git init --bare --quiet --template= "$fixtures"
+          jq -er '[.[].rules_commit] | unique[] | select(test("^[a-f0-9]{40}$"))' \
+            scripts/hub/bench-workload/official-sources.json > "$scratch/fixture-commits"
+          while IFS= read -r commit; do
+            git -C "$fixtures" fetch --no-tags --no-recurse-submodules --depth=1 \
+              https://github.com/pipelab-org/pipelock-rules "$commit"
+            test "$(git -C "$fixtures" rev-parse FETCH_HEAD)" = "$commit"
+          done < "$scratch/fixture-commits"
+      - id: admission
+        name: Check and measure the exact Rules submission
+        env:
+          HUB_RULES_PUBLIC_API: "1"
+          RULES_PR: ${{ inputs.rules_pr }}
+          RULES_BASE: ${{ inputs.rules_base }}
+          RULES_HEAD: ${{ inputs.rules_head }}
+        run: |
+          scratch="$RUNNER_TEMP/hub-admission"
+          engine="$scratch/engine.json"
+          node --input-type=module - "$scratch" "$engine" > "$scratch/input.json" <<'JS'
+          import { readFileSync } from "node:fs";
+          const [scratch, engineFile] = process.argv.slice(2);
+          const { binary, destination, identity } = JSON.parse(readFileSync(engineFile, "utf8"));
+          const { RULES_PR: pr, RULES_BASE: base, RULES_HEAD: head } = process.env;
+          if (!/^[1-9][0-9]*$/.test(pr) || !Number.isSafeInteger(Number(pr))) throw new Error("Invalid Rules pull request number.");
+          console.log(JSON.stringify({
+            number: Number(pr), base, head, rulesFixtureRepository: scratch + "/fixtures.git",
+            source: {
+              binary, engine: identity, config: destination + "/configs/claude-code.yaml",
+              repository: scratch + "/engine.git", pipelockBinary: scratch + "/bin/pipelock",
+            },
+          }));
+          JS
+          status=0
+          node scripts/hub/hosted-admission.mjs "$scratch/input.json" > "$scratch/result.json" || status=$?
+          {
+            printf '%s\n\n' '## Hub admission'
+            if (( status == 0 )); then
+              printf 'ADMIT for Rules pull request #%s at %s.\n' "$RULES_PR" "$RULES_HEAD"
+            elif (( status == 3 )); then
+              printf '%s\n' 'Rules metadata was unavailable. Retry the admission check.'
+            else
+              printf '%s\n' 'Admission did not pass. See the report artifact and job log.'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit "$status"
+      - name: Upload admission report
+        if: ${{ !cancelled() && steps.admission.outcome != 'skipped' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: hub-admission
+          path: ${{ runner.temp }}/hub-admission/result.json
+          if-no-files-found: error

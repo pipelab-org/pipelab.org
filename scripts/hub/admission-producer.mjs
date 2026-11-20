@@ -33,6 +33,12 @@ export function admissionProducer({ mode, environment, root, engine }, readMain 
   }
 
   if (readMain() !== revision) throw new Error("producer revision differs from current site main");
+  const tooling = assertSiteCheckoutIdentity(root, revision, engine);
+  return { ref, sha: revision, workflow: workflow.path, run_id: runId, tooling_identity: tooling };
+}
+
+export function assertSiteCheckoutIdentity(root, revision, engine) {
+  if (!sha.test(revision ?? "")) throw new Error("site checkout requires a full commit SHA");
   const git = (...args) => readGit(root, args, { timeout: 15_000 });
   if (git("rev-parse", "HEAD").toString().trim() !== revision ||
       git("status", "--porcelain=v1", "--untracked-files=normal").length) {
@@ -44,7 +50,7 @@ export function admissionProducer({ mode, environment, root, engine }, readMain 
       tooling.package_lock_sha256 !== sha256(git("show", revision + ":package-lock.json"))) {
     throw new Error("producer tooling differs from the site commit");
   }
-  return { ref, sha: revision, workflow: workflow.path, run_id: runId, tooling_identity: tooling };
+  return tooling;
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

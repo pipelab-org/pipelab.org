@@ -66,22 +66,21 @@ function assertCatalogScratch(rootDirectory, scratchDirectory) {
 // Rehearsal uses a caller-inspected PR tree and the accepted site's baseline.
 // Publication still goes through prepareBoundCatalog and its Rules main check.
 export function prepareCandidateCatalog(options, loaded, {
-  siteBase, rulesSHA, rulesRepository, candidateRepository,
+  siteBase, siteRepository, rulesSHA, rulesRepository, candidateRepository,
 }, scratchDirectory) {
   assertCatalogScratch(options.root, scratchDirectory);
-  const previous = acceptedSource(options.root, siteBase);
+  const previous = acceptedSource(siteRepository, siteBase);
   assertSourceProgress(candidateRepository, previous.rules_sha, rulesSHA, rulesSHA);
   const downloads = [];
   const catalog = generateAcquiredCatalog({ ...options, mode: "routine" }, loaded, previous, {
-    rulesSHA, rulesRepository, downloads,
+    rulesSHA, rulesRepository, downloads, siteRepository, siteCommit: siteBase,
     evidenceRoot: path.join(scratchDirectory, "site-evidence"),
   });
   const assetRoot = stageCatalogAssets(scratchDirectory, catalog["routes.json"], downloads);
   return { catalog, assetRoot };
 }
 
-function committedMeasurements(root, destination) {
-  const commit = readGit(root, ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
+function committedMeasurements(root, destination, commit = readGit(root, ["rev-parse", "HEAD"], { encoding: "utf8" }).trim()) {
   const directory = "data/hub/measurements";
   mkdirSync(destination);
   materializeGitTree(root, commit, destination, [
@@ -127,8 +126,8 @@ function generateBoundCatalog(options, downloads) {
 }
 
 function generateAcquiredCatalog(options, { items, publishers, history }, previous,
-  { rulesSHA, rulesRepository, downloads, evidenceRoot }) {
-  const references = committedMeasurements(options.root, evidenceRoot);
+  { rulesSHA, rulesRepository, downloads, evidenceRoot, siteRepository = options.root, siteCommit }) {
+  const references = committedMeasurements(siteRepository, evidenceRoot, siteCommit);
   return generateFromListings({
     ...options, items, publishers, lifecycle: { accepted: previous.lifecycle, history },
   }, { rulesSHA, downloads, measurements: { evidenceRoot, references, rulesRepository } });

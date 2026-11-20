@@ -5,6 +5,8 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { acquirePolicyBlobs } from "../scripts/hub/policy-blobs.mjs";
+import { assertRulesWorkflowPolicy } from "../scripts/hub/rules-workflow-policy.mjs";
+import { rehearseCandidate } from "../scripts/hub/candidate-rehearsal.mjs";
 
 function repository(t) {
   const directory = mkdtempSync(path.join(tmpdir(), "hub-policy-"));
@@ -144,4 +146,48 @@ test("policy acquisition rejects control characters in workflow paths", t => {
   write(file, "fixture");
   git(["add", "--", file]);
   assert.throws(() => acquirePolicyBlobs(directory, commit()), /policy path is outside the acquisition bounds/);
+});
+
+test("Hub workflow policy requires ownership and confines the advisory workflow to read-only Hub PRs", () => {
+  const policy = `on:
+  pull_request:
+    branches: [main]
+    paths: ['hub/**']
+permissions: {contents: read}
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'true'
+`;
+  const file = (path, value) => ({ path, object: "a".repeat(40), bytes: Buffer.from(value) });
+  const codeowners = [file(".github/CODEOWNERS", [
+    "/hub/", "/.github/", "/.github/CODEOWNERS", "/scripts/", "/rules/", "/published/", "/compatibility/",
+  ].map(pattern => pattern + " @example-maintainers").join("\n"))];
+  const check = (advisory, extra = [], owners = codeowners) => assertRulesWorkflowPolicy({
+    codeowners: owners,
+    workflows: [file(".github/workflows/hub-validate.yml", advisory), ...extra],
+  });
+
+  assert.doesNotThrow(() => check(policy));
+  assert.throws(() => check(policy, [], []), /requires .github\/CODEOWNERS/);
+  assert.throws(() => check(policy.replace("contents: read", "contents: write")), /must be read-only/);
+  assert.throws(() => check(policy.replace("hub/**", "**")), /must be read-only/);
+  assert.throws(() => check(policy, [file(".github/workflows/other.yml", "on: pull_request_target")]), /unreviewed privileged trigger/);
+});
+
+test("candidate rehearsal refuses untracked catalog data and hidden tooling changes before acquisition", t => {
+  const { directory, git, write, commit } = repository(t);
+  write("package-lock.json", "{}");
+  write("scripts/hub/trusted.mjs", "export const trusted = true;\n");
+  git(["add", "--", "."]);
+  const siteBase = commit();
+  const candidate = { siteBase, source: { root: directory } };
+  const inventory = write("data/hub/generated/inventory.json", "{}");
+  assert.throws(() => rehearseCandidate(candidate), /requires the exact clean site checkout/);
+  rmSync(inventory);
+  git(["update-index", "--skip-worktree", "scripts/hub/trusted.mjs"]);
+  write("scripts/hub/trusted.mjs", "export const trusted = false;\n");
+  assert.equal(git(["status", "--porcelain=v1"]), "");
+  assert.throws(() => rehearseCandidate(candidate), /tooling differs from the site commit/);
 });
