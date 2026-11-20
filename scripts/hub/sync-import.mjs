@@ -81,6 +81,8 @@ async function verifyRoutineImport({ source, producer, rulesRepository, rulesMai
     const reason = step ? "routine Hub acceptance failed at step " + step : "routine Hub acceptance did not pass";
     throw new HubCheckFailure(reason, { cause });
   }
+  const { stdout: tree } = await git("rev-parse", "HEAD^{tree}");
+  return tree.trim();
 }
 
 // Only the read-only build job can prepare a delivery. Routine acceptance
@@ -113,16 +115,16 @@ export async function prepareSyncImport({ source, output }, environment = proces
     writeCatalog(path.join(staged, "data/hub/generated"), catalog);
     cpSync(assetRoot, path.join(staged, "assets"), { recursive: true });
 
+    check = "prepare and validate the routine acceptance candidate";
+    const siteTree = await verifyRoutineImport({ source, producer, rulesRepository, rulesMain, scratch, staged });
     const manifest = {
-      format: 1, producer, rules_sha: rulesMain, rules_policy: rulesPolicy,
+      format: 1, producer, site_tree: siteTree, rules_sha: rulesMain, rules_policy: rulesPolicy,
       files: fileInventory(staged),
     };
     writeFileSync(path.join(staged, "hub-sync-manifest.json"), jsonBytes(manifest), { flag: "wx" });
     check = "verify the import file manifest";
     const verifier = fileURLToPath(new URL("./verify-sync-import.py", import.meta.url));
     execFileSync("python3", ["-I", verifier, staged, producer.sha, rulesMain], { stdio: "pipe" });
-    check = "prepare and validate the routine acceptance candidate";
-    await verifyRoutineImport({ source, producer, rulesRepository, rulesMain, scratch, staged });
     check = "recheck current Rules main";
     if (readRulesMain() !== rulesMain) throw new HubCheckFailure("Rules main moved during the import");
     check = "recheck the import producer";
