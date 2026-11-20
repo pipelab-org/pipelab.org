@@ -109,16 +109,16 @@ function generateBoundCatalog(options, downloads) {
       options.removed?.length || options.baseline?.length || binding.history) {
     throw new Error("bound source must be the sole contributor data producer");
   }
-  const { siteBase, rulesRepository, rulesSHA, rulesMain } = binding;
+  const { siteBase, rulesRepository, rulesSHA, rulesMain, siteRepository = options.root } = binding;
   const rulesTip = readGit(rulesRepository, ["rev-parse", "refs/remotes/origin/main"], { encoding: "utf8" }).trim();
   if (rulesTip !== rulesMain) throw new Error("rules source does not bind the fetched main tip");
-  const previous = acceptedSource(options.root, siteBase);
+  const previous = acceptedSource(siteRepository, siteBase);
   assertSourceProgress(rulesRepository, previous.rules_sha, rulesSHA, rulesMain);
   const directory = mkdtempSync(path.join(tmpdir(), "hub-sources-"));
   try {
     acquireHubTree(rulesRepository, rulesSHA, directory);
     return generateAcquiredCatalog(options, loadAcquiredListings(directory, options.root), previous, {
-      rulesSHA, rulesRepository, downloads, evidenceRoot: path.join(directory, "site-evidence"),
+      rulesSHA, rulesRepository, downloads, siteRepository, evidenceRoot: path.join(directory, "site-evidence"),
     });
   } finally {
     rmSync(directory, { recursive: true, force: true });
@@ -130,7 +130,7 @@ function generateAcquiredCatalog(options, { items, publishers, history }, previo
   const references = committedMeasurements(siteRepository, evidenceRoot, siteCommit);
   return generateFromListings({
     ...options, items, publishers, lifecycle: { accepted: previous.lifecycle, history },
-  }, { rulesSHA, downloads, measurements: { evidenceRoot, references, rulesRepository } });
+  }, { rulesSHA, downloads, measurements: { evidenceRoot, references, rulesRepository: options.rulesFixtureRepository ?? rulesRepository } });
 }
 
 function generateFromListings({ root, items, engine, binary, repository, config, pipelockBinary,

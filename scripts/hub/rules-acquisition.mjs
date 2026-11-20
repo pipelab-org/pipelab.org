@@ -1,11 +1,17 @@
 import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import path from "node:path";
-import { httpsGitEnvironment, readGit } from "./git-source.mjs";
+import { httpsGitEnvironment, readGit, readRemoteRefs } from "./git-source.mjs";
 import { maxPolicyBlobBytes, policyBlobEntries } from "./policy-blobs.mjs";
 import { assertHubOnly, hubBlobEntries, maxSourceFileBytes } from "./source-tree.mjs";
 
 export const rulesRepository = "pipelab-org/pipelock-rules";
+const rulesURL = "https://github.com/" + rulesRepository;
+const rulesMainRef = "refs/heads/main";
+
+export function readRulesMain() {
+  return readRemoteRefs(rulesURL, [rulesMainRef], "invalid Rules main ref result").get(rulesMainRef);
+}
 // Bound the initial Git metadata pack to the same size as GitHub's recursive
 // Trees API response. The selected blob fetch adds its declared payload size.
 const maxMetadataBytes = 7 * 1024 * 1024;
@@ -71,7 +77,13 @@ function boundedObjects(tree, files, policy) {
 // Fetch into a new bare repository. Every inspection uses readGit, which
 // refuses missing objects without starting a Git transport.
 export function acquireRulesObjects(directory, { number, base, head }) {
+  const pullRequest = number !== undefined;
+  if (!pullRequest && base !== head) throw new Error("Rules import must use the exact main tip");
   const repository = path.join(directory, "rules.git");
+  const baseRef = pullRequest ? rulesMainRef : "refs/remotes/origin/main";
+  const headRef = "refs/hub/pull-head";
+  const refspecs = ["+" + rulesMainRef + ":" + baseRef];
+  if (pullRequest) refspecs.push("+refs/pull/" + number + "/head:" + headRef);
   const gitOptions = { env: httpsGitEnvironment(directory), timeout: 30_000 };
   const isolatedGit = ["-c", "http.followRedirects=false", "-C", directory];
   const git = args => execFileSync("git", [...isolatedGit, ...args], {
@@ -90,19 +102,20 @@ export function acquireRulesObjects(directory, { number, base, head }) {
   };
   try {
     git(["init", "--bare", "--quiet", "--template=", repository]);
-    git(["-C", repository, "config", "remote.origin.url", `https://github.com/${rulesRepository}`]);
+    git(["-C", repository, "config", "remote.origin.url", rulesURL]);
     git(["-C", repository, "config", "remote.origin.promisor", "true"]);
-    fetch(["+refs/heads/main:refs/heads/main", `+refs/pull/${number}/head:refs/hub/pull-head`], maxMetadataBytes);
+    fetch(refspecs, maxMetadataBytes);
   } catch {
     throw new Error("could not fetch published Rules commits within the metadata limit");
   }
-  const refs = readGit(repository, ["rev-parse", "refs/heads/main", "refs/hub/pull-head"],
+  const requested = pullRequest ? [baseRef, headRef] : [baseRef];
+  const refs = readGit(repository, ["rev-parse", ...requested],
     { encoding: "ascii" }).trimEnd().split("\n");
-  if (refs.length !== 2 || refs[0] !== base || refs[1] !== head) {
+  if (refs.length !== requested.length || refs[0] !== base || (pullRequest && refs[1] !== head)) {
     throw new Error("published Rules refs moved during acquisition");
   }
 
-  assertHubOnly(repository, base, head);
+  if (pullRequest) assertHubOnly(repository, base, head);
   const { tree, files } = hubBlobEntries(repository, head);
   const { workflows, codeowners } = policyBlobEntries(repository, head);
   const objects = boundedObjects(tree, files, [...workflows, ...codeowners]);
