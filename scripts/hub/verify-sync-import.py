@@ -5,8 +5,11 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import shutil
 import stat
 import sys
+import tarfile
+from tempfile import TemporaryDirectory
 
 
 CATALOG = {
@@ -18,6 +21,11 @@ ASSET = re.compile(
     rf"assets/hub/(?:community/{ID}/{ID}/bundle\.yaml(?:\.sig)?|configs/{ID}/pipelock\.yaml)"
 )
 MANIFEST = "hub-sync-manifest.json"
+OWNED = ("data/hub/generated", "assets/hub/community", "assets/hub/configs")
+
+
+def allowed_file(name):
+    return name in CATALOG or ASSET.fullmatch(name)
 
 
 def file_inventory(root, directory):
@@ -54,7 +62,7 @@ def verify(root, site_sha, rules_sha):
     for entry in manifest["files"]:
         name = entry["path"]
         if (name not in expected or name in seen
-                or (name not in CATALOG and not ASSET.fullmatch(name))):
+                or not allowed_file(name)):
             raise ValueError("Hub manifest has an unexpected or repeated path")
         file = root / name
         if type(entry["size"]) is not int or file.stat().st_size != entry["size"]:
@@ -67,18 +75,55 @@ def verify(root, site_sha, rules_sha):
         raise ValueError("Hub manifest does not cover the complete delivery")
 
 
+def apply_delivery(archive, site, site_sha, rules_sha):
+    with TemporaryDirectory(prefix="hub-sync-") as directory:
+        root = Path(directory)
+        with tarfile.open(archive, "r:") as bundle:
+            seen = set()
+            for member in bundle:
+                name = member.name
+                if (not member.isreg() or name in seen
+                        or (name != MANIFEST and not allowed_file(name))):
+                    raise ValueError("Hub sync archive includes an invalid entry")
+                seen.add(name)
+                target = root / name
+                target.parent.mkdir(parents=True, exist_ok=True)
+                with bundle.extractfile(member) as source, target.open("xb") as destination:
+                    shutil.copyfileobj(source, destination)
+        verify(root, site_sha, rules_sha)
+
+        for relative in OWNED:
+            target = site / relative
+            for ancestor in (target, *target.parents):
+                if ancestor == site.parent:
+                    break
+                if ancestor.is_symlink():
+                    raise ValueError("Hub output path contains a symbolic link")
+        for relative in OWNED:
+            target = site / relative
+            if target.exists():
+                shutil.rmtree(target)
+            source = root / relative
+            if source.exists():
+                shutil.copytree(source, target)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("root", type=Path)
     parser.add_argument("site_sha")
     parser.add_argument("rules_sha")
+    parser.add_argument("--apply-to", type=Path)
     arguments = parser.parse_args()
     try:
         for revision in (arguments.site_sha, arguments.rules_sha):
             if not re.fullmatch(r"[a-f0-9]{40}", revision):
                 raise ValueError("Expected exact site and Rules SHAs")
-        verify(arguments.root, arguments.site_sha, arguments.rules_sha)
-    except (ValueError, TypeError, KeyError, AttributeError, OSError, RecursionError):
+        if arguments.apply_to:
+            apply_delivery(arguments.root, arguments.apply_to, arguments.site_sha, arguments.rules_sha)
+        else:
+            verify(arguments.root, arguments.site_sha, arguments.rules_sha)
+    except (ValueError, TypeError, KeyError, AttributeError, OSError, RecursionError, tarfile.TarError):
         sys.exit("Hub delivery could not be verified.")
 
 

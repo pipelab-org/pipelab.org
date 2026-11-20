@@ -1,0 +1,117 @@
+name: Sync PipeLab Hub
+
+on:
+  schedule:
+    - cron: '23 7 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sync-pipelab-hub
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    outputs:
+      site_sha: ${{ steps.delivery.outputs.site_sha }}
+      rules_sha: ${{ steps.delivery.outputs.rules_sha }}
+    steps:
+      - name: Require site main
+        env:
+          REPOSITORY: ${{ github.repository }}
+          REF: ${{ github.ref }}
+        run: |
+          test "$REPOSITORY" = pipelab-org/pipelab.org
+          test "$REF" = refs/heads/main
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: ./.github/actions/hub-toolchain
+        with:
+          mode: sync
+      - id: delivery
+        name: Verify the catalog and build the import delivery
+        env:
+          HUB_RULES_PUBLIC_API: "1"
+        run: |
+          scratch="$RUNNER_TEMP/hub-build"
+          node --input-type=module - "$scratch" > "$scratch/sync-input.json" <<'JS'
+          import { readFileSync } from "node:fs";
+          const scratch = process.argv[2];
+          const { binary, destination, identity } = JSON.parse(readFileSync(scratch + "/engine.json", "utf8"));
+          console.log(JSON.stringify({
+            output: scratch + "/delivery",
+            source: {
+              binary, engine: identity, config: destination + "/configs/claude-code.yaml",
+              repository: scratch + "/engine.git", pipelockBinary: scratch + "/bin/pipelock",
+              rulesFixtureRepository: scratch + "/fixtures.git",
+            },
+          }));
+          JS
+          node scripts/hub/sync-import.mjs "$scratch/sync-input.json"
+          delivery="$scratch/delivery"
+          manifest="$delivery/hub-sync-manifest.json"
+          site_sha="$(jq -er '.producer.sha' "$manifest")"
+          rules_sha="$(jq -er '.rules_sha' "$manifest")"
+          {
+            printf '%s\n' 'hub-sync-manifest.json'
+            jq -er '.files[].path' "$manifest"
+          } > "$scratch/filelist"
+          tar --create --file "$scratch/hub-sync.tar" --directory "$delivery" --no-recursion \
+            --verbatim-files-from --files-from "$scratch/filelist"
+          {
+            printf 'site_sha=%s\n' "$site_sha"
+            printf 'rules_sha=%s\n' "$rules_sha"
+          } >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: hub-sync
+          path: ${{ runner.temp }}/hub-build/hub-sync.tar
+          if-no-files-found: error
+  propose:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          ref: ${{ needs.build.outputs.site_sha }}
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: hub-sync
+          path: ${{ runner.temp }}/hub-delivery
+      - name: Check current revisions and apply only verified catalog files
+        env:
+          SITE_SHA: ${{ needs.build.outputs.site_sha }}
+          RULES_SHA: ${{ needs.build.outputs.rules_sha }}
+        run: |
+          [[ "$SITE_SHA" =~ ^[a-f0-9]{40}$ && "$RULES_SHA" =~ ^[a-f0-9]{40}$ ]]
+          test "$(git rev-parse HEAD)" = "$SITE_SHA"
+          python3 -I scripts/hub/verify-sync-import.py "$RUNNER_TEMP/hub-delivery/hub-sync.tar" \
+            "$SITE_SHA" "$RULES_SHA" --apply-to "$PWD"
+          site_main="$(git ls-remote --exit-code https://github.com/pipelab-org/pipelab.org refs/heads/main)"
+          rules_main="$(git ls-remote --exit-code https://github.com/pipelab-org/pipelock-rules refs/heads/main)"
+          test "$site_main" = "$SITE_SHA"$'\trefs/heads/main'
+          test "$rules_main" = "$RULES_SHA"$'\trefs/heads/main'
+      - name: Open or update the Hub import pull request
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          token: ${{ secrets.PIPELAB_HUB_SYNC_TOKEN }}
+          add-paths: |
+            data/hub/generated/**
+            assets/hub/community/**
+            assets/hub/configs/**
+          base: main
+          branch: pip/sync-pipelab-hub
+          commit-message: 'chore: import the verified Hub catalog'
+          committer: 'github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>'
+          author: 'github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>'
+          title: 'chore: import the verified Hub catalog'
+          body: |
+            Imports the validated catalog from Rules commit `${{ needs.build.outputs.rules_sha }}`.
+            The read-only build passed routine Hub acceptance on site base `${{ needs.build.outputs.site_sha }}`.
