@@ -79,6 +79,19 @@ test("a feature workflow, wrong workflow version or scheduled admission cannot c
   }
 });
 
+test("hosted preflight has its own site main identity and uses no engine evidence", t => {
+  const input = fixture(t);
+  const workflow = ".github/workflows/hub-rules-preflight.yml";
+  const environment = { ...input.environment, GITHUB_WORKFLOW_REF: "pipelab-org/pipelab.org/" + workflow + "@refs/heads/main" };
+  const options = { ...input, mode: "preflight", environment, engine: undefined };
+  const checked = JSON.parse(JSON.stringify(admissionProducer(options, () => input.revision)));
+  assert.equal(checked.workflow, workflow);
+  assert.equal(checked.sha, input.revision);
+  assert.equal(Object.hasOwn(checked.tooling_identity, "engine"), false);
+  assert.throws(() => admissionProducer({ ...options, mode: "admission" }, () => assert.fail("read remote")), /producer context/);
+  assert.throws(() => admissionProducer(options, () => "0".repeat(40)), /current site main/);
+});
+
 test("scheduled sync requires its own workflow identity", t => {
   const input = fixture(t);
   input.environment.GITHUB_EVENT_NAME = "schedule";

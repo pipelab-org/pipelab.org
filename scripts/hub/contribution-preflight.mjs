@@ -1,10 +1,9 @@
-import { execFileSync } from "node:child_process";
 import { readGit as git, readRemoteRefs } from "./git-source.mjs";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { acquireRulesObjects, rulesRepository } from "./rules-acquisition.mjs";
+import { acquireRulesObjects, readRulesAPI, rulesRepository } from "./rules-acquisition.mjs";
 import { loadAcquiredListings } from "./source-listings.mjs";
 import { acquirePolicyBlobs } from "./policy-blobs.mjs";
 import { parseListing } from "./validate.mjs";
@@ -52,9 +51,7 @@ const commitSHA = /^[a-f0-9]{40}$/;
 class RulesRefMismatch extends Error {}
 
 function pullRequest(number) {
-  const pr = JSON.parse(execFileSync("gh", ["api", "--hostname", "github.com", `repos/${rulesRepository}/pulls/${number}`], {
-    encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], timeout: 15000,
-  }));
+  const pr = readRulesAPI("pulls/" + number);
   const baseRef = "refs/heads/main";
   const headRef = `refs/pull/${number}/head`;
   const tips = readRemoteRefs(`https://github.com/${rulesRepository}`, [baseRef, headRef], "invalid rules ref result");

@@ -357,9 +357,20 @@ test("Rules PR acquisition fetches only selected blobs before offline preflight"
   const ghStub = path.join(directory, "gh");
   writeFileSync(ghStub, [
     "#!/bin/sh",
+    '[ "$HUB_RULES_PUBLIC_API" != 1 ] || exit 1',
     'case "$*" in',
     '  "api --hostname github.com repos/pipelab-org/pipelock-rules/pulls/2") cat "$HUB_STUB_DIR/pr.json";;',
     '  "api --hostname github.com repos/pipelab-org/pipelock-rules/git/trees/$HUB_STUB_TREE?recursive=1") cat "$HUB_STUB_DIR/tree.json";;',
+    '  *) exit 1;;',
+    "esac",
+    "",
+  ].join("\n"), { mode: 0o755 });
+
+  writeFileSync(path.join(directory, "curl"), [
+    "#!/bin/sh",
+    'case "$*" in',
+    '  "-q --silent --show-error --fail --proto =https --max-time 15 --max-filesize 1048576 --header Accept: application/vnd.github+json --url https://api.github.com/repos/pipelab-org/pipelock-rules/pulls/2") cat "$HUB_STUB_DIR/pr.json";;',
+    '  "-q --silent --show-error --fail --proto =https --max-time 15 --max-filesize 7340032 --header Accept: application/vnd.github+json --url https://api.github.com/repos/pipelab-org/pipelock-rules/git/trees/$HUB_STUB_TREE?recursive=1") cat "$HUB_STUB_DIR/tree.json";;',
     '  *) exit 1;;',
     "esac",
     "",
@@ -386,12 +397,12 @@ test("Rules PR acquisition fetches only selected blobs before offline preflight"
 
   const script = path.join(root, "scripts/hub/contribution-preflight.mjs");
   const wanted = path.join(directory, "wanted");
-  const run = (metadata, { drop = false, overrun = false } = {}) => {
+  const run = (metadata, { drop = false, overrun = false, publicAPI = false } = {}) => {
     rmSync(wanted, { force: true });
     writeFileSync(path.join(directory, "tree.json"), JSON.stringify(metadata));
     const result = spawnSync(process.execPath, [script, "--fetch-pr", "2", base, head, site], {
       encoding: "utf8", env: { ...process.env, PATH: directory + path.delimiter + process.env.PATH,
-        HUB_ORIGINAL_PATH: process.env.PATH, HUB_STUB_DIR: directory, HUB_STUB_TREE: tree, HUB_STUB_DROP: drop ? "1" : "0", HUB_STUB_OVERRUN: overrun ? "1" : "0" },
+        HUB_ORIGINAL_PATH: process.env.PATH, HUB_STUB_DIR: directory, HUB_STUB_TREE: tree, HUB_STUB_DROP: drop ? "1" : "0", HUB_STUB_OVERRUN: overrun ? "1" : "0", HUB_RULES_PUBLIC_API: publicAPI ? "1" : "0" },
     });
     assert.equal(result.signal, null, result.stderr);
     return { code: result.status, report: JSON.parse(result.stdout) };
@@ -403,6 +414,10 @@ test("Rules PR acquisition fetches only selected blobs before offline preflight"
   assert.deepEqual(eligible.report.steps["policy-inputs"].evidence.workflows.map(item => item.path), [workflow]);
   assert.deepEqual(new Set(readFileSync(wanted, "utf8").trim().split("\n")),
     new Set(treeEntries.filter(entry => entry.path !== unrelated).map(entry => entry.sha)));
+
+  const published = run(metadata, { publicAPI: true });
+  assert.equal(published.code, 0, JSON.stringify(published.report));
+  assert.deepEqual(published.report, eligible.report);
 
   const wrongFiles = [
     treeEntries.slice(1),

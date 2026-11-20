@@ -9,12 +9,21 @@ export const rulesRepository = "pipelab-org/pipelock-rules";
 // Trees API response. The selected blob fetch adds its declared payload size.
 const maxMetadataBytes = 7 * 1024 * 1024;
 
+export function readRulesAPI(resource, maxBuffer = 1024 * 1024) {
+  const endpoint = "repos/" + rulesRepository + "/" + resource;
+  const publicRead = process.env.HUB_RULES_PUBLIC_API === "1";
+  // Both endpoints expose public resources without authentication.
+  const args = publicRead ? ["-q", "--silent", "--show-error", "--fail", "--proto", "=https",
+    "--max-time", "15", "--max-filesize", String(maxBuffer), "--header", "Accept: application/vnd.github+json",
+    "--url", "https://api.github.com/" + endpoint] : ["api", "--hostname", "github.com", endpoint];
+  return JSON.parse(execFileSync(publicRead ? "curl" : "gh", args, {
+    encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], timeout: 15_000, maxBuffer,
+  }));
+}
+
 function publishedTree(tree) {
   // GitHub's recursive Trees API caps a response at 7 MB and sets truncated.
-  const result = JSON.parse(execFileSync("gh", ["api", "--hostname", "github.com",
-    `repos/${rulesRepository}/git/trees/${tree}?recursive=1`], {
-    encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], timeout: 15_000, maxBuffer: maxMetadataBytes,
-  }));
+  const result = readRulesAPI("git/trees/" + tree + "?recursive=1", maxMetadataBytes);
   if (result?.sha !== tree || result.truncated !== false || !Array.isArray(result.tree)) {
     throw new Error("GitHub Rules tree evidence is incomplete");
   }
