@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { HubCheckFailure } from "./check-failure.mjs";
+import { HubCheckFailure, HubUnavailable } from "./check-failure.mjs";
 import { sha256, toolingIdentity } from "./evidence.mjs";
 import { readGit, readRemoteRefs } from "./git-source.mjs";
 
@@ -37,7 +37,7 @@ export function admissionProducer({ mode, environment, root, engine }, readMain 
   try {
     published = readMain();
   } catch (cause) {
-    throw new HubCheckFailure("site main unavailable from GitHub", { cause });
+    throw new HubUnavailable("site main unavailable from GitHub", { cause });
   }
   if (published !== revision) throw new HubCheckFailure("producer revision differs from current site main");
   const tooling = assertSiteCheckoutIdentity(root, revision, engine);
@@ -74,7 +74,8 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     console.log(JSON.stringify({ producer }));
   } catch (error) {
     const reason = error instanceof HubCheckFailure ? error.message : "could not read producer inputs or checkout evidence";
-    console.error("NOT EVIDENCE: " + reason);
-    process.exitCode = 1;
+    const unavailable = error instanceof HubUnavailable;
+    console.error(unavailable ? "UNAVAILABLE: " + reason + ". Retry the check." : "NOT EVIDENCE: " + reason);
+    process.exitCode = unavailable ? 3 : 1;
   }
 }

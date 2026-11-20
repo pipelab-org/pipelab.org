@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { admissionProducer } from "./admission-producer.mjs";
 import { rehearseCandidate } from "./candidate-rehearsal.mjs";
-import { HubCheckFailure } from "./check-failure.mjs";
+import { HubCheckFailure, HubUnavailable } from "./check-failure.mjs";
 import { checkRulesWorkflowPolicy } from "./rules-workflow-policy.mjs";
 
 function officialListingPolicy({ repository, head, changes }) {
@@ -45,7 +45,9 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     else if (report.verdict !== "ADMIT") process.exitCode = 1;
   } catch (error) {
     const reason = error instanceof HubCheckFailure ? error.message : "could not complete " + check;
-    console.log(JSON.stringify({ mode: "hosted-admission", verdict: "REFUSED", reason }, null, 2));
-    process.exitCode = 1;
+    const unavailable = error instanceof HubUnavailable;
+    const verdict = unavailable ? "UNAVAILABLE" : "REFUSED";
+    console.log(JSON.stringify({ mode: "hosted-admission", verdict, reason }, null, 2));
+    process.exitCode = unavailable ? 3 : 1;
   }
 }

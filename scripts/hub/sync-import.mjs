@@ -3,7 +3,7 @@ import { cpSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, 
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { HubCheckFailure } from "./check-failure.mjs";
+import { HubCheckFailure, HubUnavailable } from "./check-failure.mjs";
 import { admissionProducer } from "./admission-producer.mjs";
 import { jsonBytes, sha256 } from "./evidence.mjs";
 import { prepareBoundCatalog, writeCatalog } from "./generate.mjs";
@@ -54,8 +54,10 @@ async function verifyRoutineImport({ source, producer, rulesRepository, rulesMai
       sourceBinding: { siteBase: producer.sha, rulesRepository, rulesMain, rulesSHA: rulesMain },
     },
   }));
-  const cwd = candidate;
-  const maxBuffer = 16 * 1024 * 1024;
+  // Candidate checks run independently of the outer workflow's Rules reads.
+  const env = Object.fromEntries(Object.entries(process.env).filter(([key]) =>
+    key !== "HUB_RULES_PUBLIC_API" && !key.startsWith("GITHUB_")));
+  const options = { cwd: candidate, maxBuffer: 16 * 1024 * 1024, env };
   const checks = [
     ["install candidate dependencies", "npm", ["ci", "--ignore-scripts"]],
     ["install the Pipelock verifier", "bash", ["scripts/install-pipelock-verifier.sh"]],
@@ -63,13 +65,13 @@ async function verifyRoutineImport({ source, producer, rulesRepository, rulesMai
   ];
   for (const [check, command, args] of checks) {
     try {
-      await run(command, args, { cwd, maxBuffer });
+      await run(command, args, options);
     } catch (cause) {
       throw new HubCheckFailure("could not " + check, { cause });
     }
   }
   try {
-    await run("make", ["--silent", "hub-acceptance", "HUB_ACCEPTANCE_INPUT=" + input], { cwd, maxBuffer });
+    await run("make", ["--silent", "hub-acceptance", "HUB_ACCEPTANCE_INPUT=" + input], options);
   } catch (cause) {
     let step;
     try {
@@ -157,7 +159,8 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     console.log(JSON.stringify({ rules_sha, files: files.length }));
   } catch (error) {
     const reason = error instanceof HubCheckFailure ? error.message : "could not read or finish the import input";
-    console.error("Hub import refused: " + reason);
-    process.exitCode = 1;
+    const unavailable = error instanceof HubUnavailable;
+    console.error(unavailable ? "Hub import unavailable: " + reason + ". Retry the check." : "Hub import refused: " + reason);
+    process.exitCode = unavailable ? 3 : 1;
   }
 }

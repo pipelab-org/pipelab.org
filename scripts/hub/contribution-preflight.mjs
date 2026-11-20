@@ -3,7 +3,8 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { acquireRulesObjects, readRulesAPI, RulesAPIUnavailable, rulesRepository } from "./rules-acquisition.mjs";
+import { HubUnavailable } from "./check-failure.mjs";
+import { acquireRulesObjects, readRulesAPI, rulesRepository } from "./rules-acquisition.mjs";
 import { loadAcquiredListings } from "./source-listings.mjs";
 import { acquirePolicyBlobs } from "./policy-blobs.mjs";
 import { parseListing } from "./validate.mjs";
@@ -54,7 +55,13 @@ function pullRequest(number) {
   const pr = readRulesAPI("pulls/" + number, { fresh: true });
   const baseRef = "refs/heads/main";
   const headRef = `refs/pull/${number}/head`;
-  const tips = readRemoteRefs(`https://github.com/${rulesRepository}`, [baseRef, headRef], "invalid rules ref result");
+  let tips;
+  try {
+    tips = readRemoteRefs(`https://github.com/${rulesRepository}`, [baseRef, headRef], "invalid rules ref result");
+  } catch (cause) {
+    if (cause.code === "ETIMEDOUT") throw new HubUnavailable("Rules pull request ref lookup timed out", { cause });
+    throw cause;
+  }
   if (pr?.base?.sha !== tips.get(baseRef) || pr?.head?.sha !== tips.get(headRef)) {
     throw new RulesRefMismatch("pull request metadata differs from the published Rules refs");
   }
@@ -141,7 +148,7 @@ export function preflightPullRequest({ number, fetchRules = false, ...options },
   const { base, head } = options;
   const binding = { repository: rulesRepository, number, base, head };
   const refused = (error, step = "pull-request") => ({
-    mode: "contribution", base, head, verdict: error instanceof RulesAPIUnavailable ? "UNAVAILABLE" : "REFUSED", pull_request: binding,
+    mode: "contribution", base, head, verdict: error instanceof HubUnavailable ? "UNAVAILABLE" : "REFUSED", pull_request: binding,
     steps: { [step]: { status: "fail", evidence: oneLine(error) } }, changes: [], categories: [], remaining: [],
   });
   if (!Number.isSafeInteger(number) || number < 1 || typeof base !== "string" || typeof head !== "string" ||
@@ -153,7 +160,7 @@ export function preflightPullRequest({ number, fetchRules = false, ...options },
       return matchesPullRequest(readPull(number), number, base, head) ? null :
         "open pull request does not match the requested repository, base and head";
     } catch (error) {
-      if (error instanceof RulesRefMismatch || error instanceof RulesAPIUnavailable) return error;
+      if (error instanceof RulesRefMismatch || error instanceof HubUnavailable) return error;
       return "published Rules pull request could not be verified";
     }
   };
@@ -214,7 +221,7 @@ function inspectPullRequest(options, binding, mismatch, refused, inspect) {
   }
   if (report.verdict !== "LOCAL-ELIGIBLE") return report;
   const final = mismatch();
-  if (final instanceof RulesAPIUnavailable) return refused(final);
+  if (final instanceof HubUnavailable) return refused(final);
   if (final) {
     report.verdict = "REFUSED";
     report.remaining = [];

@@ -69,7 +69,7 @@ jobs:
             if (( status == 0 )); then
               printf 'ADMIT for Rules pull request #%s at %s.\n' "$RULES_PR" "$RULES_HEAD"
             elif (( status == 3 )); then
-              printf '%s\n' 'Rules metadata was unavailable. Retry the admission check.'
+              printf '%s\n' 'GitHub data was unavailable. Retry the admission check.'
             else
               printf '%s\n' 'Admission did not pass. See the report artifact and job log.'
             fi

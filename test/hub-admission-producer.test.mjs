@@ -145,3 +145,31 @@ test("admission and import report the failed check without printing raw input", 
   assert.equal(malformed.stderr, "");
   assert.doesNotMatch(malformed.stdout, /raw input marker/);
 });
+
+test("hosted admission and sync return retryable status when site main cannot be read", t => {
+  const { root, write, environment } = fixture(t);
+  const input = path.join(root, "input.json");
+  write("input.json", JSON.stringify({ source: {} }));
+  writeFileSync(path.join(root, "git"), "#!/bin/sh\nprintf 'private transport details\\n' >&2\nexit 128\n", { mode: 0o755 });
+  const cli = (name, variables) => spawnSync(process.execPath, [
+    fileURLToPath(new URL("../scripts/hub/" + name, import.meta.url)), input,
+  ], {
+    env: { ...process.env, ...variables, PATH: root + path.delimiter + process.env.PATH },
+    encoding: "utf8",
+  });
+
+  const admission = cli("hosted-admission.mjs", environment);
+  assert.equal(admission.status, 3);
+  assert.deepEqual(JSON.parse(admission.stdout), {
+    mode: "hosted-admission", verdict: "UNAVAILABLE", reason: "site main unavailable from GitHub",
+  });
+  assert.equal(admission.stderr, "");
+
+  const sync = cli("sync-import.mjs", {
+    ...environment,
+    GITHUB_WORKFLOW_REF: environment.GITHUB_WORKFLOW_REF.replace("hub-admission.yml", "sync-pipelab-hub.yml"),
+  });
+  assert.equal(sync.status, 3);
+  assert.equal(sync.stdout, "");
+  assert.equal(sync.stderr.trim(), "Hub import unavailable: site main unavailable from GitHub. Retry the check.");
+});

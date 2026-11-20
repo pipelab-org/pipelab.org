@@ -323,7 +323,7 @@ test("eligible Hub input must match the same open rules pull request and publish
     writeFileSync(laterPath, later);
     return spawnSync(process.execPath, [script, "--pr", number, directory, base, head, site], {
       encoding: "utf8", env: { ...process.env, PATH: directory + path.delimiter + process.env.PATH,
-        HUB_ORIGINAL_PATH: process.env.PATH, HUB_PR_FIXTURE: path.join(directory, "pr.json"),
+        HUB_RULES_PUBLIC_API: "0", HUB_ORIGINAL_PATH: process.env.PATH, HUB_PR_FIXTURE: path.join(directory, "pr.json"),
         HUB_REFS_SEEN: seen, HUB_REFS_FIRST: firstPath, HUB_REFS_LATER: laterPath },
     });
   };
