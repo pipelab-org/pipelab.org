@@ -19,6 +19,13 @@ export function readGit(repository, args, options = {}) {
 }
 
 
+export function httpsGitEnvironment(directory, environment = process.env) {
+  return { ...withoutGitOverrides(environment),
+    GIT_CONFIG_NOSYSTEM: "1", GIT_CONFIG_GLOBAL: path.join(directory, "config"),
+    GIT_CEILING_DIRECTORIES: path.dirname(directory), GIT_ALLOW_PROTOCOL: "https", GIT_TERMINAL_PROMPT: "0",
+  };
+}
+
 // Use an empty Git context so configuration cannot select a different
 // remote. Keep the caller's HTTP(S) proxy environment.
 export function readRemoteRefs(url, refs, invalidResult, { runGit = execFileSync, environment = process.env } = {}) {
@@ -28,10 +35,7 @@ export function readRemoteRefs(url, refs, invalidResult, { runGit = execFileSync
       "-c", "http.followRedirects=false", "ls-remote", "--exit-code", url, ...refs,
     ], {
       cwd: directory,
-      env: { ...withoutGitOverrides(environment),
-        GIT_CONFIG_NOSYSTEM: "1", GIT_CONFIG_GLOBAL: path.join(directory, "config"),
-        GIT_CEILING_DIRECTORIES: path.dirname(directory), GIT_ALLOW_PROTOCOL: "https", GIT_TERMINAL_PROMPT: "0",
-      },
+      env: httpsGitEnvironment(directory, environment),
       encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], timeout: 15_000,
     });
     const tips = new Map();

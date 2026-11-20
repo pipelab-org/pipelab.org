@@ -315,14 +315,120 @@ test("eligible Hub input must match the same open rules pull request and publish
   assert.equal(JSON.parse(cli.stdout).steps["pull-request"].status, "pass");
   assert.equal(shell("2e0").status, 2);
 
-  for (const refs of [mainRow, mainRow + headRow + headRow, mainRow + headRow.replace(head, "a".repeat(40))]) {
+  for (const refs of [mainRow, mainRow + headRow + headRow]) {
     const bad = shell("2", refs);
     assert.equal(bad.status, 1, bad.stderr);
-    assert.equal(failed(JSON.parse(bad.stdout)), "pull-request");
+    const report = JSON.parse(bad.stdout);
+    assert.equal(failed(report), "pull-request");
+    assert.equal(report.steps["pull-request"].evidence, "published Rules pull request could not be verified");
   }
+  const stale = shell("2", mainRow + headRow.replace(head, "a".repeat(40)));
+  assert.equal(stale.status, 1);
+  assert.equal(JSON.parse(stale.stdout).steps["pull-request"].evidence, "pull request metadata differs from the published Rules refs");
   const moved = shell("2", mainRow + headRow, mainRow.replace(base, "b".repeat(40)) + headRow);
   assert.equal(moved.status, 1, moved.stderr);
   const report = JSON.parse(moved.stdout);
   assert.equal(report.steps["object-read"].status, "pass");
   assert.equal(failed(report), "pull-request");
+});
+
+test("Rules PR acquisition fetches only selected blobs before offline preflight", t => {
+  const { directory, git, commit } = repository(t);
+  const workflow = ".github/workflows/advisory.yml";
+  const unrelated = "README.md";
+  const base = commit({ "hub/README.md": "Guide.\n", [workflow]: "name: advisory\n", [unrelated]: "Rules.\n" });
+  const head = commit(files);
+  const tree = git("rev-parse", head + "^{tree}");
+  git("update-ref", "refs/pull/2/head", head);
+  git("update-ref", "refs/heads/main", base);
+  git("config", "uploadpack.allowFilter", "true");
+  git("config", "uploadpack.allowAnySHA1InWant", "true");
+  const treeEntries = git("ls-tree", "-r", "-l", head).split("\n").map(row => {
+    const [meta, path] = row.split("\t");
+    const [mode, type, sha, size] = meta.split(/ +/);
+    return { mode, type, sha, size: Number(size), path };
+  });
+
+  writeFileSync(path.join(directory, "pr.json"), JSON.stringify({ number: 2, state: "open",
+    base: { ref: "main", sha: base, repo: { full_name: "pipelab-org/pipelock-rules" } }, head: { sha: head } }));
+  writeFileSync(path.join(directory, "refs"), [
+    base + "\trefs/heads/main", head + "\trefs/pull/2/head", "",
+  ].join("\n"));
+  const ghStub = path.join(directory, "gh");
+  writeFileSync(ghStub, [
+    "#!/bin/sh",
+    'case "$*" in',
+    '  "api --hostname github.com repos/pipelab-org/pipelock-rules/pulls/2") cat "$HUB_STUB_DIR/pr.json";;',
+    '  "api --hostname github.com repos/pipelab-org/pipelock-rules/git/trees/$HUB_STUB_TREE?recursive=1") cat "$HUB_STUB_DIR/tree.json";;',
+    '  *) exit 1;;',
+    "esac",
+    "",
+  ].join("\n"), { mode: 0o755 });
+
+  const gitStub = path.join(directory, "git");
+  writeFileSync(gitStub, [
+    "#!/bin/sh",
+    'export PATH="$HUB_ORIGINAL_PATH"',
+    'case " $* " in',
+    '  *" ls-remote "*) exec cat "$HUB_STUB_DIR/refs";;',
+    '  *" fetch "*" --stdin "*)',
+    '    cat > "$HUB_STUB_DIR/wanted"',
+    '    if [ "$HUB_STUB_DROP" = 1 ]; then sed "1d" "$HUB_STUB_DIR/wanted" > "$HUB_STUB_DIR/send";',
+    '    else cp "$HUB_STUB_DIR/wanted" "$HUB_STUB_DIR/send"; fi',
+    '    GIT_ALLOW_PROTOCOL=file exec git -c "url.file://$HUB_STUB_DIR.insteadOf=https://github.com/pipelab-org/pipelock-rules" "$@" < "$HUB_STUB_DIR/send";;',
+    '  *" fetch "*) GIT_ALLOW_PROTOCOL=file exec git -c "url.file://$HUB_STUB_DIR.insteadOf=https://github.com/pipelab-org/pipelock-rules" "$@";;',
+    '  *) exec git "$@";;',
+    "esac",
+    "",
+  ].join("\n"), { mode: 0o755 });
+
+  const script = path.join(root, "scripts/hub/contribution-preflight.mjs");
+  const wanted = path.join(directory, "wanted");
+  const run = (metadata, drop = false) => {
+    rmSync(wanted, { force: true });
+    writeFileSync(path.join(directory, "tree.json"), JSON.stringify(metadata));
+    const result = spawnSync(process.execPath, [script, "--fetch-pr", "2", base, head, site], {
+      encoding: "utf8", env: { ...process.env, PATH: directory + path.delimiter + process.env.PATH,
+        HUB_ORIGINAL_PATH: process.env.PATH, HUB_STUB_DIR: directory, HUB_STUB_TREE: tree, HUB_STUB_DROP: drop ? "1" : "0" },
+    });
+    assert.equal(result.signal, null, result.stderr);
+    return { code: result.status, report: JSON.parse(result.stdout) };
+  };
+  const metadata = { sha: tree, truncated: false, tree: treeEntries };
+  const eligible = run(metadata);
+  assert.equal(eligible.code, 0, JSON.stringify(eligible.report));
+  assert.equal(eligible.report.verdict, "LOCAL-ELIGIBLE");
+  assert.deepEqual(eligible.report.steps["policy-inputs"].evidence.workflows.map(item => item.path), [workflow]);
+  assert.deepEqual(new Set(readFileSync(wanted, "utf8").trim().split("\n")),
+    new Set(treeEntries.filter(entry => entry.path !== unrelated).map(entry => entry.sha)));
+
+  const wrongFiles = [
+    treeEntries.slice(1),
+    [...treeEntries, treeEntries[0]],
+    treeEntries.map(entry => entry.path === workflow ? { ...entry, sha: "a".repeat(40) } : entry),
+    treeEntries.map(entry => entry.path === workflow ? { ...entry, size: 1024 * 1024 + 1 } : entry),
+  ];
+  for (const bad of [{ ...metadata, truncated: true }, ...wrongFiles.map(tree => ({ ...metadata, tree }))]) {
+    const refused = run(bad);
+    assert.equal(refused.code, 1);
+    assert.equal(failed(refused.report), "rules-acquisition");
+    assert.throws(() => readFileSync(wanted), { code: "ENOENT" });
+  }
+
+  const missing = run(metadata, true);
+  assert.equal(missing.code, 1);
+  assert.equal(missing.report.verdict, "REFUSED");
+  assert.equal(failed(missing.report), "rules-acquisition");
+  assert.match(missing.report.steps["rules-acquisition"].evidence, /(?:could not verify acquired Rules blob metadata|acquired Rules blob metadata differs)/);
+
+  const wrongSize = run({ ...metadata, tree: treeEntries.map(entry =>
+    entry.path === workflow ? { ...entry, size: entry.size - 1 } : entry) });
+  assert.equal(wrongSize.code, 1);
+  assert.match(wrongSize.report.steps["rules-acquisition"].evidence, /acquired Rules blob metadata differs/);
+
+  git("update-ref", "refs/heads/main", head);
+  const moved = run(metadata);
+  assert.equal(moved.code, 1);
+  assert.match(moved.report.steps["rules-acquisition"].evidence, /refs moved during acquisition/);
+  assert.throws(() => readFileSync(wanted), { code: "ENOENT" });
 });

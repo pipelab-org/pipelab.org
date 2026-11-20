@@ -1,13 +1,13 @@
 import { readGit } from "./git-source.mjs";
+import { maxSourceFileBytes } from "./source-tree.mjs";
 
 const sha = /^[0-9a-f]{40}$/;
 const codeownersPaths = [".github/CODEOWNERS", "CODEOWNERS", "docs/CODEOWNERS"];
-// Match source-tree.mjs: the 1 MiB Hub file limit and GitHub's 3,000-file PR cap.
-const maxFileBytes = 1024 * 1024;
+// Match the Hub source file limit and GitHub's 3,000-file PR cap.
 const maxFiles = 3000;
 // The collector retains raw bytes in memory and bounds tree listings separately.
-const maxTotalBytes = 16 * maxFileBytes;
-const maxMetadataBytes = maxFileBytes;
+export const maxPolicyBlobBytes = 16 * maxSourceFileBytes;
+const maxMetadataBytes = maxSourceFileBytes;
 
 function git(repository, args, { input, maxBuffer = maxMetadataBytes } = {}) {
   try {
@@ -37,7 +37,13 @@ function listDirectory(repository, entry, paths) {
   return listTree(repository, entry.object, paths);
 }
 
-function policyEntries(repository, commit) {
+export function policyBlobEntries(repository, commit) {
+  if (typeof commit !== "string" || commit.length !== 40 || !sha.test(commit)) {
+    throw new Error("a full Git commit SHA is required");
+  }
+  if (git(repository, ["cat-file", "-t", commit]).toString("ascii").trim() !== "commit") {
+    throw new Error("expected an exact Git commit object");
+  }
   const root = listTree(repository, commit, [".github", "CODEOWNERS", "docs"]);
   const github = listDirectory(repository, root.find(entry => entry.name === ".github"), ["CODEOWNERS", "workflows"]);
   const docs = listDirectory(repository, root.find(entry => entry.name === "docs"), ["CODEOWNERS"]);
@@ -48,10 +54,7 @@ function policyEntries(repository, commit) {
     const entry = entries.find(item => item.name === "CODEOWNERS");
     return entry ? [{ ...entry, path: codeownersPaths[index] }] : [];
   });
-  return { workflows, codeowners };
-}
-
-function sizedBlobs(repository, entries) {
+  const entries = [...workflows, ...codeowners];
   if (entries.length > maxFiles) throw new Error("policy input exceeds the file count limit");
   for (const { mode, type, path } of entries) {
     if (/[^\x20-\x7e]|\\/.test(path)) {
@@ -61,8 +64,11 @@ function sizedBlobs(repository, entries) {
       throw new Error("policy input must be a regular, non-executable Git blob");
     }
   }
-  if (!entries.length) return [];
+  return { workflows, codeowners };
+}
 
+function sizedBlobs(repository, entries) {
+  if (!entries.length) return [];
   const input = entries.map(({ object }) => object).join("\n") + "\n";
   const metadata = git(repository, ["cat-file", "--batch-check"], { input }).toString("ascii").trimEnd().split("\n");
   if (metadata.length !== entries.length) throw new Error("Git policy blob metadata is incomplete");
@@ -72,22 +78,16 @@ function sizedBlobs(repository, entries) {
     const match = /^([0-9a-f]{40}) blob ([0-9]+)$/.exec(metadata[index]);
     if (!match || match[1] !== object) throw new Error("Git policy blob metadata is invalid");
     const size = Number(match[2]);
-    if (size > maxFileBytes) throw new Error("policy input exceeds the per-file byte limit");
+    if (size > maxSourceFileBytes) throw new Error("policy input exceeds the per-file byte limit");
     totalBytes += size;
-    if (totalBytes > maxTotalBytes) throw new Error("policy input exceeds the total byte limit");
+    if (totalBytes > maxPolicyBlobBytes) throw new Error("policy input exceeds the total byte limit");
     return { path, object, size };
   });
 }
 
 // Empty arrays describe missing inputs. Only the caller can make a policy decision.
 export function acquirePolicyBlobs(repository, commit) {
-  if (typeof commit !== "string" || commit.length !== 40 || !sha.test(commit)) {
-    throw new Error("a full Git commit SHA is required");
-  }
-  if (git(repository, ["cat-file", "-t", commit]).toString("ascii").trim() !== "commit") {
-    throw new Error("expected an exact Git commit object");
-  }
-  const { workflows, codeowners } = policyEntries(repository, commit);
+  const { workflows, codeowners } = policyBlobEntries(repository, commit);
   const blobs = sizedBlobs(repository, [...workflows, ...codeowners]).map(item => {
     const bytes = git(repository, ["cat-file", "blob", item.object], { maxBuffer: item.size || 1 });
     if (bytes.length !== item.size) throw new Error("policy input differs from its Git blob size");
