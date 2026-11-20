@@ -250,7 +250,7 @@ test("pull request policy evidence identifies exact files without treating them 
   assert.equal(refused.steps["policy-inputs"].evidence.workflows[0].object, git("rev-parse", mixed + ":" + tracker));
 });
 
-test("eligible Hub input must match the same open rules pull request before and after inspection", t => {
+test("eligible Hub input must match the same open rules pull request and published refs before and after inspection", t => {
   const { directory, git, commit } = repository(t);
   const base = commit({ "hub/README.md": "Guide.\n" });
   const head = commit(files);
@@ -279,17 +279,50 @@ test("eligible Hub input must match the same open rules pull request before and 
     assert.equal(failed(moved), "pull-request");
   }
 
-  const stub = path.join(directory, "gh");
+  const ghStub = path.join(directory, "gh");
+  const gitStub = path.join(directory, "git");
+  const mainRow = `${base}\trefs/heads/main\n`;
+  const headRow = `${head}\trefs/pull/2/head\n`;
   writeFileSync(path.join(directory, "pr.json"), JSON.stringify(original));
-  writeFileSync(stub, '#!/bin/sh\n[ "$*" = "api --hostname github.com repos/pipelab-org/pipelock-rules/pulls/2" ] || exit 1\ncat "$HUB_PR_FIXTURE"\n');
-  chmodSync(stub, 0o755);
+  writeFileSync(ghStub, '#!/bin/sh\n[ "$*" = "api --hostname github.com repos/pipelab-org/pipelock-rules/pulls/2" ] || exit 1\ncat "$HUB_PR_FIXTURE"\n');
+  writeFileSync(gitStub, [
+    "#!/bin/sh",
+    'if [ "$*" = "-c http.followRedirects=false ls-remote --exit-code https://github.com/pipelab-org/pipelock-rules refs/heads/main refs/pull/2/head" ]; then',
+    '  if [ -e "$HUB_REFS_SEEN" ]; then cat "$HUB_REFS_LATER"; else : > "$HUB_REFS_SEEN"; cat "$HUB_REFS_FIRST"; fi',
+    "  exit $?",
+    "fi",
+    'PATH="$HUB_ORIGINAL_PATH" exec git "$@"',
+    "",
+  ].join("\n"));
+  chmodSync(ghStub, 0o755);
+  chmodSync(gitStub, 0o755);
   const script = path.join(root, "scripts/hub/contribution-preflight.mjs");
-  const shell = number => spawnSync(process.execPath, [script, "--pr", number, directory, base, head, site], {
-    encoding: "utf8", env: { ...process.env, PATH: directory + path.delimiter + process.env.PATH,
-      HUB_PR_FIXTURE: path.join(directory, "pr.json") },
-  });
+  const shell = (number, first = mainRow + headRow, later = first) => {
+    const seen = path.join(directory, "refs-seen");
+    const firstPath = path.join(directory, "refs-first");
+    const laterPath = path.join(directory, "refs-later");
+    rmSync(seen, { force: true });
+    writeFileSync(firstPath, first);
+    writeFileSync(laterPath, later);
+    return spawnSync(process.execPath, [script, "--pr", number, directory, base, head, site], {
+      encoding: "utf8", env: { ...process.env, PATH: directory + path.delimiter + process.env.PATH,
+        HUB_ORIGINAL_PATH: process.env.PATH, HUB_PR_FIXTURE: path.join(directory, "pr.json"),
+        HUB_REFS_SEEN: seen, HUB_REFS_FIRST: firstPath, HUB_REFS_LATER: laterPath },
+    });
+  };
   const cli = shell("2");
   assert.equal(cli.status, 0, cli.stderr);
   assert.equal(JSON.parse(cli.stdout).steps["pull-request"].status, "pass");
   assert.equal(shell("2e0").status, 2);
+
+  for (const refs of [mainRow, mainRow + headRow + headRow, mainRow + headRow.replace(head, "a".repeat(40))]) {
+    const bad = shell("2", refs);
+    assert.equal(bad.status, 1, bad.stderr);
+    assert.equal(failed(JSON.parse(bad.stdout)), "pull-request");
+  }
+  const moved = shell("2", mainRow + headRow, mainRow.replace(base, "b".repeat(40)) + headRow);
+  assert.equal(moved.status, 1, moved.stderr);
+  const report = JSON.parse(moved.stdout);
+  assert.equal(report.steps["object-read"].status, "pass");
+  assert.equal(failed(report), "pull-request");
 });
