@@ -262,6 +262,23 @@ test("eligible Hub input must match the same open rules pull request and publish
   assert.equal(checked.steps["pull-request"].status, "pass");
   assert.equal(checked.pull_request.head_tree, git("rev-parse", "HEAD^{tree}"));
 
+  let candidateRan = false;
+  const inspected = preflightPullRequest(input, () => candidateRan ? { ...original, state: "closed" } : original, data => {
+    assert.equal(data.head, head);
+    assert.equal(data.loaded.items.length, 1);
+    candidateRan = true;
+    return { passed: true };
+  });
+  assert.equal(candidateRan, true);
+  assert.equal(inspected.verdict, "REFUSED");
+  assert.equal(inspected.steps.candidate, undefined);
+
+  const rejected = preflightPullRequest(input, () => original, () => {
+    throw new Error("candidate refused");
+  });
+  assert.equal(rejected.verdict, "REFUSED");
+  assert.equal(rejected.steps.candidate.evidence, "candidate refused");
+
   const wrongBase = { ...original, base: { ...original.base, ref: "release" } };
   assert.equal(failed(preflightPullRequest(input, () => wrongBase)), "pull-request");
   assert.equal(failed(preflightPullRequest({ ...input, number: 3 }, () => original)), "pull-request");
