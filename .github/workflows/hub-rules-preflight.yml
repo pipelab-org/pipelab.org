@@ -52,7 +52,14 @@ jobs:
           report="$RUNNER_TEMP/hub-rules-preflight.json"
           status=0
           node scripts/hub/contribution-preflight.mjs --fetch-pr "$RULES_PR" "$RULES_BASE" "$RULES_HEAD" > "$report" || status=$?
-          node scripts/hub/admission-producer.mjs preflight
+          node scripts/hub/admission-producer.mjs preflight || {
+            producer_status=$?
+            {
+              printf '%s\n\n' '## Rules contribution eligibility'
+              printf '%s\n' 'Site producer verification failed after preflight. Run again from current site main.'
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit "$producer_status"
+          }
           {
             printf '%s\n\n' '## Rules contribution eligibility'
             if [[ -s "$report" ]]; then
