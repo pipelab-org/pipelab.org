@@ -16,7 +16,7 @@ const contribution = new RegExp(`^(?:
 )$`.replace(/\s+/g, ""));
 const official = new RegExp(`^(?:published/${id}/bundle\\.yaml(?:\\.sig)?|fixtures/${id}/${fixture})$`);
 // Published Pipelock bundle file limit: v3.8.0 internal/rules/bundle.go.
-const maxFileBytes = 1024 * 1024;
+export const maxSourceFileBytes = 1024 * 1024;
 // GitHub's "List pull request files" contract caps a submission at 3,000 files.
 // The cap also bounds work on a catalog snapshot before reading object bodies.
 const maxFiles = 3000;
@@ -103,33 +103,47 @@ export function materializeGitTree(repository, commit, destination, paths = []) 
   }
 }
 
-export function acquireHubTree(repository, commit, destination) {
+export function hubBlobEntries(repository, commit) {
   checkSHA(commit);
-  if (!lstatSync(destination).isDirectory() || readdirSync(destination).length) {
-    throw new Error("Hub acquisition directory must be empty and regular");
-  }
   if (git(repository, ["cat-file", "-t", commit], { encoding: "utf8" }).trim() !== "commit") {
     throw new Error("expected an exact commit object");
   }
   const tree = git(repository, ["rev-parse", "--verify", commit + "^{tree}"], { encoding: "utf8" }).trim();
-  const entries = git(repository, ["ls-tree", "-r", "-l", "-z", "--full-tree", tree, "--", "hub", "published", "fixtures"])
+  const entries = git(repository, ["ls-tree", "-r", "-z", "--full-tree", tree, "--", "hub", "published", "fixtures"])
     .toString("utf8").split("\0").filter(Boolean);
   if (!entries.length || entries.length > maxFiles) throw new Error("Hub input file count is outside the acquisition bounds");
 
   const files = entries.map(entry => {
-    const match = /^100644 blob ([a-f0-9]{40}) +([0-9]+)\t([\x20-\x7e]+)$/.exec(entry);
+    const match = /^100644 blob ([a-f0-9]{40})\t([\x20-\x7e]+)$/.exec(entry);
     if (!match) throw new Error("Hub input must be a regular, non-executable Git blob");
-    const [, object, size, file] = match;
+    const [, object, file] = match;
     if (!(file === "hub/README.md" || contribution.test(file) || official.test(file))) {
       throw new Error("Hub input path is outside the source contract");
     }
-    if (Number(size) > maxFileBytes) throw new Error("Hub input exceeds the per-file byte limit");
-    return { object, size: Number(size), file };
+    return { object, path: file };
   });
-  for (const item of files) {
-    const bytes = git(repository, ["cat-file", "blob", item.object], { maxBuffer: maxFileBytes });
-    if (bytes.length !== item.size) throw new Error("Hub input differs from its Git blob size");
-    const target = path.join(destination, item.file);
+  return { tree, files };
+}
+
+export function acquireHubTree(repository, commit, destination) {
+  if (!lstatSync(destination).isDirectory() || readdirSync(destination).length) {
+    throw new Error("Hub acquisition directory must be empty and regular");
+  }
+  const { tree, files } = hubBlobEntries(repository, commit);
+  const input = files.map(file => file.object).join("\n") + "\n";
+  const sizes = git(repository, ["cat-file", "--batch-check"], { input, encoding: "ascii" }).trimEnd().split("\n");
+  if (sizes.length !== files.length) throw new Error("Hub input blob metadata is incomplete");
+  const sized = files.map((item, index) => {
+    const match = /^([a-f0-9]{40}) blob ([0-9]+)$/.exec(sizes[index]);
+    if (!match || match[1] !== item.object) throw new Error("Hub input blob metadata is invalid");
+    const size = Number(match[2]);
+    if (size > maxSourceFileBytes) throw new Error("Hub input exceeds the per-file byte limit");
+    return { ...item, size };
+  });
+  for (const { object, size, path: file } of sized) {
+    const bytes = git(repository, ["cat-file", "blob", object], { maxBuffer: Math.max(1, size) });
+    if (bytes.length !== size) throw new Error("Hub input differs from its Git blob size");
+    const target = path.join(destination, file);
     mkdirSync(path.dirname(target), { recursive: true });
     writeFileSync(target, bytes, { flag: "wx", mode: 0o600 });
   }

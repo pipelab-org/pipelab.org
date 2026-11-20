@@ -4,6 +4,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { acquireRulesObjects, rulesRepository } from "./rules-acquisition.mjs";
 import { loadAcquiredListings } from "./source-listings.mjs";
 import { acquirePolicyBlobs } from "./policy-blobs.mjs";
 import { parseListing } from "./validate.mjs";
@@ -46,8 +47,9 @@ const dependencies = {
 const oneLine = error => String(error?.message ?? error).split("\n", 1)[0].replace(/[^\x20-\x7e]/g, "?").slice(0, 200);
 
 const defaultSite = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-const rulesRepository = "pipelab-org/pipelock-rules";
 const commitSHA = /^[a-f0-9]{40}$/;
+
+class RulesRefMismatch extends Error {}
 
 function pullRequest(number) {
   const pr = JSON.parse(execFileSync("gh", ["api", "--hostname", "github.com", `repos/${rulesRepository}/pulls/${number}`], {
@@ -57,7 +59,7 @@ function pullRequest(number) {
   const headRef = `refs/pull/${number}/head`;
   const tips = readRemoteRefs(`https://github.com/${rulesRepository}`, [baseRef, headRef], "invalid rules ref result");
   if (pr?.base?.sha !== tips.get(baseRef) || pr?.head?.sha !== tips.get(headRef)) {
-    throw new Error("pull request metadata differs from the published rules refs");
+    throw new RulesRefMismatch("pull request metadata differs from the published Rules refs");
   }
   return pr;
 }
@@ -136,25 +138,45 @@ export function preflightContribution({ repository, base, head, maintenance = fa
 
 // This mode binds the local input check to a public PR. Producer and admission
 // evidence are separate. The default reader verifies the API against live Git refs.
-export function preflightPullRequest({ number, ...options }, readPull = pullRequest) {
+export function preflightPullRequest({ number, fetchRules = false, ...options }, readPull = pullRequest) {
   const { base, head } = options;
   const binding = { repository: rulesRepository, number, base, head };
-  const refused = evidence => ({
+  const refused = (evidence, step = "pull-request") => ({
     mode: "contribution", base, head, verdict: "REFUSED", pull_request: binding,
-    steps: { "pull-request": { status: "fail", evidence } }, changes: [], categories: [], remaining: [],
+    steps: { [step]: { status: "fail", evidence } }, changes: [], categories: [], remaining: [],
   });
   if (!Number.isSafeInteger(number) || number < 1 || typeof base !== "string" || typeof head !== "string" ||
       !commitSHA.test(base) || !commitSHA.test(head)) {
     return refused("an exact pull request number and full base and head SHAs are required");
   }
-  const matches = () => {
+  const mismatch = () => {
     try {
-      return matchesPullRequest(readPull(number), number, base, head);
-    } catch {
-      return false;
+      return matchesPullRequest(readPull(number), number, base, head) ? null :
+        "open pull request does not match the requested repository, base and head";
+    } catch (error) {
+      return error instanceof RulesRefMismatch ? error.message : "published Rules pull request could not be verified";
     }
   };
-  if (!matches()) return refused("open pull request does not match the requested repository, base and head");
+  const initial = mismatch();
+  if (initial) return refused(initial);
+  if (!fetchRules) return inspectPullRequest(options, binding, mismatch, refused);
+
+  const directory = mkdtempSync(path.join(tmpdir(), "hub-rules-objects-"));
+  try {
+    let repository;
+    try {
+      repository = acquireRulesObjects(directory, binding);
+    } catch (error) {
+      return refused(oneLine(error), "rules-acquisition");
+    }
+    return inspectPullRequest({ ...options, repository }, binding, mismatch, refused);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+}
+
+function inspectPullRequest(options, binding, mismatch, refused) {
+  const { base, head } = options;
   try {
     for (const commit of [base, head]) {
       if (git(options.repository, ["cat-file", "-t", commit]).toString().trim() !== "commit") {
@@ -189,7 +211,7 @@ export function preflightPullRequest({ number, ...options }, readPull = pullRequ
     report.steps["policy-inputs"] = { status: "fail", evidence: oneLine(error) };
   }
   if (report.verdict !== "LOCAL-ELIGIBLE") return report;
-  if (!matches()) {
+  if (mismatch()) {
     report.verdict = "REFUSED";
     report.remaining = [];
     report.steps["pull-request"] = { status: "fail", evidence: "pull request moved, closed or became unavailable during the check" };
@@ -202,18 +224,21 @@ export function preflightPullRequest({ number, ...options }, readPull = pullRequ
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const args = process.argv.slice(2);
   const maintenance = args[0] === "--maintenance";
-  const bound = args[0] === "--pr";
+  const fetchRules = args[0] === "--fetch-pr";
+  const bound = fetchRules || args[0] === "--pr";
   if (maintenance || bound) args.shift();
   const prNumber = bound ? args.shift() : null;
   const number = Number(prNumber);
-  const [repository, base, head, site] = args;
-  if (args.length < 3 || args.length > 4 || args.some(arg => !arg || arg.startsWith("--")) ||
+  const minimumArgs = fetchRules ? 2 : 3;
+  const [repository, base, head, site] = fetchRules ? [undefined, ...args] : args;
+  if (args.length < minimumArgs || args.length > minimumArgs + 1 || args.some(arg => !arg || arg.startsWith("--")) ||
       (bound && (!/^[1-9][0-9]*$/.test(prNumber ?? "") || !Number.isSafeInteger(number)))) {
     console.error("usage: contribution-preflight.mjs [--maintenance | --pr NUMBER] GIT_OBJECT_STORE BASE_SHA HEAD_SHA [TRUSTED_SITE_DIR]");
+    console.error("       contribution-preflight.mjs --fetch-pr NUMBER BASE_SHA HEAD_SHA [TRUSTED_SITE_DIR]");
     process.exit(2);
   }
   const options = { repository, base, head, maintenance, site };
-  const report = bound ? preflightPullRequest({ ...options, number }) : preflightContribution(options);
+  const report = bound ? preflightPullRequest({ ...options, number, fetchRules }) : preflightContribution(options);
   console.log(JSON.stringify(report, null, 2));
   if (report.verdict !== "LOCAL-ELIGIBLE") process.exitCode = 1;
 }
