@@ -1,4 +1,5 @@
 import { execFileSync } from "node:child_process";
+import { randomUUID } from "node:crypto";
 import path from "node:path";
 import { httpsGitEnvironment, readGit } from "./git-source.mjs";
 import { maxPolicyBlobBytes, policyBlobEntries } from "./policy-blobs.mjs";
@@ -9,12 +10,33 @@ export const rulesRepository = "pipelab-org/pipelock-rules";
 // Trees API response. The selected blob fetch adds its declared payload size.
 const maxMetadataBytes = 7 * 1024 * 1024;
 
+export class RulesAPIUnavailable extends Error {}
+
+export function readRulesAPI(resource, { maxBuffer = 1024 * 1024, fresh = false } = {}) {
+  const endpoint = "repos/" + rulesRepository + "/" + resource;
+  const options = { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], timeout: 15_000, maxBuffer };
+  if (process.env.HUB_RULES_PUBLIC_API !== "1") {
+    return JSON.parse(execFileSync("gh", ["api", "--hostname", "github.com", endpoint], options));
+  }
+
+  const url = new URL("https://api.github.com/" + endpoint);
+  // PR state is mutable even when the advertised commit refs have not moved.
+  if (fresh) url.searchParams.set("hub_preflight_nonce", randomUUID());
+  try {
+    const output = execFileSync("curl", ["-q", "--silent", "--show-error", "--fail", "--proto", "=https",
+      "--max-time", "15", "--max-filesize", String(maxBuffer), "--header", "Accept: application/vnd.github+json",
+      "--header", "Cache-Control: no-cache", "--write-out", "\n%{http_code}", "--url", url.href],
+    { ...options, maxBuffer: maxBuffer + 4 });
+    if (!output.endsWith("\n200")) throw new Error("unexpected public Rules HTTP status");
+    return JSON.parse(output.slice(0, -4));
+  } catch {
+    throw new RulesAPIUnavailable("Could not read the public Rules API. Retry the check.");
+  }
+}
+
 function publishedTree(tree) {
   // GitHub's recursive Trees API caps a response at 7 MB and sets truncated.
-  const result = JSON.parse(execFileSync("gh", ["api", "--hostname", "github.com",
-    `repos/${rulesRepository}/git/trees/${tree}?recursive=1`], {
-    encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], timeout: 15_000, maxBuffer: maxMetadataBytes,
-  }));
+  const result = readRulesAPI("git/trees/" + tree + "?recursive=1", { maxBuffer: maxMetadataBytes });
   if (result?.sha !== tree || result.truncated !== false || !Array.isArray(result.tree)) {
     throw new Error("GitHub Rules tree evidence is incomplete");
   }

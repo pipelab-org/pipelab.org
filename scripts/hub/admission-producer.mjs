@@ -9,6 +9,7 @@ const server = "https://github.com";
 const main = "refs/heads/main";
 const sha = /^[a-f0-9]{40}$/;
 const workflows = {
+  preflight: { path: ".github/workflows/hub-rules-preflight.yml", events: ["workflow_dispatch"] },
   admission: { path: ".github/workflows/hub-admission.yml", events: ["workflow_dispatch"] },
   sync: { path: ".github/workflows/sync-pipelab-hub.yml", events: ["schedule", "workflow_dispatch"] },
 };
@@ -48,13 +49,14 @@ export function admissionProducer({ mode, environment, root, engine }, readMain 
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const [mode, enginePath] = process.argv.slice(2);
-  if (process.argv.length !== 4 || !Object.hasOwn(workflows, mode)) {
-    console.error("usage: admission-producer.mjs (admission|sync) ENGINE_IDENTITY_JSON");
+  const preflight = mode === "preflight";
+  if (process.argv.length !== (preflight ? 3 : 4) || !Object.hasOwn(workflows, mode)) {
+    console.error("usage: admission-producer.mjs preflight | (admission|sync) ENGINE_IDENTITY_JSON");
     process.exit(2);
   }
   try {
     const root = path.resolve(import.meta.dirname, "../..");
-    const engine = JSON.parse(readFileSync(enginePath, "utf8"));
+    const engine = preflight ? undefined : JSON.parse(readFileSync(enginePath, "utf8"));
     const producer = admissionProducer({ mode, environment: process.env, root, engine });
     console.log(JSON.stringify({ producer }));
   } catch {
