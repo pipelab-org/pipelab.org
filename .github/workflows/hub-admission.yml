@@ -53,9 +53,9 @@ jobs:
           const [scratch, engineFile] = process.argv.slice(2);
           const { binary, destination, identity } = JSON.parse(readFileSync(engineFile, "utf8"));
           const { RULES_PR: pr, RULES_BASE: base, RULES_HEAD: head } = process.env;
-          if (!/^[1-9][0-9]*$/.test(pr) || !Number.isSafeInteger(Number(pr))) throw new Error("Invalid Rules pull request number.");
+          const number = /^[1-9][0-9]*$/.test(pr) && Number.isSafeInteger(Number(pr)) ? Number(pr) : null;
           console.log(JSON.stringify({
-            number: Number(pr), base, head, rulesFixtureRepository: scratch + "/fixtures.git",
+            number, base, head, rulesFixtureRepository: scratch + "/fixtures.git",
             source: {
               binary, engine: identity, config: destination + "/configs/claude-code.yaml",
               repository: scratch + "/engine.git", pipelockBinary: scratch + "/bin/pipelock",

@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 import { admissionProducer, readSiteMain } from "../scripts/hub/admission-producer.mjs";
 
 function fixture(t) {
@@ -114,4 +115,33 @@ test("a dirty checkout or ignored Hub tooling cannot produce evidence", t => {
   input.write("package-lock.json", "{}\n");
   input.write("scripts/hub/ignored.mjs", "export const value = 2;\n");
   assert.throws(run, /tooling differs/);
+});
+
+test("admission and import report the failed check without printing raw input", t => {
+  const { root, write, environment } = fixture(t);
+  const input = path.join(root, "input.json");
+  const cli = name => spawnSync(process.execPath, [
+    fileURLToPath(new URL("../scripts/hub/" + name, import.meta.url)), input,
+  ], { env: { ...process.env, ...environment, GITHUB_REF: "refs/heads/feature" }, encoding: "utf8" });
+
+  write("input.json", JSON.stringify({ source: {} }));
+  const denied = cli("hosted-admission.mjs");
+  assert.equal(denied.status, 1);
+  assert.deepEqual(JSON.parse(denied.stdout), {
+    mode: "hosted-admission", verdict: "REFUSED",
+    reason: "producer context does not identify the expected site main workflow",
+  });
+  assert.equal(denied.stderr, "");
+
+  const sync = cli("sync-import.mjs");
+  assert.equal(sync.status, 1);
+  assert.equal(sync.stdout, "");
+  assert.match(sync.stderr, /^Hub import refused: producer context/);
+
+  write("input.json", "{raw input marker}");
+  const malformed = cli("hosted-admission.mjs");
+  assert.equal(malformed.status, 1);
+  assert.equal(JSON.parse(malformed.stdout).reason, "could not complete admission input");
+  assert.equal(malformed.stderr, "");
+  assert.doesNotMatch(malformed.stdout, /raw input marker/);
 });

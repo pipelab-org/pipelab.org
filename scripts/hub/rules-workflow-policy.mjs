@@ -1,4 +1,5 @@
 import { parse } from "yaml";
+import { HubCheckFailure } from "./check-failure.mjs";
 import { acquirePolicyBlobs } from "./policy-blobs.mjs";
 
 // The existing Rules review workflow and its caller check are independently
@@ -16,7 +17,7 @@ const decode = bytes => new TextDecoder("utf-8", { fatal: true }).decode(bytes);
 
 function checkCodeowners(files) {
   if (files.length !== 1 || files[0].path !== ".github/CODEOWNERS") {
-    throw new Error("Rules admission requires .github/CODEOWNERS");
+    throw new HubCheckFailure("Rules admission requires .github/CODEOWNERS");
   }
   const seen = new Set();
   for (const line of decode(files[0].bytes).split(/\r?\n/)) {
@@ -24,18 +25,18 @@ function checkCodeowners(files) {
     if (!text || text.startsWith("#")) continue;
     const [pattern, ...owners] = text.split(/\s+/);
     if (!ownedPaths.has(pattern) || seen.has(pattern) || !owners.length || owners.some(name => !owner.test(name))) {
-      throw new Error("Rules CODEOWNERS must use single explicit entries for the governed paths");
+      throw new HubCheckFailure("Rules CODEOWNERS must use single explicit entries for the governed paths");
     }
     seen.add(pattern);
   }
-  if (seen.size !== ownedPaths.size) throw new Error("Rules CODEOWNERS does not cover all governed paths");
+  if (seen.size !== ownedPaths.size) throw new HubCheckFailure("Rules CODEOWNERS does not cover all governed paths");
 }
 
 function eventsOf(value) {
   if (typeof value === "string") return [value];
   if (Array.isArray(value) && value.length && value.every(event => typeof event === "string")) return value;
   if (value && typeof value === "object" && !Array.isArray(value)) return Object.keys(value);
-  throw new Error("Rules workflow trigger is missing or invalid");
+  throw new HubCheckFailure("Rules workflow trigger is missing or invalid");
 }
 
 function contentsRead(permissions) {
@@ -50,7 +51,7 @@ export function assertRulesWorkflowPolicy({ workflows, codeowners }) {
     const workflow = parse(source, { maxAliasCount: 0 });
     const events = eventsOf(workflow?.on);
     if (events.some(event => privilegedEvents.has(event)) && reviewedWorkflows.get(path) !== object) {
-      throw new Error("Rules workflow has an unreviewed privileged trigger");
+      throw new HubCheckFailure("Rules workflow has an unreviewed privileged trigger");
     }
     if (path !== advisoryPath) continue;
     const trigger = workflow.on?.pull_request;
@@ -61,10 +62,10 @@ export function assertRulesWorkflowPolicy({ workflows, codeowners }) {
         Object.values(workflow.jobs).some(job => job.uses || job.secrets || job.environment ||
           (job.permissions && !contentsRead(job.permissions))) ||
         /\b(?:secrets|auto-merge|automerge)\b/i.test(source)) {
-      throw new Error("Rules Hub advisory workflow must be read-only and limited to Hub pull requests");
+      throw new HubCheckFailure("Rules Hub advisory workflow must be read-only and limited to Hub pull requests");
     }
   }
-  if (!workflows.some(file => file.path === advisoryPath)) throw new Error("Rules Hub advisory workflow is missing");
+  if (!workflows.some(file => file.path === advisoryPath)) throw new HubCheckFailure("Rules Hub advisory workflow is missing");
 }
 
 export function checkRulesWorkflowPolicy(repository, commit) {
