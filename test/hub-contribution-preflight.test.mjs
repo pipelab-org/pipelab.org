@@ -376,7 +376,9 @@ test("Rules PR acquisition fetches only selected blobs before offline preflight"
     '    if [ "$HUB_STUB_DROP" = 1 ]; then sed "1d" "$HUB_STUB_DIR/wanted" > "$HUB_STUB_DIR/send";',
     '    else cp "$HUB_STUB_DIR/wanted" "$HUB_STUB_DIR/send"; fi',
     '    GIT_ALLOW_PROTOCOL=file exec git -c "url.file://$HUB_STUB_DIR.insteadOf=https://github.com/pipelab-org/pipelock-rules" "$@" < "$HUB_STUB_DIR/send";;',
-    '  *" fetch "*) GIT_ALLOW_PROTOCOL=file exec git -c "url.file://$HUB_STUB_DIR.insteadOf=https://github.com/pipelab-org/pipelock-rules" "$@";;',
+    '  *" fetch "*)',
+    '    if [ "$HUB_STUB_OVERRUN" = 1 ]; then truncate -s 7340033 "$HUB_STUB_DIR/pack-probe" || exit; fi',
+    '    GIT_ALLOW_PROTOCOL=file exec git -c "url.file://$HUB_STUB_DIR.insteadOf=https://github.com/pipelab-org/pipelock-rules" "$@";;',
     '  *) exec git "$@";;',
     "esac",
     "",
@@ -384,12 +386,12 @@ test("Rules PR acquisition fetches only selected blobs before offline preflight"
 
   const script = path.join(root, "scripts/hub/contribution-preflight.mjs");
   const wanted = path.join(directory, "wanted");
-  const run = (metadata, drop = false) => {
+  const run = (metadata, { drop = false, overrun = false } = {}) => {
     rmSync(wanted, { force: true });
     writeFileSync(path.join(directory, "tree.json"), JSON.stringify(metadata));
     const result = spawnSync(process.execPath, [script, "--fetch-pr", "2", base, head, site], {
       encoding: "utf8", env: { ...process.env, PATH: directory + path.delimiter + process.env.PATH,
-        HUB_ORIGINAL_PATH: process.env.PATH, HUB_STUB_DIR: directory, HUB_STUB_TREE: tree, HUB_STUB_DROP: drop ? "1" : "0" },
+        HUB_ORIGINAL_PATH: process.env.PATH, HUB_STUB_DIR: directory, HUB_STUB_TREE: tree, HUB_STUB_DROP: drop ? "1" : "0", HUB_STUB_OVERRUN: overrun ? "1" : "0" },
     });
     assert.equal(result.signal, null, result.stderr);
     return { code: result.status, report: JSON.parse(result.stdout) };
@@ -415,7 +417,7 @@ test("Rules PR acquisition fetches only selected blobs before offline preflight"
     assert.throws(() => readFileSync(wanted), { code: "ENOENT" });
   }
 
-  const missing = run(metadata, true);
+  const missing = run(metadata, { drop: true });
   assert.equal(missing.code, 1);
   assert.equal(missing.report.verdict, "REFUSED");
   assert.equal(failed(missing.report), "rules-acquisition");
@@ -425,6 +427,12 @@ test("Rules PR acquisition fetches only selected blobs before offline preflight"
     entry.path === workflow ? { ...entry, size: entry.size - 1 } : entry) });
   assert.equal(wrongSize.code, 1);
   assert.match(wrongSize.report.steps["rules-acquisition"].evidence, /acquired Rules blob metadata differs/);
+
+  const overrun = run(metadata, { overrun: true });
+  assert.equal(overrun.code, 1);
+  assert.equal(failed(overrun.report), "rules-acquisition");
+  assert.match(overrun.report.steps["rules-acquisition"].evidence, /within the metadata limit/);
+  assert.throws(() => readFileSync(wanted), { code: "ENOENT" });
 
   git("update-ref", "refs/heads/main", head);
   const moved = run(metadata);

@@ -5,12 +5,15 @@ import { maxPolicyBlobBytes, policyBlobEntries } from "./policy-blobs.mjs";
 import { assertHubOnly, hubBlobEntries, maxSourceFileBytes } from "./source-tree.mjs";
 
 export const rulesRepository = "pipelab-org/pipelock-rules";
+// Bound the initial Git metadata pack to the same size as GitHub's recursive
+// Trees API response. The selected blob fetch adds its declared payload size.
+const maxMetadataBytes = 7 * 1024 * 1024;
 
 function publishedTree(tree) {
   // GitHub's recursive Trees API caps a response at 7 MB and sets truncated.
   const result = JSON.parse(execFileSync("gh", ["api", "--hostname", "github.com",
     `repos/${rulesRepository}/git/trees/${tree}?recursive=1`], {
-    encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], timeout: 15_000, maxBuffer: 7 * 1024 * 1024,
+    encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], timeout: 15_000, maxBuffer: maxMetadataBytes,
   }));
   if (result?.sha !== tree || result.truncated !== false || !Array.isArray(result.tree)) {
     throw new Error("GitHub Rules tree evidence is incomplete");
@@ -47,20 +50,29 @@ function boundedObjects(tree, files, policy) {
 // refuses missing objects without starting a Git transport.
 export function acquireRulesObjects(directory, { number, base, head }) {
   const repository = path.join(directory, "rules.git");
-  const git = (args, input) => execFileSync("git", ["-c", "http.followRedirects=false",
-    "-c", "fetch.fsckObjects=true", "-C", directory, ...args], {
-    env: httpsGitEnvironment(directory), input,
-    stdio: [input === undefined ? "ignore" : "pipe", "pipe", "ignore"], timeout: 30_000,
+  const gitOptions = { env: httpsGitEnvironment(directory), timeout: 30_000 };
+  const isolatedGit = ["-c", "http.followRedirects=false", "-C", directory];
+  const git = args => execFileSync("git", [...isolatedGit, ...args], {
+    ...gitOptions, stdio: ["ignore", "pipe", "ignore"],
   });
-  const fetch = ["-C", repository, "fetch", "--quiet", "--no-tags", "--no-write-fetch-head",
-    "--no-auto-maintenance", "--no-recurse-submodules", "--filter=blob:none", "origin"];
+  const fetch = (args, maxBytes, input) => {
+    // Keep the transfer packed even for small fetches, and cap each file
+    // before Git can write it. The indexer inherits the same limit.
+    execFileSync("bash", ["-pc", 'set +o posix; ulimit -f "$1" || exit; shift; exec git "$@"',
+      "rules-fetch", String(Math.ceil(maxBytes / 1024)), ...isolatedGit,
+      "-c", "fetch.fsckObjects=true", "-c", "fetch.unpackLimit=1",
+      "-C", repository, "fetch", "--quiet", "--no-tags", "--no-write-fetch-head",
+      "--no-auto-maintenance", "--no-recurse-submodules", "--filter=blob:none", "origin", ...args], {
+      ...gitOptions, input, stdio: [input === undefined ? "ignore" : "pipe", "pipe", "ignore"],
+    });
+  };
   try {
     git(["init", "--bare", "--quiet", "--template=", repository]);
     git(["-C", repository, "config", "remote.origin.url", `https://github.com/${rulesRepository}`]);
     git(["-C", repository, "config", "remote.origin.promisor", "true"]);
-    git([...fetch, "+refs/heads/main:refs/heads/main", `+refs/pull/${number}/head:refs/hub/pull-head`]);
+    fetch(["+refs/heads/main:refs/heads/main", `+refs/pull/${number}/head:refs/hub/pull-head`], maxMetadataBytes);
   } catch {
-    throw new Error("could not fetch published Rules commits");
+    throw new Error("could not fetch published Rules commits within the metadata limit");
   }
   const refs = readGit(repository, ["rev-parse", "refs/heads/main", "refs/hub/pull-head"],
     { encoding: "ascii" }).trimEnd().split("\n");
@@ -73,10 +85,11 @@ export function acquireRulesObjects(directory, { number, base, head }) {
   const { workflows, codeowners } = policyBlobEntries(repository, head);
   const objects = boundedObjects(tree, files, [...workflows, ...codeowners]);
   const input = [...objects.keys()].join("\n") + "\n";
+  const selectedBytes = [...objects.values()].reduce((total, size) => total + size, 0);
   try {
-    git([...fetch, "--stdin"], input);
+    fetch(["--stdin"], maxMetadataBytes + selectedBytes, input);
   } catch {
-    throw new Error("could not fetch selected Rules blobs");
+    throw new Error("could not fetch selected Rules blobs within the object limit");
   }
   let acquired;
   try {
