@@ -5,6 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse as toml } from "smol-toml";
 import { assertClosedDiscovery } from "./acceptance.mjs";
+import { measureCandidatePacks } from "./candidate-measurements.mjs";
 import { preflightPullRequest } from "./contribution-preflight.mjs";
 import { canonical, sha256 } from "./evidence.mjs";
 import { prepareCandidateCatalog, writeCatalog } from "./generate.mjs";
@@ -12,17 +13,26 @@ import { readGit } from "./git-source.mjs";
 import { assertPublication } from "./parity.mjs";
 import { materializeGitTree } from "./source-tree.mjs";
 
-export function rehearseCandidate({ number, base, head, siteBase, rulesFixtureRepository, source }) {
+const { policies } = JSON.parse(readFileSync(new URL("./routes.json", import.meta.url)));
+
+export function rehearseCandidate({ number, base, head, siteBase, rulesFixtureRepository, source, measure = false }) {
   const { root } = source;
   if (readGit(root, ["rev-parse", "HEAD"], { encoding: "utf8" }).trim() !== siteBase) {
     throw new Error("rehearsal requires the exact site base checkout");
   }
 
   return preflightPullRequest({ number, base, head, fetchRules: true, site: root }, undefined,
-    ({ loaded, repository }) => {
+    candidate => {
+      const { loaded, repository } = candidate;
       const scratch = mkdtempSync(path.join(tmpdir(), "hub-candidate-"));
       try {
-        const prepared = prepareCandidateCatalog(source, loaded, {
+        // The policy copy has its own approval before an opening candidate.
+        // Rehearse every policy page with committed source text and record any
+        // absent pages alongside the results for this disposable preview.
+        const policyFile = path.join(root, "data/hub/policy-pages.json");
+        const pages = existsSync(policyFile) ? JSON.parse(readFileSync(policyFile, "utf8")) : {};
+        const previewPolicies = policies.filter(name => Object.hasOwn(pages, name));
+        const prepared = prepareCandidateCatalog({ ...source, policies: previewPolicies }, loaded, {
           siteBase, rulesSHA: head, rulesRepository: rulesFixtureRepository, candidateRepository: repository,
         }, scratch);
         const site = path.join(scratch, "site");
@@ -59,12 +69,17 @@ export function rehearseCandidate({ number, base, head, siteBase, rulesFixtureRe
         assertClosedDiscovery(build("closed", false));
         writeFileSync(launch, "open = true\n");
         build("preview", true);
+        const fresh = measure === true && measureCandidatePacks({
+          candidate, source, rulesFixtureRepository, output: path.join(scratch, "fresh-measurements"),
+        });
         return {
           site_sha: siteBase,
           tooling_identity: catalog["source.json"].tooling_identity,
           manifest_sha256: sha256(canonical(manifest)),
           listings: records.length,
           routes: manifest.entries.length,
+          missing_policy_pages: policies.filter(name => !previewPolicies.includes(name)),
+          ...(fresh ? { fresh_measurements: fresh } : {}),
         };
       } finally {
         rmSync(scratch, { recursive: true, force: true });
