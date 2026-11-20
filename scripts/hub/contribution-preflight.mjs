@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { readGit as git } from "./git-source.mjs";
+import { readGit as git, readRemoteRefs } from "./git-source.mjs";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -50,9 +50,16 @@ const rulesRepository = "pipelab-org/pipelock-rules";
 const commitSHA = /^[a-f0-9]{40}$/;
 
 function pullRequest(number) {
-  return JSON.parse(execFileSync("gh", ["api", "--hostname", "github.com", `repos/${rulesRepository}/pulls/${number}`], {
+  const pr = JSON.parse(execFileSync("gh", ["api", "--hostname", "github.com", `repos/${rulesRepository}/pulls/${number}`], {
     encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], timeout: 15000,
   }));
+  const baseRef = "refs/heads/main";
+  const headRef = `refs/pull/${number}/head`;
+  const tips = readRemoteRefs(`https://github.com/${rulesRepository}`, [baseRef, headRef], "invalid rules ref result");
+  if (pr?.base?.sha !== tips.get(baseRef) || pr?.head?.sha !== tips.get(headRef)) {
+    throw new Error("pull request metadata differs from the published rules refs");
+  }
+  return pr;
 }
 
 function matchesPullRequest(pr, number, base, head) {
@@ -128,7 +135,7 @@ export function preflightContribution({ repository, base, head, maintenance = fa
 }
 
 // This mode binds the local input check to a public PR. Producer and admission
-// evidence are separate. The caller still verifies the authoritative Git refs.
+// evidence are separate. The default reader verifies the API against live Git refs.
 export function preflightPullRequest({ number, ...options }, readPull = pullRequest) {
   const { base, head } = options;
   const binding = { repository: rulesRepository, number, base, head };

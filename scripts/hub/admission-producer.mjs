@@ -1,10 +1,8 @@
-import { execFileSync } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { sha256, toolingIdentity } from "./evidence.mjs";
-import { readGit, withoutGitOverrides } from "./git-source.mjs";
+import { readGit, readRemoteRefs } from "./git-source.mjs";
 
 const repository = "pipelab-org/pipelab.org";
 const server = "https://github.com";
@@ -15,27 +13,8 @@ const workflows = {
   sync: { path: ".github/workflows/sync-pipelab-hub.yml", events: ["schedule", "workflow_dispatch"] },
 };
 
-export function readSiteMain({ runGit = execFileSync, environment = process.env } = {}) {
-  // Use an empty Git context so configuration cannot select a different
-  // remote. Keep the caller's HTTP(S) proxy environment.
-  const directory = mkdtempSync(path.join(tmpdir(), "hub-site-main-"));
-  try {
-    const output = runGit("git", [
-      "-c", "http.followRedirects=false", "ls-remote", "--exit-code", server + "/" + repository, main,
-    ], {
-      cwd: directory,
-      env: { ...withoutGitOverrides(environment),
-        GIT_CONFIG_NOSYSTEM: "1", GIT_CONFIG_GLOBAL: path.join(directory, "config"),
-        GIT_CEILING_DIRECTORIES: path.dirname(directory), GIT_ALLOW_PROTOCOL: "https", GIT_TERMINAL_PROMPT: "0",
-      },
-      encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], timeout: 15_000,
-    }).trim();
-    const [tip, ref, ...unexpected] = output.split("\t");
-    if (!sha.test(tip) || ref !== main || unexpected.length) throw new Error("invalid site main result");
-    return tip;
-  } finally {
-    rmSync(directory, { recursive: true, force: true });
-  }
+export function readSiteMain(options) {
+  return readRemoteRefs(server + "/" + repository, [main], "invalid site main result", options).get(main);
 }
 
 // Design 3.2.1. Call from the trusted site checkout before reading any
