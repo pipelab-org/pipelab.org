@@ -2,14 +2,18 @@
 // step; the import refusal repeats it. Text that reaches a workflow log or a
 // public run page passes through diagnosticLine first.
 
+// Redaction inserts a private-use sentinel that input can never carry, so the
+// final check can tell an inserted marker from text the input supplied. It is
+// shown as [redacted] only after every check has run.
+const sentinel = "\uE000";
 const redactions = [
-  [/\b([a-z][a-z0-9+.-]*:\/\/)[^\s/@]*@/gi, "$1[redacted]@"],
-  [/-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*/g, "[redacted]"],
-  [/\b(?:gh[pousr]_[A-Za-z0-9]{16,}|github_pat_[A-Za-z0-9_]{16,}|xox[abprs]-[A-Za-z0-9-]{10,}|AKIA[0-9A-Z]{16}|sk-[A-Za-z0-9_-]{20,})/g, "[redacted]"],
+  [/\b([a-z][a-z0-9+.-]*:\/\/)[^\s/@]*@/gi, "$1" + sentinel + "@"],
+  [/-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*/g, sentinel],
+  [/\b(?:gh[pousr]_[A-Za-z0-9]{16,}|github_pat_[A-Za-z0-9_]{16,}|xox[abprs]-[A-Za-z0-9-]{10,}|AKIA[0-9A-Z]{16}|sk-[A-Za-z0-9_-]{20,})/g, sentinel],
   // Every scheme carries credentials after its name, so withhold the rest of the line.
-  [/\b(authorization|proxy-authorization)(["']?\s*[:=]\s*)[^\r\n]*/gi, "$1$2[redacted]"],
-  [/\b(bearer|basic)\s+[A-Za-z0-9._~+/=-]{8,}/gi, "$1 [redacted]"],
-  [/\b([A-Za-z0-9_-]*(?:token|secret|passw(?:or)?d|api[_-]?key|credential|private[_-]?key)[A-Za-z0-9_-]*)(["']?\s*[:=]\s*)(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|\S+)/gi, "$1$2[redacted]"],
+  [/\b(authorization|proxy-authorization)(["']?\s*[:=]\s*)[^\r\n]*/gi, "$1$2" + sentinel],
+  [/\b(bearer|basic)\s+[A-Za-z0-9._~+/=-]{8,}/gi, "$1 " + sentinel],
+  [/\b([A-Za-z0-9_-]*(?:token|secret|passw(?:or)?d|api[_-]?key|credential|private[_-]?key)[A-Za-z0-9_-]*)(["']?\s*[:=]\s*)(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|\S+)/gi, "$1$2" + sentinel],
 ];
 
 export function diagnosticLine(value, limit = 600) {
@@ -17,9 +21,8 @@ export function diagnosticLine(value, limit = 600) {
   // Encoded text can hide keys and delimiters. Withhold it rather than
   // decoding untrusted quoting into a different structure before redaction.
   if (/%[0-9a-f]{2}|\\u[0-9a-f]{4}/i.test(value)) return "encoded diagnostic evidence withheld";
-  // The redaction marker must only come from redaction, or the final check below
-  // would trust a marker the input supplied.
-  if (/\[redacted\]/i.test(value)) return "credential-like diagnostic evidence withheld";
+  // Only redaction may produce the sentinel.
+  if (/\p{Co}/u.test(value)) return "hidden-character diagnostic evidence withheld";
   // Invisible format and control characters can split a credential key so it
   // escapes the patterns below and then rejoins when they are stripped.
   // Withhold that too; only tab, line feed and carriage return stay readable.
@@ -34,10 +37,11 @@ export function diagnosticLine(value, limit = 600) {
   // Whitespace can split a credential key so the patterns above miss it. If the
   // text with all whitespace removed still shows an unredacted credential key and
   // value, withhold the whole line rather than chase each separator.
-  if (/(?:token|secret|passw(?:or)?d|api[_-]?key|credential|private[_-]?key|authorization)["']?[:=](?!\[redacted\])\S/i
+  if (/(?:token|secret|passw(?:or)?d|api[_-]?key|credential|private[_-]?key|authorization)["']?[:=](?!\uE000)\S/i
     .test(line.replace(/\s+/g, ""))) {
     return "credential-like diagnostic evidence withheld";
   }
+  line = line.replaceAll(sentinel, "[redacted]");
   return line.length > limit ? line.slice(0, limit - 1) + "…" : line;
 }
 
