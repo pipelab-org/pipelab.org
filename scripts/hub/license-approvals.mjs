@@ -16,7 +16,7 @@ import { rulesRepository } from "./rules-acquisition.mjs";
 export const osiListSource = "https://spdx.org/licenses/licenses.json";
 const spdxId = /^[A-Za-z0-9][A-Za-z0-9.+-]{0,63}$/;
 const digest = /^[a-f0-9]{64}$/;
-const listingKey = /^[a-z0-9][a-z0-9-]{1,62}[a-z0-9]--[a-z0-9][a-z0-9-]{1,62}[a-z0-9]$/;
+const listingKey = /^[a-z0-9][a-z0-9-]{1,62}[a-z0-9]\/[a-z0-9][a-z0-9-]{1,62}[a-z0-9]$/;
 const approvalURL = new RegExp("^https://github\\.com/" + rulesRepository.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "/pull/[1-9][0-9]{0,8}$");
 export const approvalFile = "hub/license-approvals.yaml";
 const maxApprovals = 1000;
@@ -71,7 +71,7 @@ export function osiListFrom(spdx) {
 // hub/license-approvals.yaml:
 //   schema_version: 1
 //   approvals:
-//     - listing: <publisher-id>--<bundle-name>
+//     - listing: <publisher-id>/<bundle-name>
 //       license: <SPDX identifier>
 //       license_sha256: <SHA-256 of the delivered LICENSE bytes>
 //       approved_in: https://github.com/pipelab-org/pipelock-rules/pull/<number>
@@ -110,7 +110,9 @@ export function loadLicenseApprovals(directory) {
   return parseLicenseApprovals(source);
 }
 
-export const communityListingKey = (publisherId, bundleName) => publisherId + "--" + bundleName;
+// Use the route path separator: hyphens (including "--") are valid inside
+// both names, so concatenating them with "--" is not an exact identity.
+export const communityListingKey = (publisherId, bundleName) => publisherId + "/" + bundleName;
 
 // The approval, if any, that covers this listing under this license. Matching
 // the digest to the delivered bytes is the caller's check (license-delivery).

@@ -304,7 +304,7 @@ test("generation lists a non-default OSI license only under an approval of the d
   const retainedCopy = path.join(dir, "assets/hub/community/example/example-bundle/license.txt");
   const original = readFileSync(delivered, "utf8");
   const declare = license => writeFileSync(item.listing_file, stringify({ ...listing, license }));
-  const approval = { listing: "example--" + listing.bundle_name, license: "MPL-2.0", license_sha256: sha256(text),
+  const approval = { listing: "example/" + listing.bundle_name, license: "MPL-2.0", license_sha256: sha256(text),
     approved_in: "https://github.com/pipelab-org/pipelock-rules/pull/12" };
   const community = (approvals, items = source.items) => generateCatalog({ ...source, items, approvals })["listings.json"].find(record => record.badge === "community");
 
@@ -317,7 +317,7 @@ test("generation lists a non-default OSI license only under an approval of the d
   const unapproved = /license is not approved for this listing or its text changed/;
   assert.throws(() => community([]), unapproved);
   assert.throws(() => community([{ ...approval, license_sha256: sha256(text + "x") }]), unapproved);
-  assert.throws(() => community([{ ...approval, listing: "example--other-bundle" }]), unapproved);
+  assert.throws(() => community([{ ...approval, listing: "example/other-bundle" }]), unapproved);
   assert.throws(() => community([{ ...approval, license: "GPL-3.0-only" }]), unapproved);
   const record = community([approval]);
   assert.equal(record.listing.license, "MPL-2.0");

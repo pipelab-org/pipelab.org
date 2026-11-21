@@ -17,7 +17,7 @@ import { serialize } from "../scripts/hub/update-osi-licenses.mjs";
 const root = path.resolve(import.meta.dirname, "..");
 const pullURL = "https://github.com/pipelab-org/pipelock-rules/pull/12";
 const mplText = "Mozilla Public License Version 2.0\n\nFixture text for an OSI-approved license outside the default set.\n";
-const entry = { listing: "acme--example-bundle", license: "MPL-2.0", license_sha256: sha256(mplText), approved_in: pullURL };
+const entry = { listing: "acme/example-bundle", license: "MPL-2.0", license_sha256: sha256(mplText), approved_in: pullURL };
 const approvalsFile = (...entries) => stringify({ schema_version: 1, approvals: entries });
 
 test("the committed OSI list is generated from the SPDX list rules and stays well formed", () => {
@@ -56,7 +56,8 @@ test("license approval entries are strict and bound to one listing", () => {
   bad("schema_version: 1\nschema_version: 1\napprovals: []\n", /invalid license approval file/);
   bad(approvalsFile({ ...entry, extra: "x" }), /invalid license approval entry/);
   bad(approvalsFile({ ...entry, listing: "acme" }), /invalid license approval entry/);
-  bad(approvalsFile({ ...entry, listing: "ACME--example-bundle" }), /invalid license approval entry/);
+  bad(approvalsFile({ ...entry, listing: "acme--example-bundle" }), /invalid license approval entry/);
+  bad(approvalsFile({ ...entry, listing: "ACME/example-bundle" }), /invalid license approval entry/);
   bad(approvalsFile({ ...entry, license: "MPL 2.0" }), /invalid license approval entry/);
   bad(approvalsFile({ ...entry, license_sha256: entry.license_sha256.toUpperCase() }), /invalid license approval entry/);
   bad(approvalsFile({ ...entry, license_sha256: "abc" }), /invalid license approval entry/);
@@ -71,7 +72,7 @@ test("license approval entries are strict and bound to one listing", () => {
 
   assert.equal(communityListingKey("acme", "example-bundle"), entry.listing);
   assert.equal(findLicenseApproval([entry], entry.listing, "MPL-2.0"), entry);
-  assert.equal(findLicenseApproval([entry], "acme--other-bundle", "MPL-2.0"), null);
+  assert.equal(findLicenseApproval([entry], "acme/other-bundle", "MPL-2.0"), null);
   assert.equal(findLicenseApproval([entry], entry.listing, "GPL-3.0-only"), null);
   assert.equal(findLicenseApproval(undefined, entry.listing, "MPL-2.0"), null);
 });
@@ -209,7 +210,7 @@ test("approvals are maintenance-only files that the Rules acquisition admits", t
   assert.throws(() => assertHubOnly(directory, base, head), /only Hub contribution files/);
   assert.deepEqual(assertHubOnly(directory, base, head, { maintenance: true }), ["hub/license-approvals.yaml"]);
   // A pack cannot carry its own approval in the same contribution.
-  const both = commit({ ...pack("MPL-2.0", mplText), "hub/license-approvals.yaml": approvalsFile(entry, { ...entry, listing: "acme--other-bundle" }) });
+  const both = commit({ ...pack("MPL-2.0", mplText), "hub/license-approvals.yaml": approvalsFile(entry, { ...entry, listing: "acme/other-bundle" }) });
   assert.throws(() => assertHubOnly(directory, head, both), /only Hub contribution files/);
   // The acquired tree carries the file so generation and preflight can read it.
   const output = path.join(directory, "output");
@@ -240,7 +241,7 @@ test("preflight admits an approved non-default pack and refuses every mismatch",
   const editedBase = edited.commit({ "hub/license-approvals.yaml": approvalsFile(entry) });
   const editedHead = edited.commit(pack("MPL-2.0", mplText + "Added line.\n"));
   assert.match(preflightContribution({ repository: edited.directory, base: editedBase, head: editedHead, site: root }).steps["license-approvals"].evidence, /not approved/);
-  for (const changed of [{ ...entry, listing: "acme--other-bundle" }, { ...entry, license: "GPL-3.0-only" }, { ...entry, license_sha256: sha256("x") }]) {
+  for (const changed of [{ ...entry, listing: "acme/other-bundle" }, { ...entry, license: "GPL-3.0-only" }, { ...entry, license_sha256: sha256("x") }]) {
     const other = rules(t);
     const otherBase = other.commit({ "hub/license-approvals.yaml": approvalsFile(changed) });
     const otherHead = other.commit(pack("MPL-2.0", mplText));
@@ -279,4 +280,31 @@ test("preflight reports approvals as a maintenance category and refuses malforme
   const refused = preflightContribution({ repository: directory, base: head, head: broken, site: root, maintenance: true });
   assert.equal(refused.verdict, "REFUSED");
   assert.equal(failed(refused), "source-parse");
+});
+
+test("license approvals cannot transfer between ambiguous publisher and bundle pairs", t => {
+  const originalPublisher = "acme--tools", originalBundle = "example-bundle";
+  const otherPublisher = "acme", otherBundle = "tools--example-bundle";
+  const approvedKey = communityListingKey(originalPublisher, originalBundle);
+  const approved = parseLicenseApprovals(approvalsFile({ ...entry, listing: approvedKey }));
+  assert.equal(findLicenseApproval(approved, approvedKey, "MPL-2.0"), approved[0]);
+  assert.equal(findLicenseApproval(approved, communityListingKey(otherPublisher, otherBundle), "MPL-2.0"), null);
+  const { directory, commit } = rules(t);
+  const base = commit({ "hub/license-approvals.yaml": approvalsFile({ ...entry, listing: approvedKey }) });
+  const files = pack("MPL-2.0", mplText);
+  const listingFile = "hub/listings/community/acme--example-bundle.yaml";
+  const stagedListing = Object.assign(JSON.parse(readFileSync(path.join(root, "test/hub-fixtures/listing.json"), "utf8")), { type: "bundle", id: otherBundle, bundle_name: otherBundle, license: "MPL-2.0", bundle_sha256: sha256(bundle), signer_fingerprint: fingerprint });
+  delete stagedListing.learn_page;
+  delete stagedListing.evidence.artifact;
+  files["hub/listings/community/" + otherPublisher + "--" + otherBundle + ".yaml"] = stringify(stagedListing);
+  delete files[listingFile];
+  for (const name of ["bundle.yaml", "bundle.yaml.sig", "LICENSE"]) {
+    files["hub/community/" + otherPublisher + "/" + otherBundle + "/" + name] = files[packDirectory + name];
+    delete files[packDirectory + name];
+  }
+  const head = commit(files);
+  const report = preflightContribution({ repository: directory, base, head, site: root });
+  assert.equal(report.verdict, "REFUSED", JSON.stringify(report));
+  assert.equal(failed(report), "license-approvals");
+  assert.notEqual(approvedKey, communityListingKey(otherPublisher, otherBundle));
 });
