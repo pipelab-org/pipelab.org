@@ -22,7 +22,7 @@ const candidateName = /^(?:licen[cs]e|notice|copying)(?:[._-].*)?$/i;
 // appendix. A partial, extended or mismatched text is refused.
 const licenseDirectory = new URL("./licenses/", import.meta.url);
 const holes = {
-  holder: "[^\"]{1,160}?",
+  holder: ".{1,160}?",
   "and-or": "(?:and/or|and)",
   the: "(?:the )?",
   "any-those": "(?:any|those)",
@@ -67,7 +67,7 @@ const templates = new Map(["Apache-2.0", "MIT", "BSD-2-Clause", "BSD-3-Clause", 
     // The appendix is optional; when present, its notice may be filled in.
     const appendix = compileTemplate("Apache-2.0-appendix.txt", false);
     const boilerplate = compileTemplate("Apache-2.0-boilerplate.txt", false);
-    body += `(?: (?:${appendix} )?(?:copyright [^"]{1,200}? )?${boilerplate})?`;
+    body += `(?: (?:${appendix} )?(?:(?:copyright|\\(c\\)) .{1,300}? )*${boilerplate})?`;
   }
   return [id, { bullets, pattern: new RegExp("^" + body + "$") }];
 }));

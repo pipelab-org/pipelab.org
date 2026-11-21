@@ -7,6 +7,7 @@ import { readLicenseMaterial, licenseRecord, licenseDownloads, officialRoute } f
 import { routeManifest } from "../scripts/hub/route-manifest.mjs";
 import { stageCatalogAssets } from "../scripts/hub/catalog-assets.mjs";
 import { sha256 } from "../scripts/hub/evidence.mjs";
+import { publishedFiles } from "../scripts/hub/retrieval.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
 const schemaBytes = readFileSync(path.join(root, "scripts/hub/schema/listing-v1.json"));
@@ -210,6 +211,9 @@ test("license text must be the complete body of the declared license", t => {
     ["0BSD", fill("0BSD", "THE AUTHOR")],
     ["0BSD", "Copyright (C) 2026 by Example\n\n" + fill("0BSD", "THE AUTHOR")],
     ["CC0-1.0", template("CC0-1.0")],
+    // Several copyright holders after the terms, including quoted names.
+    ["Apache-2.0", apache.slice(0, apache.indexOf("END OF TERMS AND CONDITIONS") + 27) + "\n\nCopyright 2026 Acme \"Labs\" Inc.\nCopyright 2025 Example Org, Second Example Org, Third Example Org and the many named contributors listed in the project's authors file, each of whom retains copyright in their own contributions\n\n" + template("Apache-2.0-boilerplate")],
+    ["BSD-3-Clause", "Copyright (c) 2026 Acme \"Labs\" Inc.\n\n" + fill("BSD-3-Clause", "Acme \"Labs\" Inc.")],
     // Classic Mac line endings split like LF and CRLF.
     ["0BSD", ("Copyright (C) 2026 by Example\n\n" + fill("0BSD", "THE AUTHOR")).replaceAll("\n", "\r")],
   ];
@@ -246,4 +250,16 @@ test("license text must be the complete body of the declared license", t => {
     const { dir, signed } = bundle(t, { LICENSE: text }, "license: " + license + "\n");
     assert.throws(() => readLicenseMaterial(dir, license, signed), /does not match the declared license/, license + ": " + text.slice(0, 60));
   }
+});
+
+test("retrieval verification accepts license and notice downloads", t => {
+  const dir = mkdtempSync(path.join(tmpdir(), "hub-retrieval-txt-"));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  for (const name of ["license.txt", "notice.txt"]) writeFileSync(path.join(dir, name), "text\n");
+  const manifest = { entries: [
+    { kind: "license-download", route: "/license.txt", representations: ["raw"] },
+    { kind: "notice-download", route: "/notice.txt", representations: ["raw"] },
+  ] };
+  const files = publishedFiles(dir, manifest, false);
+  assert.deepEqual([...files.values()].map(file => file.type), ["text/plain; charset=utf-8", "text/plain; charset=utf-8"]);
 });
