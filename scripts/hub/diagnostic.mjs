@@ -4,16 +4,21 @@
 
 // Credential-shaped text anywhere in the evidence withholds the whole line.
 // Partial redaction proved unsafe: a split key, a supplied marker or a value
-// longer than its recognized prefix each left part of a secret readable. These
-// patterns are checked on the text as given and with all whitespace removed.
+// longer than its recognized prefix each left part of a secret readable. This
+// list is a backstop, not a guarantee: the public refusal repeats evidence only
+// in the allowlisted fixture-summary form (see acceptanceRefusal).
 const credentialShapes = [
   /[a-z][a-z0-9+.-]*:\/\/[^\s/@]*@/i,
   /-----BEGIN [A-Z ]*PRIVATE KEY-----/,
-  /gh[pousr]_[A-Za-z0-9]{8,}|github_pat_|xox[abprs]-|AKIA[0-9A-Z]{8,}|sk-[A-Za-z0-9_-]{8,}/,
+  /(?<![A-Za-z0-9])(?:gh[pousr]_[A-Za-z0-9]{8,}|github_pat_|xox[abprs]-|A[KS]IA[0-9A-Z]{8,}|sk[-_][A-Za-z0-9_-]{8,}|glpat-|npm_[A-Za-z0-9]{20,}|eyJ[A-Za-z0-9_-]{10,}\.)/,
   /(?:proxy-)?authorization["']?\s*[:=]/i,
   /\b(?:bearer|basic)\s+[A-Za-z0-9._~+/=-]{8,}/i,
-  /(?:token|secret|passw(?:or)?d|api[_-]?key|credential|private[_-]?key)["']?\s*[:=]/i,
+  /(?:token|secret|passw(?:or)?d|api[_-]?key|credential|private[_-]?key|(?:set-)?cookie|signature)["']?\s*[:=]/i,
 ];
+
+// Key and delimiter shapes are also checked with whitespace removed, because a
+// split key is the bypass that matters there.
+const keyShapes = credentialShapes.slice(3);
 
 export function diagnosticLine(value, limit = 600) {
   if (typeof value !== "string") return "no evidence recorded";
@@ -25,7 +30,7 @@ export function diagnosticLine(value, limit = 600) {
     return "hidden-character diagnostic evidence withheld";
   }
   const compact = value.replace(/\s+/g, "");
-  if (credentialShapes.some(shape => shape.test(value) || shape.test(compact))) {
+  if (credentialShapes.some(shape => shape.test(value)) || keyShapes.some(shape => shape.test(compact))) {
     return "credential-like diagnostic evidence withheld";
   }
   // Line separators can rewrite log lines; collapse to one line.

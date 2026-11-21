@@ -25,11 +25,16 @@ function fileInventory(directory, prefix = "") {
   }).sort((a, b) => a.path.localeCompare(b.path));
 }
 
-// The refusal names the failed step and repeats its single line of evidence,
-// bounded and stripped of credential-shaped text. Raw output stays in the cause.
+// The refusal reaches a public workflow log, so it repeats evidence only in a
+// known-safe form: the fixture summary, which names failed tests from this
+// repository. Any other step reports its number alone; free-form error text
+// stays in the cause and in a local acceptance run.
+const safeEvidence = /^\d+(?: of \d+)? Hub fixture tests failed: /;
 export function acceptanceRefusal(stdout) {
   const failed = failedAcceptanceStep(stdout);
-  return failed ? "routine Hub acceptance failed at step " + failed.step + ": " + failed.evidence : "routine Hub acceptance did not pass";
+  if (!failed) return "routine Hub acceptance did not pass";
+  const prefix = "routine Hub acceptance failed at step " + failed.step;
+  return failed.step === "5" && safeEvidence.test(failed.evidence) ? prefix + ": " + failed.evidence : prefix;
 }
 
 const run = promisify(runProcess);

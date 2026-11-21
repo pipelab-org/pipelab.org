@@ -105,7 +105,7 @@ test("the import refusal repeats the failed step evidence", () => {
 
   steps["5"].evidence = "Command failed: git clone https://user:hunter2@example.invalid/repo.git\nstack line";
   const refused = acceptanceRefusal(JSON.stringify({ steps }));
-  assert.equal(refused, "routine Hub acceptance failed at step 5: credential-like diagnostic evidence withheld");
+  assert.equal(refused, "routine Hub acceptance failed at step 5");
   assert.doesNotMatch(refused, /hunter2/);
   assert.equal(refused.split("\n").length, 1);
 
@@ -124,7 +124,20 @@ test("the import refusal repeats the failed step evidence", () => {
   }
 
   steps["5"].evidence = { nested: "not a line" };
-  assert.equal(acceptanceRefusal(JSON.stringify({ steps })), "routine Hub acceptance failed at step 5: no evidence recorded");
+  assert.equal(acceptanceRefusal(JSON.stringify({ steps })), "routine Hub acceptance failed at step 5");
+
+  // Only the fixture summary is repeated publicly; other free-form evidence is not,
+  // including shapes no credential pattern recognizes.
+  for (const evidence of ["fetch failed: https://example.invalid/x?key=abc123def456", "Cookie: session=abc123", "eyJhbGciOiJIUzI1NiJ9.e30.sig", "no space left on device"]) {
+    steps["5"].evidence = evidence;
+    assert.equal(acceptanceRefusal(JSON.stringify({ steps })), "routine Hub acceptance failed at step 5", evidence);
+    steps["5"].evidence = "1 of 2 Hub fixture tests failed: x";
+    const other = { ...steps, "5": { status: "pass", evidence: "ok" }, "3": { status: "fail", evidence } };
+    assert.equal(acceptanceRefusal(JSON.stringify({ steps: other })), "routine Hub acceptance failed at step 3", evidence);
+  }
+  // Ordinary names containing token-like substrings stay readable.
+  assert.equal(diagnosticLine("bundle risk-scoring-rules failed the naming check"), "bundle risk-scoring-rules failed the naming check");
+  assert.equal(diagnosticLine("task-runner-policy missing"), "task-runner-policy missing");
 });
 
 test("an unreadable or step-less acceptance report gives no evidence to repeat", () => {
