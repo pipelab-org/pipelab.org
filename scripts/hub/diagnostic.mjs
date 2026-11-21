@@ -24,6 +24,8 @@ export function diagnosticLine(value, limit = 600) {
   return line.length > limit ? line.slice(0, limit - 1) + "…" : line;
 }
 
+export const notExecuted = "Not executed.";
+
 // The failed step's one-line evidence from an acceptance report on stdout.
 // Returns undefined when the report is absent or names no failed step.
 export function failedAcceptanceStep(stdout) {
@@ -34,7 +36,10 @@ export function failedAcceptanceStep(stdout) {
     return undefined;
   }
   if (!steps || typeof steps !== "object") return undefined;
-  const step = Object.keys(steps).find(key => /^(?:[1-9]|10)$/.test(key) && steps[key]?.status === "fail");
+  // Acceptance marks steps it never reached as failed with a placeholder; report
+  // the step that actually failed, falling back to the first failed step.
+  const failed = Object.keys(steps).filter(key => /^(?:[1-9]|10)$/.test(key) && steps[key]?.status === "fail");
+  const step = failed.find(key => steps[key].evidence !== notExecuted) ?? failed[0];
   return step ? { step, evidence: diagnosticLine(steps[step].evidence) } : undefined;
 }
 

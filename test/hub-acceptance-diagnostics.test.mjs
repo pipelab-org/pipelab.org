@@ -96,6 +96,10 @@ test("the import refusal repeats the failed step evidence", () => {
     "routine Hub acceptance failed at step 5: 6 of 115 Hub fixture tests failed: official workloads bind exact served producer bytes");
   assert.deepEqual(failedAcceptanceStep(report), { step: "5", evidence: steps["5"].evidence });
 
+  // A step the run never reached keeps its placeholder; the executed failure wins.
+  const early = { ...steps, "1": { status: "fail", evidence: "Not executed." }, "2": { status: "fail", evidence: "no space left on device" } };
+  assert.deepEqual(failedAcceptanceStep(JSON.stringify({ steps: early })), { step: "2", evidence: "no space left on device" });
+
   steps["5"].evidence = "Command failed: git clone https://user:hunter2@example.invalid/repo.git\nstack line";
   const refused = acceptanceRefusal(JSON.stringify({ steps }));
   assert.equal(refused, "routine Hub acceptance failed at step 5: Command failed: git clone https://[redacted]@example.invalid/repo.git stack line");

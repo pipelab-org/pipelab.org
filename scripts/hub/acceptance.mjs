@@ -13,7 +13,7 @@ import { verifyRetrieval } from "./retrieval.mjs";
 import { assertSourceProgress, materializeGitTree } from "./source-tree.mjs";
 import { readGit } from "./git-source.mjs";
 import { readSiteMain } from "./admission-producer.mjs";
-import { diagnosticLine, fixtureFailureEvidence } from "./diagnostic.mjs";
+import { diagnosticLine, fixtureFailureEvidence, notExecuted } from "./diagnostic.mjs";
 
 const gitSHA = /^[a-f0-9]{40}$/;
 const method = JSON.parse(readFileSync(new URL("./routes.json", import.meta.url)));
@@ -84,7 +84,7 @@ export async function routineAcceptance({ source, siteSHA, rulesSHA }, { readMai
     candidate: { site_sha: siteSHA, rules_sha: rulesSHA, tooling_identity: null },
     deployment: null,
     steps: Object.fromEntries(Array.from({ length: 10 }, (_, i) => [
-      String(i + 1), { status: i === 8 ? "not-in-mode" : "fail", evidence: i === 8 ? null : "Not executed." },
+      String(i + 1), { status: i === 8 ? "not-in-mode" : "fail", evidence: i === 8 ? null : notExecuted },
     ])),
     opening_eligible: false,
   };
