@@ -51,6 +51,20 @@ License: {{ partial "hub-md-label.html" $l.license }}
 {{- end }}
 {{ end }}
 
+{{ with .Params.hub.license_material -}}
+## License
+
+[Download {{ .license.name }}]({{ absURL (strings.TrimPrefix "/" .license.route) }})
+
+{{ partial "hub-md-code.html" (chomp .license.text) }}
+{{ with .notices }}
+## Notices
+{{ range . }}
+[Download {{ .name }}]({{ absURL (strings.TrimPrefix "/" .route) }})
+
+{{ partial "hub-md-code.html" (chomp .text) }}
+{{ end }}{{ end }}
+{{ end -}}
 ## Disclosures
 
 {{ if ne $.Params.hub.badge "first-party" }}AI assisted: {{ $l.disclosures.ai_assisted }}{{ end }}

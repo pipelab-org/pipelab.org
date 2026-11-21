@@ -22,6 +22,44 @@
     {{- if .served_source -}}
       {{- if ne (crypto.SHA256 (os.ReadFile .served_source)) .bundle_sha256 -}}{{- errorf "hub served bundle digest differs" -}}{{- end -}}
     {{- end -}}
+    {{- if in (slice "community" "official") .badge -}}
+      {{- /* License text and notices must reach readers of the page itself. */ -}}
+      {{- $official := eq .badge "official" -}}
+      {{- $material := .license_material -}}
+      {{- if not (and $material $material.license $material.license.text) -}}{{- errorf "hub license text is missing" -}}{{- end -}}
+      {{- if $official -}}
+        {{- /* The synchronized registry is the authority for optional NOTICE.
+             Omitting both generated notice projections must not hide it. */ -}}
+        {{- $base := printf "/rules/%s/" $listing.bundle_name -}}
+        {{- $noticePresent := os.FileExists (printf "static%snotice.txt" $base) -}}
+        {{- if or (ne $material.license.route (printf "%slicense.txt" $base)) (ne (len ($material.notices | default (slice))) (cond $noticePresent 1 0)) -}}
+          {{- errorf "hub official license delivery differs" -}}
+        {{- end -}}
+        {{- range $material.notices -}}
+          {{- if ne .route (printf "%snotice.txt" $base) -}}{{- errorf "hub official license delivery differs" -}}{{- end -}}
+        {{- end -}}
+      {{- end -}}
+      {{- range (slice $material.license) | append ($material.notices | default (slice)) -}}
+        {{- if or (not .text) (ne (crypto.SHA256 .text) .sha256) -}}{{- errorf "hub license or notice text differs from its download" -}}{{- end -}}
+        {{- if $official -}}
+          {{- /* Official files are served verbatim from the synchronized registry. */ -}}
+          {{- if not (findRE `^/rules/[a-z0-9][a-z0-9-]*/(license|notice)\.txt$` .route) -}}{{- errorf "hub official license route is invalid" -}}{{- end -}}
+          {{- if ne (crypto.SHA256 (os.ReadFile (printf "static%s" .route))) .sha256 -}}{{- errorf "hub official license or notice differs from the served file" -}}{{- end -}}
+        {{- end -}}
+        {{- $file := . -}}
+        {{- $expectedKind := index (dict "LICENSE" "license-download" "NOTICE" "notice-download") .name -}}
+        {{- $expectedOwner := cond $official "official-registry" "hub" -}}
+        {{- $entries := where (site.Data.hub.generated.routes.entries | default (slice)) "route" .route -}}
+        {{- if ne (len $entries) 1 -}}
+          {{- errorf "hub license delivery manifest differs" -}}
+        {{- else -}}
+          {{- $entry := index $entries 0 -}}
+          {{- if or (not $expectedKind) (ne $entry.kind $expectedKind) (ne $entry.ownership $expectedOwner) (ne $entry.sha256 $file.sha256) -}}
+            {{- errorf "hub license delivery manifest differs" -}}
+          {{- end -}}
+        {{- end -}}
+      {{- end -}}
+    {{- end -}}
     {{- $group := index (dict "bundle" "bundles" "config" "configs" "recipe" "recipes" "verifier" "verifiers") $listing.type -}}
     {{- if not $group }}{{ errorf "hub record has unknown type" }}{{ end -}}
     {{- if not (findRE `^[a-z0-9][a-z0-9-]{1,62}[a-z0-9]$` $listing.id) }}{{ errorf "hub record has invalid id" }}{{ end -}}

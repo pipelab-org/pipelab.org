@@ -45,9 +45,10 @@ function synthetic() {
 function stage(t, mutate = value => value) {
   const dir = temp(t), key = keypair(), bundle = mutate({ ...synthetic(), key_id: key.hex });
   const bytes = Buffer.from(stringify(bundle)), signature = Buffer.from(sign(null, bytes, key.privateKey).toString("base64") + "\n");
-  writeFileSync(path.join(dir, "bundle.yaml"), bytes); writeFileSync(path.join(dir, "bundle.yaml.sig"), signature);
+  writeFileSync(path.join(dir, "bundle.yaml"), bytes); writeFileSync(path.join(dir, "bundle.yaml.sig"), signature); writeFileSync(path.join(dir, "LICENSE"), fixtureLicense);
   return { dir, key, bundle, bytes, signature, request: { bundle_dir: dir, config: path.join(engineDir || "", "configs/claude-code.yaml"), trusted_keys: [{ name: "example", public_key: key.hex }] } };
 }
+const fixtureLicense = read("static/rules/pipelock-community/license.txt");
 function listingFor(reader) { const listing = structuredClone(base); delete listing.learn_page; delete listing.evidence.artifact; Object.assign(listing, { type: "bundle", id: reader.name, bundle_name: reader.name, bundle_sha256: reader.bundle_sha256, signer_fingerprint: reader.signer_fingerprint }); return listing; }
 function timer(samples) { return { samples_ns: samples, maximum_ns: Math.max(...samples), completed: true, timeout: false }; }
 function results(maximum = 12, workload_sha256 = "executed") { const measured = { baseline: timer([10, 10, 10]), target: timer([12, 12, maximum]), ratio: 0.2 }; return { rules: { "test-rule": structuredClone(measured) }, bundle: measured, deprecated: [], workload_sha256, bundle_sha256: "bundle", config_sha256: "config" }; }
@@ -235,7 +236,8 @@ test("recorded rule routes become removal pages with their parent listing", () =
   const id = "official-fixture";
   const parent = { listing: { id, type: "bundle", bundle_name: id }, badge: "official",
     route: "/hub/bundles/" + id + "/", bundle_sha256: "a".repeat(64), signature_sha256: "b".repeat(64),
-    facts: {}, reader: { declared: [{ id: "example-rule", name: "Example rule" }], policies: { stock: { loaded: [] } } } };
+    facts: {}, reader: { declared: [{ id: "example-rule", name: "Example rule" }], policies: { stock: { loaded: [] } } },
+    license_material: { license: { name: "LICENSE", route: "/rules/" + id + "/license.txt", text: fixtureLicense, sha256: sha256(fixtureLicense) }, notices: [] } };
   const active = routeManifest({ records: [parent], policies: [], schemaBytes });
   const rule = active.entries.find(entry => entry.kind === "rule");
   const removed = { id, route: parent.route, publisher_id: "official", facts: { Reason: "Withdrawn." } };
@@ -281,6 +283,7 @@ function catalogSource(t) {
   items.push({ listing_file: communityFile, bundle_dir: community.dir, publisher });
   const communityAssets = path.join(dir, "assets/hub/community/example/example-bundle"); mkdirSync(communityAssets, { recursive: true });
   cpSync(path.join(community.dir, "bundle.yaml"), path.join(communityAssets, "bundle.yaml")); cpSync(path.join(community.dir, "bundle.yaml.sig"), path.join(communityAssets, "bundle.yaml.sig"));
+  cpSync(path.join(community.dir, "LICENSE"), path.join(communityAssets, "license.txt"));
   cpSync(path.join(root, "package-lock.json"), path.join(dir, "package-lock.json"));
   mkdirSync(path.join(dir, "data/hub/first-party"), { recursive: true });
   const recipe = structuredClone(base); delete recipe.evidence.artifact;
@@ -801,7 +804,7 @@ test("bound generation stages the exact signed contribution from committed rules
     const relative = item.publisher ? "community/" + publisher.id + "--" + name : "bundles/" + name;
     writeListing("listings/" + relative + ".yaml", readFileSync(item.listing_file));
     if (item.publisher) {
-      for (const file of ["bundle.yaml", "bundle.yaml.sig"]) {
+      for (const file of ["bundle.yaml", "bundle.yaml.sig", "LICENSE"]) {
         writeListing("community/" + publisher.id + "/" + name + "/" + file, readFileSync(path.join(item.bundle_dir, file)));
       }
     }
@@ -814,8 +817,8 @@ test("bound generation stages the exact signed contribution from committed rules
   const { catalog, assetRoot } = prepareBoundCatalog(options, scratch);
   const admitted = catalog["listings.json"].find(record => record.badge === "community");
   assert.ok(admitted);
-  for (const file of ["bundle.yaml", "bundle.yaml.sig"]) {
-    assert.deepEqual(readFileSync(path.join(assetRoot, admitted.route, file)), readFileSync(path.join(signed.bundle_dir, file)));
+  for (const [file, source = file] of [["bundle.yaml"], ["bundle.yaml.sig"], ["license.txt", "LICENSE"]]) {
+    assert.deepEqual(readFileSync(path.join(assetRoot, admitted.route, file)), readFileSync(path.join(signed.bundle_dir, source)));
   }
   assert.ok(!existsSync(path.join(assetRoot, "rules")));
   assert.throws(() => prepareBoundCatalog({ ...options, mode: "routine" }, scratch), /current accepted measurement required/);
@@ -849,6 +852,7 @@ test("bound generation checks the committed latency selection against the acquir
   write(path.join(rules, "hub/listings/community", "example--" + reader.name + ".yaml"), stringify(listingFor(reader)));
   write(path.join(bundleDir, "bundle.yaml"), staged.bytes);
   write(path.join(bundleDir, "bundle.yaml.sig"), staged.signature);
+  write(path.join(bundleDir, "LICENSE"), fixtureLicense);
   const negative = path.join(bundleDir, "fixtures/dlp/stable-rule-long-false-positive.txt");
   write(path.join(bundleDir, "fixtures/dlp/stable-rule-long-true-positive.txt"), "fixture-secret\n");
   write(negative, "fixture-public\n");
@@ -934,8 +938,9 @@ test("catalog generation joins lifecycle removals and retains their names", { sk
   const community = generateCatalog(source)["listings.json"].find(record => record.badge === "community");
   const listing = { id: "bundle--" + community.listing.id, route: community.route,
     publisher: community.publisher_id, badge: community.badge, bundle_sha256: community.bundle_sha256,
-    signature_sha256: community.signature_sha256 };
-  const retired = { type: "removed", at: "2026-11-17", reason_id: "1".repeat(32), reason_class: "retired",
+    signature_sha256: community.signature_sha256, license: community.listing.license,
+    license_sha256: community.license_material.license.sha256 };
+  const retired ={ type: "removed", at: "2026-11-17", reason_id: "1".repeat(32), reason_class: "retired",
     public_reason: "Retired.", bundle_sha256: listing.bundle_sha256, downloads: "retained" };
   const security = { ...retired, reason_id: "2".repeat(32), reason_class: "security",
     public_reason: "Security review.", downloads: "removed" };
@@ -945,6 +950,18 @@ test("catalog generation joins lifecycle removals and retains their names", { sk
     lifecycle: { accepted: { listings: [listing], history: [], routes: [] }, history: history(retired) } });
   const retained = retainedCatalog["routes.json"].entries.filter(entry => entry.kind === "retained-download");
   assert.deepEqual(retained.map(entry => entry.route), [listing.route + "bundle.yaml", listing.route + "bundle.yaml.sig"]);
+  // License text stays available beside the retained pair; without it, retention is refused.
+  const retainedLicense = retainedCatalog["routes.json"].entries.filter(entry => entry.route === listing.route + "license.txt");
+  assert.deepEqual(retainedLicense.map(entry => [entry.kind, entry.sha256]), [["license-download", listing.license_sha256]]);
+  const retainLifecycle = accepted => ({ accepted: { listings: [accepted], history: [], routes: [] }, history: history(retired) });
+  const { license: _license, ...unlicensed } = listing;
+  assert.throws(() => generateCatalog({ ...source, items, lifecycle: retainLifecycle(unlicensed) }), /requires its accepted license material/);
+  assert.throws(() => generateCatalog({ ...source, items, lifecycle: retainLifecycle({ ...listing, license_sha256: "0".repeat(64) }) }), /retained license material differs/);
+  const retainedText = path.join(dir, "assets", listing.route.slice(1), "license.txt");
+  const savedText = readFileSync(retainedText);
+  rmSync(retainedText);
+  assert.throws(() => generateCatalog({ ...source, items, lifecycle: retainLifecycle(listing) }), /license text missing/);
+  writeFileSync(retainedText, savedText);
   assert.ok(retainedCatalog["inventory.json"].retained_names.includes(community.listing.bundle_name));
   assert.equal(retainedCatalog["routes.json"].entries.find(entry => entry.route === listing.route).facts["bundle.name"], community.listing.bundle_name);
   const withdrawn = generateCatalog({ ...source, items,
@@ -961,6 +978,35 @@ test("catalog generation joins lifecycle removals and retains their names", { sk
   assert.equal(restored["routes.json"].entries.find(entry => entry.route === listing.route).kind, "listing");
   const renamed = { ...listing, route: "/hub/community/example/new-bundle/", bundle_name: "new-bundle" };
   assert.throws(() => reconcileLifecycle({ listings: [listing], history: [] }, { listings: [renamed], history: [] }), /accepted listing route cannot change/);
+});
+
+test("official listings deliver the synchronized Rules license and refuse missing material", { skip: !native }, t => {
+  const { source } = catalogSource(t);
+  const catalog = generateCatalog(source);
+  for (const name of ["pipelock-community", "healthcare-phi-pii"]) {
+    const record = catalog["listings.json"].find(entry => entry.badge === "official" && entry.listing.bundle_name === name);
+    const directory = "/rules/" + name + "/";
+    assert.equal(record.license_material.license.route, directory + "license.txt");
+    assert.equal(record.license_material.license.text, read("static/rules/" + name + "/license.txt"));
+    assert.deepEqual(record.license_material.notices.map(notice => [notice.route, notice.text]), [[directory + "notice.txt", read("static/rules/" + name + "/notice.txt")]]);
+    const entries = catalog["routes.json"].entries.filter(entry => entry.route.startsWith(directory) && entry.route.endsWith(".txt"));
+    assert.deepEqual(entries.map(entry => [entry.route, entry.kind, entry.ownership]), [
+      [directory + "license.txt", "license-download", "official-registry"],
+      [directory + "notice.txt", "notice-download", "official-registry"],
+    ]);
+  }
+  const official = source.items.find(item => item.bundle_dir?.endsWith("/static/rules/pipelock-community"));
+  const copy = temp(t);
+  for (const file of ["bundle.yaml", "bundle.yaml.sig"]) cpSync(path.join(official.bundle_dir, file), path.join(copy, file));
+  const items = source.items.map(item => item === official ? { ...item, bundle_dir: copy } : item);
+  assert.throws(() => generateCatalog({ ...source, items }), /license text missing/);
+  writeFileSync(path.join(copy, "license.txt"), "MIT License\n\nCopyright (c) 2026 Example\n\n" + read("scripts/hub/licenses/MIT.txt"));
+  assert.throws(() => generateCatalog({ ...source, items }), /does not match the declared license/);
+  writeFileSync(path.join(copy, "license.txt"), "Apache License\nVersion 2.0, January 2004\n");
+  assert.throws(() => generateCatalog({ ...source, items }), /does not match the declared license/);
+  writeFileSync(path.join(copy, "license.txt"), read("static/rules/pipelock-community/license.txt"));
+  writeFileSync(path.join(copy, "LICENSE"), read("static/rules/pipelock-community/license.txt"));
+  assert.throws(() => generateCatalog({ ...source, items }), /unrecognized license or notice file/);
 });
 
 test("policy facts have unique normalized labels", () => {

@@ -186,14 +186,141 @@ test("open builds publish only the signed community downloads selected by the ca
   };
   writeFileSync(routes, JSON.stringify(retained));
   const kept = f.build("true");
-  assert.equal(kept.status, 0, kept.output);
-  assert.equal(f.built(artifact), "fixture: exact-byte-download\n");
-  assert.equal(f.built(artifact + ".sig"), "fixture-signature\n");
+  assert.notEqual(kept.status, 0, "retained pairs require accepted license companions");
+  assert.match(kept.output, /hub retained license delivery differs/);
+
+  // A retained pair keeps its accepted license file; a stray one is refused.
+  const retainedLicense = "hub/community/example/example-bundle/license.txt";
+  const licenseText = "Retained license text\n";
+  writeFileSync(path.join(f.dir, "assets", retainedLicense), licenseText);
+  const licenseEntry = { route: "/" + retainedLicense, kind: "license-download", ownership: "hub", sha256: sha256(licenseText) };
+  const lifecycleFile = path.join(f.dir, "data/hub/generated/lifecycle.json");
+  const accepted = { route: "/hub/community/example/example-bundle/", license: "MIT", license_sha256: sha256(licenseText) };
+  writeFileSync(lifecycleFile, JSON.stringify({ listings: [accepted] }));
+  const noticeText = "Retained copyright notice\n";
+  const noticeEntry = { route: accepted.route + "notice.txt", kind: "notice-download", ownership: "hub", sha256: sha256(noticeText) };
+  writeFileSync(path.join(f.dir, "assets", accepted.route.slice(1), "notice.txt"), noticeText);
+  writeFileSync(lifecycleFile, JSON.stringify({ listings: [{ ...accepted, notice_sha256: noticeEntry.sha256 }] }));
+  writeFileSync(routes, JSON.stringify({ entries: [...retained.entries, licenseEntry] }));
+  const absentNotice = f.build("true");
+  assert.notEqual(absentNotice.status, 0, "accepted notice may not disappear");
+  assert.match(absentNotice.output, /hub retained license delivery differs/);
+  writeFileSync(routes, JSON.stringify({ entries: [...retained.entries, licenseEntry, noticeEntry] }));
+  const keptLicense = f.build("true");
+  assert.equal(keptLicense.status, 0, keptLicense.output);
+  assert.equal(f.built(retainedLicense), licenseText);
+  writeFileSync(routes, JSON.stringify({ entries: [...withdrawal.entries, licenseEntry] }));
+  const strayLicense = f.build("true");
+  assert.notEqual(strayLicense.status, 0);
+  assert.match(strayLicense.output, /hub license delivery manifest differs/);
+  writeFileSync(routes, JSON.stringify({ entries: [...retained.entries, { ...licenseEntry, sha256: sha256("Changed license\n") }, noticeEntry] }));
+  writeFileSync(path.join(f.dir, "assets", retainedLicense), "Changed license\n");
+  const changedLicense = f.build("true");
+  assert.notEqual(changedLicense.status, 0, "retained license must match accepted bytes even if manifest and resource agree");
+  assert.match(changedLicense.output, /hub retained license delivery differs/);
+  writeFileSync(path.join(f.dir, "assets", retainedLicense), licenseText);
+  writeFileSync(routes, JSON.stringify({ entries: [...retained.entries, licenseEntry, noticeEntry] }));
 
   writeFileSync(path.join(f.dir, "assets", artifact + ".sig"), "different signature\n");
   const changed = f.build("true");
   assert.notEqual(changed.status, 0);
   assert.match(changed.output, /Hub community download digest differs/);
+});
+
+test("community listings deliver license and notices on the page, mirror and as downloads", t => {
+  const f = buildFixture(t);
+  const directory = "hub/community/example/example-bundle/";
+  const license = "MIT License\n\nCopyright (c) 2026 Example <maintainer>\n\nPermission is hereby granted, free of charge.\n";
+  const notice = "Example notice ``` with fence\n";
+  for (const [name, text] of [["license.txt", license], ["notice.txt", notice]]) writeFileSync(path.join(f.dir, "assets", directory, name), text);
+  const routes = path.join(f.dir, "data/hub/generated/routes.json");
+  const manifest = JSON.parse(readFileSync(routes, "utf8"));
+  manifest.entries.push(
+    { route: "/" + directory + "license.txt", kind: "license-download", ownership: "hub", sha256: sha256(license) },
+    { route: "/" + directory + "notice.txt", kind: "notice-download", ownership: "hub", sha256: sha256(notice) },
+  );
+  writeFileSync(routes, JSON.stringify(manifest));
+  const material = {
+    license: { name: "LICENSE", route: "/" + directory + "license.txt", text: license, sha256: sha256(license) },
+    notices: [{ name: "NOTICE", route: "/" + directory + "notice.txt", text: notice, sha256: sha256(notice) }],
+  };
+  const page = "hub/recipes/example-recipe/";
+  const built = f.build("true", base, { badge: "community", license_material: material });
+  assert.equal(built.status, 0, built.output);
+  assert.equal(f.built(directory + "license.txt"), license);
+  assert.equal(f.built(directory + "notice.txt"), notice);
+  assert.equal(f.built(directory + "bundle.yaml"), "fixture: exact-byte-download\n");
+  const html = parseHTML(f.built(page + "index.html"));
+  const field = name => elements(html).find(node => attr(node, "data-hub-field") === name);
+  assert.equal(textContent(field("license_material.license")), license);
+  assert.equal(textContent(field("license_material.notices.0")), notice);
+  const markdown = f.built(page + "index.md");
+  const blocks = [];
+  const walker = new commonmark.Parser().parse(markdown).walker();
+  for (let event; (event = walker.next());) if (event.entering && event.node.type === "code_block") blocks.push(event.node.literal);
+  assert.ok(blocks.includes(license), markdown);
+  assert.ok(blocks.includes(notice), markdown);
+  assert.match(markdown, /## License/);
+  assert.match(markdown, /## Notices/);
+  assert.ok(markdown.includes(`(https://pipelab.org/${directory}license.txt)`), markdown);
+  assert.ok(markdown.includes(`(https://pipelab.org/${directory}notice.txt)`), markdown);
+  const links = elements(html).filter(node => node.tagName === "a").map(node => attr(node, "href"));
+  assert.ok(links.includes(`/${directory}license.txt`) && links.includes(`/${directory}notice.txt`), String(links));
+
+  for (const kind of ["license-download", "notice-download"]) {
+    writeFileSync(routes, JSON.stringify({ entries: manifest.entries.filter(entry => entry.kind !== kind) }));
+    const absentRoute = f.build("true", base, { badge: "community", license_material: material });
+    assert.notEqual(absentRoute.status, 0, "missing " + kind + " must fail");
+    assert.match(absentRoute.output, /hub license delivery manifest differs/);
+  }
+  writeFileSync(routes, JSON.stringify(manifest));
+
+  const hiddenNotice = f.build("true", base, { badge: "community", license_material: { ...material, notices: [] } });
+  assert.notEqual(hiddenNotice.status, 0, "downloaded notice must also appear on the page");
+  assert.match(hiddenNotice.output, /hub license delivery manifest differs/);
+  const otherText = "Different license text\n";
+  const splitMaterial = { ...material, license: { ...material.license, text: otherText, sha256: sha256(otherText) } };
+  const split = f.build("true", base, { badge: "community", license_material: splitMaterial });
+  assert.notEqual(split.status, 0, "self-consistent page material must match the served manifest");
+  assert.match(split.output, /hub license delivery manifest differs/);
+
+  const missing = f.build("true", base, { badge: "community" });
+  assert.notEqual(missing.status, 0);
+  assert.match(missing.output, /hub license text is missing/);
+  const drifted = f.build("true", base, { badge: "community", license_material: { ...material, notices: [{ ...material.notices[0], text: "other\n" }] } });
+  assert.notEqual(drifted.status, 0);
+  assert.match(drifted.output, /hub license or notice text differs from its download/);
+  writeFileSync(path.join(f.dir, "assets", directory, "license.txt"), "changed\n");
+  const changed = f.build("true", base, { badge: "community", license_material: material });
+  assert.notEqual(changed.status, 0);
+  assert.match(changed.output, /Hub community download digest differs/);
+});
+
+test("official notices cannot disappear from the page and mirror", t => {
+  const f = buildFixture(t);
+  const name = "pipelock-community", directory = "/rules/" + name + "/";
+  const license = read("static" + directory + "license.txt");
+  const notice = read("static" + directory + "notice.txt");
+  const material = {
+    license: { name: "LICENSE", route: directory + "license.txt", text: license, sha256: sha256(license) },
+    notices: [{ name: "NOTICE", route: directory + "notice.txt", text: notice, sha256: sha256(notice) }],
+  };
+  const routes = path.join(f.dir, "data/hub/generated/routes.json");
+  const schema = JSON.parse(readFileSync(routes, "utf8")).entries.filter(entry => entry.kind === "schema");
+  const entries = [material.license, ...material.notices].map(file => ({ route: file.route, sha256: file.sha256,
+    kind: file.name === "LICENSE" ? "license-download" : "notice-download", ownership: "official-registry", listing_id: base.id }));
+  writeFileSync(routes, JSON.stringify({ entries: [...schema, ...entries] }));
+  const listing = { ...base, bundle_name: name };
+  const built = f.build("true", listing, { badge: "official", license_material: material });
+  assert.equal(built.status, 0, built.output);
+  for (const file of ["index.html", "index.md"]) assert.ok(f.built("hub/recipes/example-recipe/" + file).includes(notice.split("\n")[0]));
+  const hidden = f.build("true", listing, { badge: "official", license_material: { ...material, notices: [] } });
+  assert.notEqual(hidden.status, 0, "official served notice must appear on the page");
+  assert.match(hidden.output, /hub official license delivery differs/);
+  writeFileSync(routes, JSON.stringify({ entries: [schema[0], entries[0]] }));
+  const erased = f.build("true", listing, { badge: "official", license_material: { ...material, notices: [] } });
+  assert.notEqual(erased.status, 0, "omitting both generated notice records cannot hide a served notice");
+  assert.match(erased.output, /hub official license delivery differs/);
 });
 
 test("Hugo checks digests against the configured resources it publishes", t => {

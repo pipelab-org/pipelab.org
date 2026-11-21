@@ -19,6 +19,7 @@ import { parseListing, resolveArtifact } from "./validate.mjs";
 import { toolingIdentity, jsonBytes, readMeasurement, assessMeasurement, assertRegeneration, bindWorkload, measurementBindings, measurementMethod, goWorkloadSHA256, sha256 } from "./evidence.mjs";
 import { routeManifest } from "./route-manifest.mjs";
 import { bundleWorkload } from "./workload.mjs";
+import { readLicenseMaterial, licenseRecord, licenseDownloads, officialRoute, servedName } from "./license-delivery.mjs";
 
 export function runHubcheck(binary, mode, request, { timeout = 120000 } = {}) {
   const output = execFileSync(binary, [mode], { input: JSON.stringify(request), encoding: "utf8", timeout, maxBuffer: 16 * 1024 * 1024, env: { ...process.env, GOMAXPROCS: "1" } });
@@ -187,10 +188,26 @@ function generateFromListings({ root, items, engine, binary, repository, config,
     if (listing.evidence.artifact) { resolveArtifact(item.artifact_root, listing.evidence.artifact); evidencePresent = true; }
     const conformance = listing.type === "verifier" ? verifierEvidence(item.artifact_root, listing) : null;
     const record = deriveRecord({ listing, reader, independent, publisher, tooling, evidencePresent, measurement, source });
-    if (downloads && record.badge === "community") {
-      downloads.push(
+    if (record.badge === "official") {
+      // Official packs are served from static/rules, where the Rules sync
+      // places the Rules root license and notice beside each signed pair.
+      const material = readLicenseMaterial(item.bundle_dir, listing.license, pair, { served: true });
+      if (sha256(pair.bytes) !== record.bundle_sha256 || sha256(pair.signature) !== record.signature_sha256) {
+        throw new Error("license delivery would alter signed bytes");
+      }
+      record.license_material = licenseRecord(officialRoute(listing.bundle_name), material);
+    }
+    if (record.badge === "community") {
+      // Hub-served packs deliver license and notices beside the signed pair.
+      const material = readLicenseMaterial(item.bundle_dir, listing.license, pair);
+      if (sha256(pair.bytes) !== record.bundle_sha256 || sha256(pair.signature) !== record.signature_sha256) {
+        throw new Error("license delivery would alter signed bytes");
+      }
+      record.license_material = licenseRecord(record.route, material);
+      downloads?.push(
         { route: record.route + "bundle.yaml", bytes: pair.bytes },
         { route: record.route + "bundle.yaml.sig", bytes: pair.signature },
+        ...licenseDownloads(record.route, material),
       );
     }
     if (conformance) {
@@ -259,18 +276,42 @@ function generateFromListings({ root, items, engine, binary, repository, config,
         bundle_sha256: record.bundle_sha256,
         signature_sha256: record.signature_sha256,
       } : {}),
+      // A later retained download must deliver the same accepted license material.
+      ...(record.badge === "community" && record.license_material ? {
+        license: record.listing.license,
+        license_sha256: record.license_material.license.sha256,
+        ...(record.license_material.notices.length ? { notice_sha256: record.license_material.notices[0].sha256 } : {}),
+      } : {}),
     }));
     const transitions = reconcileLifecycle(lifecycle.accepted, { listings, history: lifecycle.history });
     for (const { listing, event } of transitions) {
       if (event.downloads !== "retained") continue;
       if (listing.badge !== "community") throw new Error("retained downloads must be Hub-owned signed pairs");
-      for (const [name, digest] of [["bundle.yaml", listing.bundle_sha256], ["bundle.yaml.sig", listing.signature_sha256]]) {
+      if (typeof listing.license !== "string" || !/^[a-f0-9]{64}$/.test(listing.license_sha256 ?? "") ||
+          listing.notice_sha256 !== undefined && !/^[a-f0-9]{64}$/.test(listing.notice_sha256)) {
+        throw new Error("retained signed pair requires its accepted license material");
+      }
+      const pair = {};
+      for (const [name, digest, field] of [["bundle.yaml", listing.bundle_sha256, "bytes"], ["bundle.yaml.sig", listing.signature_sha256, "signature"]]) {
         const relative = listing.route.slice(1) + name;
         const bytes = readFileSync(resolveArtifact(root, "assets/" + relative));
         if (sha256(bytes) !== digest) throw new Error("retained signed pair differs from the accepted bytes");
         const route = "/" + relative;
         retainedDownloads.push({ route, sha256: digest });
         downloads?.push({ route, bytes });
+        pair[field] = bytes;
+      }
+      // License text and notices stay available beside the retained pair.
+      const directory = path.dirname(resolveArtifact(root, "assets/" + listing.route.slice(1) + "bundle.yaml"));
+      const material = readLicenseMaterial(directory, listing.license, pair, { served: true });
+      if (material.license.sha256 !== listing.license_sha256 ||
+          (material.notices[0]?.sha256 ?? undefined) !== listing.notice_sha256) {
+        throw new Error("retained license material differs from the accepted bytes");
+      }
+      for (const file of licenseDownloads(listing.route, material)) {
+        const kind = file.route.endsWith("/" + servedName.NOTICE) ? "notice-download" : "license-download";
+        retainedDownloads.push({ route: file.route, sha256: sha256(file.bytes), kind });
+        downloads?.push(file);
       }
     }
     removed = transitions.map(({ listing, event, replacement }) => {

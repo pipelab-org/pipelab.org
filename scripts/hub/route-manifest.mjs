@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { validateText } from "./validate.mjs";
 import { listingRoute } from "./records.mjs";
+import { servedName } from "./license-delivery.mjs";
 import { sha256, canonical } from "./evidence.mjs";
 const rules = JSON.parse(readFileSync(new URL("./routes.json", import.meta.url)));
 
@@ -26,6 +27,15 @@ export function routeManifest({ records, publishers = [], core = [], removed = [
       for (const [suffix, digest] of [["bundle.yaml", record.bundle_sha256], ["bundle.yaml.sig", record.signature_sha256]]) {
         if (!digest) throw new Error("served pair digest required");
         add({ route: base + suffix, kind: "bundle-download", ownership: record.badge === "official" ? "official-registry" : "hub", representations: ["raw"], readability: "expected-block", sha256: digest, listing_id: listing.id });
+      }
+      if (record.badge === "community" || record.badge === "official") {
+        const material = record.license_material;
+        if (!material?.license?.text || !material.license.sha256) throw new Error("license text missing");
+        for (const [file, kind] of [[material.license, "license-download"], ...material.notices.map(notice => [notice, "notice-download"])]) {
+          if (!Object.hasOwn(servedName, file.name) || file.route !== base + servedName[file.name]) throw new Error("unexpected license delivery route");
+          if (!file.text || !file.sha256) throw new Error("notice text missing");
+          add({ route: file.route, kind, ownership: record.badge === "official" ? "official-registry" : "hub", representations: ["raw"], readability: "readable", sha256: file.sha256, listing_id: listing.id });
+        }
       }
       if (record.badge === "official") for (const rule of record.reader.declared) {
         const facts = Object.fromEntries(Object.entries(record.facts).filter(([key]) => key.startsWith(`rule.${rule.id}.`)));
@@ -55,7 +65,9 @@ export function routeManifest({ records, publishers = [], core = [], removed = [
     reference(`/hub/publishers/${publisher.id}/`, "publisher", publisher.name, facts);
   }
   for (const retained of retainedDownloads) {
-    add({ ...retained, kind: "retained-download", ownership: "hub", representations: ["raw"], readability: "expected-block" });
+    const { kind = "retained-download", ...download } = retained;
+    if (!["retained-download", "license-download", "notice-download"].includes(kind)) throw new Error("unexpected retained download kind");
+    add({ ...download, kind, ownership: "hub", representations: ["raw"], readability: kind === "retained-download" ? "expected-block" : "readable" });
   }
   for (const record of removed) {
     for (const route of new Set([record.route, ...baseline.filter(entry => entry.listing_id === record.id && entry.representations.includes("html")).map(entry => entry.route)])) reference(route, "removal", "Removed component", record.facts, { indexable: false, listing_id: record.id });

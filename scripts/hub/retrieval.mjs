@@ -23,6 +23,7 @@ const types = {
   ".json": "application/json",
   ".md": "text/markdown; charset=utf-8",
   ".sig": "text/plain; charset=utf-8",
+  ".txt": "text/plain; charset=utf-8",
   ".yaml": "application/yaml",
 };
 
@@ -181,7 +182,7 @@ async function startProxy(binary, args, config, cwd) {
   }
 }
 
-function publishedFiles(directory, manifest, requireBuild) {
+export function publishedFiles(directory, manifest, requireBuild) {
   const result = new Map();
   for (const entry of manifest.entries) {
     if (!requireBuild && entry.kind === "build") continue;

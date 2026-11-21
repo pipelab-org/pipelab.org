@@ -18,6 +18,7 @@
     <a href="#evidence">Evidence</a>
     <a href="#limits">Limits</a>
     {{ if $rules }}<a href="#rules">Rules in this bundle</a>{{ end }}
+    {{ with $r.license_material }}<a href="#license">License</a>{{ end }}
   </nav>
 
   <div class="hub-detail-grid">
@@ -53,6 +54,20 @@
       <section class="hub-rules" id="rules">
         <h2>Rules in this bundle</h2>
         <ul>{{ range . }}<li><a href="{{ .RelPermalink }}">{{ .Title }}</a></li>{{ end }}</ul>
+      </section>
+      {{ end }}
+      {{ with $r.license_material }}
+      <section class="hub-license" id="license">
+        <h2>License</h2>
+        <p><a class="hub-artifact-link" href="{{ relURL (strings.TrimPrefix "/" .license.route) }}" download>Download {{ .license.name }}</a></p>
+        <pre><code data-hub-field="license_material.license">{{ .license.text }}</code></pre>
+        {{ with .notices }}
+        <h3>Notices</h3>
+        {{ range $i, $notice := . }}
+        <p><a class="hub-artifact-link" href="{{ relURL (strings.TrimPrefix "/" $notice.route) }}" download>Download {{ $notice.name }}</a></p>
+        <pre><code data-hub-field="license_material.notices.{{ $i }}">{{ $notice.text }}</code></pre>
+        {{ end }}
+        {{ end }}
       </section>
       {{ end }}
       {{ partial "hub-facts.html" . }}
