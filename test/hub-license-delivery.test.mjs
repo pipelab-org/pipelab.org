@@ -60,7 +60,10 @@ test("license delivery fails closed on missing, mismatched or ambiguous material
   refuse({ LICENSE: Buffer.from([0xff, 0xfe, 0x41]) }, "MIT", /UTF-8/);
   refuse({ LICENSE: mit + "\u0000" }, "MIT", /control characters/);
   refuse({ LICENSE: mit }, "MIT", /differs from the signed bundle/, "license: Apache-2.0\n");
-  refuse({ LICENSE: mit }, "GPL-3.0-only", /unsupported listing license/);
+  refuse({ LICENSE: mit }, "Unknown-1.0", /unsupported listing license/);
+  refuse({ LICENSE: mit }, "GPL-3.0", /unsupported listing license/);
+  // An OSI license outside the default set needs a recorded approval; none was given.
+  refuse({ LICENSE: mit }, "GPL-3.0-only", /license is not approved/);
 
   const { dir, signed } = bundle(t, { LICENSE: mit });
   const changed = { ...signed, bytes: Buffer.from("other signed bytes\n") };

@@ -295,6 +295,76 @@ function catalogSource(t) {
   return { dir, source };
 }
 
+test("generation lists a non-default OSI license only under an approval of the delivered text", { skip: !native }, t => {
+  const { dir, source } = catalogSource(t);
+  const item = source.items.find(entry => entry.publisher);
+  const listing = parse(readFileSync(item.listing_file, "utf8"));
+  const text = "Mozilla Public License Version 2.0\n\nFixture text for an OSI-approved license outside the default set.\n";
+  const delivered = path.join(item.bundle_dir, "LICENSE");
+  const retainedCopy = path.join(dir, "assets/hub/community/example/example-bundle/license.txt");
+  const original = readFileSync(delivered, "utf8");
+  const declare = license => writeFileSync(item.listing_file, stringify({ ...listing, license }));
+  const approval = { listing: "example/" + listing.bundle_name, license: "MPL-2.0", license_sha256: sha256(text),
+    approved_in: "https://github.com/pipelab-org/pipelock-rules/pull/12" };
+  const community = (approvals, items = source.items) => generateCatalog({ ...source, items, approvals })["listings.json"].find(record => record.badge === "community");
+
+  // Default unchanged: complete Apache-2.0 text, and an unrelated approval is ignored.
+  assert.equal(community([]).license_material.license.text, original);
+  assert.equal(community([{ ...approval, license: "Apache-2.0", license_sha256: "0".repeat(64) }]).listing.license, "Apache-2.0");
+  declare("MPL-2.0");
+  writeFileSync(delivered, text);
+  writeFileSync(retainedCopy, text);
+  const unapproved = /license is not approved for this listing or its text changed/;
+  assert.throws(() => community([]), unapproved);
+  assert.throws(() => community([{ ...approval, license_sha256: sha256(text + "x") }]), unapproved);
+  assert.throws(() => community([{ ...approval, listing: "example/other-bundle" }]), unapproved);
+  assert.throws(() => community([{ ...approval, license: "GPL-3.0-only" }]), unapproved);
+  const record = community([approval]);
+  assert.equal(record.listing.license, "MPL-2.0");
+  assert.equal(record.license_material.license.text, text);
+  assert.equal(record.license_material.license.sha256, approval.license_sha256);
+  // A staged replacement approval coexists with the current one, in either order.
+  const staged = { ...approval, license_sha256: sha256(text + "Revised.\n"), approved_in: "https://github.com/pipelab-org/pipelock-rules/pull/14" };
+  assert.equal(community([staged, approval]).license_material.license.sha256, approval.license_sha256);
+  assert.equal(community([approval, staged]).license_material.license.sha256, approval.license_sha256);
+  assert.throws(() => community([staged, { ...staged, license_sha256: sha256("other\n") }]), unapproved);
+  // Text changed after approval.
+  writeFileSync(delivered, text + "Edited.\n");
+  assert.throws(() => community([approval]), unapproved);
+  writeFileSync(delivered, text + "Revised.\n");
+  assert.equal(community([approval, staged]).license_material.license.sha256, staged.license_sha256);
+  writeFileSync(delivered, text + "Edited.\n");
+  writeFileSync(delivered, text);
+  for (const license of ["Unknown-1.0", "GPL-3.0"]) {
+    declare(license);
+    assert.throws(() => community([{ ...approval, license }]), /unsupported listing license/, license);
+  }
+  // A default license cannot borrow an approval for partial text.
+  declare("MIT");
+  assert.throws(() => community([{ ...approval, license: "MIT" }]), /does not match the declared license/);
+
+  // A retained pair carries its accepted license digest; no approval is needed again.
+  declare("MPL-2.0");
+  const accepted = community([approval]);
+  const pinned = { id: "bundle--" + accepted.listing.id, route: accepted.route, publisher: accepted.publisher_id, badge: "community",
+    bundle_sha256: accepted.bundle_sha256, signature_sha256: accepted.signature_sha256, license: "MPL-2.0", license_sha256: approval.license_sha256 };
+  const retired = { type: "removed", at: "2026-11-17", reason_id: "1".repeat(32), reason_class: "retired",
+    public_reason: "Retired.", bundle_sha256: pinned.bundle_sha256, downloads: "retained" };
+  const retain = listing => generateCatalog({ ...source, items: source.items.filter(entry => !entry.publisher), approvals: [],
+    lifecycle: { accepted: { listings: [listing], history: [], routes: [] }, history: [{ id: pinned.id, events: [retired] }] } });
+  const retained = retain(pinned)["routes.json"].entries.filter(entry => entry.route === pinned.route + "license.txt");
+  assert.deepEqual(retained.map(entry => [entry.kind, entry.sha256]), [["license-download", approval.license_sha256]]);
+  assert.throws(() => retain({ ...pinned, license_sha256: "0".repeat(64) }), unapproved);
+  writeFileSync(retainedCopy, text + "Edited.\n");
+  assert.throws(() => retain(pinned), unapproved);
+  writeFileSync(retainedCopy, text);
+  // The accepted record outranks the current OSI list: an identifier that has since
+  // left the list still delivers the pinned, digest-checked text.
+  const afterListChange = retain({ ...pinned, license: "GPL-3.0" })["routes.json"].entries.filter(entry => entry.route === pinned.route + "license.txt");
+  assert.deepEqual(afterListChange.map(entry => [entry.kind, entry.sha256]), [["license-download", approval.license_sha256]]);
+  assert.throws(() => retain({ ...pinned, license: "GPL-3.0", license_sha256: "0".repeat(64) }), unapproved);
+});
+
 test("retrieval keeps exact commands and checks the end of a listing", () => {
   const listing = {
     title: "Example recipe",

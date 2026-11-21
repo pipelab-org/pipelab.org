@@ -9,6 +9,8 @@ import { loadAcquiredListings } from "./source-listings.mjs";
 import { acquirePolicyBlobs } from "./policy-blobs.mjs";
 import { parseListing } from "./validate.mjs";
 import { readBundleFiles, verifyBundle } from "./verify-bundle.mjs";
+import { defaultLicenses, readLicenseMaterial } from "./license-delivery.mjs";
+import { approvalFile, communityListingKey, findLicenseApprovals, osiApprovedLicenses, parseLicenseApprovals } from "./license-approvals.mjs";
 import { acquireHubTree, assertHubOnly } from "./source-tree.mjs";
 
 // Local eligibility check for a proposed Hub-only rules change (design 3.2.1
@@ -26,6 +28,7 @@ const categories = [
   ["community-fixture", /^hub\/community\/[^/]+\/[^/]+\/fixtures\//],
   ["quality", /^hub\/quality\//],
   ["maintenance", /^hub\/README\.md$/],
+  ["license-approval", /^hub\/license-approvals\.yaml$/],
 ];
 
 // What this local check cannot decide, keyed by the change categories that
@@ -39,7 +42,8 @@ const dependencies = {
   publisher: "Publisher owner/key change: the Git objects carry no PR author or GitHub login evidence, so who may change a publisher record is undecided.",
   tombstone: "Withdrawal or restoration: validity needs reconcileLifecycle against the accepted baseline (data/hub/generated at the site base), which this check does not load.",
   "community-bundle": "Bundle admission needs signature parity, trust tier and rule loading from the hubcheck reader and pinned Pipelock engine.",
-  "community-license": "License text and notices are checked against the declared license during catalog generation.",
+  "community-license": "License text and notices are checked against the declared license during catalog generation: default licenses by complete canonical text, other OSI licenses by a recorded approval of the exact text.",
+  "license-approval": "License approval: the Git objects carry no reviewer identity, so who approved is governed by CODEOWNERS on /hub/; approved_in is checked for form only, not that its Rules pull request merged.",
   "community-signature":"Signing evidence still needs parity with the native reader and publisher records authorized by the admission workflow.",
   config: "Config assessment needs the pinned engine and config vocabulary run (section 8).",
   listing: "Listing assertions over the acquired files still need native reader evidence for the derived catalog record.",
@@ -71,6 +75,19 @@ function matchesPullRequest(pr, number, base, head) {
     pr.base.ref === "main" && pr.base.sha === base && pr.head?.sha === head;
 }
 
+
+const approvalIdentity = entry => [entry.listing, entry.license, entry.license_sha256].join(" ");
+
+// Approvals already recorded at the base commit, keyed by listing, license and
+// text digest. A missing or unreadable base file yields none, so every approval
+// in the candidate is then treated as new and checked.
+function baseApprovals(repository, base) {
+  try {
+    return new Set(parseLicenseApprovals(git(repository, ["show", base + ":" + approvalFile]).toString("utf8")).map(approvalIdentity));
+  } catch {
+    return new Set();
+  }
+}
 
 export function preflightContribution({ repository, base, head, maintenance = false, site = defaultSite }, inspect) {
   const report = { mode: maintenance ? "maintenance" : "contribution", base, head, verdict: "REFUSED", steps: {}, changes: [], categories: [], remaining: [] };
@@ -119,6 +136,18 @@ export function preflightContribution({ repository, base, head, maintenance = fa
       return { publishers: loaded.publishers.length, listings: loaded.items.length, histories: loaded.history.length };
     })) return report;
 
+    // List membership gates an approval only when it is admitted: entries added or
+    // changed relative to the base. Loading and generation do not recheck it, and
+    // an unchanged entry whose identifier later left the list fails only at use
+    // time for its own listing, so it cannot block an unrelated approval.
+    if (report.categories.includes("license-approval") && !run("license-approval-list", () => {
+      const admitted = baseApprovals(repository, base);
+      const added = loaded.approvals.filter(entry => !admitted.has(approvalIdentity(entry)));
+      const outside = added.filter(entry => !osiApprovedLicenses().has(entry.license));
+      if (outside.length) throw new Error("license approval names a license outside the OSI-approved list: " + outside.map(entry => entry.listing + " " + entry.license).join(", "));
+      return added.length;
+    })) return report;
+
     if (!run("bundle-signatures", () => loaded.items.filter(item => item.publisher).map(item => {
       const listing = parseListing(readFileSync(item.listing_file, "utf8"));
       const { bundle_sha256, signer_fingerprint, signature_sha256 } = verifyBundle({
@@ -128,6 +157,17 @@ export function preflightContribution({ repository, base, head, maintenance = fa
         throw new Error("signed pair differs from the community listing");
       }
       return { id: listing.id, bundle_sha256, signer_fingerprint, signature_sha256 };
+    }))) return report;
+
+    // A non-default license is admitted only with a recorded approval of the
+    // delivered text. Default licenses are checked during catalog generation.
+    if (!run("license-approvals", () => loaded.items.filter(item => item.publisher).flatMap(item => {
+      const listing = parseListing(readFileSync(item.listing_file, "utf8"));
+      if (defaultLicenses.has(listing.license)) return [];
+      const material = readLicenseMaterial(item.bundle_dir, listing.license, readBundleFiles(item.bundle_dir), {
+        approval: findLicenseApprovals(loaded.approvals, communityListingKey(item.publisher.id, listing.bundle_name), listing.license),
+      });
+      return [{ id: listing.id, license: listing.license, license_sha256: material.license.sha256 }];
     }))) return report;
 
     if (inspect && !run("candidate", () => inspect({ tree, loaded, changes: report.changes }))) return report;

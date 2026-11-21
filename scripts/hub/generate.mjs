@@ -19,7 +19,8 @@ import { parseListing, resolveArtifact } from "./validate.mjs";
 import { toolingIdentity, jsonBytes, readMeasurement, assessMeasurement, assertRegeneration, bindWorkload, measurementBindings, measurementMethod, goWorkloadSHA256, sha256 } from "./evidence.mjs";
 import { routeManifest } from "./route-manifest.mjs";
 import { bundleWorkload } from "./workload.mjs";
-import { readLicenseMaterial, licenseRecord, licenseDownloads, officialRoute, servedName } from "./license-delivery.mjs";
+import { readLicenseMaterial, licenseRecord, licenseDownloads, officialRoute, servedName, defaultLicenses } from "./license-delivery.mjs";
+import { communityListingKey, findLicenseApprovals } from "./license-approvals.mjs";
 
 export function runHubcheck(binary, mode, request, { timeout = 120000 } = {}) {
   const output = execFileSync(binary, [mode], { input: JSON.stringify(request), encoding: "utf8", timeout, maxBuffer: 16 * 1024 * 1024, env: { ...process.env, GOMAXPROCS: "1" } });
@@ -126,16 +127,16 @@ function generateBoundCatalog(options, downloads) {
   }
 }
 
-function generateAcquiredCatalog(options, { items, publishers, history }, previous,
+function generateAcquiredCatalog(options, { items, publishers, history, approvals }, previous,
   { rulesSHA, rulesRepository, downloads, evidenceRoot, siteRepository = options.root, siteCommit }) {
   const references = committedMeasurements(siteRepository, evidenceRoot, siteCommit);
   return generateFromListings({
-    ...options, items, publishers, lifecycle: { accepted: previous.lifecycle, history },
+    ...options, items, publishers, approvals, lifecycle: { accepted: previous.lifecycle, history },
   }, { rulesSHA, downloads, measurements: { evidenceRoot, references, rulesRepository: options.rulesFixtureRepository ?? rulesRepository } });
 }
 
 function generateFromListings({ root, items, engine, binary, repository, config, pipelockBinary,
-  publishers = [], removed = [], baseline = [], lifecycle, policies, mode = "routine" }, { rulesSHA, downloads, measurements } = {}) {
+  publishers = [], approvals = [], removed = [], baseline = [], lifecycle, policies, mode = "routine" }, { rulesSHA, downloads, measurements } = {}) {
   if (!["routine", "report"].includes(mode)) throw new Error("unsupported generation mode");
   assertEngineIdentity({ root, engine, binary });
   const sourceConfig = readGit(repository, ["show", `${enginePin.source_commit}:configs/claude-code.yaml`]);
@@ -199,7 +200,10 @@ function generateFromListings({ root, items, engine, binary, repository, config,
     }
     if (record.badge === "community") {
       // Hub-served packs deliver license and notices beside the signed pair.
-      const material = readLicenseMaterial(item.bundle_dir, listing.license, pair);
+      // A default license ignores approvals. Any other OSI license needs the
+      // approval recorded in Rules for this publisher, bundle, license and text.
+      const approval = findLicenseApprovals(approvals, communityListingKey(publisher.id, listing.bundle_name), listing.license);
+      const material = readLicenseMaterial(item.bundle_dir, listing.license, pair, { approval });
       if (sha256(pair.bytes) !== record.bundle_sha256 || sha256(pair.signature) !== record.signature_sha256) {
         throw new Error("license delivery would alter signed bytes");
       }
@@ -303,7 +307,10 @@ function generateFromListings({ root, items, engine, binary, repository, config,
       }
       // License text and notices stay available beside the retained pair.
       const directory = path.dirname(resolveArtifact(root, "assets/" + listing.route.slice(1) + "bundle.yaml"));
-      const material = readLicenseMaterial(directory, listing.license, pair, { served: true });
+      // The accepted record already pins the approved bytes: a non-default
+      // license was admitted only against an approval of exactly this digest.
+      const approval = defaultLicenses.has(listing.license) ? null : { license: listing.license, license_sha256: listing.license_sha256 };
+      const material = readLicenseMaterial(directory, listing.license, pair, { served: true, approval, retained: true });
       if (material.license.sha256 !== listing.license_sha256 ||
           (material.notices[0]?.sha256 ?? undefined) !== listing.notice_sha256) {
         throw new Error("retained license material differs from the accepted bytes");

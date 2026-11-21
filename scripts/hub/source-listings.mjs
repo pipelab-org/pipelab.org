@@ -2,6 +2,8 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { parse } from "yaml";
 import { parseListing, resolveArtifact, validateText } from "./validate.mjs";
+import { loadLicenseApprovals } from "./license-approvals.mjs";
+import { defaultLicenses } from "./license-delivery.mjs";
 
 const id = /^[a-z0-9][a-z0-9-]{1,62}[a-z0-9]$/;
 const key = /^[a-f0-9]{64}$/;
@@ -48,6 +50,10 @@ export function loadAcquiredListings(directory, site) {
   for (const file of yamlFiles(directory, "hub/listings/bundles")) {
     const listing = readListing(file);
     if (listing.type !== "bundle" || listing.bundle_name !== file.name) throw new Error("official listing identity differs");
+    // The schema allows any SPDX-shaped bundle license because community packs
+    // may carry an approved one. Official packs never consult approvals, so a
+    // non-default license here could only abort generation for the whole Hub.
+    if (!defaultLicenses.has(listing.license)) throw new Error("official bundle listing must use a default license: " + file.relative);
     const bundle_dir = path.dirname(resolveArtifact(path.join(site, "static"), "rules/" + file.name + "/bundle.yaml"));
     items.push({ listing_file: filePath(file), bundle_dir });
   }
@@ -69,5 +75,6 @@ export function loadAcquiredListings(directory, site) {
   const history = yamlFiles(directory, "hub/tombstones").map(file => ({
     id: file.name, events: parse(read(file), { maxAliasCount: 0 }),
   }));
-  return { publishers, items, history };
+  // Absent means no approvals; a present but malformed file refuses the tree.
+  return { publishers, items, history, approvals: loadLicenseApprovals(directory) };
 }
