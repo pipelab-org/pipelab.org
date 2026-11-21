@@ -28,6 +28,13 @@ export function diagnosticLine(value, limit = 600) {
   // Control and bidirectional characters can hide or rewrite log lines.
   line = line.replace(/[\p{Cc}\p{Cf}\p{Zl}\p{Zp}]+/gu, " ").replace(/\s+/g, " ").trim();
   if (!line) return "no evidence recorded";
+  // Whitespace can split a credential key so the patterns above miss it. If the
+  // text with all whitespace removed still shows an unredacted credential key and
+  // value, withhold the whole line rather than chase each separator.
+  if (/(?:token|secret|passw(?:or)?d|api[_-]?key|credential|private[_-]?key|authorization)["']?[:=](?!\[redacted\])\S/i
+    .test(line.replace(/\s+/g, ""))) {
+    return "credential-like diagnostic evidence withheld";
+  }
   return line.length > limit ? line.slice(0, limit - 1) + "…" : line;
 }
 

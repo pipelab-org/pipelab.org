@@ -113,7 +113,7 @@ test("the import refusal repeats the failed step evidence", () => {
   steps["5"].evidence = "request failed: Authorization: Negotiate opaque-auth-data";
   assert.doesNotMatch(acceptanceRefusal(JSON.stringify({ steps })), /opaque-auth-data/);
   // A hidden format character cannot split a key around the credential patterns.
-  for (const split of ["​", "\u0000", "\u001b", "\u0085"]) {
+  for (const split of ["​", "\u0000", "\u001b", "\u0085", "\t", "\r", "\n", " ", "\r\n"]) {
     steps["5"].evidence = "to" + split + "ken=synthetic-secret-value";
     assert.doesNotMatch(acceptanceRefusal(JSON.stringify({ steps })), /synthetic-secret-value/, JSON.stringify(split));
   }
