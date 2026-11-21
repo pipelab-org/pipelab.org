@@ -158,10 +158,16 @@ test("default licenses keep the complete-text check and ignore approvals", t => 
 
 test("the listing schema accepts SPDX identifiers structurally and leaves policy to generation", () => {
   const fixture = JSON.parse(readFileSync(path.join(root, "test/hub-fixtures/listing.json"), "utf8"));
-  const ok = license => parseListing(JSON.stringify({ ...fixture, license }));
+  const bundle = { ...fixture, type: "bundle", bundle_name: "example-bundle", bundle_sha256: "a".repeat(64), signer_fingerprint: "b".repeat(64) };
+  delete bundle.learn_page;
+  const ok = license => parseListing(JSON.stringify({ ...bundle, license }));
   for (const license of ["MPL-2.0", "GPL-3.0-only", "Apache-2.0", "GPL-3.0"]) assert.equal(ok(license).license, license);
   for (const license of ["", "MPL 2.0", "-MPL", "MPL/2.0", "x".repeat(65), "MPL-2.0\n"]) assert.throws(() => ok(license), /does not match exactly one type schema/, JSON.stringify(license));
-  assert.throws(() => parseListing(JSON.stringify({ ...fixture, license: 5 })), /does not match exactly one type schema/);
+  assert.throws(() => parseListing(JSON.stringify({ ...bundle, license: 5 })), /does not match exactly one type schema/);
+  // Only bundle licenses pass through generation's approval path; recipes, configs
+  // and verifiers keep the seven default licenses in the schema.
+  assert.equal(parseListing(JSON.stringify({ ...fixture, license: "MIT" })).license, "MIT");
+  assert.throws(() => parseListing(JSON.stringify({ ...fixture, license: "MPL-2.0" })), /does not match exactly one type schema/);
   assert.deepEqual(readFileSync(path.join(root, "assets/hub/schema/listing-v1.json")), readFileSync(path.join(root, "scripts/hub/schema/listing-v1.json")));
 });
 
