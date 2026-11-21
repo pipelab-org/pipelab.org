@@ -62,21 +62,21 @@ test("a fixture run that fails without a report says so", () => {
 
 test("diagnostic lines are one bounded line without credentials", () => {
   const github = "ghp_" + "a1B2c3D4".repeat(5);
+  // Credential-shaped evidence is withheld whole, never partially redacted.
   const cases = [
-    ["fatal: unable to access 'https://x-access-token:" + github + "@github.com/pipelab-org/pipelock-rules/'", /\[redacted\]@github\.com/],
-    ["request failed with Authorization: Bearer abcdefghijklmnop", /Authorization: \[redacted\]/],
-    ["using bearer abcdefghijklmnopqrstuvwxyz", /bearer \[redacted\]/],
-    ["PIPELAB_HUB_SYNC_TOKEN=s3cr3t-value leaked", /PIPELAB_HUB_SYNC_TOKEN=\[redacted\] leaked/],
-    ["env password: hunter2 failed", /password: \[redacted\] failed/],
-    ["github_pat_" + "A1".repeat(20), /^\[redacted\]$/],
-    ["key AKIAABCDEFGHIJKLMNOP end", /key \[redacted\] end/],
-    ["-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBg\n-----END PRIVATE KEY-----", /^\[redacted\]$/],
+    "fatal: unable to access 'https://x-access-token:" + github + "@github.com/pipelab-org/pipelock-rules/'",
+    "request failed with Authorization: Bearer abcdefghijklmnop",
+    "request failed with Authorization: Negotiate opaque-auth-data",
+    "using bearer abcdefghijklmnopqrstuvwxyz",
+    "PIPELAB_HUB_SYNC_TOKEN=s3cr3t-value leaked",
+    "env password: hunter2 failed",
+    "github_pat_" + "A1".repeat(20),
+    "key AKIAABCDEFGHIJKLMNOP end",
+    "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBg\n-----END PRIVATE KEY-----",
+    "to\tken=ghp_ABCDEFGHIJKLMNOP-synthetic-secret-value",
+    "to\tken=[redact\ted]synthetic-secret-value",
   ];
-  for (const [input, expected] of cases) {
-    const line = diagnosticLine(input);
-    assert.match(line, expected);
-    assert.doesNotMatch(line, /ghp_|s3cr3t|hunter2|AKIA|MIIEvQ|abcdefghijklmnop|x-access-token:/);
-  }
+  for (const input of cases) assert.equal(diagnosticLine(input), "credential-like diagnostic evidence withheld", JSON.stringify(input));
   const noisy = diagnosticLine("first‮line\u0000with\ttabs\r\nand more");
   assert.equal(noisy, "hidden-character diagnostic evidence withheld");
   // Tabs and line breaks still collapse to readable text; other controls are withheld.
@@ -105,7 +105,7 @@ test("the import refusal repeats the failed step evidence", () => {
 
   steps["5"].evidence = "Command failed: git clone https://user:hunter2@example.invalid/repo.git\nstack line";
   const refused = acceptanceRefusal(JSON.stringify({ steps }));
-  assert.equal(refused, "routine Hub acceptance failed at step 5: Command failed: git clone https://[redacted]@example.invalid/repo.git stack line");
+  assert.equal(refused, "routine Hub acceptance failed at step 5: credential-like diagnostic evidence withheld");
   assert.doesNotMatch(refused, /hunter2/);
   assert.equal(refused.split("\n").length, 1);
 
@@ -114,7 +114,7 @@ test("the import refusal repeats the failed step evidence", () => {
   assert.doesNotMatch(acceptanceRefusal(JSON.stringify({ steps })), /opaque-auth-data/);
   // A hidden format character cannot split a key around the credential patterns.
   // A marker supplied by the input cannot pass for a redaction.
-  for (const marker of ["[redacted]", "[redact\ted]", "[red acted]", ""]) {
+  for (const marker of ["[redacted]", "[redact\ted]", "[red acted]", "", "ghp_ABCDEFGHIJKLMNOP-"]) {
     steps["5"].evidence = "to\tken=" + marker + "synthetic-secret-value";
     assert.doesNotMatch(acceptanceRefusal(JSON.stringify({ steps })), /synthetic-secret-value/, JSON.stringify(marker));
   }

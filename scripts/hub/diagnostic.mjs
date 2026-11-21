@@ -2,46 +2,35 @@
 // step; the import refusal repeats it. Text that reaches a workflow log or a
 // public run page passes through diagnosticLine first.
 
-// Redaction inserts a private-use sentinel that input can never carry, so the
-// final check can tell an inserted marker from text the input supplied. It is
-// shown as [redacted] only after every check has run.
-const sentinel = "\uE000";
-const redactions = [
-  [/\b([a-z][a-z0-9+.-]*:\/\/)[^\s/@]*@/gi, "$1" + sentinel + "@"],
-  [/-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*/g, sentinel],
-  [/\b(?:gh[pousr]_[A-Za-z0-9]{16,}|github_pat_[A-Za-z0-9_]{16,}|xox[abprs]-[A-Za-z0-9-]{10,}|AKIA[0-9A-Z]{16}|sk-[A-Za-z0-9_-]{20,})/g, sentinel],
-  // Every scheme carries credentials after its name, so withhold the rest of the line.
-  [/\b(authorization|proxy-authorization)(["']?\s*[:=]\s*)[^\r\n]*/gi, "$1$2" + sentinel],
-  [/\b(bearer|basic)\s+[A-Za-z0-9._~+/=-]{8,}/gi, "$1 " + sentinel],
-  [/\b([A-Za-z0-9_-]*(?:token|secret|passw(?:or)?d|api[_-]?key|credential|private[_-]?key)[A-Za-z0-9_-]*)(["']?\s*[:=]\s*)(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|\S+)/gi, "$1$2" + sentinel],
+// Credential-shaped text anywhere in the evidence withholds the whole line.
+// Partial redaction proved unsafe: a split key, a supplied marker or a value
+// longer than its recognized prefix each left part of a secret readable. These
+// patterns are checked on the text as given and with all whitespace removed.
+const credentialShapes = [
+  /[a-z][a-z0-9+.-]*:\/\/[^\s/@]*@/i,
+  /-----BEGIN [A-Z ]*PRIVATE KEY-----/,
+  /gh[pousr]_[A-Za-z0-9]{8,}|github_pat_|xox[abprs]-|AKIA[0-9A-Z]{8,}|sk-[A-Za-z0-9_-]{8,}/,
+  /(?:proxy-)?authorization["']?\s*[:=]/i,
+  /\b(?:bearer|basic)\s+[A-Za-z0-9._~+/=-]{8,}/i,
+  /(?:token|secret|passw(?:or)?d|api[_-]?key|credential|private[_-]?key)["']?\s*[:=]/i,
 ];
 
 export function diagnosticLine(value, limit = 600) {
   if (typeof value !== "string") return "no evidence recorded";
-  // Encoded text can hide keys and delimiters. Withhold it rather than
-  // decoding untrusted quoting into a different structure before redaction.
+  // Encoded text can hide keys and delimiters.
   if (/%[0-9a-f]{2}|\\u[0-9a-f]{4}/i.test(value)) return "encoded diagnostic evidence withheld";
-  // Only redaction may produce the sentinel.
-  if (/\p{Co}/u.test(value)) return "hidden-character diagnostic evidence withheld";
-  // Invisible format and control characters can split a credential key so it
-  // escapes the patterns below and then rejoins when they are stripped.
-  // Withhold that too; only tab, line feed and carriage return stay readable.
-  if (/[\p{Cf}\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]/u.test(value)) {
+  // Invisible format, private-use and control characters can disguise text;
+  // only tab, line feed and carriage return stay readable.
+  if (/[\p{Cf}\p{Co}\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]/u.test(value)) {
     return "hidden-character diagnostic evidence withheld";
   }
-  let line = value;
-  for (const [pattern, replacement] of redactions) line = line.replace(pattern, replacement);
-  // Control and bidirectional characters can hide or rewrite log lines.
-  line = line.replace(/[\p{Cc}\p{Cf}\p{Zl}\p{Zp}]+/gu, " ").replace(/\s+/g, " ").trim();
-  if (!line) return "no evidence recorded";
-  // Whitespace can split a credential key so the patterns above miss it. If the
-  // text with all whitespace removed still shows an unredacted credential key and
-  // value, withhold the whole line rather than chase each separator.
-  if (/(?:token|secret|passw(?:or)?d|api[_-]?key|credential|private[_-]?key|authorization)["']?[:=](?!\uE000)\S/i
-    .test(line.replace(/\s+/g, ""))) {
+  const compact = value.replace(/\s+/g, "");
+  if (credentialShapes.some(shape => shape.test(value) || shape.test(compact))) {
     return "credential-like diagnostic evidence withheld";
   }
-  line = line.replaceAll(sentinel, "[redacted]");
+  // Line separators can rewrite log lines; collapse to one line.
+  const line = value.replace(/[\p{Cc}\p{Zl}\p{Zp}]+/gu, " ").replace(/\s+/g, " ").trim();
+  if (!line) return "no evidence recorded";
   return line.length > limit ? line.slice(0, limit - 1) + "…" : line;
 }
 
