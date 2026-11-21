@@ -45,9 +45,10 @@ function synthetic() {
 function stage(t, mutate = value => value) {
   const dir = temp(t), key = keypair(), bundle = mutate({ ...synthetic(), key_id: key.hex });
   const bytes = Buffer.from(stringify(bundle)), signature = Buffer.from(sign(null, bytes, key.privateKey).toString("base64") + "\n");
-  writeFileSync(path.join(dir, "bundle.yaml"), bytes); writeFileSync(path.join(dir, "bundle.yaml.sig"), signature);
+  writeFileSync(path.join(dir, "bundle.yaml"), bytes); writeFileSync(path.join(dir, "bundle.yaml.sig"), signature); writeFileSync(path.join(dir, "LICENSE"), fixtureLicense);
   return { dir, key, bundle, bytes, signature, request: { bundle_dir: dir, config: path.join(engineDir || "", "configs/claude-code.yaml"), trusted_keys: [{ name: "example", public_key: key.hex }] } };
 }
+const fixtureLicense = "Apache License\nVersion 2.0, January 2004\n";
 function listingFor(reader) { const listing = structuredClone(base); delete listing.learn_page; delete listing.evidence.artifact; Object.assign(listing, { type: "bundle", id: reader.name, bundle_name: reader.name, bundle_sha256: reader.bundle_sha256, signer_fingerprint: reader.signer_fingerprint }); return listing; }
 function timer(samples) { return { samples_ns: samples, maximum_ns: Math.max(...samples), completed: true, timeout: false }; }
 function results(maximum = 12, workload_sha256 = "executed") { const measured = { baseline: timer([10, 10, 10]), target: timer([12, 12, maximum]), ratio: 0.2 }; return { rules: { "test-rule": structuredClone(measured) }, bundle: measured, deprecated: [], workload_sha256, bundle_sha256: "bundle", config_sha256: "config" }; }
@@ -281,6 +282,7 @@ function catalogSource(t) {
   items.push({ listing_file: communityFile, bundle_dir: community.dir, publisher });
   const communityAssets = path.join(dir, "assets/hub/community/example/example-bundle"); mkdirSync(communityAssets, { recursive: true });
   cpSync(path.join(community.dir, "bundle.yaml"), path.join(communityAssets, "bundle.yaml")); cpSync(path.join(community.dir, "bundle.yaml.sig"), path.join(communityAssets, "bundle.yaml.sig"));
+  cpSync(path.join(community.dir, "LICENSE"), path.join(communityAssets, "license.txt"));
   cpSync(path.join(root, "package-lock.json"), path.join(dir, "package-lock.json"));
   mkdirSync(path.join(dir, "data/hub/first-party"), { recursive: true });
   const recipe = structuredClone(base); delete recipe.evidence.artifact;
@@ -801,7 +803,7 @@ test("bound generation stages the exact signed contribution from committed rules
     const relative = item.publisher ? "community/" + publisher.id + "--" + name : "bundles/" + name;
     writeListing("listings/" + relative + ".yaml", readFileSync(item.listing_file));
     if (item.publisher) {
-      for (const file of ["bundle.yaml", "bundle.yaml.sig"]) {
+      for (const file of ["bundle.yaml", "bundle.yaml.sig", "LICENSE"]) {
         writeListing("community/" + publisher.id + "/" + name + "/" + file, readFileSync(path.join(item.bundle_dir, file)));
       }
     }
@@ -814,8 +816,8 @@ test("bound generation stages the exact signed contribution from committed rules
   const { catalog, assetRoot } = prepareBoundCatalog(options, scratch);
   const admitted = catalog["listings.json"].find(record => record.badge === "community");
   assert.ok(admitted);
-  for (const file of ["bundle.yaml", "bundle.yaml.sig"]) {
-    assert.deepEqual(readFileSync(path.join(assetRoot, admitted.route, file)), readFileSync(path.join(signed.bundle_dir, file)));
+  for (const [file, source = file] of [["bundle.yaml"], ["bundle.yaml.sig"], ["license.txt", "LICENSE"]]) {
+    assert.deepEqual(readFileSync(path.join(assetRoot, admitted.route, file)), readFileSync(path.join(signed.bundle_dir, source)));
   }
   assert.ok(!existsSync(path.join(assetRoot, "rules")));
   assert.throws(() => prepareBoundCatalog({ ...options, mode: "routine" }, scratch), /current accepted measurement required/);
@@ -849,6 +851,7 @@ test("bound generation checks the committed latency selection against the acquir
   write(path.join(rules, "hub/listings/community", "example--" + reader.name + ".yaml"), stringify(listingFor(reader)));
   write(path.join(bundleDir, "bundle.yaml"), staged.bytes);
   write(path.join(bundleDir, "bundle.yaml.sig"), staged.signature);
+  write(path.join(bundleDir, "LICENSE"), fixtureLicense);
   const negative = path.join(bundleDir, "fixtures/dlp/stable-rule-long-false-positive.txt");
   write(path.join(bundleDir, "fixtures/dlp/stable-rule-long-true-positive.txt"), "fixture-secret\n");
   write(negative, "fixture-public\n");

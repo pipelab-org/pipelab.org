@@ -10,6 +10,7 @@ import { prepareBoundCatalog } from "../scripts/hub/generate.mjs";
 const community = "/hub/community/example/active-bundle/bundle.yaml";
 const retained = "/hub/community/example/removed-bundle/bundle.yaml";
 const config = "/hub/configs/example-config/pipelock.yaml";
+const license = "/hub/community/example/active-bundle/license.txt";
 const data = (route, value) => ({ route, bytes: Buffer.from(value) });
 
 function fixture(t) {
@@ -18,13 +19,14 @@ function fixture(t) {
   const downloads = [
     data(community, "exact: community\r\n"),
     data(community + ".sig", "fixture signature\n"),
+    data(license, "MIT License\n\nCopyright (c) 2026 Example\n"),
     data(retained, "exact: retained\n"),
     data(retained + ".sig", "retained signature\n"),
     data(config, "exact: assessed config\n"),
   ];
   const manifest = { entries: downloads.map(({ route, bytes }) => ({
     route, ownership: "hub", sha256: sha256(bytes),
-    kind: route === config ? "config-download" : route.startsWith(retained) ? "retained-download" : "bundle-download",
+    kind: route === config ? "config-download" : route === license ? "license-download" : route.startsWith(retained) ? "retained-download" : "bundle-download",
   })) };
   return { scratch, manifest, downloads };
 }

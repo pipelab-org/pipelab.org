@@ -22,6 +22,14 @@
     {{- if .served_source -}}
       {{- if ne (crypto.SHA256 (os.ReadFile .served_source)) .bundle_sha256 -}}{{- errorf "hub served bundle digest differs" -}}{{- end -}}
     {{- end -}}
+    {{- if eq .badge "community" -}}
+      {{- /* License text and notices must reach readers of the page itself. */ -}}
+      {{- $material := .license_material -}}
+      {{- if not (and $material $material.license $material.license.text) -}}{{- errorf "hub license text is missing" -}}{{- end -}}
+      {{- range (slice $material.license) | append ($material.notices | default (slice)) -}}
+        {{- if or (not .text) (ne (crypto.SHA256 .text) .sha256) -}}{{- errorf "hub license or notice text differs from its download" -}}{{- end -}}
+      {{- end -}}
+    {{- end -}}
     {{- $group := index (dict "bundle" "bundles" "config" "configs" "recipe" "recipes" "verifier" "verifiers") $listing.type -}}
     {{- if not $group }}{{ errorf "hub record has unknown type" }}{{ end -}}
     {{- if not (findRE `^[a-z0-9][a-z0-9-]{1,62}[a-z0-9]$` $listing.id) }}{{ errorf "hub record has invalid id" }}{{ end -}}

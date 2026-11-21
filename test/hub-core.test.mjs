@@ -196,6 +196,58 @@ test("open builds publish only the signed community downloads selected by the ca
   assert.match(changed.output, /Hub community download digest differs/);
 });
 
+test("community listings deliver license and notices on the page, mirror and as downloads", t => {
+  const f = buildFixture(t);
+  const directory = "hub/community/example/example-bundle/";
+  const license = "MIT License\n\nCopyright (c) 2026 Example <maintainer>\n\nPermission is hereby granted, free of charge.\n";
+  const notice = "Example notice ``` with fence\n";
+  for (const [name, text] of [["license.txt", license], ["notice.txt", notice]]) writeFileSync(path.join(f.dir, "assets", directory, name), text);
+  const routes = path.join(f.dir, "data/hub/generated/routes.json");
+  const manifest = JSON.parse(readFileSync(routes, "utf8"));
+  manifest.entries.push(
+    { route: "/" + directory + "license.txt", kind: "license-download", ownership: "hub", sha256: sha256(license) },
+    { route: "/" + directory + "notice.txt", kind: "notice-download", ownership: "hub", sha256: sha256(notice) },
+  );
+  writeFileSync(routes, JSON.stringify(manifest));
+  const material = {
+    license: { name: "LICENSE", route: "/" + directory + "license.txt", text: license, sha256: sha256(license) },
+    notices: [{ name: "NOTICE", route: "/" + directory + "notice.txt", text: notice, sha256: sha256(notice) }],
+  };
+  const page = "hub/recipes/example-recipe/";
+  const built = f.build("true", base, { badge: "community", license_material: material });
+  assert.equal(built.status, 0, built.output);
+  assert.equal(f.built(directory + "license.txt"), license);
+  assert.equal(f.built(directory + "notice.txt"), notice);
+  assert.equal(f.built(directory + "bundle.yaml"), "fixture: exact-byte-download\n");
+  const html = parseHTML(f.built(page + "index.html"));
+  const field = name => elements(html).find(node => attr(node, "data-hub-field") === name);
+  assert.equal(textContent(field("license_material.license")), license);
+  assert.equal(textContent(field("license_material.notices.0")), notice);
+  const markdown = f.built(page + "index.md");
+  const blocks = [];
+  const walker = new commonmark.Parser().parse(markdown).walker();
+  for (let event; (event = walker.next());) if (event.entering && event.node.type === "code_block") blocks.push(event.node.literal);
+  assert.ok(blocks.includes(license), markdown);
+  assert.ok(blocks.includes(notice), markdown);
+  assert.match(markdown, /## License/);
+  assert.match(markdown, /## Notices/);
+  assert.ok(markdown.includes(`(https://pipelab.org/${directory}license.txt)`), markdown);
+  assert.ok(markdown.includes(`(https://pipelab.org/${directory}notice.txt)`), markdown);
+  const links = elements(html).filter(node => node.tagName === "a").map(node => attr(node, "href"));
+  assert.ok(links.includes(`/${directory}license.txt`) && links.includes(`/${directory}notice.txt`), String(links));
+
+  const missing = f.build("true", base, { badge: "community" });
+  assert.notEqual(missing.status, 0);
+  assert.match(missing.output, /hub license text is missing/);
+  const drifted = f.build("true", base, { badge: "community", license_material: { ...material, notices: [{ ...material.notices[0], text: "other\n" }] } });
+  assert.notEqual(drifted.status, 0);
+  assert.match(drifted.output, /hub license or notice text differs from its download/);
+  writeFileSync(path.join(f.dir, "assets", directory, "license.txt"), "changed\n");
+  const changed = f.build("true", base, { badge: "community", license_material: material });
+  assert.notEqual(changed.status, 0);
+  assert.match(changed.output, /Hub community download digest differs/);
+});
+
 test("Hugo checks digests against the configured resources it publishes", t => {
   const f = buildFixture(t);
   const assets = path.join(f.dir, "assets");

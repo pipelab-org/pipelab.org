@@ -11,7 +11,7 @@ const contribution = new RegExp(`^(?:
   hub/(?:publishers|configs)/${id}\\.yaml|
   hub/tombstones/(?:bundle|config|recipe|verifier)--${id}\\.yaml|
   hub/listings/(?:bundles/${id}|community/${id}--${id})\\.yaml|
-  hub/community/${id}/${id}/(?:bundle\\.yaml(?:\\.sig)?|fixtures/${fixture})|
+  hub/community/${id}/${id}/(?:bundle\\.yaml(?:\\.sig)?|LICENSE|NOTICE|fixtures/${fixture})|
   hub/quality/${id}/${id}\\.json
 )$`.replace(/\s+/g, ""));
 const official = new RegExp(`^(?:published/${id}/bundle\\.yaml(?:\\.sig)?|fixtures/${id}/${fixture})$`);

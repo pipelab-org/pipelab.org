@@ -19,6 +19,7 @@ import { parseListing, resolveArtifact } from "./validate.mjs";
 import { toolingIdentity, jsonBytes, readMeasurement, assessMeasurement, assertRegeneration, bindWorkload, measurementBindings, measurementMethod, goWorkloadSHA256, sha256 } from "./evidence.mjs";
 import { routeManifest } from "./route-manifest.mjs";
 import { bundleWorkload } from "./workload.mjs";
+import { readLicenseMaterial, licenseRecord, licenseDownloads } from "./license-delivery.mjs";
 
 export function runHubcheck(binary, mode, request, { timeout = 120000 } = {}) {
   const output = execFileSync(binary, [mode], { input: JSON.stringify(request), encoding: "utf8", timeout, maxBuffer: 16 * 1024 * 1024, env: { ...process.env, GOMAXPROCS: "1" } });
@@ -187,10 +188,17 @@ function generateFromListings({ root, items, engine, binary, repository, config,
     if (listing.evidence.artifact) { resolveArtifact(item.artifact_root, listing.evidence.artifact); evidencePresent = true; }
     const conformance = listing.type === "verifier" ? verifierEvidence(item.artifact_root, listing) : null;
     const record = deriveRecord({ listing, reader, independent, publisher, tooling, evidencePresent, measurement, source });
-    if (downloads && record.badge === "community") {
-      downloads.push(
+    if (record.badge === "community") {
+      // Hub-served packs deliver license and notices beside the signed pair.
+      const material = readLicenseMaterial(item.bundle_dir, listing.license, pair);
+      if (sha256(pair.bytes) !== record.bundle_sha256 || sha256(pair.signature) !== record.signature_sha256) {
+        throw new Error("license delivery would alter signed bytes");
+      }
+      record.license_material = licenseRecord(record.route, material);
+      downloads?.push(
         { route: record.route + "bundle.yaml", bytes: pair.bytes },
         { route: record.route + "bundle.yaml.sig", bytes: pair.signature },
+        ...licenseDownloads(record.route, material),
       );
     }
     if (conformance) {

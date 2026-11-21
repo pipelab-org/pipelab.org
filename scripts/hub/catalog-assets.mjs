@@ -5,13 +5,15 @@ import { sha256 } from "./evidence.mjs";
 const id = "[a-z0-9][a-z0-9-]{1,62}[a-z0-9]";
 const community = new RegExp("^/hub/community/" + id + "/" + id + "/bundle\\.yaml(\\.sig)?$");
 const config = new RegExp("^/hub/configs/" + id + "/pipelock\\.yaml$");
-const kinds = new Set(["bundle-download", "retained-download", "config-download"]);
+const licenseRoute = new RegExp("^/hub/community/" + id + "/" + id + "/(?:license|notice)\\.txt$");
+const kinds = new Set(["bundle-download", "retained-download", "config-download", "license-download", "notice-download"]);
+const licenseKinds = new Set(["license-download", "notice-download"]);
 
 function expectedDownloads(manifest) {
   const expected = new Map();
   for (const entry of manifest.entries) {
     if (entry.ownership !== "hub" || !kinds.has(entry.kind)) continue;
-    const routePattern = entry.kind === "config-download" ? config : community;
+    const routePattern = entry.kind === "config-download" ? config : licenseKinds.has(entry.kind) ? licenseRoute : community;
     if (typeof entry.route !== "string" || !routePattern.test(entry.route) ||
         typeof entry.sha256 !== "string" || !/^[a-f0-9]{64}$/.test(entry.sha256) || expected.has(entry.route)) {
       throw new Error("invalid or duplicate catalog download route");
@@ -19,6 +21,17 @@ function expectedDownloads(manifest) {
     expected.set(entry.route, entry);
   }
   for (const { route, kind } of expected.values()) {
+    const directory = route.slice(0, route.lastIndexOf("/") + 1);
+    if (licenseKinds.has(kind)) {
+      if (kind !== (route.endsWith("/license.txt") ? "license-download" : "notice-download") ||
+          expected.get(directory + "bundle.yaml")?.kind !== "bundle-download") {
+        throw new Error("license delivery must accompany a served bundle");
+      }
+      continue;
+    }
+    if (kind === "bundle-download" && !route.endsWith(".sig") && expected.get(directory + "license.txt")?.kind !== "license-download") {
+      throw new Error("served bundle requires license delivery");
+    }
     if (kind === "config-download") continue;
     const counterpart = route.endsWith(".sig") ? route.slice(0, -4) : route + ".sig";
     if (expected.get(counterpart)?.kind !== kind) throw new Error("incomplete catalog bundle pair");

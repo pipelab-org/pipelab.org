@@ -52,8 +52,8 @@
     {{- end -}}
   {{- end -}}
   {{- range $routes -}}
-    {{- if in (slice "bundle-download" "retained-download") .kind -}}
-      {{- if not (findRE `^/hub/community/[a-z0-9][a-z0-9-]{1,62}[a-z0-9]/[a-z0-9][a-z0-9-]{1,62}[a-z0-9]/bundle\.yaml(\.sig)?$` .route) -}}
+    {{- if in (slice "bundle-download" "retained-download" "license-download" "notice-download") .kind -}}
+      {{- if not (findRE `^/hub/community/[a-z0-9][a-z0-9-]{1,62}[a-z0-9]/[a-z0-9][a-z0-9-]{1,62}[a-z0-9]/(bundle\.yaml(\.sig)?|license\.txt|notice\.txt)$` .route) -}}
         {{- errorf "unexpected community download path" -}}
       {{- end -}}
       {{- $file := strings.TrimPrefix "/" .route -}}
