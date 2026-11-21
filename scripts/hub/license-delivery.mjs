@@ -41,7 +41,7 @@ function readText(directory, name, required, fileName = name) {
   const bytes = readFileSync(file);
   let text;
   try { text = new TextDecoder("utf-8", { fatal: true }).decode(bytes); } catch { throw new Error("license or notice must be UTF-8 text"); }
-  if (text.startsWith("﻿") || /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(text)) throw new Error("license or notice contains control characters");
+  if (text.startsWith("﻿") || /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]/.test(text)) throw new Error("license or notice contains control characters");
   if (!text.trim()) throw new Error(required ? "license text missing" : "notice text missing");
   return { name, bytes, text, sha256: sha256(bytes) };
 }

@@ -173,3 +173,16 @@ test("complete upstream licenses cannot substitute terms mentioning copyright fo
     assert.throws(() => readLicenseMaterial(dir, license, signed), /required copyright notice missing/);
   }
 });
+
+
+test("license and notice refuse C1 controls and oversized delivery text", t => {
+  for (const name of ["LICENSE", "NOTICE"]) {
+    const { dir, signed } = bundle(t, { LICENSE: mit, ...(name === "NOTICE" ? { NOTICE: "Attribution\n" } : {}) });
+    for (let point = 0x80; point <= 0x9f; point++) {
+      writeFileSync(path.join(dir, name), mit + String.fromCodePoint(point));
+      assert.throws(() => readLicenseMaterial(dir, "MIT", signed), /control characters/, name + " U+" + point.toString(16));
+    }
+    writeFileSync(path.join(dir, name), mit + "x".repeat(64 * 1024));
+    assert.throws(() => readLicenseMaterial(dir, "MIT", signed), /byte limit/);
+  }
+});
