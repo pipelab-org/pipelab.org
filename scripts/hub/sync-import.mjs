@@ -5,6 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { HubCheckFailure, HubUnavailable } from "./check-failure.mjs";
 import { admissionProducer } from "./admission-producer.mjs";
+import { failedAcceptanceStep } from "./diagnostic.mjs";
 import { jsonBytes, sha256 } from "./evidence.mjs";
 import { prepareBoundCatalog, writeCatalog } from "./generate.mjs";
 import { acquireRulesObjects, readRulesMain } from "./rules-acquisition.mjs";
@@ -22,6 +23,19 @@ function fileInventory(directory, prefix = "") {
     const bytes = readFileSync(target);
     return [{ path: name, size: bytes.length, sha256: sha256(bytes) }];
   }).sort((a, b) => a.path.localeCompare(b.path));
+}
+
+// The refusal reaches a public workflow log, so it repeats evidence only in a
+// known-safe form: the fixture summary, which names failed tests from this
+// repository. Any other step reports its number alone; free-form error text
+// stays in the cause and in a local acceptance run.
+// Fixed acceptance messages built only from repository data are also safe.
+const safeEvidence = /^(?:\d+(?: of \d+)? Hub fixture tests failed: |site baseline differs from current site main$|policy page is missing: [a-z-]+$)/;
+export function acceptanceRefusal(stdout) {
+  const failed = failedAcceptanceStep(stdout);
+  if (!failed) return "routine Hub acceptance did not pass";
+  const prefix = "routine Hub acceptance failed at step " + failed.step;
+  return safeEvidence.test(failed.evidence) ? prefix + ": " + failed.evidence : prefix;
 }
 
 const run = promisify(runProcess);
@@ -73,15 +87,7 @@ async function verifyRoutineImport({ source, producer, rulesRepository, rulesMai
   try {
     await run("make", ["--silent", "hub-acceptance", "HUB_ACCEPTANCE_INPUT=" + input], options);
   } catch (cause) {
-    let step;
-    try {
-      const { steps } = JSON.parse(cause.stdout);
-      step = Object.keys(steps).find(key => /^(?:[1-9]|10)$/.test(key) && steps[key].status === "fail");
-    } catch {
-      // A failure before the acceptance report has no step number.
-    }
-    const reason = step ? "routine Hub acceptance failed at step " + step : "routine Hub acceptance did not pass";
-    throw new HubCheckFailure(reason, { cause });
+    throw new HubCheckFailure(acceptanceRefusal(cause.stdout), { cause });
   }
   const { stdout: tree } = await git("rev-parse", "HEAD^{tree}");
   return tree.trim();

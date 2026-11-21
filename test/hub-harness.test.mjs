@@ -26,6 +26,8 @@ import { assertClosedDiscovery } from "../scripts/hub/acceptance.mjs";
 import { publicationClearancePayload, publicationIdentity } from "../scripts/hub/deployment-evidence.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
+// A committed count binds every measurement to the same number of pairs.
+const measurementPairs = JSON.parse(readFileSync(path.join(root, "data/hub/benchmark-method.json"))).pairs ?? 1;
 const read = file => readFileSync(path.join(root, file), "utf8");
 const base = JSON.parse(read("test/hub-fixtures/listing.json"));
 const binary = process.env.HUBCHECK_BIN;
@@ -157,7 +159,7 @@ test("native benchmark requires complete inputs then isolates stable, experiment
   assert.throws(() => runHubcheck(binary, "bench", { ...fixture.request, pairs: 1, workload: oversized }), /REFUSED/);
   const inputs = oversized.map(input => ({ rule_id: input.rule_id, ...Object.fromEntries(["positive", "negative", "clean", "near"].map(group => [group, input[group].map(text => ({ origin: "test:oversized", text }))])) }));
   const output = path.join(temp(t), "refused-report"), engine = JSON.parse(readFileSync(path.join(engineDir, "engine-identity.json")));
-  assert.throws(() => benchmarkReport({ binary, request: fixture.request, engine, workloadSpec: { inputs, generator: "test:oversized", parameters: {} }, pairs: 1, output, root }), /REFUSED/);
+  assert.throws(() => benchmarkReport({ binary, request: fixture.request, engine, workloadSpec: { inputs, generator: "test:oversized", parameters: {} }, pairs: measurementPairs, output, root }), /REFUSED/);
   assert.equal(existsSync(output), false);
 });
 
@@ -591,12 +593,13 @@ test("real Hugo joins reader facts, rule/core routes, exact mirrors and digest g
 });
 
 test("official workloads bind exact served producer bytes and supply every missing experimental negative", { skip: !native || !process.env.HUBCHECK_RULES_REPOSITORY }, () => {
-  let count = 0, supplementary = 0;
+  let count = 0;
+  const supplemented = [];
   for (const name of ["pipelock-community", "healthcare-phi-pii"]) {
     const reader = runHubcheck(binary, "reader", { bundle_dir: path.join(root, "static/rules", name), config: path.join(engineDir, "configs/claude-code.yaml") });
     const own = officialOwnInputs({ repository: process.env.HUBCHECK_RULES_REPOSITORY, reader });
     assert.deepEqual(own.map(input => input.rule_id), reader.declared.filter(rule => rule.status !== "deprecated").map(rule => rule.id));
-    for (const input of own) { assert.ok(input.positive[0].text); assert.ok(input.negative[0].text); supplementary += Number(input.negative[0].origin.startsWith("site:")); }
+    for (const input of own) { assert.ok(input.positive[0].text); assert.ok(input.negative[0].text); if (input.negative[0].origin.startsWith("site:")) supplemented.push(input.rule_id); }
     count += own.length;
     assert.throws(() => officialOwnInputs({ repository: process.env.HUBCHECK_RULES_REPOSITORY, reader: { ...reader, bundle_sha256: "changed" } }), /not current/);
     if (name === "pipelock-community") {
@@ -605,7 +608,11 @@ test("official workloads bind exact served producer bytes and supply every missi
       assert.throws(() => officialOwnInputs({ repository: process.env.HUBCHECK_RULES_REPOSITORY, reader: flipped }), /missing official/);
     }
   }
-  assert.equal(count, 56); assert.equal(supplementary, 10);
+  assert.equal(count, 56);
+  // Exactly the committed supplements are used: a rule whose Rules fixture gained a negative drops out
+  // of this set, and a supplement left behind for it is stale and must be removed.
+  const committed = JSON.parse(readFileSync(path.join(root, "scripts/hub/bench-workload/supplemental-negatives.json"), "utf8"));
+  assert.deepEqual(supplemented.sort(), Object.keys(committed.rules).sort());
   const caps = workloadCaps(repository);
   assert.equal(caps.engine_commit, "d6bb0003c1dac00d3b2df8dd1eb1a51ed8cecd6a");
   assert.equal(caps.dlp, caps.presets.find(preset => preset.name === "claude-code").request_bytes);
@@ -712,12 +719,12 @@ test("benchmark report refuses a caller reader and a different executable", { sk
   const engine = JSON.parse(readFileSync(path.join(engineDir, "engine-identity.json")));
   const inputs = fixture.bundle.rules.filter(rule => rule.status !== "deprecated").map(rule => ({ rule_id: rule.id, positive: [{ origin: "fixture", text: rule.pattern.regex }], negative: [{ origin: "fixture", text: "A normal description of project files." }], clean: [{ origin: "fixture", text: "Read the setup & <instructions>." }], near: [{ origin: "fixture", text: "fixture filler" }] }));
   const spec = { inputs, generator: "hub-harness-test", parameters: { pairs: 1 } };
-  const report = benchmarkReport({ binary, request: fixture.request, engine, workloadSpec: spec, pairs: 1, output: temp(t), root });
+  const report = benchmarkReport({ binary, request: fixture.request, engine, workloadSpec: spec, pairs: measurementPairs, output: temp(t), root });
   assert.equal(report.verdict.status, "unassessed");
   assert.equal(report.results.workload_sha256, report.bindings.executed_workload_sha256);
   assert.equal(report.bindings.bundle_sha256, sha256(fixture.bytes));
-  assert.throws(() => benchmarkReport({ binary, request: fixture.request, reader: { bundle_sha256: "f".repeat(64), declared: [] }, engine, workloadSpec: spec, pairs: 1, output: temp(t), root }), /derived/);
-  assert.throws(() => benchmarkReport({ binary, request: fixture.request, engine: { ...engine, binary_sha256: "0".repeat(64) }, workloadSpec: spec, pairs: 1, output: temp(t), root }), /engine executable/);
+  assert.throws(() => benchmarkReport({ binary, request: fixture.request, reader: { bundle_sha256: "f".repeat(64), declared: [] }, engine, workloadSpec: spec, pairs: measurementPairs, output: temp(t), root }), /derived/);
+  assert.throws(() => benchmarkReport({ binary, request: fixture.request, engine: { ...engine, binary_sha256: "0".repeat(64) }, workloadSpec: spec, pairs: measurementPairs, output: temp(t), root }), /engine executable/);
 });
 
 
@@ -1063,7 +1070,7 @@ test("benchmark refuses signed bundle or config replacement between reader and b
     const engine = { ...JSON.parse(readFileSync(path.join(engineDir, "engine-identity.json"))), binary_sha256: sha256(readFileSync(wrapper)) };
     const inputs = fixture.bundle.rules.filter(rule => rule.status !== "deprecated").map(rule => ({ rule_id: rule.id, ...Object.fromEntries(["positive", "negative", "clean", "near"].map(group => [group, [{ origin: "test:replacement", text: "fixture filler" }]])) }));
     const output = path.join(dir, "report");
-    assert.throws(() => benchmarkReport({ binary: wrapper, request: fixture.request, engine, workloadSpec: { inputs, generator: "test:replacement", parameters: {} }, pairs: 1, output, root }), new RegExp(`executed ${replacementKind} digest differs`));
+    assert.throws(() => benchmarkReport({ binary: wrapper, request: fixture.request, engine, workloadSpec: { inputs, generator: "test:replacement", parameters: {} }, pairs: measurementPairs, output, root }), new RegExp(`executed ${replacementKind} digest differs`));
     assert.equal(existsSync(output), false);
   }
 });
@@ -1097,7 +1104,7 @@ test("default official benchmark honors smaller effective configuration caps", {
   const file = path.join(dir, "strict-small.yaml"); writeFileSync(file, stringify(config));
   const request = { bundle_dir: path.join(root, "static/rules/healthcare-phi-pii"), config: file };
   const engine = JSON.parse(readFileSync(path.join(engineDir, "engine-identity.json")));
-  const report = benchmarkReport({ binary, request, engine, repository, rulesRepository: process.env.HUBCHECK_RULES_REPOSITORY, pairs: 1, output: path.join(dir, "report"), root });
+  const report = benchmarkReport({ binary, request, engine, repository, rulesRepository: process.env.HUBCHECK_RULES_REPOSITORY, pairs: measurementPairs, output: path.join(dir, "report"), root });
   assert.equal(report.verdict.status, "unassessed");
   assert.equal(report.bindings.workload_parameters.caps.dlp, 512);
   assert.equal(report.bindings.workload_parameters.caps.injection, 1024 * 1024);
