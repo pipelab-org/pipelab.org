@@ -183,6 +183,8 @@ test("license and notice refuse C1 controls and oversized delivery text", t => {
       writeFileSync(path.join(dir, name), mit + String.fromCodePoint(point));
       assert.throws(() => readLicenseMaterial(dir, "MIT", signed), /control characters/, name + " U+" + point.toString(16));
     }
+    writeFileSync(path.join(dir, name), "﻿" + mit);
+    assert.throws(() => readLicenseMaterial(dir, "MIT", signed), /control characters/, name + " BOM");
     writeFileSync(path.join(dir, name), mit + "x".repeat(64 * 1024));
     assert.throws(() => readLicenseMaterial(dir, "MIT", signed), /byte limit/);
   }
@@ -208,6 +210,8 @@ test("license text must be the complete body of the declared license", t => {
     ["0BSD", fill("0BSD", "THE AUTHOR")],
     ["0BSD", "Copyright (C) 2026 by Example\n\n" + fill("0BSD", "THE AUTHOR")],
     ["CC0-1.0", template("CC0-1.0")],
+    // Classic Mac line endings split like LF and CRLF.
+    ["0BSD", ("Copyright (C) 2026 by Example\n\n" + fill("0BSD", "THE AUTHOR")).replaceAll("\n", "\r")],
   ];
   for (const [license, text] of accepted) {
     const { dir, signed } = bundle(t, { LICENSE: text }, "license: " + license + "\n");

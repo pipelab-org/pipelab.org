@@ -75,7 +75,7 @@ const templates = new Map(["Apache-2.0", "MIT", "BSD-2-Clause", "BSD-3-Clause", 
 export function completeLicense(license, text) {
   const template = templates.get(license);
   if (!template) return false;
-  const lines = text.split(/\r?\n/);
+  const lines = text.split(/\r\n|\r|\n/);
   let start = 0;
   // Only blank lines precede Apache and CC0 bodies; notice-style licenses may
   // open with a title, copyright lines and a reservation of rights.
@@ -98,7 +98,7 @@ function readText(directory, name, required, fileName = name) {
   if (entry.size > maxBytes) throw new Error("license or notice exceeds the byte limit");
   const bytes = readFileSync(file);
   let text;
-  try { text = new TextDecoder("utf-8", { fatal: true }).decode(bytes); } catch { throw new Error("license or notice must be UTF-8 text"); }
+  try { text = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(bytes); } catch { throw new Error("license or notice must be UTF-8 text"); }
   if (text.startsWith("﻿") || /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]/.test(text)) throw new Error("license or notice contains control characters");
   if (!text.trim()) throw new Error(required ? "license text missing" : "notice text missing");
   return { name, bytes, text, sha256: sha256(bytes) };
