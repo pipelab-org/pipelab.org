@@ -48,7 +48,7 @@ function stage(t, mutate = value => value) {
   writeFileSync(path.join(dir, "bundle.yaml"), bytes); writeFileSync(path.join(dir, "bundle.yaml.sig"), signature); writeFileSync(path.join(dir, "LICENSE"), fixtureLicense);
   return { dir, key, bundle, bytes, signature, request: { bundle_dir: dir, config: path.join(engineDir || "", "configs/claude-code.yaml"), trusted_keys: [{ name: "example", public_key: key.hex }] } };
 }
-const fixtureLicense = "Apache License\nVersion 2.0, January 2004\n";
+const fixtureLicense = read("static/rules/pipelock-community/license.txt");
 function listingFor(reader) { const listing = structuredClone(base); delete listing.learn_page; delete listing.evidence.artifact; Object.assign(listing, { type: "bundle", id: reader.name, bundle_name: reader.name, bundle_sha256: reader.bundle_sha256, signer_fingerprint: reader.signer_fingerprint }); return listing; }
 function timer(samples) { return { samples_ns: samples, maximum_ns: Math.max(...samples), completed: true, timeout: false }; }
 function results(maximum = 12, workload_sha256 = "executed") { const measured = { baseline: timer([10, 10, 10]), target: timer([12, 12, maximum]), ratio: 0.2 }; return { rules: { "test-rule": structuredClone(measured) }, bundle: measured, deprecated: [], workload_sha256, bundle_sha256: "bundle", config_sha256: "config" }; }
@@ -1000,7 +1000,9 @@ test("official listings deliver the synchronized Rules license and refuse missin
   for (const file of ["bundle.yaml", "bundle.yaml.sig"]) cpSync(path.join(official.bundle_dir, file), path.join(copy, file));
   const items = source.items.map(item => item === official ? { ...item, bundle_dir: copy } : item);
   assert.throws(() => generateCatalog({ ...source, items }), /license text missing/);
-  writeFileSync(path.join(copy, "license.txt"), "MIT License\n\nCopyright (c) 2026 Example\n\nPermission is hereby granted, free of charge.\n");
+  writeFileSync(path.join(copy, "license.txt"), "MIT License\n\nCopyright (c) 2026 Example\n\n" + read("scripts/hub/licenses/MIT.txt"));
+  assert.throws(() => generateCatalog({ ...source, items }), /does not match the declared license/);
+  writeFileSync(path.join(copy, "license.txt"), "Apache License\nVersion 2.0, January 2004\n");
   assert.throws(() => generateCatalog({ ...source, items }), /does not match the declared license/);
   writeFileSync(path.join(copy, "license.txt"), read("static/rules/pipelock-community/license.txt"));
   writeFileSync(path.join(copy, "LICENSE"), read("static/rules/pipelock-community/license.txt"));

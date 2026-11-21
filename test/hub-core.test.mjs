@@ -190,6 +190,21 @@ test("open builds publish only the signed community downloads selected by the ca
   assert.equal(f.built(artifact), "fixture: exact-byte-download\n");
   assert.equal(f.built(artifact + ".sig"), "fixture-signature\n");
 
+  // A retained pair keeps its accepted license file; a stray one is refused.
+  const retainedLicense = "hub/community/example/example-bundle/license.txt";
+  const licenseText = "Retained license text\n";
+  writeFileSync(path.join(f.dir, "assets", retainedLicense), licenseText);
+  const licenseEntry = { route: "/" + retainedLicense, kind: "license-download", ownership: "hub", sha256: sha256(licenseText) };
+  writeFileSync(routes, JSON.stringify({ entries: [...retained.entries, licenseEntry] }));
+  const keptLicense = f.build("true");
+  assert.equal(keptLicense.status, 0, keptLicense.output);
+  assert.equal(f.built(retainedLicense), licenseText);
+  writeFileSync(routes, JSON.stringify({ entries: [...withdrawal.entries, licenseEntry] }));
+  const strayLicense = f.build("true");
+  assert.notEqual(strayLicense.status, 0);
+  assert.match(strayLicense.output, /hub license delivery manifest differs/);
+  writeFileSync(routes, JSON.stringify(retained));
+
   writeFileSync(path.join(f.dir, "assets", artifact + ".sig"), "different signature\n");
   const changed = f.build("true");
   assert.notEqual(changed.status, 0);

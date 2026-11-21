@@ -10,8 +10,9 @@ import { sha256 } from "../scripts/hub/evidence.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
 const schemaBytes = readFileSync(path.join(root, "scripts/hub/schema/listing-v1.json"));
-const mit = "MIT License\n\nCopyright (c) 2026 Example Maintainer\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software.\n";
-const apache = "                                 Apache License\n                           Version 2.0, January 2004\n";
+const mit = "MIT License\n\nCopyright (c) 2026 Example Maintainer\n\n" + readFileSync(path.join(root, "scripts/hub/licenses/MIT.txt"), "utf8");
+// The synchronized Rules license is a real Apache-2.0 producer text.
+const apache = readFileSync(path.join(root, "static/rules/pipelock-community/license.txt"), "utf8");
 const route = "/hub/community/example/example-bundle/";
 
 function bundle(t, files, bundleText = "format_version: 2\nname: example-bundle\nlicense: \"MIT\"\n") {
@@ -184,5 +185,61 @@ test("license and notice refuse C1 controls and oversized delivery text", t => {
     }
     writeFileSync(path.join(dir, name), mit + "x".repeat(64 * 1024));
     assert.throws(() => readLicenseMaterial(dir, "MIT", signed), /byte limit/);
+  }
+});
+
+test("license text must be the complete body of the declared license", t => {
+  const template = id => readFileSync(path.join(root, "scripts/hub/licenses", id + ".txt"), "utf8");
+  const dependency = name => readFileSync(path.join(root, "node_modules", name, "LICENSE"), "utf8");
+  const fill = (id, holder) => template(id).replaceAll("{{holder}}", holder).replaceAll("{{its}}", "its").replaceAll("{{and-or}}", "and/or");
+  const accepted = [
+    // Real producer texts: the synchronized Rules license and locked dependencies.
+    ["Apache-2.0", apache],
+    ["MIT", dependency("pg")],
+    ["MIT", dependency("xtend")],
+    ["ISC", dependency("yaml")],
+    ["ISC", dependency("pg-int8")],
+    ["BSD-3-Clause", dependency("smol-toml")],
+    // Variable parts the SPDX templates mark as replaceable.
+    ["Apache-2.0", apache.slice(0, apache.indexOf("END OF TERMS AND CONDITIONS") + 27) + "\n"],
+    ["BSD-2-Clause", "BSD 2-Clause License\n\nCopyright (c) 2026, Example\nAll rights reserved.\n\n" + fill("BSD-2-Clause", "THE COPYRIGHT HOLDERS AND CONTRIBUTORS")],
+    ["BSD-3-Clause", "Copyright (c) 2026 Example Org\n\n" + fill("BSD-3-Clause", "Example Org").replace(/^(\d)\. /gm, "* ")],
+    ["ISC", "Copyright (c) 2026 Example\n\n" + template("ISC").replace("{{and-or}}", "and").replaceAll("{{holder}}", "THE AUTHOR")],
+    ["0BSD", fill("0BSD", "THE AUTHOR")],
+    ["0BSD", "Copyright (C) 2026 by Example\n\n" + fill("0BSD", "THE AUTHOR")],
+    ["CC0-1.0", template("CC0-1.0")],
+  ];
+  for (const [license, text] of accepted) {
+    const { dir, signed } = bundle(t, { LICENSE: text }, "license: " + license + "\n");
+    assert.doesNotThrow(() => readLicenseMaterial(dir, license, signed), license);
+  }
+
+  const bodyWithout = (text, phrase) => { assert.ok(text.includes(phrase), phrase); return text.replace(phrase, ""); };
+  const refused = [
+    // Name-only stubs carry none of the terms.
+    ["Apache-2.0", "Apache License\nVersion 2.0\n"],
+    ["Apache-2.0", "                                 Apache License\n                           Version 2.0, January 2004\n"],
+    ["MIT", "MIT License\n\nCopyright (c) 2026 Example\n\nPermission is hereby granted, free of charge.\n"],
+    ["ISC", "ISC License\n\nCopyright (c) 2026 Example\n"],
+    ["BSD-2-Clause", "Copyright (c) 2026 Example\n\nRedistribution and use in source and binary forms, with or without modification, are permitted.\n"],
+    ["BSD-3-Clause", "Copyright (c) 2026 Example\n\nRedistribution and use in source and binary forms. Neither the name of Example.\n"],
+    ["0BSD", "Permission to use, copy, modify, and/or distribute this software for any purpose\n"],
+    ["CC0-1.0", "CC0 1.0 Universal\n"],
+    // Removed, added or substituted terms.
+    ["Apache-2.0", bodyWithout(apache, " shall terminate\n      as of the date such litigation is filed")],
+    ["Apache-2.0", apache + "\nAdditional term: commercial use requires a separate license.\n"],
+    ["MIT", bodyWithout(mit, " AND NONINFRINGEMENT")],
+    ["MIT", mit + "\nThe Software shall be used for Good, not Evil.\n"],
+    ["BSD-3-Clause", "Copyright (c) 2026 Example\n\n" + fill("BSD-2-Clause", "Example")],
+    ["BSD-2-Clause", "Copyright (c) 2026 Example\n\n" + fill("BSD-3-Clause", "Example")],
+    ["ISC", "Copyright (c) 2026 Example\n\n" + fill("0BSD", "THE AUTHOR")],
+    ["0BSD", "Copyright (c) 2026 Example\n\n" + fill("ISC", "THE AUTHOR")],
+    // Text before the body that is not a title or copyright line.
+    ["MIT", "Example preamble that adds a restriction.\n\n" + mit],
+    ["CC0-1.0", "Copyright (c) 2026 Example\n\n" + template("CC0-1.0")],
+  ];
+  for (const [license, text] of refused) {
+    const { dir, signed } = bundle(t, { LICENSE: text }, "license: " + license + "\n");
+    assert.throws(() => readLicenseMaterial(dir, license, signed), /does not match the declared license/, license + ": " + text.slice(0, 60));
   }
 });

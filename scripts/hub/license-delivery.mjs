@@ -14,17 +14,75 @@ export const officialRoute = name => "/rules/" + name + "/";
 const maxBytes = 64 * 1024;
 const candidateName = /^(?:licen[cs]e|notice|copying)(?:[._-].*)?$/i;
 
-// Identifying text from each DR-415 license. A declared identifier must match
-// the delivered text; an unrecognized or mismatched text is refused.
-const markers = {
-  "Apache-2.0": text => text.includes("apache license") && text.includes("version 2.0"),
-  "MIT": text => text.includes("permission is hereby granted, free of charge"),
-  "BSD-2-Clause": text => text.includes("redistribution and use in source and binary forms") && !text.includes("neither the name"),
-  "BSD-3-Clause": text => text.includes("redistribution and use in source and binary forms") && text.includes("neither the name"),
-  "ISC": text => text.includes("permission to use, copy, modify, and/or distribute this software for any purpose") && text.includes("provided that the above copyright notice"),
-  "0BSD": text => text.includes("permission to use, copy, modify, and/or distribute this software for any purpose") && !text.includes("provided that the above copyright notice"),
-  "CC0-1.0": text => text.includes("cc0 1.0 universal"),
+// Complete license bodies for each DR-415 license live in ./licenses/, taken
+// from the published SPDX and license-steward texts. A delivered LICENSE must
+// be the whole body after normalization; only the variable parts SPDX marks
+// as replaceable may differ: copyright and title lines before the body, the
+// holder named in disclaimers and BSD clause 3, and the optional Apache
+// appendix. A partial, extended or mismatched text is refused.
+const licenseDirectory = new URL("./licenses/", import.meta.url);
+const holes = {
+  holder: "[^\"]{1,160}?",
+  "and-or": "(?:and/or|and)",
+  the: "(?:the )?",
+  "any-those": "(?:any|those)",
+  its: "(?:its|the|their)",
 };
+// Leading lines a license file may carry before its body.
+const titleLine = /^[\t ]*\(?(?:the )?(?:mit|isc|bsd[ -](?:2|3|zero)[ -]clause|zero[ -]clause bsd|bsd)(?: license)?(?: \(mit\))?\)?[\t ]*$/i;
+const copyrightLine = /^[\t ]*(?:copyright\b|\(c\)|©)[^\r\n]*$/i;
+const reservedLine = /^[\t ]*all rights reserved\.?[\t ]*$/i;
+const bulleted = new Set(["BSD-2-Clause", "BSD-3-Clause"]);
+const noticePrefix = new Set(["MIT", "BSD-2-Clause", "BSD-3-Clause", "ISC", "0BSD"]);
+
+function normalizeLicense(text, bullets) {
+  let value = text.toLowerCase()
+    .replace(/[“”„‟″]|''|``/g, "\"")
+    .replace(/[‘’]/g, "'")
+    .replace(/©/g, "(c)")
+    .replace(/[‐-―]/g, "-")
+    .replace(/https:\/\//g, "http://")
+    .replace(/\s+/g, " ").trim();
+  // SPDX matching ignores list markers; BSD clauses appear numbered, bulleted or bare.
+  if (bullets) value = value.replace(/(^| )(?:[*•-]|\d{1,2}\.)(?= )/g, "$1").replace(/ {2,}/g, " ").trim();
+  return value;
+}
+
+function compileTemplate(file, bullets) {
+  const text = normalizeLicense(readFileSync(new URL(file, licenseDirectory), "utf8"), bullets);
+  return text.split(/(\{\{[a-z-]+\}\})/).map(part => {
+    const hole = /^\{\{([a-z-]+)\}\}$/.exec(part);
+    if (hole) {
+      if (!Object.hasOwn(holes, hole[1])) throw new Error("unknown license template field");
+      return holes[hole[1]];
+    }
+    return part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }).join("");
+}
+
+const templates = new Map(["Apache-2.0", "MIT", "BSD-2-Clause", "BSD-3-Clause", "ISC", "0BSD", "CC0-1.0"].map(id => {
+  const bullets = bulleted.has(id);
+  let body = compileTemplate(id + ".txt", bullets);
+  if (id === "Apache-2.0") {
+    // The appendix is optional; when present, its notice may be filled in.
+    const appendix = compileTemplate("Apache-2.0-appendix.txt", false);
+    const boilerplate = compileTemplate("Apache-2.0-boilerplate.txt", false);
+    body += `(?: (?:${appendix} )?(?:copyright [^"]{1,200}? )?${boilerplate})?`;
+  }
+  return [id, { bullets, pattern: new RegExp("^" + body + "$") }];
+}));
+
+export function completeLicense(license, text) {
+  const template = templates.get(license);
+  if (!template) return false;
+  const lines = text.split(/\r?\n/);
+  let start = 0;
+  // Only blank lines precede Apache and CC0 bodies; notice-style licenses may
+  // open with a title, copyright lines and a reservation of rights.
+  while (start < lines.length && (!lines[start].trim() || noticePrefix.has(license) &&
+    [titleLine, copyrightLine, reservedLine].some(line => line.test(lines[start])))) start++;
+  return template.pattern.test(normalizeLicense(lines.slice(start).join("\n"), template.bullets));
+}
 // These license texts require the copyright notice to accompany copies.
 // Apache-2.0 notices travel in NOTICE, which is delivered whenever present.
 const copyrightRequired = new Set(["MIT", "BSD-2-Clause", "BSD-3-Clause", "ISC"]);
@@ -51,7 +109,7 @@ function readText(directory, name, required, fileName = name) {
 // `served` reads a directory that already holds the served names: official
 // packs under static/rules and retained Hub downloads under assets/.
 export function readLicenseMaterial(directory, license, signed, { served = false } = {}) {
-  if (!Object.hasOwn(markers, license)) throw new Error("unsupported listing license");
+  if (!templates.has(license)) throw new Error("unsupported listing license");
   const fileName = name => served ? servedName[name] : name;
   for (const name of readdirSync(directory)) {
     if (candidateName.test(name) && name !== fileName(licenseFile) && name !== fileName(noticeFile)) {
@@ -61,8 +119,7 @@ export function readLicenseMaterial(directory, license, signed, { served = false
   const before = signed && [sha256(signed.bytes), sha256(signed.signature)];
   const licenseText = readText(directory, licenseFile, true, fileName(licenseFile));
   const notice = readText(directory, noticeFile, false, fileName(noticeFile));
-  const normalized = licenseText.text.toLowerCase().replace(/\s+/g, " ");
-  if (!markers[license](normalized)) throw new Error("license text does not match the declared license");
+  if (!completeLicense(license, licenseText.text)) throw new Error("license text does not match the declared license");
   if (copyrightRequired.has(license) &&
       ![licenseText, notice].some(file => file && /^[\t ]*(?:copyright(?:[\t ]*\(c\))?|©|\(c\))[\t ]+(?!(?:holders?|notice)\b)\S[^\r\n]*$/im.test(file.text))) {
     throw new Error("required copyright notice missing");
