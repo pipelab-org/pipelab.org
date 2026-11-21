@@ -236,7 +236,8 @@ test("recorded rule routes become removal pages with their parent listing", () =
   const id = "official-fixture";
   const parent = { listing: { id, type: "bundle", bundle_name: id }, badge: "official",
     route: "/hub/bundles/" + id + "/", bundle_sha256: "a".repeat(64), signature_sha256: "b".repeat(64),
-    facts: {}, reader: { declared: [{ id: "example-rule", name: "Example rule" }], policies: { stock: { loaded: [] } } } };
+    facts: {}, reader: { declared: [{ id: "example-rule", name: "Example rule" }], policies: { stock: { loaded: [] } } },
+    license_material: { license: { name: "LICENSE", route: "/rules/" + id + "/license.txt", text: fixtureLicense, sha256: sha256(fixtureLicense) }, notices: [] } };
   const active = routeManifest({ records: [parent], policies: [], schemaBytes });
   const rule = active.entries.find(entry => entry.kind === "rule");
   const removed = { id, route: parent.route, publisher_id: "official", facts: { Reason: "Withdrawn." } };
@@ -937,8 +938,9 @@ test("catalog generation joins lifecycle removals and retains their names", { sk
   const community = generateCatalog(source)["listings.json"].find(record => record.badge === "community");
   const listing = { id: "bundle--" + community.listing.id, route: community.route,
     publisher: community.publisher_id, badge: community.badge, bundle_sha256: community.bundle_sha256,
-    signature_sha256: community.signature_sha256 };
-  const retired = { type: "removed", at: "2026-11-17", reason_id: "1".repeat(32), reason_class: "retired",
+    signature_sha256: community.signature_sha256, license: community.listing.license,
+    license_sha256: community.license_material.license.sha256 };
+  const retired ={ type: "removed", at: "2026-11-17", reason_id: "1".repeat(32), reason_class: "retired",
     public_reason: "Retired.", bundle_sha256: listing.bundle_sha256, downloads: "retained" };
   const security = { ...retired, reason_id: "2".repeat(32), reason_class: "security",
     public_reason: "Security review.", downloads: "removed" };
@@ -948,6 +950,18 @@ test("catalog generation joins lifecycle removals and retains their names", { sk
     lifecycle: { accepted: { listings: [listing], history: [], routes: [] }, history: history(retired) } });
   const retained = retainedCatalog["routes.json"].entries.filter(entry => entry.kind === "retained-download");
   assert.deepEqual(retained.map(entry => entry.route), [listing.route + "bundle.yaml", listing.route + "bundle.yaml.sig"]);
+  // License text stays available beside the retained pair; without it, retention is refused.
+  const retainedLicense = retainedCatalog["routes.json"].entries.filter(entry => entry.route === listing.route + "license.txt");
+  assert.deepEqual(retainedLicense.map(entry => [entry.kind, entry.sha256]), [["license-download", listing.license_sha256]]);
+  const retainLifecycle = accepted => ({ accepted: { listings: [accepted], history: [], routes: [] }, history: history(retired) });
+  const { license: _license, ...unlicensed } = listing;
+  assert.throws(() => generateCatalog({ ...source, items, lifecycle: retainLifecycle(unlicensed) }), /requires its accepted license material/);
+  assert.throws(() => generateCatalog({ ...source, items, lifecycle: retainLifecycle({ ...listing, license_sha256: "0".repeat(64) }) }), /retained license material differs/);
+  const retainedText = path.join(dir, "assets", listing.route.slice(1), "license.txt");
+  const savedText = readFileSync(retainedText);
+  rmSync(retainedText);
+  assert.throws(() => generateCatalog({ ...source, items, lifecycle: retainLifecycle(listing) }), /license text missing/);
+  writeFileSync(retainedText, savedText);
   assert.ok(retainedCatalog["inventory.json"].retained_names.includes(community.listing.bundle_name));
   assert.equal(retainedCatalog["routes.json"].entries.find(entry => entry.route === listing.route).facts["bundle.name"], community.listing.bundle_name);
   const withdrawn = generateCatalog({ ...source, items,
@@ -964,6 +978,33 @@ test("catalog generation joins lifecycle removals and retains their names", { sk
   assert.equal(restored["routes.json"].entries.find(entry => entry.route === listing.route).kind, "listing");
   const renamed = { ...listing, route: "/hub/community/example/new-bundle/", bundle_name: "new-bundle" };
   assert.throws(() => reconcileLifecycle({ listings: [listing], history: [] }, { listings: [renamed], history: [] }), /accepted listing route cannot change/);
+});
+
+test("official listings deliver the synchronized Rules license and refuse missing material", { skip: !native }, t => {
+  const { source } = catalogSource(t);
+  const catalog = generateCatalog(source);
+  for (const name of ["pipelock-community", "healthcare-phi-pii"]) {
+    const record = catalog["listings.json"].find(entry => entry.badge === "official" && entry.listing.bundle_name === name);
+    const directory = "/rules/" + name + "/";
+    assert.equal(record.license_material.license.route, directory + "license.txt");
+    assert.equal(record.license_material.license.text, read("static/rules/" + name + "/license.txt"));
+    assert.deepEqual(record.license_material.notices.map(notice => [notice.route, notice.text]), [[directory + "notice.txt", read("static/rules/" + name + "/notice.txt")]]);
+    const entries = catalog["routes.json"].entries.filter(entry => entry.route.startsWith(directory) && entry.route.endsWith(".txt"));
+    assert.deepEqual(entries.map(entry => [entry.route, entry.kind, entry.ownership]), [
+      [directory + "license.txt", "license-download", "official-registry"],
+      [directory + "notice.txt", "notice-download", "official-registry"],
+    ]);
+  }
+  const official = source.items.find(item => item.bundle_dir?.endsWith("/static/rules/pipelock-community"));
+  const copy = temp(t);
+  for (const file of ["bundle.yaml", "bundle.yaml.sig"]) cpSync(path.join(official.bundle_dir, file), path.join(copy, file));
+  const items = source.items.map(item => item === official ? { ...item, bundle_dir: copy } : item);
+  assert.throws(() => generateCatalog({ ...source, items }), /license text missing/);
+  writeFileSync(path.join(copy, "license.txt"), "MIT License\n\nCopyright (c) 2026 Example\n\nPermission is hereby granted, free of charge.\n");
+  assert.throws(() => generateCatalog({ ...source, items }), /does not match the declared license/);
+  writeFileSync(path.join(copy, "license.txt"), read("static/rules/pipelock-community/license.txt"));
+  writeFileSync(path.join(copy, "LICENSE"), read("static/rules/pipelock-community/license.txt"));
+  assert.throws(() => generateCatalog({ ...source, items }), /unrecognized license or notice file/);
 });
 
 test("policy facts have unique normalized labels", () => {

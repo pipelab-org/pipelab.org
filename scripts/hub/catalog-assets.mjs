@@ -8,6 +8,8 @@ const config = new RegExp("^/hub/configs/" + id + "/pipelock\\.yaml$");
 const licenseRoute = new RegExp("^/hub/community/" + id + "/" + id + "/(?:license|notice)\\.txt$");
 const kinds = new Set(["bundle-download", "retained-download", "config-download", "license-download", "notice-download"]);
 const licenseKinds = new Set(["license-download", "notice-download"]);
+// Active and retained signed pairs both carry their license material.
+const pairKinds = new Set(["bundle-download", "retained-download"]);
 
 function expectedDownloads(manifest) {
   const expected = new Map();
@@ -24,12 +26,12 @@ function expectedDownloads(manifest) {
     const directory = route.slice(0, route.lastIndexOf("/") + 1);
     if (licenseKinds.has(kind)) {
       if (kind !== (route.endsWith("/license.txt") ? "license-download" : "notice-download") ||
-          expected.get(directory + "bundle.yaml")?.kind !== "bundle-download") {
+          !pairKinds.has(expected.get(directory + "bundle.yaml")?.kind)) {
         throw new Error("license delivery must accompany a served bundle");
       }
       continue;
     }
-    if (kind === "bundle-download" && !route.endsWith(".sig") && expected.get(directory + "license.txt")?.kind !== "license-download") {
+    if (pairKinds.has(kind) && !route.endsWith(".sig") && expected.get(directory + "license.txt")?.kind !== "license-download") {
       throw new Error("served bundle requires license delivery");
     }
     if (kind === "config-download") continue;

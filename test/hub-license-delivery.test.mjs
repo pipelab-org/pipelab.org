@@ -3,7 +3,7 @@ import { mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileS
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { readLicenseMaterial, licenseRecord, licenseDownloads } from "../scripts/hub/license-delivery.mjs";
+import { readLicenseMaterial, licenseRecord, licenseDownloads, officialRoute } from "../scripts/hub/license-delivery.mjs";
 import { routeManifest } from "../scripts/hub/route-manifest.mjs";
 import { stageCatalogAssets } from "../scripts/hub/catalog-assets.mjs";
 import { sha256 } from "../scripts/hub/evidence.mjs";
@@ -63,6 +63,47 @@ test("license delivery fails closed on missing, mismatched or ambiguous material
   const { dir, signed } = bundle(t, { LICENSE: mit });
   const changed = { ...signed, bytes: Buffer.from("other signed bytes\n") };
   assert.throws(() => readLicenseMaterial(dir, "MIT", changed), /would alter signed bytes/);
+});
+
+test("served directories deliver license.txt and notice.txt and refuse missing material", t => {
+  const notice = "Example Rules\nCopyright 2026 Example Maintainer\n";
+  const { dir, signed } = bundle(t, { "license.txt": mit, "notice.txt": notice });
+  const material = readLicenseMaterial(dir, "MIT", signed, { served: true });
+  assert.deepEqual([material.license.name, material.license.text], ["LICENSE", mit]);
+  assert.deepEqual(material.notices.map(file => file.text), [notice]);
+  assert.throws(() => readLicenseMaterial(dir, "MIT", signed), /unrecognized license or notice file/);
+  const official = officialRoute("example-bundle");
+  assert.equal(licenseRecord(official, material).license.route, "/rules/example-bundle/license.txt");
+
+  const missing = bundle(t, { "notice.txt": notice });
+  assert.throws(() => readLicenseMaterial(missing.dir, "MIT", missing.signed, { served: true }), /license text missing/);
+  const sourceNames = bundle(t, { LICENSE: mit });
+  assert.throws(() => readLicenseMaterial(sourceNames.dir, "MIT", sourceNames.signed, { served: true }), /unrecognized license or notice file/);
+});
+
+test("official route manifests serve license files from the registry path", () => {
+  const material = { license: { name: "LICENSE", bytes: Buffer.from(mit), text: mit, sha256: sha256(Buffer.from(mit)) }, notices: [] };
+  const official = {
+    ...communityRecord(), badge: "official", publisher_id: undefined,
+    reader: { declared: [], policies: { stock: { loaded: [] } } },
+  };
+  assert.throws(() => routeManifest({ records: [official], policies: [], schemaBytes }), /license text missing/);
+  const directory = officialRoute("example-bundle");
+  assert.throws(() => routeManifest({ records: [{ ...official, license_material: licenseRecord(route, material) }], policies: [], schemaBytes }), /unexpected license delivery route/);
+  const manifest = routeManifest({ records: [{ ...official, license_material: licenseRecord(directory, material) }], policies: [], schemaBytes });
+  const entry = manifest.entries.find(item => item.route === directory + "license.txt");
+  assert.deepEqual([entry.kind, entry.ownership, entry.sha256], ["license-download", "official-registry", sha256(Buffer.from(mit))]);
+});
+
+test("retained license downloads keep their kind in the route manifest", () => {
+  const retainedDownloads = [
+    { route: route + "bundle.yaml", sha256: "a".repeat(64) },
+    { route: route + "license.txt", sha256: "b".repeat(64), kind: "license-download" },
+  ];
+  const manifest = routeManifest({ records: [], retainedDownloads, policies: [], schemaBytes });
+  assert.deepEqual(manifest.entries.filter(entry => entry.route.startsWith(route)).map(entry => [entry.kind, entry.readability]),
+    [["retained-download", "expected-block"], ["license-download", "readable"]]);
+  assert.throws(() => routeManifest({ records: [], retainedDownloads: [{ ...retainedDownloads[1], kind: "listing" }], policies: [], schemaBytes }), /unexpected retained download kind/);
 });
 
 test("a linked license file is refused", t => {

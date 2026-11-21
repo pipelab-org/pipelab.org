@@ -11,6 +11,8 @@ const community = "/hub/community/example/active-bundle/bundle.yaml";
 const retained = "/hub/community/example/removed-bundle/bundle.yaml";
 const config = "/hub/configs/example-config/pipelock.yaml";
 const license = "/hub/community/example/active-bundle/license.txt";
+const retainedLicense = "/hub/community/example/removed-bundle/license.txt";
+const retainedDirectory = "/hub/community/example/removed-bundle/";
 const data = (route, value) => ({ route, bytes: Buffer.from(value) });
 
 function fixture(t) {
@@ -22,11 +24,12 @@ function fixture(t) {
     data(license, "MIT License\n\nCopyright (c) 2026 Example\n"),
     data(retained, "exact: retained\n"),
     data(retained + ".sig", "retained signature\n"),
+    data(retainedLicense, "MIT License\n\nCopyright (c) 2026 Retained Example\n"),
     data(config, "exact: assessed config\n"),
   ];
   const manifest = { entries: downloads.map(({ route, bytes }) => ({
     route, ownership: "hub", sha256: sha256(bytes),
-    kind: route === config ? "config-download" : route === license ? "license-download" : route.startsWith(retained) ? "retained-download" : "bundle-download",
+    kind: route === config ? "config-download" : route === license || route === retainedLicense ? "license-download" : route.startsWith(retained) ? "retained-download" : "bundle-download",
   })) };
   return { scratch, manifest, downloads };
 }
@@ -71,6 +74,16 @@ test("catalog asset staging refuses digest drift, orphan files and incomplete ma
   assert.deepEqual(readdirSync(scratch), []);
 });
 
+test("a retained signed pair is staged only with its license material", t => {
+  const { scratch, manifest, downloads } = fixture(t);
+  const without = { entries: manifest.entries.filter(entry => entry.route !== retainedLicense) };
+  assert.throws(() => stageCatalogAssets(scratch, without, downloads.filter(file => file.route !== retainedLicense)), /served bundle requires license delivery/);
+  const orphan = { entries: manifest.entries.filter(entry => !entry.route.startsWith(retained)) };
+  assert.throws(() => stageCatalogAssets(scratch, orphan, downloads.filter(file => !file.route.startsWith(retained))), /must accompany a served bundle/);
+  const staged = stageCatalogAssets(scratch, manifest, downloads);
+  assert.deepEqual(readdirSync(path.join(staged, retainedDirectory.slice(1))).sort(), ["bundle.yaml", "bundle.yaml.sig", "license.txt"]);
+});
+
 test("catalog asset staging rejects escaped routes, mismatched kinds and an aliased scratch directory", t => {
   const { scratch, manifest, downloads } = fixture(t);
   for (const route of ["/hub/configs/../pipelock.yaml", "/hub/configs/example/../../pipelock.yaml",
@@ -101,8 +114,8 @@ test("candidate assets must match the regenerated set, including withdrawals", t
   rmSync(retired);
   assert.throws(() => assertCatalogAssets(candidate, staged), /asset set differs/);
 
-  const withdrawnManifest = { entries: manifest.entries.filter(entry => entry.kind !== "retained-download") };
-  const withdrawn = stageCatalogAssets(scratch, withdrawnManifest, downloads.filter(file => !file.route.startsWith(retained)));
+  const withdrawnManifest = { entries: manifest.entries.filter(entry => !entry.route.startsWith(retainedDirectory)) };
+  const withdrawn = stageCatalogAssets(scratch, withdrawnManifest, downloads.filter(file => !file.route.startsWith(retainedDirectory)));
   assert.throws(() => assertCatalogAssets(staged, withdrawn), /asset set differs/);
   symlinkSync(path.join(staged, retained.slice(1)), retired);
   assert.throws(() => assertCatalogAssets(candidate, staged), /must contain regular files/);

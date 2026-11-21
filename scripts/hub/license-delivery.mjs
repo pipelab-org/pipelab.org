@@ -9,6 +9,8 @@ export const licenseFile = "LICENSE";
 export const noticeFile = "NOTICE";
 // Served names stay lowercase like every other Hub route.
 export const servedName = { [licenseFile]: "license.txt", [noticeFile]: "notice.txt" };
+// Official packs are served by the registry path that holds their signed pair.
+export const officialRoute = name => "/rules/" + name + "/";
 const maxBytes = 64 * 1024;
 const candidateName = /^(?:licen[cs]e|notice|copying)(?:[._-].*)?$/i;
 
@@ -27,8 +29,8 @@ const markers = {
 // Apache-2.0 notices travel in NOTICE, which is delivered whenever present.
 const copyrightRequired = new Set(["MIT", "BSD-2-Clause", "BSD-3-Clause", "ISC"]);
 
-function readText(directory, name, required) {
-  const file = path.join(directory, name);
+function readText(directory, name, required, fileName = name) {
+  const file = path.join(directory, fileName);
   const entry = lstatSync(file, { throwIfNoEntry: false });
   if (!entry) {
     if (required) throw new Error("license text missing");
@@ -46,16 +48,19 @@ function readText(directory, name, required) {
 
 // Reads delivery material for a bundle listing. `signed` is the signed pair
 // already verified for the listing; delivery must leave those bytes unchanged.
-export function readLicenseMaterial(directory, license, signed) {
+// `served` reads a directory that already holds the served names: official
+// packs under static/rules and retained Hub downloads under assets/.
+export function readLicenseMaterial(directory, license, signed, { served = false } = {}) {
   if (!Object.hasOwn(markers, license)) throw new Error("unsupported listing license");
+  const fileName = name => served ? servedName[name] : name;
   for (const name of readdirSync(directory)) {
-    if (candidateName.test(name) && name !== licenseFile && name !== noticeFile) {
+    if (candidateName.test(name) && name !== fileName(licenseFile) && name !== fileName(noticeFile)) {
       throw new Error("unrecognized license or notice file: " + name);
     }
   }
   const before = signed && [sha256(signed.bytes), sha256(signed.signature)];
-  const licenseText = readText(directory, licenseFile, true);
-  const notice = readText(directory, noticeFile, false);
+  const licenseText = readText(directory, licenseFile, true, fileName(licenseFile));
+  const notice = readText(directory, noticeFile, false, fileName(noticeFile));
   const normalized = licenseText.text.toLowerCase().replace(/\s+/g, " ");
   if (!markers[license](normalized)) throw new Error("license text does not match the declared license");
   if (copyrightRequired.has(license) &&

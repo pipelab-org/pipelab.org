@@ -22,12 +22,18 @@
     {{- if .served_source -}}
       {{- if ne (crypto.SHA256 (os.ReadFile .served_source)) .bundle_sha256 -}}{{- errorf "hub served bundle digest differs" -}}{{- end -}}
     {{- end -}}
-    {{- if eq .badge "community" -}}
+    {{- if in (slice "community" "official") .badge -}}
       {{- /* License text and notices must reach readers of the page itself. */ -}}
+      {{- $official := eq .badge "official" -}}
       {{- $material := .license_material -}}
       {{- if not (and $material $material.license $material.license.text) -}}{{- errorf "hub license text is missing" -}}{{- end -}}
       {{- range (slice $material.license) | append ($material.notices | default (slice)) -}}
         {{- if or (not .text) (ne (crypto.SHA256 .text) .sha256) -}}{{- errorf "hub license or notice text differs from its download" -}}{{- end -}}
+        {{- if $official -}}
+          {{- /* Official files are served verbatim from the synchronized registry. */ -}}
+          {{- if not (findRE `^/rules/[a-z0-9][a-z0-9-]*/(license|notice)\.txt$` .route) -}}{{- errorf "hub official license route is invalid" -}}{{- end -}}
+          {{- if ne (crypto.SHA256 (os.ReadFile (printf "static%s" .route))) .sha256 -}}{{- errorf "hub official license or notice differs from the served file" -}}{{- end -}}
+        {{- end -}}
       {{- end -}}
     {{- end -}}
     {{- $group := index (dict "bundle" "bundles" "config" "configs" "recipe" "recipes" "verifier" "verifiers") $listing.type -}}

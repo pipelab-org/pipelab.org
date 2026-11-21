@@ -51,6 +51,31 @@ if (( ${#bundle_dirs[@]} == 0 )); then
 	exit 1
 fi
 
+# The Rules root license and notice cover every published pack. They are copied
+# from the same checkout as the signed pairs, so both come from one Rules commit.
+license_assets=()
+for license_asset in LICENSE NOTICE; do
+	source_file="$source_root/$license_asset"
+	if [[ -L "$source_file" || ( -e "$source_file" && ! -f "$source_file" ) ]]; then
+		printf 'rules sync: FAIL - linked or irregular license material: %s\n' "$source_file" >&2
+		exit 1
+	fi
+	if [[ -f "$source_file" ]]; then
+		if [[ ! -s "$source_file" ]]; then
+			printf 'rules sync: FAIL - empty license material: %s\n' "$source_file" >&2
+			exit 1
+		fi
+		license_assets+=("$license_asset")
+	elif [[ "$license_asset" == LICENSE ]]; then
+		printf 'rules sync: FAIL - source has no LICENSE\n' >&2
+		exit 1
+	fi
+done
+if [[ -e "$source_root/.git" ]] && ! git -C "$source_root" diff --quiet HEAD -- LICENSE NOTICE published; then
+	printf 'rules sync: FAIL - source license material or published bundles differ from the checked-out Rules commit\n' >&2
+	exit 1
+fi
+
 expected_bundles=()
 for bundle_dir in "${bundle_dirs[@]}"; do
 	bundle="${bundle_dir##*/}"
@@ -68,6 +93,10 @@ for bundle_dir in "${bundle_dirs[@]}"; do
 		fi
 		mkdir -p "$expected_root/$bundle"
 		cp "$source_file" "$expected_root/$bundle/$asset"
+	done
+	for license_asset in "${license_assets[@]}"; do
+		served_name="$(printf '%s' "$license_asset" | tr '[:upper:]' '[:lower:]').txt"
+		cp "$source_root/$license_asset" "$expected_root/$bundle/$served_name"
 	done
 done
 printf '%s\n' "${expected_bundles[@]}" | LC_ALL=C sort > "$expected_root/$ownership_manifest"
@@ -228,8 +257,12 @@ validate_destination_shape() {
 			asset="${relative#*/}"
 			if [[ "$mode" == --write && "$relative" == */* && ! -d "$expected_root/$bundle" && -n "${previously_managed[$bundle]+x}" ]]; then
 				case "$asset" in
-				bundle.yaml | bundle.yaml.sig) continue ;;
+				bundle.yaml | bundle.yaml.sig | license.txt | notice.txt) continue ;;
 				esac
+			fi
+			# An upstream NOTICE removal retires the managed copy on write.
+			if [[ "$mode" == --write && "$asset" == notice.txt && -n "${previously_managed[$bundle]+x}" ]]; then
+				continue
 			fi
 			printf 'rules sync: FAIL - destination has an unowned file: %s\n' "$file" >&2
 			return 1

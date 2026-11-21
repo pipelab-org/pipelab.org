@@ -13,8 +13,10 @@ printf 'name: alpha\nversion: "1"\n' > "$source_root/published/alpha/bundle.yaml
 printf 'alpha-signature\n' > "$source_root/published/alpha/bundle.yaml.sig"
 printf 'name: beta\nversion: "2"\n' > "$source_root/published/beta/bundle.yaml"
 printf 'beta-signature\n' > "$source_root/published/beta/bundle.yaml.sig"
+printf 'Apache License\nVersion 2.0\n' > "$source_root/LICENSE"
+printf 'example-rules\nCopyright 2026 Example\n' > "$source_root/NOTICE"
 
-sync_script="$root_dir/scripts/sync-pipelock-rules.sh"
+sync_script="${SYNC_SCRIPT:-$root_dir/scripts/sync-pipelock-rules.sh}"
 
 bash "$sync_script" --write "$source_root" "$destination_root"
 bash "$sync_script" --check "$source_root" "$destination_root"
@@ -157,6 +159,7 @@ printf 'name: a-1\n' > "$locale_source/published/a-1/bundle.yaml"
 printf 'a-1-signature\n' > "$locale_source/published/a-1/bundle.yaml.sig"
 printf 'name: a0\n' > "$locale_source/published/a0/bundle.yaml"
 printf 'a0-signature\n' > "$locale_source/published/a0/bundle.yaml.sig"
+cp "$source_root/LICENSE" "$locale_source/LICENSE"
 sort_guard_bin="$temp_dir/sort-guard-bin"
 mkdir -p "$sort_guard_bin"
 printf '%s\n' \
@@ -228,6 +231,56 @@ if bash "$sync_script" --check "$source_root" "$destination_root" >/dev/null 2>&
 	exit 1
 fi
 rm -rf "$destination_root/alpha/nested"
+
+# Every published pack carries the Rules root license and notice verbatim.
+for bundle in alpha; do
+	if ! cmp -s "$source_root/LICENSE" "$destination_root/$bundle/license.txt" || ! cmp -s "$source_root/NOTICE" "$destination_root/$bundle/notice.txt"; then
+		printf 'rules sync test: FAIL - license material was not delivered beside %s\n' "$bundle" >&2
+		exit 1
+	fi
+done
+printf 'drift\n' >> "$destination_root/alpha/license.txt"
+if bash "$sync_script" --check "$source_root" "$destination_root" >/dev/null 2>&1; then
+	printf 'rules sync test: FAIL - changed license text passed the check\n' >&2
+	exit 1
+fi
+bash "$sync_script" --write "$source_root" "$destination_root"
+mv "$source_root/LICENSE" "$temp_dir/source-license"
+if bash "$sync_script" --write "$source_root" "$destination_root" >/dev/null 2>&1; then
+	printf 'rules sync test: FAIL - source without LICENSE passed\n' >&2
+	exit 1
+fi
+: > "$source_root/LICENSE"
+if bash "$sync_script" --write "$source_root" "$destination_root" >/dev/null 2>&1; then
+	printf 'rules sync test: FAIL - empty LICENSE passed\n' >&2
+	exit 1
+fi
+rm "$source_root/LICENSE"
+ln -s "$temp_dir/source-license" "$source_root/LICENSE"
+if bash "$sync_script" --write "$source_root" "$destination_root" >/dev/null 2>&1; then
+	printf 'rules sync test: FAIL - linked LICENSE passed\n' >&2
+	exit 1
+fi
+rm "$source_root/LICENSE"
+mv "$temp_dir/source-license" "$source_root/LICENSE"
+mv "$source_root/NOTICE" "$temp_dir/source-notice"
+bash "$sync_script" --write "$source_root" "$destination_root"
+if [[ -e "$destination_root/alpha/notice.txt" ]]; then
+	printf 'rules sync test: FAIL - removed NOTICE stayed published\n' >&2
+	exit 1
+fi
+mv "$temp_dir/source-notice" "$source_root/NOTICE"
+bash "$sync_script" --write "$source_root" "$destination_root"
+git -C "$source_root" init -q
+git -C "$source_root" add -A
+git -C "$source_root" -c user.name=test -c user.email=test@example.invalid commit -qm fixture
+bash "$sync_script" --check "$source_root" "$destination_root"
+printf 'uncommitted\n' >> "$source_root/NOTICE"
+if bash "$sync_script" --write "$source_root" "$destination_root" >/dev/null 2>&1; then
+	printf 'rules sync test: FAIL - license material outside the Rules commit passed\n' >&2
+	exit 1
+fi
+git -C "$source_root" checkout -q -- NOTICE
 
 mv "$destination_root" "$destination_root-real"
 ln -s "$destination_root-real" "$destination_root"
