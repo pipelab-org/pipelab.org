@@ -15,6 +15,10 @@ const contribution = new RegExp(`^(?:
   hub/quality/${id}/${id}\\.json
 )$`.replace(/\s+/g, ""));
 const official = new RegExp(`^(?:published/${id}/bundle\\.yaml(?:\\.sig)?|fixtures/${id}/${fixture})$`);
+// Maintainer-owned Hub files. Acquired with every Rules commit, but a
+// contribution may not change them; only a maintenance change may.
+// License approvals are separate from the pack they cover on purpose.
+export const maintenanceFiles = new Set(["hub/README.md", "hub/license-approvals.yaml"]);
 // Published Pipelock bundle file limit: v3.8.0 internal/rules/bundle.go.
 export const maxSourceFileBytes = 1024 * 1024;
 // GitHub's "List pull request files" contract caps a submission at 3,000 files.
@@ -44,7 +48,7 @@ export function assertHubOnly(repository, base, head, { maintenance = false } = 
   requireAncestor(repository, base, head);
   const changes = git(repository, ["diff", "--name-only", "--no-renames", "-z", base, head])
     .toString("utf8").split("\0").filter(Boolean);
-  if (!changes.length || changes.length > maxFiles || changes.some(file => !contribution.test(file) && !(maintenance === true && file === "hub/README.md"))) {
+  if (!changes.length || changes.length > maxFiles || changes.some(file => !contribution.test(file) && !(maintenance === true && maintenanceFiles.has(file)))) {
     throw new Error("submission must change only Hub contribution files");
   }
   return changes;
@@ -117,7 +121,7 @@ export function hubBlobEntries(repository, commit) {
     const match = /^100644 blob ([a-f0-9]{40})\t([\x20-\x7e]+)$/.exec(entry);
     if (!match) throw new Error("Hub input must be a regular, non-executable Git blob");
     const [, object, file] = match;
-    if (!(file === "hub/README.md" || contribution.test(file) || official.test(file))) {
+    if (!(maintenanceFiles.has(file) || contribution.test(file) || official.test(file))) {
       throw new Error("Hub input path is outside the source contract");
     }
     return { object, path: file };

@@ -2,6 +2,7 @@ import { lstatSync, readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { parse } from "yaml";
 import { sha256 } from "./evidence.mjs";
+import { osiApprovedLicenses } from "./license-approvals.mjs";
 
 // License and notice files are separate sibling files of the signed pair.
 // They are served and rendered next to the bundle; signed bytes never change.
@@ -60,7 +61,9 @@ function compileTemplate(file, bullets) {
   }).join("");
 }
 
-const templates = new Map(["Apache-2.0", "MIT", "BSD-2-Clause", "BSD-3-Clause", "ISC", "0BSD", "CC0-1.0"].map(id => {
+// The default licenses keep the automatic path: complete canonical text only.
+export const defaultLicenses = new Set(["Apache-2.0", "MIT", "BSD-2-Clause", "BSD-3-Clause", "ISC", "0BSD", "CC0-1.0"]);
+const templates = new Map([...defaultLicenses].map(id => {
   const bullets = bulleted.has(id);
   let body = compileTemplate(id + ".txt", bullets);
   if (id === "Apache-2.0") {
@@ -108,8 +111,15 @@ function readText(directory, name, required, fileName = name) {
 // already verified for the listing; delivery must leave those bytes unchanged.
 // `served` reads a directory that already holds the served names: official
 // packs under static/rules and retained Hub downloads under assets/.
-export function readLicenseMaterial(directory, license, signed, { served = false } = {}) {
-  if (!templates.has(license)) throw new Error("unsupported listing license");
+//
+// A default license needs the complete canonical text and ignores `approval`.
+// Any other OSI-approved SPDX identifier is delivered only under a maintainer
+// approval ({ license, license_sha256 }, see license-approvals.mjs) naming the
+// same identifier and the SHA-256 of the delivered LICENSE bytes. No approval,
+// an unknown or deprecated identifier, or changed text is refused.
+export function readLicenseMaterial(directory, license, signed, { served = false, approval = null } = {}) {
+  const automatic = defaultLicenses.has(license);
+  if (!automatic && !(typeof license === "string" && osiApprovedLicenses().has(license))) throw new Error("unsupported listing license");
   const fileName = name => served ? servedName[name] : name;
   for (const name of readdirSync(directory)) {
     if (candidateName.test(name) && name !== fileName(licenseFile) && name !== fileName(noticeFile)) {
@@ -119,7 +129,11 @@ export function readLicenseMaterial(directory, license, signed, { served = false
   const before = signed && [sha256(signed.bytes), sha256(signed.signature)];
   const licenseText = readText(directory, licenseFile, true, fileName(licenseFile));
   const notice = readText(directory, noticeFile, false, fileName(noticeFile));
-  if (!completeLicense(license, licenseText.text)) throw new Error("license text does not match the declared license");
+  if (automatic) {
+    if (!completeLicense(license, licenseText.text)) throw new Error("license text does not match the declared license");
+  } else if (!(approval && approval.license === license && approval.license_sha256 === licenseText.sha256)) {
+    throw new Error("license is not approved for this listing or its text changed");
+  }
   if (copyrightRequired.has(license) &&
       ![licenseText, notice].some(file => file && /^[\t ]*(?:copyright(?:[\t ]*\(c\))?|©|\(c\))[\t ]+(?!(?:holders?|notice)\b)\S[^\r\n]*$/im.test(file.text))) {
     throw new Error("required copyright notice missing");

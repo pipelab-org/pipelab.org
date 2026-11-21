@@ -2,6 +2,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { parse } from "yaml";
 import { parseListing, resolveArtifact, validateText } from "./validate.mjs";
+import { loadLicenseApprovals } from "./license-approvals.mjs";
 
 const id = /^[a-z0-9][a-z0-9-]{1,62}[a-z0-9]$/;
 const key = /^[a-f0-9]{64}$/;
@@ -69,5 +70,6 @@ export function loadAcquiredListings(directory, site) {
   const history = yamlFiles(directory, "hub/tombstones").map(file => ({
     id: file.name, events: parse(read(file), { maxAliasCount: 0 }),
   }));
-  return { publishers, items, history };
+  // Absent means no approvals; a present but malformed file refuses the tree.
+  return { publishers, items, history, approvals: loadLicenseApprovals(directory) };
 }
