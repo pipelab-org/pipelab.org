@@ -236,6 +236,23 @@ test("community listings deliver license and notices on the page, mirror and as 
   const links = elements(html).filter(node => node.tagName === "a").map(node => attr(node, "href"));
   assert.ok(links.includes(`/${directory}license.txt`) && links.includes(`/${directory}notice.txt`), String(links));
 
+  for (const kind of ["license-download", "notice-download"]) {
+    writeFileSync(routes, JSON.stringify({ entries: manifest.entries.filter(entry => entry.kind !== kind) }));
+    const absentRoute = f.build("true", base, { badge: "community", license_material: material });
+    assert.notEqual(absentRoute.status, 0, "missing " + kind + " must fail");
+    assert.match(absentRoute.output, /hub license delivery manifest differs/);
+  }
+  writeFileSync(routes, JSON.stringify(manifest));
+
+  const hiddenNotice = f.build("true", base, { badge: "community", license_material: { ...material, notices: [] } });
+  assert.notEqual(hiddenNotice.status, 0, "downloaded notice must also appear on the page");
+  assert.match(hiddenNotice.output, /hub license delivery manifest differs/);
+  const otherText = "Different license text\n";
+  const splitMaterial = { ...material, license: { ...material.license, text: otherText, sha256: sha256(otherText) } };
+  const split = f.build("true", base, { badge: "community", license_material: splitMaterial });
+  assert.notEqual(split.status, 0, "self-consistent page material must match the served manifest");
+  assert.match(split.output, /hub license delivery manifest differs/);
+
   const missing = f.build("true", base, { badge: "community" });
   assert.notEqual(missing.status, 0);
   assert.match(missing.output, /hub license text is missing/);

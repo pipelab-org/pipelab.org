@@ -52,6 +52,24 @@
     {{- end -}}
   {{- end -}}
   {{- range $routes -}}
+    {{- if in (slice "license-download" "notice-download") .kind -}}
+      {{- $entry := . -}}
+      {{- $matches := 0 -}}
+      {{- range site.Data.hub.generated.listings -}}
+        {{- if eq .badge "community" -}}
+          {{- with .license_material -}}
+            {{- range (slice .license) | append (.notices | default (slice)) -}}
+              {{- if and (eq .route $entry.route) (eq .sha256 $entry.sha256) -}}{{- $matches = add $matches 1 -}}{{- end -}}
+            {{- end -}}
+          {{- end -}}
+        {{- end -}}
+      {{- end -}}
+      {{- /* A withdrawn listing's retained pair keeps its accepted license files. */ -}}
+      {{- $directory := replaceRE `[^/]+$` "" $entry.route -}}
+      {{- $retained := where (where $routes "route" (printf "%sbundle.yaml" $directory)) "kind" "retained-download" -}}
+      {{- if eq $matches 0 -}}{{- $matches = len $retained -}}{{- end -}}
+      {{- if ne $matches 1 -}}{{- errorf "hub license delivery manifest differs" -}}{{- end -}}
+    {{- end -}}
     {{- if in (slice "bundle-download" "retained-download" "license-download" "notice-download") .kind -}}
       {{- if not (findRE `^/hub/community/[a-z0-9][a-z0-9-]{1,62}[a-z0-9]/[a-z0-9][a-z0-9-]{1,62}[a-z0-9]/(bundle\.yaml(\.sig)?|license\.txt|notice\.txt)$` .route) -}}
         {{- errorf "unexpected community download path" -}}

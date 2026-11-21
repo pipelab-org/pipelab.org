@@ -34,6 +34,18 @@
           {{- if not (findRE `^/rules/[a-z0-9][a-z0-9-]*/(license|notice)\.txt$` .route) -}}{{- errorf "hub official license route is invalid" -}}{{- end -}}
           {{- if ne (crypto.SHA256 (os.ReadFile (printf "static%s" .route))) .sha256 -}}{{- errorf "hub official license or notice differs from the served file" -}}{{- end -}}
         {{- end -}}
+        {{- $file := . -}}
+        {{- $expectedKind := index (dict "LICENSE" "license-download" "NOTICE" "notice-download") .name -}}
+        {{- $expectedOwner := cond $official "official-registry" "hub" -}}
+        {{- $entries := where (site.Data.hub.generated.routes.entries | default (slice)) "route" .route -}}
+        {{- if ne (len $entries) 1 -}}
+          {{- errorf "hub license delivery manifest differs" -}}
+        {{- else -}}
+          {{- $entry := index $entries 0 -}}
+          {{- if or (not $expectedKind) (ne $entry.kind $expectedKind) (ne $entry.ownership $expectedOwner) (ne $entry.sha256 $file.sha256) -}}
+            {{- errorf "hub license delivery manifest differs" -}}
+          {{- end -}}
+        {{- end -}}
       {{- end -}}
     {{- end -}}
     {{- $group := index (dict "bundle" "bundles" "config" "configs" "recipe" "recipes" "verifier" "verifiers") $listing.type -}}
