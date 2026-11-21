@@ -17,6 +17,9 @@ export function diagnosticLine(value, limit = 600) {
   // Encoded text can hide keys and delimiters. Withhold it rather than
   // decoding untrusted quoting into a different structure before redaction.
   if (/%[0-9a-f]{2}|\\u[0-9a-f]{4}/i.test(value)) return "encoded diagnostic evidence withheld";
+  // The redaction marker must only come from redaction, or the final check below
+  // would trust a marker the input supplied.
+  if (/\[redacted\]/i.test(value)) return "credential-like diagnostic evidence withheld";
   // Invisible format and control characters can split a credential key so it
   // escapes the patterns below and then rejoins when they are stripped.
   // Withhold that too; only tab, line feed and carriage return stay readable.
