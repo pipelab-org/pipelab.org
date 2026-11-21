@@ -135,6 +135,15 @@ test("the import refusal repeats the failed step evidence", () => {
     const other = { ...steps, "5": { status: "pass", evidence: "ok" }, "3": { status: "fail", evidence } };
     assert.equal(acceptanceRefusal(JSON.stringify({ steps: other })), "routine Hub acceptance failed at step 3", evidence);
   }
+  // Fixed acceptance messages built from repository data are repeated.
+  for (const [step, evidence] of [["1", "site baseline differs from current site main"], ["10", "policy page is missing: trust"]]) {
+    const fixed = { ...steps, "5": { status: "pass", evidence: "ok" }, [step]: { status: "fail", evidence } };
+    assert.equal(acceptanceRefusal(JSON.stringify({ steps: fixed })), "routine Hub acceptance failed at step " + step + ": " + evidence);
+  }
+  // Glued and whitespace-split credentials stay withheld by the backstop.
+  for (const input of ["keyAKIAABCDEFGHIJKLMNOP", "id0ghp_aaaaaaaaaaaaaaaaaaaa", "git clone https://user:\thunter2@example.invalid/repo", "ghp_abcd efgh1234ijkl"]) {
+    assert.equal(diagnosticLine(input), "credential-like diagnostic evidence withheld", JSON.stringify(input));
+  }
   // Ordinary names containing token-like substrings stay readable.
   assert.equal(diagnosticLine("bundle risk-scoring-rules failed the naming check"), "bundle risk-scoring-rules failed the naming check");
   assert.equal(diagnosticLine("task-runner-policy missing"), "task-runner-policy missing");

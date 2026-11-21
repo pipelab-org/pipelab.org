@@ -29,12 +29,13 @@ function fileInventory(directory, prefix = "") {
 // known-safe form: the fixture summary, which names failed tests from this
 // repository. Any other step reports its number alone; free-form error text
 // stays in the cause and in a local acceptance run.
-const safeEvidence = /^\d+(?: of \d+)? Hub fixture tests failed: /;
+// Fixed acceptance messages built only from repository data are also safe.
+const safeEvidence = /^(?:\d+(?: of \d+)? Hub fixture tests failed: |site baseline differs from current site main$|policy page is missing: [a-z-]+$)/;
 export function acceptanceRefusal(stdout) {
   const failed = failedAcceptanceStep(stdout);
   if (!failed) return "routine Hub acceptance did not pass";
   const prefix = "routine Hub acceptance failed at step " + failed.step;
-  return failed.step === "5" && safeEvidence.test(failed.evidence) ? prefix + ": " + failed.evidence : prefix;
+  return safeEvidence.test(failed.evidence) ? prefix + ": " + failed.evidence : prefix;
 }
 
 const run = promisify(runProcess);
