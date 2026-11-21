@@ -79,8 +79,9 @@ test("diagnostic lines are one bounded line without credentials", () => {
   }
   const noisy = diagnosticLine("first‮line\u0000with\ttabs\r\nand more");
   assert.equal(noisy, "hidden-character diagnostic evidence withheld");
-  // Ordinary control characters still collapse to readable text.
-  assert.equal(diagnosticLine("first line\u0000with\ttabs\r\nand more"), "first line with tabs and more");
+  // Tabs and line breaks still collapse to readable text; other controls are withheld.
+  assert.equal(diagnosticLine("first line with\ttabs\r\nand more"), "first line with tabs and more");
+  assert.equal(diagnosticLine("first line\u0000with"), "hidden-character diagnostic evidence withheld");
   assert.ok(diagnosticLine("y".repeat(5000)).length <= 600);
   assert.equal(diagnosticLine("y".repeat(5000)).slice(-1), "…");
   for (const missing of [undefined, null, 5, {}, "", " \n "]) assert.equal(diagnosticLine(missing), "no evidence recorded");
@@ -112,8 +113,10 @@ test("the import refusal repeats the failed step evidence", () => {
   steps["5"].evidence = "request failed: Authorization: Negotiate opaque-auth-data";
   assert.doesNotMatch(acceptanceRefusal(JSON.stringify({ steps })), /opaque-auth-data/);
   // A hidden format character cannot split a key around the credential patterns.
-  steps["5"].evidence = "to​ken=synthetic-secret-value";
-  assert.doesNotMatch(acceptanceRefusal(JSON.stringify({ steps })), /synthetic-secret-value/);
+  for (const split of ["​", "\u0000", "\u001b", "\u0085"]) {
+    steps["5"].evidence = "to" + split + "ken=synthetic-secret-value";
+    assert.doesNotMatch(acceptanceRefusal(JSON.stringify({ steps })), /synthetic-secret-value/, JSON.stringify(split));
+  }
 
   steps["5"].evidence = { nested: "not a line" };
   assert.equal(acceptanceRefusal(JSON.stringify({ steps })), "routine Hub acceptance failed at step 5: no evidence recorded");

@@ -17,9 +17,12 @@ export function diagnosticLine(value, limit = 600) {
   // Encoded text can hide keys and delimiters. Withhold it rather than
   // decoding untrusted quoting into a different structure before redaction.
   if (/%[0-9a-f]{2}|\\u[0-9a-f]{4}/i.test(value)) return "encoded diagnostic evidence withheld";
-  // Invisible format characters can split a credential key so it escapes the
-  // patterns below and then rejoins when they are stripped. Withhold that too.
-  if (/\p{Cf}/u.test(value)) return "hidden-character diagnostic evidence withheld";
+  // Invisible format and control characters can split a credential key so it
+  // escapes the patterns below and then rejoins when they are stripped.
+  // Withhold that too; only tab, line feed and carriage return stay readable.
+  if (/[\p{Cf}\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]/u.test(value)) {
+    return "hidden-character diagnostic evidence withheld";
+  }
   let line = value;
   for (const [pattern, replacement] of redactions) line = line.replace(pattern, replacement);
   // Control and bidirectional characters can hide or rewrite log lines.
