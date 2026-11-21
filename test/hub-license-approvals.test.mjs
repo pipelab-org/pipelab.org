@@ -1,18 +1,18 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { generateKeyPairSync, sign } from "node:crypto";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { stringify } from "yaml";
 import { preflightContribution } from "../scripts/hub/contribution-preflight.mjs";
-import { sha256 } from "../scripts/hub/evidence.mjs";
+import { sha256, toolingIdentity } from "../scripts/hub/evidence.mjs";
 import { communityListingKey, findLicenseApproval, loadLicenseApprovals, osiApprovedLicenses, osiListFrom, parseLicenseApprovals } from "../scripts/hub/license-approvals.mjs";
 import { defaultLicenses, readLicenseMaterial } from "../scripts/hub/license-delivery.mjs";
 import { acquireHubTree, assertHubOnly } from "../scripts/hub/source-tree.mjs";
 import { parseListing } from "../scripts/hub/validate.mjs";
-import { serialize } from "../scripts/hub/update-osi-licenses.mjs";
+import { droppedReferenced, referencedLicenses, serialize } from "../scripts/hub/update-osi-licenses.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
 const pullURL = "https://github.com/pipelab-org/pipelock-rules/pull/12";
@@ -35,7 +35,7 @@ test("the committed OSI list is generated from the SPDX list rules and stays wel
   assert.throws(() => osiListFrom({ licenses: [] }), /unexpected SPDX license list shape/);
   assert.throws(() => osiListFrom({ ...spdx, licenses: [{ licenseId: "X", isOsiApproved: "yes" }] }), /unexpected SPDX license entry/);
 
-  const committed = readFileSync(path.join(root, "data/hub/osi-approved-licenses.json"), "utf8");
+  const committed = readFileSync(path.join(root, "scripts/hub/data/osi-approved-licenses.json"), "utf8");
   const list = JSON.parse(committed);
   assert.equal(serialize(list), committed, "the file keeps the generator's byte format");
   assert.match(list.spdx_license_list_version, /^\d+\.\d+/);
@@ -66,8 +66,9 @@ test("license approval entries are strict and bound to one listing", () => {
     pullURL + "/files", pullURL + "?x=1", ""]) {
     bad(approvalsFile({ ...entry, approved_in: url }), /invalid license approval entry/);
   }
-  bad(approvalsFile({ ...entry, license: "Unknown-1.0" }), /outside the OSI-approved list/);
-  bad(approvalsFile({ ...entry, license: "GPL-3.0" }), /outside the OSI-approved list/);
+  // List membership is a use-time check: an approval whose identifier has left the
+  // mutable OSI list still parses, so it cannot make the whole tree unloadable.
+  for (const license of ["Unknown-1.0", "GPL-3.0"]) assert.deepEqual(parseLicenseApprovals(approvalsFile({ ...entry, license })), [{ ...entry, license }]);
   bad(approvalsFile(entry, { ...entry, license: "GPL-3.0-only" }), /duplicate license approval/);
 
   assert.equal(communityListingKey("acme", "example-bundle"), entry.listing);
@@ -282,10 +283,16 @@ test("preflight reports approvals as a maintenance category and refuses malforme
   assert.deepEqual(report.categories, ["license-approval"]);
   assert.match(report.remaining.join("\n"), /License approval: the Git objects carry no reviewer identity/);
 
+  // A maintenance change that records an approval for an identifier outside the
+  // OSI list is refused when the approval is admitted.
   const broken = commit({ "hub/license-approvals.yaml": approvalsFile({ ...entry, license: "Unknown-1.0" }) });
   const refused = preflightContribution({ repository: directory, base: head, head: broken, site: root, maintenance: true });
   assert.equal(refused.verdict, "REFUSED");
-  assert.equal(failed(refused), "source-parse");
+  assert.equal(failed(refused), "license-approval-list");
+  assert.match(refused.steps["license-approval-list"].evidence, /outside the OSI-approved list/);
+
+  const malformed = commit({ "hub/license-approvals.yaml": "approvals: []\n" });
+  assert.equal(failed(preflightContribution({ repository: directory, base: broken, head: malformed, site: root, maintenance: true })), "source-parse");
 });
 
 test("license approvals cannot transfer between ambiguous publisher and bundle pairs", t => {
@@ -313,4 +320,111 @@ test("license approvals cannot transfer between ambiguous publisher and bundle p
   assert.equal(report.verdict, "REFUSED", JSON.stringify(report));
   assert.equal(failed(report), "license-approvals");
   assert.notEqual(approvedKey, communityListingKey(otherPublisher, otherBundle));
+});
+
+test("a stale approval fails only its own listing and never the whole Rules tree", t => {
+  const { directory, commit } = rules(t);
+  const stale = { ...entry, listing: "acme/other-bundle", license: "Unknown-1.0" };
+  const base = commit({ "hub/license-approvals.yaml": approvalsFile(stale) });
+  const head = commit(pack("MIT"));
+  // Loading and unrelated contributions are unaffected by an approval whose identifier left the list.
+  const report = preflightContribution({ repository: directory, base, head, site: root });
+  assert.equal(report.verdict, "LOCAL-ELIGIBLE", JSON.stringify(report.steps));
+  // The listing that uses it fails when it is used.
+  const { dir, signed } = bundleDirectory(t, { LICENSE: mplText });
+  assert.throws(() => readLicenseMaterial(dir, "Unknown-1.0", signed, { approval: { ...stale, license_sha256: sha256(mplText) } }), /unsupported listing license/);
+});
+
+test("retained delivery trusts the accepted license and digest, not the current OSI list", t => {
+  const { dir, signed } = bundleDirectory(t, { LICENSE: mplText, NOTICE: "Example notice\n" });
+  // "GPL-3.0" stands for an identifier that has since left the list.
+  const pinned = { license: "GPL-3.0", license_sha256: sha256(mplText) };
+  assert.ok(!osiApprovedLicenses().has("GPL-3.0"));
+  assert.equal(readLicenseMaterial(dir, "GPL-3.0", signed, { retained: true, approval: pinned }).license.sha256, pinned.license_sha256);
+  // The pin still binds: changed text, no pin and another identifier are refused.
+  const unapproved = /license is not approved for this listing or its text changed/;
+  assert.throws(() => readLicenseMaterial(dir, "GPL-3.0", signed, { retained: true, approval: { ...pinned, license_sha256: sha256("x") } }), unapproved);
+  assert.throws(() => readLicenseMaterial(dir, "GPL-3.0", signed, { retained: true }), unapproved);
+  assert.throws(() => readLicenseMaterial(dir, "GPL-3.0", signed, { retained: true, approval: { ...pinned, license: "MPL-2.0" } }), unapproved);
+  // An identifier that is not even SPDX-shaped is unusable whatever the record says.
+  for (const id of ["", undefined, null, 7, "MPL 2.0"]) {
+    assert.throws(() => readLicenseMaterial(dir, id, signed, { retained: true, approval: { ...pinned, license: id } }), /unsupported listing license/, String(id));
+  }
+  // Without the retained flag the current list still gates admission.
+  assert.throws(() => readLicenseMaterial(dir, "GPL-3.0", signed, { approval: pinned }), /unsupported listing license/);
+});
+
+test("an OSI list refresh cannot drop an identifier that committed data still uses", t => {
+  const dir = mkdtempSync(path.join(tmpdir(), "hub-osi-refs-"));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const write = (file, text) => { mkdirSync(path.dirname(path.join(dir, file)), { recursive: true }); writeFileSync(path.join(dir, file), text); };
+  write("data/hub/generated/listings.json", JSON.stringify([{ id: "a", license: "MPL-2.0", license_sha256: "0".repeat(64) }, { id: "b", license: "MIT" }]));
+  write("data/hub/generated/inventory.json", JSON.stringify({ nested: { entries: [{ license: "EPL-2.0" }] } }));
+  write("data/hub/first-party/example.yaml", "license: Zlib\n");
+  const rulesDir = path.join(dir, "rules");
+  write("rules/hub/license-approvals.yaml", approvalsFile({ ...entry, license: "GPL-3.0-only" }));
+  write("rules/hub/listings/community/acme--example-bundle.yaml", "license: LGPL-2.1-only\n");
+  write("rules/hub/listings/bundles/pipelock-community.yaml", "license: Apache-2.0\n");
+
+  // Default licenses are never constrained by the list; everything else is collected.
+  assert.deepEqual([...referencedLicenses({ root: dir })].sort(), ["EPL-2.0", "MPL-2.0", "Zlib"]);
+  assert.deepEqual([...referencedLicenses({ root: dir, rules: rulesDir })].sort(), ["EPL-2.0", "GPL-3.0-only", "LGPL-2.1-only", "MPL-2.0", "Zlib"]);
+  assert.deepEqual(droppedReferenced(new Set(["MPL-2.0", "Zlib"]), new Set(["MPL-2.0", "EPL-2.0", "GPL-3.0"])), ["EPL-2.0", "GPL-3.0"]);
+  assert.deepEqual(droppedReferenced(new Set(["MPL-2.0"]), new Set(["MPL-2.0"])), []);
+
+  // The command refuses to write, names the identifiers, and leaves the committed list alone.
+  const spdx = { licenseListVersion: "9.9", releaseDate: "2026-01-01T00:00:00Z", licenses: [{ licenseId: "MPL-2.0", isOsiApproved: true, isDeprecatedLicenseId: false }] };
+  write("spdx.json", JSON.stringify(spdx));
+  const script = path.join(root, "scripts/hub/update-osi-licenses.mjs");
+  const listFile = path.join(root, "scripts/hub/data/osi-approved-licenses.json");
+  const before = readFileSync(listFile, "utf8");
+  let failure;
+  try {
+    execFileSync("node", [script, "--root", dir, path.join(dir, "spdx.json")], { stdio: "pipe", encoding: "utf8" });
+  } catch (error) { failure = error; }
+  assert.ok(failure, "the refresh is refused");
+  assert.equal(failure.status, 1);
+  assert.match(failure.stderr, /would drop .*EPL-2\.0.*Zlib/);
+  assert.match(failure.stderr, /no changes written/);
+  assert.equal(readFileSync(listFile, "utf8"), before);
+});
+
+test("the OSI list is part of the tooling identity", t => {
+  const copy = mkdtempSync(path.join(tmpdir(), "hub-tooling-"));
+  t.after(() => rmSync(copy, { recursive: true, force: true }));
+  mkdirSync(path.join(copy, "scripts"));
+  cpSync(path.join(root, "scripts/hub"), path.join(copy, "scripts/hub"), { recursive: true });
+  cpSync(path.join(root, "package-lock.json"), path.join(copy, "package-lock.json"));
+  assert.ok(!existsSync(path.join(root, "data/hub/osi-approved-licenses.json")), "no list outside the hashed scripts tree");
+  const file = path.join(copy, "scripts/hub/data/osi-approved-licenses.json");
+  const engine = { fixture: true };
+  const before = toolingIdentity(copy, engine);
+  const list = JSON.parse(readFileSync(file, "utf8"));
+  list.ids = list.ids.filter(id => id !== "Zlib");
+  writeFileSync(file, serialize(list));
+  const after = toolingIdentity(copy, engine);
+  assert.notEqual(after.scripts_tree, before.scripts_tree);
+});
+
+test("preflight refuses a non-default license on an official bundle listing", t => {
+  const official = license => {
+    const fixture = JSON.parse(readFileSync(path.join(root, "test/hub-fixtures/listing.json"), "utf8"));
+    delete fixture.learn_page;
+    delete fixture.evidence.artifact;
+    const listing = Object.assign(fixture, { type: "bundle", id: "pipelock-community", bundle_name: "pipelock-community", license, bundle_sha256: "a".repeat(64), signer_fingerprint: "b".repeat(64) });
+    return { "hub/listings/bundles/pipelock-community.yaml": stringify(listing) };
+  };
+  const check = (license, ...approvals) => {
+    const { directory, commit } = rules(t);
+    const base = commit(approvals.length ? { "hub/license-approvals.yaml": approvalsFile(...approvals) } : { "hub/README.md": "Guide.\n" });
+    return preflightContribution({ repository: directory, base, head: commit(official(license)), site: root });
+  };
+  // Approvals never apply to the official path, which generation serves without consulting them.
+  for (const [license, approvals] of [["MPL-2.0", []], ["GPL-3.0", []], ["Unknown-1.0", []], ["MPL-2.0", [{ ...entry, listing: "acme/pipelock-community" }]]]) {
+    const report = check(license, ...approvals);
+    assert.equal(report.verdict, "REFUSED", license);
+    assert.equal(failed(report), "source-parse", license);
+    assert.match(report.steps["source-parse"].evidence, /official bundle listing .*default license/, license);
+  }
+  assert.equal(check("MIT").verdict, "LOCAL-ELIGIBLE");
 });

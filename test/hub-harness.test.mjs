@@ -350,7 +350,11 @@ test("generation lists a non-default OSI license only under an approval of the d
   writeFileSync(retainedCopy, text + "Edited.\n");
   assert.throws(() => retain(pinned), unapproved);
   writeFileSync(retainedCopy, text);
-  assert.throws(() => retain({ ...pinned, license: "GPL-3.0" }), /unsupported listing license/);
+  // The accepted record outranks the current OSI list: an identifier that has since
+  // left the list still delivers the pinned, digest-checked text.
+  const afterListChange = retain({ ...pinned, license: "GPL-3.0" })["routes.json"].entries.filter(entry => entry.route === pinned.route + "license.txt");
+  assert.deepEqual(afterListChange.map(entry => [entry.kind, entry.sha256]), [["license-download", approval.license_sha256]]);
+  assert.throws(() => retain({ ...pinned, license: "GPL-3.0", license_sha256: "0".repeat(64) }), unapproved);
 });
 
 test("retrieval keeps exact commands and checks the end of a listing", () => {

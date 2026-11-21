@@ -2,7 +2,7 @@ import { lstatSync, readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { parse } from "yaml";
 import { sha256 } from "./evidence.mjs";
-import { osiApprovedLicenses } from "./license-approvals.mjs";
+import { osiApprovedLicenses, spdxId } from "./license-approvals.mjs";
 
 // License and notice files are separate sibling files of the signed pair.
 // They are served and rendered next to the bundle; signed bytes never change.
@@ -117,9 +117,15 @@ function readText(directory, name, required, fileName = name) {
 // approval ({ license, license_sha256 }, see license-approvals.mjs) naming the
 // same identifier and the SHA-256 of the delivered LICENSE bytes. No approval,
 // an unknown or deprecated identifier, or changed text is refused.
-export function readLicenseMaterial(directory, license, signed, { served = false, approval = null } = {}) {
+//
+// `retained` serves a withdrawn listing whose accepted lifecycle record pins the
+// license and digest. That record was admitted under the list of its day, so
+// the current, mutable list is not consulted: the identifier must still be
+// SPDX-shaped, and the pin (approval) must still match the delivered bytes.
+export function readLicenseMaterial(directory, license, signed, { served = false, approval = null, retained = false } = {}) {
   const automatic = defaultLicenses.has(license);
-  if (!automatic && !(typeof license === "string" && osiApprovedLicenses().has(license))) throw new Error("unsupported listing license");
+  const usable = typeof license === "string" && (retained ? spdxId.test(license) : osiApprovedLicenses().has(license));
+  if (!automatic && !usable) throw new Error("unsupported listing license");
   const fileName = name => served ? servedName[name] : name;
   for (const name of readdirSync(directory)) {
     if (candidateName.test(name) && name !== fileName(licenseFile) && name !== fileName(noticeFile)) {

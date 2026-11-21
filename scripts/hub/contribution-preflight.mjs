@@ -10,7 +10,7 @@ import { acquirePolicyBlobs } from "./policy-blobs.mjs";
 import { parseListing } from "./validate.mjs";
 import { readBundleFiles, verifyBundle } from "./verify-bundle.mjs";
 import { defaultLicenses, readLicenseMaterial } from "./license-delivery.mjs";
-import { communityListingKey, findLicenseApproval } from "./license-approvals.mjs";
+import { communityListingKey, findLicenseApproval, osiApprovedLicenses } from "./license-approvals.mjs";
 import { acquireHubTree, assertHubOnly } from "./source-tree.mjs";
 
 // Local eligibility check for a proposed Hub-only rules change (design 3.2.1
@@ -121,6 +121,14 @@ export function preflightContribution({ repository, base, head, maintenance = fa
     if (!run("source-parse", () => {
       loaded = loadAcquiredListings(tree, path.resolve(site));
       return { publishers: loaded.publishers.length, listings: loaded.items.length, histories: loaded.history.length };
+    })) return report;
+
+    // List membership gates an approval only when it is admitted. Loading and
+    // generation do not recheck it, so a later list refresh cannot unload the tree.
+    if (report.categories.includes("license-approval") && !run("license-approval-list", () => {
+      const outside = loaded.approvals.filter(entry => !osiApprovedLicenses().has(entry.license));
+      if (outside.length) throw new Error("license approval names a license outside the OSI-approved list: " + outside.map(entry => entry.listing + " " + entry.license).join(", "));
+      return loaded.approvals.length;
     })) return report;
 
     if (!run("bundle-signatures", () => loaded.items.filter(item => item.publisher).map(item => {

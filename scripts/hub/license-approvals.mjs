@@ -14,7 +14,7 @@ import { rulesRepository } from "./rules-acquisition.mjs";
 // verifies the committed record against what would be served.
 
 export const osiListSource = "https://spdx.org/licenses/licenses.json";
-const spdxId = /^[A-Za-z0-9][A-Za-z0-9.+-]{0,63}$/;
+export const spdxId = /^[A-Za-z0-9][A-Za-z0-9.+-]{0,63}$/;
 const digest = /^[a-f0-9]{64}$/;
 const listingKey = /^[a-z0-9][a-z0-9-]{1,62}[a-z0-9]\/[a-z0-9][a-z0-9-]{1,62}[a-z0-9]$/;
 const approvalURL = new RegExp("^https://github\\.com/" + rulesRepository.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "/pull/[1-9][0-9]{0,8}$");
@@ -40,10 +40,12 @@ function parseOsiList(source) {
   return new Set(list.ids);
 }
 
-// Read on first use so the generator can bootstrap or repair the file.
+// Read on first use so the generator can bootstrap or repair the file. The list
+// lives under scripts/hub so the tooling identity's scripts tree hash covers it:
+// changing which licenses may be admitted changes the recorded tooling.
 let osiCache;
 export function osiApprovedLicenses() {
-  osiCache ??= parseOsiList(readFileSync(new URL("../../data/hub/osi-approved-licenses.json", import.meta.url), "utf8"));
+  osiCache ??= parseOsiList(readFileSync(new URL("./data/osi-approved-licenses.json", import.meta.url), "utf8"));
   return osiCache;
 }
 
@@ -96,7 +98,10 @@ export function parseLicenseApprovals(source) {
     // One approval per community listing. A second entry could widen it.
     if (seen.has(entry.listing)) throw new Error("duplicate license approval for a listing");
     seen.add(entry.listing);
-    if (!osiApprovedLicenses().has(entry.license)) throw new Error("license approval names a license outside the OSI-approved list");
+    // List membership is deliberately not checked here. The list is mutable
+    // (SPDX deprecations, OSI status), so one approval that has left it must not
+    // make the whole Rules tree unloadable. readLicenseMaterial checks membership
+    // when the listing is used, and preflight checks it when an approval is admitted.
     return { listing: entry.listing, license: entry.license, license_sha256: entry.license_sha256, approved_in: entry.approved_in };
   });
 }

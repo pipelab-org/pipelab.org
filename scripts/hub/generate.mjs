@@ -310,7 +310,7 @@ function generateFromListings({ root, items, engine, binary, repository, config,
       // The accepted record already pins the approved bytes: a non-default
       // license was admitted only against an approval of exactly this digest.
       const approval = defaultLicenses.has(listing.license) ? null : { license: listing.license, license_sha256: listing.license_sha256 };
-      const material = readLicenseMaterial(directory, listing.license, pair, { served: true, approval });
+      const material = readLicenseMaterial(directory, listing.license, pair, { served: true, approval, retained: true });
       if (material.license.sha256 !== listing.license_sha256 ||
           (material.notices[0]?.sha256 ?? undefined) !== listing.notice_sha256) {
         throw new Error("retained license material differs from the accepted bytes");
