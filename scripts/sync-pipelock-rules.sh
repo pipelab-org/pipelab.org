@@ -71,7 +71,10 @@ for license_asset in LICENSE NOTICE; do
 		exit 1
 	fi
 done
-if [[ -e "$source_root/.git" ]] && ! git -C "$source_root" diff --quiet HEAD -- LICENSE NOTICE published; then
+if [[ -e "$source_root/.git" ]] && {
+	! git -C "$source_root" diff --quiet HEAD -- LICENSE NOTICE published ||
+	[[ -n "$(git -C "$source_root" ls-files --others -- LICENSE NOTICE published)" ]]
+}; then
 	printf 'rules sync: FAIL - source license material or published bundles differ from the checked-out Rules commit\n' >&2
 	exit 1
 fi

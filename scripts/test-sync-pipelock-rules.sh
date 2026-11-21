@@ -282,6 +282,28 @@ if bash "$sync_script" --write "$source_root" "$destination_root" >/dev/null 2>&
 fi
 git -C "$source_root" checkout -q -- NOTICE
 
+# A file absent from HEAD is dirty source material too, including ignored files.
+git -C "$source_root" rm -q --cached NOTICE
+git -C "$source_root" -c user.name=test -c user.email=test@example.invalid commit -qm 'remove notice fixture'
+mkdir -p "$source_root/.git/info"
+for ignored in no yes; do
+	if [[ "$ignored" == yes ]]; then printf 'NOTICE\n' > "$source_root/.git/info/exclude"; fi
+	if bash "$sync_script" --write "$source_root" "$destination_root" >/dev/null 2>&1; then
+		printf 'rules sync test: FAIL - untracked notice outside the Rules commit passed (%s)\n' "$ignored" >&2
+		exit 1
+	fi
+done
+git -C "$source_root" add -f NOTICE
+git -C "$source_root" -c user.name=test -c user.email=test@example.invalid commit -qm 'restore notice fixture'
+mkdir "$source_root/published/untracked-pack"
+cp "$(find "$source_root/published" -name bundle.yaml -type f -print -quit)" "$source_root/published/untracked-pack/bundle.yaml"
+cp "$(find "$source_root/published" -name bundle.yaml.sig -type f -print -quit)" "$source_root/published/untracked-pack/bundle.yaml.sig"
+if bash "$sync_script" --write "$source_root" "$destination_root" >/dev/null 2>&1; then
+	printf 'rules sync test: FAIL - untracked published pack outside the Rules commit passed\n' >&2
+	exit 1
+fi
+rm -r "$source_root/published/untracked-pack"
+
 mv "$destination_root" "$destination_root-real"
 ln -s "$destination_root-real" "$destination_root"
 if bash "$sync_script" --write "$source_root" "$destination_root" >/dev/null 2>&1; then
