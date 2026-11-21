@@ -112,7 +112,7 @@ export async function routineAcceptance({ source, siteSHA, rulesSHA }, { readMai
       cwd: root,
       env: { PATH: process.env.PATH ?? "", HOME: temporary, HUBCHECK_BIN: source.binary,
         HUBCHECK_ENGINE_DIR: path.dirname(path.dirname(source.config)),
-        HUBCHECK_REPOSITORY: source.repository, HUBCHECK_RULES_REPOSITORY: source.sourceBinding.rulesRepository,
+        HUBCHECK_REPOSITORY: source.repository, HUBCHECK_RULES_REPOSITORY: source.rulesFixtureRepository ?? source.sourceBinding.rulesRepository,
         HUB_RELEASE_BIN: source.pipelockBinary, HUB_VERIFY_RETRIEVAL: "0" },
     };
     const testOutput = child(process.execPath, ["--test", "--test-reporter=tap", "test/hub-core.test.mjs", "test/hub-harness.test.mjs",

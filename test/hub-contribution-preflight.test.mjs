@@ -7,6 +7,7 @@ import path from "node:path";
 import test from "node:test";
 import { stringify } from "yaml";
 import { preflightContribution, preflightPullRequest } from "../scripts/hub/contribution-preflight.mjs";
+import { changedCandidatePacks } from "../scripts/hub/candidate-measurements.mjs";
 import { generateCatalog } from "../scripts/hub/generate.mjs";
 
 import { sha256 } from "../scripts/hub/evidence.mjs";
@@ -96,6 +97,26 @@ test("a Hub-only community contribution is locally eligible, never accepted", t 
   // The dependencies are named, not silently assumed away.
   const text = report.remaining.join("\n");
   for (const needle of ["Producer", "Workflow", "Final acceptance", "Publisher owner", "hubcheck"]) assert.match(text, new RegExp(needle));
+});
+
+test("measurement selects a changed listing when the temporary directory is a symlink", t => {
+  const { directory, commit } = repository(t);
+  const base = commit(files);
+  const head = commit({ [listingPath]: stringify({ ...listing, title: "Updated example bundle" }) });
+  const alias = path.join(directory, "temp-alias");
+  symlinkSync(directory, alias, "dir");
+
+  const previous = process.env.TMPDIR;
+  process.env.TMPDIR = alias;
+  try {
+    const report = preflightContribution({ repository: directory, base, head, site },
+      candidate => changedCandidatePacks(candidate).length);
+    assert.equal(report.verdict, "LOCAL-ELIGIBLE");
+    assert.equal(report.steps.candidate.evidence, 1);
+  } finally {
+    if (previous === undefined) delete process.env.TMPDIR;
+    else process.env.TMPDIR = previous;
+  }
 });
 
 test("local preflight refuses a changed pair or mismatched listing declaration", t => {
@@ -262,6 +283,23 @@ test("eligible Hub input must match the same open rules pull request and publish
   assert.equal(checked.steps["pull-request"].status, "pass");
   assert.equal(checked.pull_request.head_tree, git("rev-parse", "HEAD^{tree}"));
 
+  let candidateRan = false;
+  const inspected = preflightPullRequest(input, () => candidateRan ? { ...original, state: "closed" } : original, data => {
+    assert.equal(data.head, head);
+    assert.equal(data.loaded.items.length, 1);
+    candidateRan = true;
+    return { passed: true };
+  });
+  assert.equal(candidateRan, true);
+  assert.equal(inspected.verdict, "REFUSED");
+  assert.equal(inspected.steps.candidate, undefined);
+
+  const rejected = preflightPullRequest(input, () => original, () => {
+    throw new Error("candidate refused");
+  });
+  assert.equal(rejected.verdict, "REFUSED");
+  assert.equal(rejected.steps.candidate.evidence, "candidate refused");
+
   const wrongBase = { ...original, base: { ...original.base, ref: "release" } };
   assert.equal(failed(preflightPullRequest(input, () => wrongBase)), "pull-request");
   assert.equal(failed(preflightPullRequest({ ...input, number: 3 }, () => original)), "pull-request");
@@ -288,6 +326,7 @@ test("eligible Hub input must match the same open rules pull request and publish
   writeFileSync(gitStub, [
     "#!/bin/sh",
     'if [ "$*" = "-c http.followRedirects=false ls-remote --exit-code https://github.com/pipelab-org/pipelock-rules refs/heads/main refs/pull/2/head" ]; then',
+    `  if [ "$HUB_REFS_OUTAGE" = "1" ]; then printf '%s\\n' "fatal: unable to access 'https://github.com/pipelab-org/pipelock-rules/': The requested URL returned error: 503" >&2; exit 128; fi`,
     '  if [ -e "$HUB_REFS_SEEN" ]; then cat "$HUB_REFS_LATER"; else : > "$HUB_REFS_SEEN"; cat "$HUB_REFS_FIRST"; fi',
     "  exit $?",
     "fi",
@@ -297,7 +336,7 @@ test("eligible Hub input must match the same open rules pull request and publish
   chmodSync(ghStub, 0o755);
   chmodSync(gitStub, 0o755);
   const script = path.join(root, "scripts/hub/contribution-preflight.mjs");
-  const shell = (number, first = mainRow + headRow, later = first) => {
+  const shell = (number, first = mainRow + headRow, later = first, outage = false) => {
     const seen = path.join(directory, "refs-seen");
     const firstPath = path.join(directory, "refs-first");
     const laterPath = path.join(directory, "refs-later");
@@ -306,14 +345,17 @@ test("eligible Hub input must match the same open rules pull request and publish
     writeFileSync(laterPath, later);
     return spawnSync(process.execPath, [script, "--pr", number, directory, base, head, site], {
       encoding: "utf8", env: { ...process.env, PATH: directory + path.delimiter + process.env.PATH,
-        HUB_ORIGINAL_PATH: process.env.PATH, HUB_PR_FIXTURE: path.join(directory, "pr.json"),
-        HUB_REFS_SEEN: seen, HUB_REFS_FIRST: firstPath, HUB_REFS_LATER: laterPath },
+        HUB_RULES_PUBLIC_API: "0", HUB_ORIGINAL_PATH: process.env.PATH, HUB_PR_FIXTURE: path.join(directory, "pr.json"),
+        HUB_REFS_SEEN: seen, HUB_REFS_FIRST: firstPath, HUB_REFS_LATER: laterPath, HUB_REFS_OUTAGE: outage ? "1" : "0" },
     });
   };
   const cli = shell("2");
   assert.equal(cli.status, 0, cli.stderr);
   assert.equal(JSON.parse(cli.stdout).steps["pull-request"].status, "pass");
   assert.equal(shell("2e0").status, 2);
+  const unavailable = shell("2", undefined, undefined, true);
+  assert.equal(unavailable.status, 3);
+  assert.equal(JSON.parse(unavailable.stdout).steps["pull-request"].evidence, "Rules pull request refs unavailable from GitHub");
 
   for (const refs of [mainRow, mainRow + headRow + headRow]) {
     const bad = shell("2", refs);
@@ -403,6 +445,7 @@ test("Rules PR acquisition fetches only selected blobs before offline preflight"
     '    else cp "$HUB_STUB_DIR/wanted" "$HUB_STUB_DIR/send"; fi',
     '    GIT_ALLOW_PROTOCOL=file exec git -c "url.file://$HUB_STUB_DIR.insteadOf=https://github.com/pipelab-org/pipelock-rules" "$@" < "$HUB_STUB_DIR/send";;',
     '  *" fetch "*)',
+    `    if [ "$HUB_STUB_FETCH_OUTAGE" = "1" ]; then printf '%s\\n' 'error: RPC failed; HTTP 503 curl 22 Internal Server Error' >&2; exit 128; fi`,
     '    if [ "$HUB_STUB_OVERRUN" = 1 ]; then truncate -s 7340033 "$HUB_STUB_DIR/pack-probe" || exit; fi',
     '    GIT_ALLOW_PROTOCOL=file exec git -c "url.file://$HUB_STUB_DIR.insteadOf=https://github.com/pipelab-org/pipelock-rules" "$@";;',
     '  *) exec git "$@";;',
@@ -412,14 +455,14 @@ test("Rules PR acquisition fetches only selected blobs before offline preflight"
 
   const script = path.join(root, "scripts/hub/contribution-preflight.mjs");
   const wanted = path.join(directory, "wanted");
-  const run = (metadata, { drop = false, overrun = false, publicAPI = false, apiFault = "" } = {}) => {
+  const run = (metadata, { drop = false, overrun = false, publicAPI = false, apiFault = "", fetchOutage = false } = {}) => {
     rmSync(wanted, { force: true });
     rmSync(path.join(directory, "pr-url"), { force: true });
     writeFileSync(path.join(directory, "tree.json"), JSON.stringify(metadata));
     const result = spawnSync(process.execPath, [script, "--fetch-pr", "2", base, head, site], {
       encoding: "utf8", env: { ...process.env, PATH: directory + path.delimiter + process.env.PATH,
         HUB_ORIGINAL_PATH: process.env.PATH, HUB_STUB_DIR: directory, HUB_STUB_TREE: tree,
-        HUB_STUB_DROP: drop ? "1" : "0", HUB_STUB_OVERRUN: overrun ? "1" : "0",
+        HUB_STUB_DROP: drop ? "1" : "0", HUB_STUB_OVERRUN: overrun ? "1" : "0", HUB_STUB_FETCH_OUTAGE: fetchOutage ? "1" : "0",
         HUB_RULES_PUBLIC_API: publicAPI ? "1" : "0", HUB_STUB_API_FAULT: apiFault },
     });
     assert.equal(result.signal, null, result.stderr);
@@ -463,6 +506,10 @@ test("Rules PR acquisition fetches only selected blobs before offline preflight"
     assert.equal(failed(refused.report), "rules-acquisition");
     assert.throws(() => readFileSync(wanted), { code: "ENOENT" });
   }
+
+  const unavailable = run(metadata, { fetchOutage: true });
+  assert.equal(unavailable.code, 3);
+  assert.equal(unavailable.report.steps["rules-acquisition"].evidence, "Rules objects unavailable from GitHub");
 
   const missing = run(metadata, { drop: true });
   assert.equal(missing.code, 1);

@@ -1,16 +1,23 @@
 import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import path from "node:path";
-import { httpsGitEnvironment, readGit } from "./git-source.mjs";
+import { HubUnavailable } from "./check-failure.mjs";
+import { httpsGitEnvironment, isGitTransportUnavailable, readGit, readRemoteRefs } from "./git-source.mjs";
 import { maxPolicyBlobBytes, policyBlobEntries } from "./policy-blobs.mjs";
 import { assertHubOnly, hubBlobEntries, maxSourceFileBytes } from "./source-tree.mjs";
 
 export const rulesRepository = "pipelab-org/pipelock-rules";
+const rulesURL = "https://github.com/" + rulesRepository;
+const rulesMainRef = "refs/heads/main";
+
+export function readRulesMain() {
+  return readRemoteRefs(rulesURL, [rulesMainRef], "invalid Rules main ref result", {
+    unavailable: "Rules main unavailable from GitHub",
+  }).get(rulesMainRef);
+}
 // Bound the initial Git metadata pack to the same size as GitHub's recursive
 // Trees API response. The selected blob fetch adds its declared payload size.
 const maxMetadataBytes = 7 * 1024 * 1024;
-
-export class RulesAPIUnavailable extends Error {}
 
 export function readRulesAPI(resource, { maxBuffer = 1024 * 1024, fresh = false } = {}) {
   const endpoint = "repos/" + rulesRepository + "/" + resource;
@@ -29,8 +36,8 @@ export function readRulesAPI(resource, { maxBuffer = 1024 * 1024, fresh = false 
     { ...options, maxBuffer: maxBuffer + 4 });
     if (!output.endsWith("\n200")) throw new Error("unexpected public Rules HTTP status");
     return JSON.parse(output.slice(0, -4));
-  } catch {
-    throw new RulesAPIUnavailable("Could not read the public Rules API. Retry the check.");
+  } catch (cause) {
+    throw new HubUnavailable("Could not read the public Rules API. Retry the check.", { cause });
   }
 }
 
@@ -71,48 +78,52 @@ function boundedObjects(tree, files, policy) {
 // Fetch into a new bare repository. Every inspection uses readGit, which
 // refuses missing objects without starting a Git transport.
 export function acquireRulesObjects(directory, { number, base, head }) {
+  const pullRequest = number !== undefined;
+  if (!pullRequest && base !== head) throw new Error("Rules import must use the exact main tip");
   const repository = path.join(directory, "rules.git");
+  const baseRef = pullRequest ? rulesMainRef : "refs/remotes/origin/main";
+  const headRef = "refs/hub/pull-head";
+  const refspecs = ["+" + rulesMainRef + ":" + baseRef];
+  if (pullRequest) refspecs.push("+refs/pull/" + number + "/head:" + headRef);
   const gitOptions = { env: httpsGitEnvironment(directory), timeout: 30_000 };
   const isolatedGit = ["-c", "http.followRedirects=false", "-C", directory];
   const git = args => execFileSync("git", [...isolatedGit, ...args], {
     ...gitOptions, stdio: ["ignore", "pipe", "ignore"],
   });
-  const fetch = (args, maxBytes, input) => {
+  const fetch = (args, maxBytes, failure, input) => {
     // Keep the transfer packed even for small fetches, and cap each file
     // before Git can write it. The indexer inherits the same limit.
-    execFileSync("bash", ["-pc", 'set +o posix; ulimit -f "$1" || exit; shift; exec git "$@"',
-      "rules-fetch", String(Math.ceil(maxBytes / 1024)), ...isolatedGit,
-      "-c", "fetch.fsckObjects=true", "-c", "fetch.unpackLimit=1",
-      "-C", repository, "fetch", "--quiet", "--no-tags", "--no-write-fetch-head",
-      "--no-auto-maintenance", "--no-recurse-submodules", "--filter=blob:none", "origin", ...args], {
-      ...gitOptions, input, stdio: [input === undefined ? "ignore" : "pipe", "pipe", "ignore"],
-    });
+    try {
+      execFileSync("bash", ["-pc", 'set +o posix; ulimit -f "$1" || exit; shift; exec git "$@"',
+        "rules-fetch", String(Math.ceil(maxBytes / 1024)), ...isolatedGit,
+        "-c", "fetch.fsckObjects=true", "-c", "fetch.unpackLimit=1",
+        "-C", repository, "fetch", "--quiet", "--no-tags", "--no-write-fetch-head",
+        "--no-auto-maintenance", "--no-recurse-submodules", "--filter=blob:none", "origin", ...args], {
+        ...gitOptions, input, stdio: [input === undefined ? "ignore" : "pipe", "pipe", "pipe"],
+      });
+    } catch (cause) {
+      if (isGitTransportUnavailable(cause)) throw new HubUnavailable("Rules objects unavailable from GitHub", { cause });
+      throw new Error(failure, { cause });
+    }
   };
-  try {
-    git(["init", "--bare", "--quiet", "--template=", repository]);
-    git(["-C", repository, "config", "remote.origin.url", `https://github.com/${rulesRepository}`]);
-    git(["-C", repository, "config", "remote.origin.promisor", "true"]);
-    fetch(["+refs/heads/main:refs/heads/main", `+refs/pull/${number}/head:refs/hub/pull-head`], maxMetadataBytes);
-  } catch {
-    throw new Error("could not fetch published Rules commits within the metadata limit");
-  }
-  const refs = readGit(repository, ["rev-parse", "refs/heads/main", "refs/hub/pull-head"],
+  git(["init", "--bare", "--quiet", "--template=", repository]);
+  git(["-C", repository, "config", "remote.origin.url", rulesURL]);
+  git(["-C", repository, "config", "remote.origin.promisor", "true"]);
+  fetch(refspecs, maxMetadataBytes, "could not fetch published Rules commits within the metadata limit");
+  const requested = pullRequest ? [baseRef, headRef] : [baseRef];
+  const refs = readGit(repository, ["rev-parse", ...requested],
     { encoding: "ascii" }).trimEnd().split("\n");
-  if (refs.length !== 2 || refs[0] !== base || refs[1] !== head) {
+  if (refs.length !== requested.length || refs[0] !== base || (pullRequest && refs[1] !== head)) {
     throw new Error("published Rules refs moved during acquisition");
   }
 
-  assertHubOnly(repository, base, head);
+  if (pullRequest) assertHubOnly(repository, base, head);
   const { tree, files } = hubBlobEntries(repository, head);
   const { workflows, codeowners } = policyBlobEntries(repository, head);
   const objects = boundedObjects(tree, files, [...workflows, ...codeowners]);
   const input = [...objects.keys()].join("\n") + "\n";
   const selectedBytes = [...objects.values()].reduce((total, size) => total + size, 0);
-  try {
-    fetch(["--stdin"], maxMetadataBytes + selectedBytes, input);
-  } catch {
-    throw new Error("could not fetch selected Rules blobs within the object limit");
-  }
+  fetch(["--stdin"], maxMetadataBytes + selectedBytes, "could not fetch selected Rules blobs within the object limit", input);
   let acquired;
   try {
     acquired = readGit(repository, ["cat-file", "--batch-check"], { input, encoding: "ascii" });

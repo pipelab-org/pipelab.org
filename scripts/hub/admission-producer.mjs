@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { HubCheckFailure, HubUnavailable } from "./check-failure.mjs";
 import { sha256, toolingIdentity } from "./evidence.mjs";
 import { readGit, readRemoteRefs } from "./git-source.mjs";
 
@@ -15,7 +16,9 @@ const workflows = {
 };
 
 export function readSiteMain(options) {
-  return readRemoteRefs(server + "/" + repository, [main], "invalid site main result", options).get(main);
+  return readRemoteRefs(server + "/" + repository, [main], "invalid site main result", {
+    ...options, unavailable: "site main unavailable from GitHub",
+  }).get(main);
 }
 
 // Design 3.2.1. Call from the trusted site checkout before reading any
@@ -29,22 +32,29 @@ export function admissionProducer({ mode, environment, root, engine }, readMain 
       ref !== main || !sha.test(revision ?? "") || workflowSHA !== revision ||
       workflowRef !== repository + "/" + workflow.path + "@" + main ||
       typeof runId !== "string" || !/^[1-9][0-9]*$/.test(runId)) {
-    throw new Error("producer context does not identify the expected site main workflow");
+    throw new HubCheckFailure("producer context does not identify the expected site main workflow");
   }
 
-  if (readMain() !== revision) throw new Error("producer revision differs from current site main");
+  const published = readMain();
+  if (published !== revision) throw new HubCheckFailure("producer revision differs from current site main");
+  const tooling = assertSiteCheckoutIdentity(root, revision, engine);
+  return { ref, sha: revision, workflow: workflow.path, run_id: runId, tooling_identity: tooling };
+}
+
+export function assertSiteCheckoutIdentity(root, revision, engine) {
+  if (!sha.test(revision ?? "")) throw new HubCheckFailure("site checkout requires a full commit SHA");
   const git = (...args) => readGit(root, args, { timeout: 15_000 });
   if (git("rev-parse", "HEAD").toString().trim() !== revision ||
       git("status", "--porcelain=v1", "--untracked-files=normal").length) {
-    throw new Error("producer requires the exact clean site checkout");
+    throw new HubCheckFailure("producer requires the exact clean site checkout");
   }
 
   const tooling = toolingIdentity(root, engine);
   if (tooling.scripts_tree !== git("rev-parse", revision + ":scripts/hub").toString().trim() ||
       tooling.package_lock_sha256 !== sha256(git("show", revision + ":package-lock.json"))) {
-    throw new Error("producer tooling differs from the site commit");
+    throw new HubCheckFailure("producer tooling differs from the site commit");
   }
-  return { ref, sha: revision, workflow: workflow.path, run_id: runId, tooling_identity: tooling };
+  return tooling;
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
@@ -59,8 +69,10 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     const engine = preflight ? undefined : JSON.parse(readFileSync(enginePath, "utf8"));
     const producer = admissionProducer({ mode, environment: process.env, root, engine });
     console.log(JSON.stringify({ producer }));
-  } catch {
-    console.error("NOT EVIDENCE: producer");
-    process.exitCode = 1;
+  } catch (error) {
+    const reason = error instanceof HubCheckFailure ? error.message : "could not read producer inputs or checkout evidence";
+    const unavailable = error instanceof HubUnavailable;
+    console.error(unavailable ? "UNAVAILABLE: " + reason + ". Retry the check." : "NOT EVIDENCE: " + reason);
+    process.exitCode = unavailable ? 3 : 1;
   }
 }

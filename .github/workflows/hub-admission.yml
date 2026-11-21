@@ -1,0 +1,84 @@
+name: Hub admission
+
+on:
+  workflow_dispatch:
+    inputs:
+      rules_pr:
+        description: Pull request number in pipelab-org/pipelock-rules
+        required: true
+        type: string
+      rules_base:
+        description: Full Rules base commit SHA
+        required: true
+        type: string
+      rules_head:
+        description: Full Rules head commit SHA
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  admission:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - name: Require site main
+        env:
+          REPOSITORY: ${{ github.repository }}
+          REF: ${{ github.ref }}
+        run: |
+          test "$REPOSITORY" = pipelab-org/pipelab.org
+          test "$REF" = refs/heads/main
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: ./.github/actions/hub-toolchain
+        with:
+          mode: admission
+      - id: admission
+        name: Check and measure the exact Rules submission
+        env:
+          HUB_RULES_PUBLIC_API: "1"
+          RULES_PR: ${{ inputs.rules_pr }}
+          RULES_BASE: ${{ inputs.rules_base }}
+          RULES_HEAD: ${{ inputs.rules_head }}
+        run: |
+          scratch="$RUNNER_TEMP/hub-build"
+          engine="$scratch/engine.json"
+          node --input-type=module - "$scratch" "$engine" > "$scratch/input.json" <<'JS'
+          import { readFileSync } from "node:fs";
+          const [scratch, engineFile] = process.argv.slice(2);
+          const { binary, destination, identity } = JSON.parse(readFileSync(engineFile, "utf8"));
+          const { RULES_PR: pr, RULES_BASE: base, RULES_HEAD: head } = process.env;
+          const number = /^[1-9][0-9]*$/.test(pr) && Number.isSafeInteger(Number(pr)) ? Number(pr) : null;
+          console.log(JSON.stringify({
+            number, base, head, rulesFixtureRepository: scratch + "/fixtures.git",
+            source: {
+              binary, engine: identity, config: destination + "/configs/claude-code.yaml",
+              repository: scratch + "/engine.git", pipelockBinary: scratch + "/bin/pipelock",
+            },
+          }));
+          JS
+          status=0
+          node scripts/hub/hosted-admission.mjs "$scratch/input.json" > "$scratch/result.json" || status=$?
+          {
+            printf '%s\n\n' '## Hub admission'
+            if (( status == 0 )); then
+              printf 'ADMIT for Rules pull request #%s at %s.\n' "$RULES_PR" "$RULES_HEAD"
+            elif (( status == 3 )); then
+              printf '%s\n' 'GitHub data was unavailable. Retry the admission check.'
+            else
+              printf '%s\n' 'Admission did not pass. See the report artifact and job log.'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit "$status"
+      - name: Upload admission report
+        if: ${{ !cancelled() && (steps.admission.outcome == 'success' || steps.admission.outcome == 'failure') }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: hub-admission
+          path: ${{ runner.temp }}/hub-build/result.json
+          if-no-files-found: error

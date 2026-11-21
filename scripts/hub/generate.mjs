@@ -47,20 +47,40 @@ export function generateCatalog(options) {
 // in a disposable Hugo source tree alongside the site's other assets.
 export function prepareBoundCatalog(options, scratchDirectory) {
   if (!options.sourceBinding) throw new Error("bound source required for catalog assets");
-  const root = realpathSync(options.root);
-  const scratch = realpathSync(scratchDirectory);
-  const relative = path.relative(root, scratch);
-  if (!relative || relative.split(path.sep)[0] !== ".." && !path.isAbsolute(relative)) {
-    throw new Error("catalog scratch must be outside the source checkout");
-  }
+  assertCatalogScratch(options.root, scratchDirectory);
   const downloads = [];
   const catalog = generateBoundCatalog(options, downloads);
   const assetRoot = stageCatalogAssets(scratchDirectory, catalog["routes.json"], downloads);
   return { catalog, assetRoot };
 }
 
-function committedMeasurements(root, destination) {
-  const commit = readGit(root, ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
+function assertCatalogScratch(rootDirectory, scratchDirectory) {
+  const root = realpathSync(rootDirectory);
+  const scratch = realpathSync(scratchDirectory);
+  const relative = path.relative(root, scratch);
+  if (!relative || relative.split(path.sep)[0] !== ".." && !path.isAbsolute(relative)) {
+    throw new Error("catalog scratch must be outside the source checkout");
+  }
+}
+
+// Rehearsal uses a caller-inspected PR tree and the accepted site's baseline.
+// Publication still goes through prepareBoundCatalog and its Rules main check.
+export function prepareCandidateCatalog(options, loaded, {
+  siteBase, siteRepository, rulesSHA, rulesRepository, candidateRepository,
+}, scratchDirectory) {
+  assertCatalogScratch(options.root, scratchDirectory);
+  const previous = acceptedSource(siteRepository, siteBase);
+  assertSourceProgress(candidateRepository, previous.rules_sha, rulesSHA, rulesSHA);
+  const downloads = [];
+  const catalog = generateAcquiredCatalog({ ...options, mode: "routine" }, loaded, previous, {
+    rulesSHA, rulesRepository, downloads, siteRepository, siteCommit: siteBase,
+    evidenceRoot: path.join(scratchDirectory, "site-evidence"),
+  });
+  const assetRoot = stageCatalogAssets(scratchDirectory, catalog["routes.json"], downloads);
+  return { catalog, assetRoot };
+}
+
+function committedMeasurements(root, destination, commit = readGit(root, ["rev-parse", "HEAD"], { encoding: "utf8" }).trim()) {
   const directory = "data/hub/measurements";
   mkdirSync(destination);
   materializeGitTree(root, commit, destination, [
@@ -89,24 +109,28 @@ function generateBoundCatalog(options, downloads) {
       options.removed?.length || options.baseline?.length || binding.history) {
     throw new Error("bound source must be the sole contributor data producer");
   }
-  const { siteBase, rulesRepository, rulesSHA, rulesMain } = binding;
+  const { siteBase, rulesRepository, rulesSHA, rulesMain, siteRepository = options.root } = binding;
   const rulesTip = readGit(rulesRepository, ["rev-parse", "refs/remotes/origin/main"], { encoding: "utf8" }).trim();
   if (rulesTip !== rulesMain) throw new Error("rules source does not bind the fetched main tip");
-  const previous = acceptedSource(options.root, siteBase);
+  const previous = acceptedSource(siteRepository, siteBase);
   assertSourceProgress(rulesRepository, previous.rules_sha, rulesSHA, rulesMain);
   const directory = mkdtempSync(path.join(tmpdir(), "hub-sources-"));
   try {
     acquireHubTree(rulesRepository, rulesSHA, directory);
-    const { items, publishers, history } = loadAcquiredListings(directory, options.root);
-    const evidenceRoot = path.join(directory, "site-evidence");
-    const references = committedMeasurements(options.root, evidenceRoot);
-    return generateFromListings({
-      ...options, items, publishers,
-      lifecycle: { accepted: previous.lifecycle, history },
-    }, { rulesSHA, downloads, measurements: { evidenceRoot, references, rulesRepository } });
+    return generateAcquiredCatalog(options, loadAcquiredListings(directory, options.root), previous, {
+      rulesSHA, rulesRepository, downloads, siteRepository, evidenceRoot: path.join(directory, "site-evidence"),
+    });
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }
+}
+
+function generateAcquiredCatalog(options, { items, publishers, history }, previous,
+  { rulesSHA, rulesRepository, downloads, evidenceRoot, siteRepository = options.root, siteCommit }) {
+  const references = committedMeasurements(siteRepository, evidenceRoot, siteCommit);
+  return generateFromListings({
+    ...options, items, publishers, lifecycle: { accepted: previous.lifecycle, history },
+  }, { rulesSHA, downloads, measurements: { evidenceRoot, references, rulesRepository: options.rulesFixtureRepository ?? rulesRepository } });
 }
 
 function generateFromListings({ root, items, engine, binary, repository, config, pipelockBinary,

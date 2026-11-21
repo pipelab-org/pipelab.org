@@ -1,9 +1,10 @@
 import { readGit as git, readRemoteRefs } from "./git-source.mjs";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { acquireRulesObjects, readRulesAPI, RulesAPIUnavailable, rulesRepository } from "./rules-acquisition.mjs";
+import { HubUnavailable } from "./check-failure.mjs";
+import { acquireRulesObjects, readRulesAPI, rulesRepository } from "./rules-acquisition.mjs";
 import { loadAcquiredListings } from "./source-listings.mjs";
 import { acquirePolicyBlobs } from "./policy-blobs.mjs";
 import { parseListing } from "./validate.mjs";
@@ -54,7 +55,9 @@ function pullRequest(number) {
   const pr = readRulesAPI("pulls/" + number, { fresh: true });
   const baseRef = "refs/heads/main";
   const headRef = `refs/pull/${number}/head`;
-  const tips = readRemoteRefs(`https://github.com/${rulesRepository}`, [baseRef, headRef], "invalid rules ref result");
+  const tips = readRemoteRefs(`https://github.com/${rulesRepository}`, [baseRef, headRef], "invalid rules ref result", {
+    unavailable: "Rules pull request refs unavailable from GitHub",
+  });
   if (pr?.base?.sha !== tips.get(baseRef) || pr?.head?.sha !== tips.get(headRef)) {
     throw new RulesRefMismatch("pull request metadata differs from the published Rules refs");
   }
@@ -67,7 +70,7 @@ function matchesPullRequest(pr, number, base, head) {
 }
 
 
-export function preflightContribution({ repository, base, head, maintenance = false, site = defaultSite }) {
+export function preflightContribution({ repository, base, head, maintenance = false, site = defaultSite }, inspect) {
   const report = { mode: maintenance ? "maintenance" : "contribution", base, head, verdict: "REFUSED", steps: {}, changes: [], categories: [], remaining: [] };
   const run = (name, action) => {
     try {
@@ -103,7 +106,7 @@ export function preflightContribution({ repository, base, head, maintenance = fa
     report.categories = categories.filter(([, pattern]) => report.changes.some(change => pattern.test(change.path))).map(([name]) => name);
 
     // Exact blob reader: regular 100644 blobs only, size-checked, no checkout.
-    const tree = path.join(directory, "tree");
+    const tree = path.join(realpathSync(directory), "tree");
     mkdirSync(tree);
     if (!run("object-read", () => acquireHubTree(repository, head, tree))) return report;
 
@@ -125,6 +128,8 @@ export function preflightContribution({ repository, base, head, maintenance = fa
       return { id: listing.id, bundle_sha256, signer_fingerprint, signature_sha256 };
     }))) return report;
 
+    if (inspect && !run("candidate", () => inspect({ tree, loaded, changes: report.changes }))) return report;
+
     report.remaining = [...dependencies.always, ...report.categories.filter(name => dependencies[name]).map(name => dependencies[name])];
     report.verdict = "LOCAL-ELIGIBLE";
     return report;
@@ -135,11 +140,11 @@ export function preflightContribution({ repository, base, head, maintenance = fa
 
 // This mode binds the local input check to a public PR. Producer and admission
 // evidence are separate. The default reader verifies the API against live Git refs.
-export function preflightPullRequest({ number, fetchRules = false, ...options }, readPull = pullRequest) {
+export function preflightPullRequest({ number, fetchRules = false, ...options }, readPull = pullRequest, inspect) {
   const { base, head } = options;
   const binding = { repository: rulesRepository, number, base, head };
   const refused = (error, step = "pull-request") => ({
-    mode: "contribution", base, head, verdict: error instanceof RulesAPIUnavailable ? "UNAVAILABLE" : "REFUSED", pull_request: binding,
+    mode: "contribution", base, head, verdict: error instanceof HubUnavailable ? "UNAVAILABLE" : "REFUSED", pull_request: binding,
     steps: { [step]: { status: "fail", evidence: oneLine(error) } }, changes: [], categories: [], remaining: [],
   });
   if (!Number.isSafeInteger(number) || number < 1 || typeof base !== "string" || typeof head !== "string" ||
@@ -151,13 +156,13 @@ export function preflightPullRequest({ number, fetchRules = false, ...options },
       return matchesPullRequest(readPull(number), number, base, head) ? null :
         "open pull request does not match the requested repository, base and head";
     } catch (error) {
-      if (error instanceof RulesRefMismatch || error instanceof RulesAPIUnavailable) return error;
+      if (error instanceof RulesRefMismatch || error instanceof HubUnavailable) return error;
       return "published Rules pull request could not be verified";
     }
   };
   const initial = mismatch();
   if (initial) return refused(initial);
-  if (!fetchRules) return inspectPullRequest(options, binding, mismatch, refused);
+  if (!fetchRules) return inspectPullRequest(options, binding, mismatch, refused, inspect);
 
   const directory = mkdtempSync(path.join(tmpdir(), "hub-rules-objects-"));
   try {
@@ -167,13 +172,13 @@ export function preflightPullRequest({ number, fetchRules = false, ...options },
     } catch (error) {
       return refused(error, "rules-acquisition");
     }
-    return inspectPullRequest({ ...options, repository }, binding, mismatch, refused);
+    return inspectPullRequest({ ...options, repository }, binding, mismatch, refused, inspect);
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }
 }
 
-function inspectPullRequest(options, binding, mismatch, refused) {
+function inspectPullRequest(options, binding, mismatch, refused, inspect) {
   const { base, head } = options;
   try {
     for (const commit of [base, head]) {
@@ -192,7 +197,8 @@ function inspectPullRequest(options, binding, mismatch, refused) {
     return refused("pull request must include current rules main");
   }
 
-  const report = preflightContribution({ ...options, maintenance: false });
+  const report = preflightContribution({ ...options, maintenance: false },
+    inspect && (data => inspect({ ...data, repository: options.repository, base, head })));
   if (report.steps["object-read"]?.status === "pass") {
     binding.head_tree = report.steps["object-read"].evidence.tree;
   }
@@ -206,14 +212,16 @@ function inspectPullRequest(options, binding, mismatch, refused) {
   } catch (error) {
     report.verdict = "REFUSED";
     report.remaining = [];
+    delete report.steps.candidate;
     report.steps["policy-inputs"] = { status: "fail", evidence: oneLine(error) };
   }
   if (report.verdict !== "LOCAL-ELIGIBLE") return report;
   const final = mismatch();
-  if (final instanceof RulesAPIUnavailable) return refused(final);
+  if (final instanceof HubUnavailable) return refused(final);
   if (final) {
     report.verdict = "REFUSED";
     report.remaining = [];
+    delete report.steps.candidate;
     report.steps["pull-request"] = { status: "fail", evidence: "pull request moved, closed or became unavailable during the check" };
     return report;
   }

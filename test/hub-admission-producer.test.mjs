@@ -1,10 +1,12 @@
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 import { admissionProducer, readSiteMain } from "../scripts/hub/admission-producer.mjs";
+import { HubCheckFailure, HubUnavailable } from "../scripts/hub/check-failure.mjs";
 
 function fixture(t) {
   const root = mkdtempSync(path.join(tmpdir(), "hub-producer-"));
@@ -48,11 +50,36 @@ test("site main lookup uses an isolated Git context and keeps the proxy", t => {
       assert.equal(options.env.GIT_DIR, undefined);
       assert.equal(options.env.GIT_CONFIG_COUNT, undefined);
       assert.equal(options.env.HTTPS_PROXY, proxy);
+      assert.equal(options.env.LC_ALL, "C");
       return revision + "\trefs/heads/main\n";
     },
   });
   assert.equal(tip, revision);
   assert.equal(existsSync(lookupDirectory), false);
+});
+
+test("remote ref lookup distinguishes transport failures from malformed evidence", () => {
+  const read = runGit => readSiteMain({ runGit });
+  const expectedRef = "a".repeat(40) + "\trefs/heads/main\n";
+  for (const bad of [
+    "malformed\n", expectedRef + expectedRef, expectedRef.replace("\n", "\t\n"),
+    "b".repeat(40) + "\trefs/heads/other\n",
+  ]) {
+    assert.throws(() => read(() => bad), error =>
+      error instanceof HubCheckFailure && !(error instanceof HubUnavailable) && /invalid site main result/.test(error.message));
+  }
+  for (const stderr of [
+    "fatal: unable to access 'https://github.com/example/rules/': Could not resolve host: github.com",
+    "fatal: unable to access 'https://github.com/example/rules/': Recv failure: Connection reset by peer",
+    "fatal: unable to access 'https://github.com/example/rules/': The requested URL returned error: 503",
+    "error: RPC failed; curl 56 Receive failure",
+  ]) {
+    assert.throws(() => read(() => { throw Object.assign(new Error("git failed"), { status: 128, stderr }); }), HubUnavailable);
+  }
+  for (const stderr of ["fatal: index-pack failed", "fatal: remote error: ref not found"]) {
+    assert.throws(() => read(() => { throw Object.assign(new Error("git failed"), { status: 128, stderr }); }), error =>
+      error instanceof HubCheckFailure && !(error instanceof HubUnavailable));
+  }
 });
 
 test("admission producer binds the current main workflow, exact checkout and tooling", t => {
@@ -114,4 +141,67 @@ test("a dirty checkout or ignored Hub tooling cannot produce evidence", t => {
   input.write("package-lock.json", "{}\n");
   input.write("scripts/hub/ignored.mjs", "export const value = 2;\n");
   assert.throws(run, /tooling differs/);
+});
+
+test("admission and import report the failed check without printing raw input", t => {
+  const { root, write, environment } = fixture(t);
+  const input = path.join(root, "input.json");
+  const cli = name => spawnSync(process.execPath, [
+    fileURLToPath(new URL("../scripts/hub/" + name, import.meta.url)), input,
+  ], { env: { ...process.env, ...environment, GITHUB_REF: "refs/heads/feature" }, encoding: "utf8" });
+
+  write("input.json", JSON.stringify({ source: {} }));
+  const denied = cli("hosted-admission.mjs");
+  assert.equal(denied.status, 1);
+  assert.deepEqual(JSON.parse(denied.stdout), {
+    mode: "hosted-admission", verdict: "REFUSED",
+    reason: "producer context does not identify the expected site main workflow",
+  });
+  assert.equal(denied.stderr, "");
+
+  const sync = cli("sync-import.mjs");
+  assert.equal(sync.status, 1);
+  assert.equal(sync.stdout, "");
+  assert.match(sync.stderr, /^Hub import refused: producer context/);
+
+  write("input.json", "{raw input marker}");
+  const malformed = cli("hosted-admission.mjs");
+  assert.equal(malformed.status, 1);
+  assert.equal(JSON.parse(malformed.stdout).reason, "could not complete admission input");
+  assert.equal(malformed.stderr, "");
+  assert.doesNotMatch(malformed.stdout, /raw input marker/);
+});
+
+test("hosted admission and sync return retryable status when site main cannot be read", t => {
+  const { root, write, environment } = fixture(t);
+  const input = path.join(root, "input.json");
+  write("input.json", JSON.stringify({ source: {} }));
+  writeFileSync(path.join(root, "git"), [
+    "#!/bin/sh",
+    `printf '%s\\n' "fatal: unable to access 'https://github.com/pipelab-org/pipelab.org/': Could not resolve host: github.com" >&2`,
+    "printf '%s\\n' 'private transport details' >&2",
+    "exit 128",
+    "",
+  ].join("\n"), { mode: 0o755 });
+  const cli = (name, variables) => spawnSync(process.execPath, [
+    fileURLToPath(new URL("../scripts/hub/" + name, import.meta.url)), input,
+  ], {
+    env: { ...process.env, ...variables, PATH: root + path.delimiter + process.env.PATH },
+    encoding: "utf8",
+  });
+
+  const admission = cli("hosted-admission.mjs", environment);
+  assert.equal(admission.status, 3);
+  assert.deepEqual(JSON.parse(admission.stdout), {
+    mode: "hosted-admission", verdict: "UNAVAILABLE", reason: "site main unavailable from GitHub",
+  });
+  assert.equal(admission.stderr, "");
+
+  const sync = cli("sync-import.mjs", {
+    ...environment,
+    GITHUB_WORKFLOW_REF: environment.GITHUB_WORKFLOW_REF.replace("hub-admission.yml", "sync-pipelab-hub.yml"),
+  });
+  assert.equal(sync.status, 3);
+  assert.equal(sync.stdout, "");
+  assert.equal(sync.stderr.trim(), "Hub import unavailable: site main unavailable from GitHub. Retry the check.");
 });
