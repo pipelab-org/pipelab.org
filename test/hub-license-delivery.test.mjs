@@ -160,3 +160,16 @@ test("route manifest and staged assets deliver license files next to unchanged s
   const swapped = manifest.entries.map(entry => entry.route.endsWith("/notice.txt") ? { ...entry, kind: "license-download" } : entry);
   assert.throws(() => stageCatalogAssets(scratch, { entries: swapped }, downloads), /must accompany a served bundle/);
 });
+
+
+test("complete upstream licenses cannot substitute terms mentioning copyright for attribution", t => {
+  // Real producers: license files shipped by the locked dependencies.
+  for (const [dependency, license] of [["pg", "MIT"], ["yaml", "ISC"]]) {
+    const text = readFileSync(path.join(root, "node_modules", dependency, "LICENSE"), "utf8");
+    assert.match(text, /^Copyright .+$/m);
+    const { dir, signed } = bundle(t, { LICENSE: text }, "license: " + license + "\n");
+    assert.doesNotThrow(() => readLicenseMaterial(dir, license, signed));
+    writeFileSync(path.join(dir, "LICENSE"), text.replace(/^Copyright .+\r?\n/m, ""));
+    assert.throws(() => readLicenseMaterial(dir, license, signed), /required copyright notice missing/);
+  }
+});

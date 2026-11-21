@@ -64,7 +64,7 @@ export function readLicenseMaterial(directory, license, signed, { served = false
   const normalized = licenseText.text.toLowerCase().replace(/\s+/g, " ");
   if (!markers[license](normalized)) throw new Error("license text does not match the declared license");
   if (copyrightRequired.has(license) &&
-      ![licenseText, notice].some(file => file && /copyright/i.test(file.text))) {
+      ![licenseText, notice].some(file => file && /^[\t ]*(?:copyright(?:[\t ]*\(c\))?|©|\(c\))[\t ]+(?!(?:holders?|notice)\b)\S[^\r\n]*$/im.test(file.text))) {
     throw new Error("required copyright notice missing");
   }
   if (signed) {
