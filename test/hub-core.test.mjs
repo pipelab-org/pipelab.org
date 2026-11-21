@@ -186,16 +186,26 @@ test("open builds publish only the signed community downloads selected by the ca
   };
   writeFileSync(routes, JSON.stringify(retained));
   const kept = f.build("true");
-  assert.equal(kept.status, 0, kept.output);
-  assert.equal(f.built(artifact), "fixture: exact-byte-download\n");
-  assert.equal(f.built(artifact + ".sig"), "fixture-signature\n");
+  assert.notEqual(kept.status, 0, "retained pairs require accepted license companions");
+  assert.match(kept.output, /hub retained license delivery differs/);
 
   // A retained pair keeps its accepted license file; a stray one is refused.
   const retainedLicense = "hub/community/example/example-bundle/license.txt";
   const licenseText = "Retained license text\n";
   writeFileSync(path.join(f.dir, "assets", retainedLicense), licenseText);
   const licenseEntry = { route: "/" + retainedLicense, kind: "license-download", ownership: "hub", sha256: sha256(licenseText) };
+  const lifecycleFile = path.join(f.dir, "data/hub/generated/lifecycle.json");
+  const accepted = { route: "/hub/community/example/example-bundle/", license: "MIT", license_sha256: sha256(licenseText) };
+  writeFileSync(lifecycleFile, JSON.stringify({ listings: [accepted] }));
+  const noticeText = "Retained copyright notice\n";
+  const noticeEntry = { route: accepted.route + "notice.txt", kind: "notice-download", ownership: "hub", sha256: sha256(noticeText) };
+  writeFileSync(path.join(f.dir, "assets", accepted.route.slice(1), "notice.txt"), noticeText);
+  writeFileSync(lifecycleFile, JSON.stringify({ listings: [{ ...accepted, notice_sha256: noticeEntry.sha256 }] }));
   writeFileSync(routes, JSON.stringify({ entries: [...retained.entries, licenseEntry] }));
+  const absentNotice = f.build("true");
+  assert.notEqual(absentNotice.status, 0, "accepted notice may not disappear");
+  assert.match(absentNotice.output, /hub retained license delivery differs/);
+  writeFileSync(routes, JSON.stringify({ entries: [...retained.entries, licenseEntry, noticeEntry] }));
   const keptLicense = f.build("true");
   assert.equal(keptLicense.status, 0, keptLicense.output);
   assert.equal(f.built(retainedLicense), licenseText);
@@ -203,7 +213,13 @@ test("open builds publish only the signed community downloads selected by the ca
   const strayLicense = f.build("true");
   assert.notEqual(strayLicense.status, 0);
   assert.match(strayLicense.output, /hub license delivery manifest differs/);
-  writeFileSync(routes, JSON.stringify(retained));
+  writeFileSync(routes, JSON.stringify({ entries: [...retained.entries, { ...licenseEntry, sha256: sha256("Changed license\n") }, noticeEntry] }));
+  writeFileSync(path.join(f.dir, "assets", retainedLicense), "Changed license\n");
+  const changedLicense = f.build("true");
+  assert.notEqual(changedLicense.status, 0, "retained license must match accepted bytes even if manifest and resource agree");
+  assert.match(changedLicense.output, /hub retained license delivery differs/);
+  writeFileSync(path.join(f.dir, "assets", retainedLicense), licenseText);
+  writeFileSync(routes, JSON.stringify({ entries: [...retained.entries, licenseEntry, noticeEntry] }));
 
   writeFileSync(path.join(f.dir, "assets", artifact + ".sig"), "different signature\n");
   const changed = f.build("true");
@@ -278,6 +294,33 @@ test("community listings deliver license and notices on the page, mirror and as 
   const changed = f.build("true", base, { badge: "community", license_material: material });
   assert.notEqual(changed.status, 0);
   assert.match(changed.output, /Hub community download digest differs/);
+});
+
+test("official notices cannot disappear from the page and mirror", t => {
+  const f = buildFixture(t);
+  const name = "pipelock-community", directory = "/rules/" + name + "/";
+  const license = read("static" + directory + "license.txt");
+  const notice = read("static" + directory + "notice.txt");
+  const material = {
+    license: { name: "LICENSE", route: directory + "license.txt", text: license, sha256: sha256(license) },
+    notices: [{ name: "NOTICE", route: directory + "notice.txt", text: notice, sha256: sha256(notice) }],
+  };
+  const routes = path.join(f.dir, "data/hub/generated/routes.json");
+  const schema = JSON.parse(readFileSync(routes, "utf8")).entries.filter(entry => entry.kind === "schema");
+  const entries = [material.license, ...material.notices].map(file => ({ route: file.route, sha256: file.sha256,
+    kind: file.name === "LICENSE" ? "license-download" : "notice-download", ownership: "official-registry", listing_id: base.id }));
+  writeFileSync(routes, JSON.stringify({ entries: [...schema, ...entries] }));
+  const listing = { ...base, bundle_name: name };
+  const built = f.build("true", listing, { badge: "official", license_material: material });
+  assert.equal(built.status, 0, built.output);
+  for (const file of ["index.html", "index.md"]) assert.ok(f.built("hub/recipes/example-recipe/" + file).includes(notice.split("\n")[0]));
+  const hidden = f.build("true", listing, { badge: "official", license_material: { ...material, notices: [] } });
+  assert.notEqual(hidden.status, 0, "official served notice must appear on the page");
+  assert.match(hidden.output, /hub official license delivery differs/);
+  writeFileSync(routes, JSON.stringify({ entries: [schema[0], entries[0]] }));
+  const erased = f.build("true", listing, { badge: "official", license_material: { ...material, notices: [] } });
+  assert.notEqual(erased.status, 0, "omitting both generated notice records cannot hide a served notice");
+  assert.match(erased.output, /hub official license delivery differs/);
 });
 
 test("Hugo checks digests against the configured resources it publishes", t => {
