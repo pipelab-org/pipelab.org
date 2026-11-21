@@ -1,0 +1,184 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { fixtureTestEnvironment, goModuleCache } from "../scripts/hub/acceptance.mjs";
+import { diagnosticLine, failedAcceptanceStep, fixtureFailureEvidence } from "../scripts/hub/diagnostic.mjs";
+import { acceptanceRefusal } from "../scripts/hub/sync-import.mjs";
+
+const source = {
+  binary: "/scratch/hub-engine/hubcheck", config: "/scratch/hub-engine/configs/claude-code.yaml",
+  repository: "/scratch/engine.git", rulesFixtureRepository: "/scratch/fixtures.git", pipelockBinary: "/scratch/bin/pipelock",
+};
+
+test("fixture tests keep the Go module cache outside their private HOME", () => {
+  const goEnv = [];
+  const environment = { PATH: "/usr/bin", HOME: "/home/runner", GITHUB_TOKEN: "not-for-children", GOPROXY: "direct" };
+  const run = (command, args, options) => { goEnv.push({ command, args, options }); return "/home/runner/go/pkg/mod\n"; };
+  const child = fixtureTestEnvironment(source, "/tmp/acceptance", environment, run);
+  assert.equal(child.HOME, "/tmp/acceptance");
+  assert.equal(child.GOMODCACHE, "/home/runner/go/pkg/mod");
+  assert.equal(child.HUBCHECK_ENGINE_DIR, "/scratch/hub-engine");
+  assert.equal(child.HUBCHECK_RULES_REPOSITORY, "/scratch/fixtures.git");
+  assert.equal(child.HUB_VERIFY_RETRIEVAL, "0");
+  assert.deepEqual(Object.keys(child).sort(), ["GOMODCACHE", "HOME", "HUBCHECK_BIN", "HUBCHECK_ENGINE_DIR", "HUBCHECK_REPOSITORY",
+    "HUBCHECK_RULES_REPOSITORY", "HUB_RELEASE_BIN", "HUB_VERIFY_RETRIEVAL", "PATH"]);
+  assert.equal(goEnv.length, 1);
+  assert.deepEqual(goEnv[0].args, ["env", "GOMODCACHE"]);
+  assert.equal(goEnv[0].options.env.GOTOOLCHAIN, "local");
+});
+
+test("an explicit Go module cache is used and an unresolved one fails closed", () => {
+  const unexpected = () => assert.fail("go env must not run when GOMODCACHE is set");
+  assert.equal(goModuleCache({ GOMODCACHE: "/cache/mod" }, unexpected), "/cache/mod");
+  assert.throws(() => goModuleCache({}, () => { throw new Error("go: not found"); }), /Go module cache could not be resolved/);
+  assert.throws(() => goModuleCache({}, () => "\n"), /Go module cache could not be resolved/);
+  assert.throws(() => goModuleCache({}, () => "relative/mod"), /Go module cache could not be resolved/);
+  assert.throws(() => fixtureTestEnvironment(source, "/tmp/acceptance", {}, () => { throw new Error("go: not found"); }), /Go module cache/);
+});
+
+test("a failed fixture run names the failed tests", () => {
+  const stdout = [
+    "TAP version 13",
+    "# Subtest: passes", "ok 1 - passes",
+    "# Subtest: first failure", "    not ok 1 - nested detail", "not ok 2 - first failure",
+    "# Subtest: native reader", "not ok 3 - native reader",
+    "# tests 3", "# pass 1", "# fail 2", "# skipped 0",
+  ].join("\n");
+  assert.equal(fixtureFailureEvidence({ stdout: Buffer.from(stdout), message: "Command failed: node --test" }),
+    "2 of 3 Hub fixture tests failed: first failure; native reader");
+  const many = Array.from({ length: 9 }, (_, i) => `not ok ${i + 1} - failure ${i + 1} ${"x".repeat(120)}`).join("\n") + "\n# tests 40\n";
+  const summary = fixtureFailureEvidence({ stdout: many });
+  assert.match(summary, /^9 of 40 Hub fixture tests failed: failure 1 x+…; failure 2/);
+  assert.match(summary, /; \+3 more$/);
+  assert.equal(summary.split("\n").length, 1);
+});
+
+test("a fixture run that fails without a report says so", () => {
+  assert.equal(fixtureFailureEvidence({ stdout: "", stderr: "\nSyntaxError: Unexpected token\n at file", message: "Command failed: node --test a b" }),
+    "Hub fixture run failed without a test report: SyntaxError: Unexpected token");
+  assert.equal(fixtureFailureEvidence(new Error("Command failed: node --test a b\nstderr text")),
+    "Hub fixture run failed without a test report: Command failed: node --test a b");
+  assert.equal(fixtureFailureEvidence({}), "Hub fixture run failed without a test report: no output");
+});
+
+test("diagnostic lines are one bounded line without credentials", () => {
+  const github = "ghp_" + "a1B2c3D4".repeat(5);
+  // Credential-shaped evidence is withheld whole, never partially redacted.
+  const cases = [
+    "fatal: unable to access 'https://x-access-token:" + github + "@github.com/pipelab-org/pipelock-rules/'",
+    "request failed with Authorization: Bearer abcdefghijklmnop",
+    "request failed with Authorization: Negotiate opaque-auth-data",
+    "using bearer abcdefghijklmnopqrstuvwxyz",
+    "PIPELAB_HUB_SYNC_TOKEN=s3cr3t-value leaked",
+    "env password: hunter2 failed",
+    "github_pat_" + "A1".repeat(20),
+    "key AKIAABCDEFGHIJKLMNOP end",
+    "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBg\n-----END PRIVATE KEY-----",
+    "to\tken=ghp_ABCDEFGHIJKLMNOP-synthetic-secret-value",
+    "to\tken=[redact\ted]synthetic-secret-value",
+  ];
+  for (const input of cases) assert.equal(diagnosticLine(input), "credential-like diagnostic evidence withheld", JSON.stringify(input));
+  const noisy = diagnosticLine("first‮line\u0000with\ttabs\r\nand more");
+  assert.equal(noisy, "hidden-character diagnostic evidence withheld");
+  // Tabs and line breaks still collapse to readable text; other controls are withheld.
+  assert.equal(diagnosticLine("first line with\ttabs\r\nand more"), "first line with tabs and more");
+  assert.equal(diagnosticLine("first line\u0000with"), "hidden-character diagnostic evidence withheld");
+  assert.ok(diagnosticLine("y".repeat(5000)).length <= 600);
+  assert.equal(diagnosticLine("y".repeat(5000)).slice(-1), "…");
+  for (const missing of [undefined, null, 5, {}, "", " \n "]) assert.equal(diagnosticLine(missing), "no evidence recorded");
+  // Commit and bundle digests and ordinary paths stay readable.
+  const digest = "bb0d98b9ff7abff68e29675f6dabe16ed93350f2";
+  assert.equal(diagnosticLine("site " + digest + " at /tmp/hub-acceptance-x/site"), "site " + digest + " at /tmp/hub-acceptance-x/site");
+});
+
+test("the import refusal repeats the failed step evidence", () => {
+  const steps = Object.fromEntries(Array.from({ length: 10 }, (_, i) => [String(i + 1), { status: "pass", evidence: "ok" }]));
+  steps["9"] = { status: "not-in-mode", evidence: null };
+  steps["5"] = { status: "fail", evidence: "6 of 115 Hub fixture tests failed: official workloads bind exact served producer bytes" };
+  const report = JSON.stringify({ mode: "routine", steps });
+  assert.equal(acceptanceRefusal(report),
+    "routine Hub acceptance failed at step 5: 6 of 115 Hub fixture tests failed: official workloads bind exact served producer bytes");
+  assert.deepEqual(failedAcceptanceStep(report), { step: "5", evidence: steps["5"].evidence });
+
+  // A step the run never reached keeps its placeholder; the executed failure wins.
+  const early = { ...steps, "1": { status: "fail", evidence: "Not executed." }, "2": { status: "fail", evidence: "no space left on device" } };
+  assert.deepEqual(failedAcceptanceStep(JSON.stringify({ steps: early })), { step: "2", evidence: "no space left on device" });
+
+  steps["5"].evidence = "Command failed: git clone https://user:hunter2@example.invalid/repo.git\nstack line";
+  const refused = acceptanceRefusal(JSON.stringify({ steps }));
+  assert.equal(refused, "routine Hub acceptance failed at step 5");
+  assert.doesNotMatch(refused, /hunter2/);
+  assert.equal(refused.split("\n").length, 1);
+
+  // Any authorization scheme keeps its credential material out of the refusal.
+  steps["5"].evidence = "request failed: Authorization: Negotiate opaque-auth-data";
+  assert.doesNotMatch(acceptanceRefusal(JSON.stringify({ steps })), /opaque-auth-data/);
+  // A hidden format character cannot split a key around the credential patterns.
+  // A marker supplied by the input cannot pass for a redaction.
+  for (const marker of ["[redacted]", "[redact\ted]", "[red acted]", "", "ghp_ABCDEFGHIJKLMNOP-"]) {
+    steps["5"].evidence = "to\tken=" + marker + "synthetic-secret-value";
+    assert.doesNotMatch(acceptanceRefusal(JSON.stringify({ steps })), /synthetic-secret-value/, JSON.stringify(marker));
+  }
+  for (const split of ["​", "\u0000", "\u001b", "\u0085", "\t", "\r", "\n", " ", "\r\n"]) {
+    steps["5"].evidence = "to" + split + "ken=synthetic-secret-value";
+    assert.doesNotMatch(acceptanceRefusal(JSON.stringify({ steps })), /synthetic-secret-value/, JSON.stringify(split));
+  }
+
+  steps["5"].evidence = { nested: "not a line" };
+  assert.equal(acceptanceRefusal(JSON.stringify({ steps })), "routine Hub acceptance failed at step 5");
+
+  // Only the fixture summary is repeated publicly; other free-form evidence is not,
+  // including shapes no credential pattern recognizes.
+  for (const evidence of ["fetch failed: https://example.invalid/x?key=abc123def456", "Cookie: session=abc123", "eyJhbGciOiJIUzI1NiJ9.e30.sig", "no space left on device"]) {
+    steps["5"].evidence = evidence;
+    assert.equal(acceptanceRefusal(JSON.stringify({ steps })), "routine Hub acceptance failed at step 5", evidence);
+    steps["5"].evidence = "1 of 2 Hub fixture tests failed: x";
+    const other = { ...steps, "5": { status: "pass", evidence: "ok" }, "3": { status: "fail", evidence } };
+    assert.equal(acceptanceRefusal(JSON.stringify({ steps: other })), "routine Hub acceptance failed at step 3", evidence);
+  }
+  // Fixed acceptance messages built from repository data are repeated.
+  for (const [step, evidence] of [["1", "site baseline differs from current site main"], ["10", "policy page is missing: trust"]]) {
+    const fixed = { ...steps, "5": { status: "pass", evidence: "ok" }, [step]: { status: "fail", evidence } };
+    assert.equal(acceptanceRefusal(JSON.stringify({ steps: fixed })), "routine Hub acceptance failed at step " + step + ": " + evidence);
+  }
+  // Glued and whitespace-split credentials stay withheld by the backstop.
+  for (const input of ["keyAKIAABCDEFGHIJKLMNOP", "id0ghp_aaaaaaaaaaaaaaaaaaaa", "git clone https://user:\thunter2@example.invalid/repo", "ghp_abcd efgh1234ijkl"]) {
+    assert.equal(diagnosticLine(input), "credential-like diagnostic evidence withheld", JSON.stringify(input));
+  }
+  // Ordinary names containing token-like substrings stay readable.
+  assert.equal(diagnosticLine("bundle risk-scoring-rules failed the naming check"), "bundle risk-scoring-rules failed the naming check");
+  assert.equal(diagnosticLine("task-runner-policy missing"), "task-runner-policy missing");
+});
+
+test("an unreadable or step-less acceptance report gives no evidence to repeat", () => {
+  for (const stdout of [undefined, "", "not json", "null", "{}", JSON.stringify({ steps: null }),
+    JSON.stringify({ steps: { 5: { status: "pass" }, 11: { status: "fail", evidence: "late" }, x: { status: "fail" } } })]) {
+    assert.equal(acceptanceRefusal(stdout), "routine Hub acceptance did not pass");
+  }
+});
+
+test("structured and encoded credentials do not reach public refusal evidence", () => {
+  for (const evidence of [
+    '{"token":"synthetic-secret-value"}',
+    'token="synthetic secret with spaces"',
+    '{"Authorization":"Bearer synthetic-secret-value"}',
+    'https://example.invalid/?token%3Dsynthetic-secret-value',
+    'https://user:synthetic-secret-value%40example.invalid/repo',
+    '{"\\u0074oken":"synthetic-secret-value"}',
+    'token%253Dsynthetic-secret-value',
+    '{"\\u0074oken":"first\\u0022 synthetic-secret-value"}',
+    '{"token":"first%22 synthetic-secret-value"}',
+  ]) {
+    const report = JSON.stringify({ steps: { 5: { status: "fail", evidence } } });
+    assert.doesNotMatch(acceptanceRefusal(report), /synthetic|secret-value|with spaces/);
+  }
+});
+
+test("fixture names are redacted before shortening can hide a credential signature", () => {
+  const token = "ghp_" + "a".repeat(36);
+  const stdout = "not ok 1 - " + "x".repeat(70) + " " + token + "\n# tests 1";
+  assert.doesNotMatch(diagnosticLine(fixtureFailureEvidence({ stdout })), /ghp_|aaaa/);
+});
+
+test("explicit module cache paths obey the same absolute-path contract", () => {
+  assert.throws(() => goModuleCache({ GOMODCACHE: "relative/cache" }), /Go module cache could not be resolved/);
+});

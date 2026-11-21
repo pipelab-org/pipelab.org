@@ -13,12 +13,40 @@ import { verifyRetrieval } from "./retrieval.mjs";
 import { assertSourceProgress, materializeGitTree } from "./source-tree.mjs";
 import { readGit } from "./git-source.mjs";
 import { readSiteMain } from "./admission-producer.mjs";
+import { diagnosticLine, fixtureFailureEvidence, notExecuted } from "./diagnostic.mjs";
 
 const gitSHA = /^[a-f0-9]{40}$/;
 const method = JSON.parse(readFileSync(new URL("./routes.json", import.meta.url)));
 
 function child(command, args, options) {
   return execFileSync(command, args, { ...options, stdio: ["ignore", "pipe", "pipe"] });
+}
+
+// Fixture tests run with a minimal environment and a private HOME. The pinned
+// harness builds offline (GOPROXY=off), so the Go module cache the toolchain
+// step populated must be named explicitly; the default sits under HOME.
+export function goModuleCache(environment = process.env, run = execFileSync) {
+  if (environment.GOMODCACHE) {
+    if (!path.isAbsolute(environment.GOMODCACHE)) throw new Error("Go module cache could not be resolved");
+    return environment.GOMODCACHE;
+  }
+  let directory;
+  try {
+    directory = run("go", ["env", "GOMODCACHE"], { env: { ...environment, GOTOOLCHAIN: "local" }, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
+  } catch {
+    throw new Error("Go module cache could not be resolved");
+  }
+  if (!path.isAbsolute(directory)) throw new Error("Go module cache could not be resolved");
+  return directory;
+}
+
+export function fixtureTestEnvironment(source, home, environment = process.env, run = execFileSync) {
+  return {
+    PATH: environment.PATH ?? "", HOME: home, GOMODCACHE: goModuleCache(environment, run), HUBCHECK_BIN: source.binary,
+    HUBCHECK_ENGINE_DIR: path.dirname(path.dirname(source.config)),
+    HUBCHECK_REPOSITORY: source.repository, HUBCHECK_RULES_REPOSITORY: source.rulesFixtureRepository ?? source.sourceBinding.rulesRepository,
+    HUB_RELEASE_BIN: source.pipelockBinary, HUB_VERIFY_RETRIEVAL: "0",
+  };
 }
 
 function checkCheckout(root, expected) {
@@ -56,7 +84,7 @@ export async function routineAcceptance({ source, siteSHA, rulesSHA }, { readMai
     candidate: { site_sha: siteSHA, rules_sha: rulesSHA, tooling_identity: null },
     deployment: null,
     steps: Object.fromEntries(Array.from({ length: 10 }, (_, i) => [
-      String(i + 1), { status: i === 8 ? "not-in-mode" : "fail", evidence: i === 8 ? null : "Not executed." },
+      String(i + 1), { status: i === 8 ? "not-in-mode" : "fail", evidence: i === 8 ? null : notExecuted },
     ])),
     opening_eligible: false,
   };
@@ -108,18 +136,18 @@ export async function routineAcceptance({ source, siteSHA, rulesSHA }, { readMai
     pass(4, "Clean closed and open-overlay Hugo builds completed.");
 
     current = 5;
-    const options = {
-      cwd: root,
-      env: { PATH: process.env.PATH ?? "", HOME: temporary, HUBCHECK_BIN: source.binary,
-        HUBCHECK_ENGINE_DIR: path.dirname(path.dirname(source.config)),
-        HUBCHECK_REPOSITORY: source.repository, HUBCHECK_RULES_REPOSITORY: source.rulesFixtureRepository ?? source.sourceBinding.rulesRepository,
-        HUB_RELEASE_BIN: source.pipelockBinary, HUB_VERIFY_RETRIEVAL: "0" },
-    };
-    const testOutput = child(process.execPath, ["--test", "--test-reporter=tap", "test/hub-core.test.mjs", "test/hub-harness.test.mjs",
-      "test/hub-source-tree.test.mjs", "test/hub-contribution-preflight.test.mjs", "test/hub-admission-producer.test.mjs",
-      "test/hub-policy-blobs.test.mjs", "test/hub-publication.test.mjs", "test/hub-catalog-assets.test.mjs", "test/hub-search.test.mjs"], options).toString("utf8");
+    const options = { cwd: root, env: fixtureTestEnvironment(source, temporary) };
+    let testOutput;
+    try {
+      testOutput = child(process.execPath, ["--test", "--test-reporter=tap", "test/hub-core.test.mjs", "test/hub-harness.test.mjs",
+        "test/hub-source-tree.test.mjs", "test/hub-contribution-preflight.test.mjs", "test/hub-admission-producer.test.mjs",
+        "test/hub-policy-blobs.test.mjs", "test/hub-publication.test.mjs", "test/hub-catalog-assets.test.mjs", "test/hub-search.test.mjs"], options).toString("utf8");
+    } catch (error) {
+      throw new Error(diagnosticLine(fixtureFailureEvidence(error)));
+    }
     if (!/^# tests [1-9][0-9]*$/m.test(testOutput) || !/^# skipped 0$/m.test(testOutput)) {
-      throw new Error("Hub fixture run is incomplete");
+      const count = name => new RegExp("^# " + name + " (\\d+)$", "m").exec(testOutput)?.[1] ?? "unreported";
+      throw new Error("Hub fixture run is incomplete: " + count("tests") + " tests, " + count("skipped") + " skipped");
     }
     assertClosedDiscovery(closed);
     pass(5, "Hub fixtures and closed discovery checks passed.");
