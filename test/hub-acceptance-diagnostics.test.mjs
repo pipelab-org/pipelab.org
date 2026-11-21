@@ -122,6 +122,8 @@ test("structured and encoded credentials do not reach public refusal evidence", 
     'https://user:synthetic-secret-value%40example.invalid/repo',
     '{"\\u0074oken":"synthetic-secret-value"}',
     'token%253Dsynthetic-secret-value',
+    '{"\\u0074oken":"first\\u0022 synthetic-secret-value"}',
+    '{"token":"first%22 synthetic-secret-value"}',
   ]) {
     const report = JSON.stringify({ steps: { 5: { status: "fail", evidence } } });
     assert.doesNotMatch(acceptanceRefusal(report), /synthetic|secret-value|with spaces/);

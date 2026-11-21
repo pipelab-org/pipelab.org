@@ -13,13 +13,10 @@ const redactions = [
 
 export function diagnosticLine(value, limit = 600) {
   if (typeof value !== "string") return "no evidence recorded";
-  // Decode URI percent escapes and JSON Unicode escapes before matching.
-  // Withhold malformed or nested encodings instead of repeatedly decoding
-  // arbitrary subprocess output or publishing a still-hidden credential.
-  let line = value.replace(/(?:%[0-9a-f]{2})+/gi, encoded => {
-    try { return decodeURIComponent(encoded); } catch { return encoded; }
-  }).replace(/\\u([0-9a-f]{4})/gi, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
-  if (/%[0-9a-f]{2}|\\u[0-9a-f]{4}/i.test(line)) return "encoded diagnostic evidence withheld";
+  // Encoded text can hide keys and delimiters. Withhold it rather than
+  // decoding untrusted quoting into a different structure before redaction.
+  if (/%[0-9a-f]{2}|\\u[0-9a-f]{4}/i.test(value)) return "encoded diagnostic evidence withheld";
+  let line = value;
   for (const [pattern, replacement] of redactions) line = line.replace(pattern, replacement);
   // Control and bidirectional characters can hide or rewrite log lines.
   line = line.replace(/[\p{Cc}\p{Cf}\p{Zl}\p{Zp}]+/gu, " ").replace(/\s+/g, " ").trim();
