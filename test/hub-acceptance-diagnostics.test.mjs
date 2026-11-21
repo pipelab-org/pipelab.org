@@ -112,3 +112,28 @@ test("an unreadable or step-less acceptance report gives no evidence to repeat",
     assert.equal(acceptanceRefusal(stdout), "routine Hub acceptance did not pass");
   }
 });
+
+test("structured and encoded credentials do not reach public refusal evidence", () => {
+  for (const evidence of [
+    '{"token":"synthetic-secret-value"}',
+    'token="synthetic secret with spaces"',
+    '{"Authorization":"Bearer synthetic-secret-value"}',
+    'https://example.invalid/?token%3Dsynthetic-secret-value',
+    'https://user:synthetic-secret-value%40example.invalid/repo',
+    '{"\\u0074oken":"synthetic-secret-value"}',
+    'token%253Dsynthetic-secret-value',
+  ]) {
+    const report = JSON.stringify({ steps: { 5: { status: "fail", evidence } } });
+    assert.doesNotMatch(acceptanceRefusal(report), /synthetic|secret-value|with spaces/);
+  }
+});
+
+test("fixture names are redacted before shortening can hide a credential signature", () => {
+  const token = "ghp_" + "a".repeat(36);
+  const stdout = "not ok 1 - " + "x".repeat(70) + " " + token + "\n# tests 1";
+  assert.doesNotMatch(diagnosticLine(fixtureFailureEvidence({ stdout })), /ghp_|aaaa/);
+});
+
+test("explicit module cache paths obey the same absolute-path contract", () => {
+  assert.throws(() => goModuleCache({ GOMODCACHE: "relative/cache" }), /Go module cache could not be resolved/);
+});

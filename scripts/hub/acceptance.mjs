@@ -26,7 +26,10 @@ function child(command, args, options) {
 // harness builds offline (GOPROXY=off), so the Go module cache the toolchain
 // step populated must be named explicitly; the default sits under HOME.
 export function goModuleCache(environment = process.env, run = execFileSync) {
-  if (environment.GOMODCACHE) return environment.GOMODCACHE;
+  if (environment.GOMODCACHE) {
+    if (!path.isAbsolute(environment.GOMODCACHE)) throw new Error("Go module cache could not be resolved");
+    return environment.GOMODCACHE;
+  }
   let directory;
   try {
     directory = run("go", ["env", "GOMODCACHE"], { env: { ...environment, GOTOOLCHAIN: "local" }, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();

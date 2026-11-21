@@ -6,14 +6,20 @@ const redactions = [
   [/\b([a-z][a-z0-9+.-]*:\/\/)[^\s/@]*@/gi, "$1[redacted]@"],
   [/-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*/g, "[redacted]"],
   [/\b(?:gh[pousr]_[A-Za-z0-9]{16,}|github_pat_[A-Za-z0-9_]{16,}|xox[abprs]-[A-Za-z0-9-]{10,}|AKIA[0-9A-Z]{16}|sk-[A-Za-z0-9_-]{20,})/g, "[redacted]"],
-  [/\b(authorization|proxy-authorization)(\s*[:=]\s*)(?:(?:bearer|basic|token)\s+)?\S+/gi, "$1$2[redacted]"],
+  [/\b(authorization|proxy-authorization)(["']?\s*[:=]\s*)(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|(?:(?:bearer|basic|token)\s+)?\S+)/gi, "$1$2[redacted]"],
   [/\b(bearer|basic)\s+[A-Za-z0-9._~+/=-]{8,}/gi, "$1 [redacted]"],
-  [/\b([A-Za-z0-9_-]*(?:token|secret|passw(?:or)?d|api[_-]?key|credential|private[_-]?key)[A-Za-z0-9_-]*)(\s*[:=]\s*)\S+/gi, "$1$2[redacted]"],
+  [/\b([A-Za-z0-9_-]*(?:token|secret|passw(?:or)?d|api[_-]?key|credential|private[_-]?key)[A-Za-z0-9_-]*)(["']?\s*[:=]\s*)(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|\S+)/gi, "$1$2[redacted]"],
 ];
 
 export function diagnosticLine(value, limit = 600) {
   if (typeof value !== "string") return "no evidence recorded";
-  let line = value;
+  // Decode URI percent escapes and JSON Unicode escapes before matching.
+  // Withhold malformed or nested encodings instead of repeatedly decoding
+  // arbitrary subprocess output or publishing a still-hidden credential.
+  let line = value.replace(/(?:%[0-9a-f]{2})+/gi, encoded => {
+    try { return decodeURIComponent(encoded); } catch { return encoded; }
+  }).replace(/\\u([0-9a-f]{4})/gi, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
+  if (/%[0-9a-f]{2}|\\u[0-9a-f]{4}/i.test(line)) return "encoded diagnostic evidence withheld";
   for (const [pattern, replacement] of redactions) line = line.replace(pattern, replacement);
   // Control and bidirectional characters can hide or rewrite log lines.
   line = line.replace(/[\p{Cc}\p{Cf}\p{Zl}\p{Zp}]+/gu, " ").replace(/\s+/g, " ").trim();
@@ -43,7 +49,7 @@ export function fixtureFailureEvidence(error, { names = 6, nameLimit = 80 } = {}
   const failed = [...stdout.matchAll(/^not ok \d+ - (.+)$/gm)].map(match => match[1].replace(/\s+#\s+(?:SKIP|TODO).*$/i, ""));
   if (failed.length) {
     const total = /^# tests (\d+)$/m.exec(stdout)?.[1];
-    const shown = failed.slice(0, names).map(name => (name.length > nameLimit ? name.slice(0, nameLimit - 1) + "…" : name));
+    const shown = failed.slice(0, names).map(name => diagnosticLine(name, nameLimit));
     const more = failed.length > shown.length ? "; +" + (failed.length - shown.length) + " more" : "";
     return failed.length + (total ? " of " + total : "") + " Hub fixture tests failed: " + shown.join("; ") + more;
   }
