@@ -6,7 +6,8 @@ const redactions = [
   [/\b([a-z][a-z0-9+.-]*:\/\/)[^\s/@]*@/gi, "$1[redacted]@"],
   [/-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*/g, "[redacted]"],
   [/\b(?:gh[pousr]_[A-Za-z0-9]{16,}|github_pat_[A-Za-z0-9_]{16,}|xox[abprs]-[A-Za-z0-9-]{10,}|AKIA[0-9A-Z]{16}|sk-[A-Za-z0-9_-]{20,})/g, "[redacted]"],
-  [/\b(authorization|proxy-authorization)(["']?\s*[:=]\s*)(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|(?:(?:bearer|basic|token)\s+)?\S+)/gi, "$1$2[redacted]"],
+  // Every scheme carries credentials after its name, so withhold the rest of the line.
+  [/\b(authorization|proxy-authorization)(["']?\s*[:=]\s*)[^\r\n]*/gi, "$1$2[redacted]"],
   [/\b(bearer|basic)\s+[A-Za-z0-9._~+/=-]{8,}/gi, "$1 [redacted]"],
   [/\b([A-Za-z0-9_-]*(?:token|secret|passw(?:or)?d|api[_-]?key|credential|private[_-]?key)[A-Za-z0-9_-]*)(["']?\s*[:=]\s*)(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|\S+)/gi, "$1$2[redacted]"],
 ];
@@ -16,6 +17,9 @@ export function diagnosticLine(value, limit = 600) {
   // Encoded text can hide keys and delimiters. Withhold it rather than
   // decoding untrusted quoting into a different structure before redaction.
   if (/%[0-9a-f]{2}|\\u[0-9a-f]{4}/i.test(value)) return "encoded diagnostic evidence withheld";
+  // Invisible format characters can split a credential key so it escapes the
+  // patterns below and then rejoins when they are stripped. Withhold that too.
+  if (/\p{Cf}/u.test(value)) return "hidden-character diagnostic evidence withheld";
   let line = value;
   for (const [pattern, replacement] of redactions) line = line.replace(pattern, replacement);
   // Control and bidirectional characters can hide or rewrite log lines.

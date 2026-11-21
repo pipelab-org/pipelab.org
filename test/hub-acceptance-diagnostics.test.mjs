@@ -106,6 +106,13 @@ test("the import refusal repeats the failed step evidence", () => {
   assert.doesNotMatch(refused, /hunter2/);
   assert.equal(refused.split("\n").length, 1);
 
+  // Any authorization scheme keeps its credential material out of the refusal.
+  steps["5"].evidence = "request failed: Authorization: Negotiate opaque-auth-data";
+  assert.doesNotMatch(acceptanceRefusal(JSON.stringify({ steps })), /opaque-auth-data/);
+  // A hidden format character cannot split a key around the credential patterns.
+  steps["5"].evidence = "to​ken=synthetic-secret-value";
+  assert.doesNotMatch(acceptanceRefusal(JSON.stringify({ steps })), /synthetic-secret-value/);
+
   steps["5"].evidence = { nested: "not a line" };
   assert.equal(acceptanceRefusal(JSON.stringify({ steps })), "routine Hub acceptance failed at step 5: no evidence recorded");
 });
