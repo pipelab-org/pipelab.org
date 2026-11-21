@@ -10,7 +10,7 @@ import { acquirePolicyBlobs } from "./policy-blobs.mjs";
 import { parseListing } from "./validate.mjs";
 import { readBundleFiles, verifyBundle } from "./verify-bundle.mjs";
 import { defaultLicenses, readLicenseMaterial } from "./license-delivery.mjs";
-import { communityListingKey, findLicenseApproval, osiApprovedLicenses } from "./license-approvals.mjs";
+import { approvalFile, communityListingKey, findLicenseApprovals, osiApprovedLicenses, parseLicenseApprovals } from "./license-approvals.mjs";
 import { acquireHubTree, assertHubOnly } from "./source-tree.mjs";
 
 // Local eligibility check for a proposed Hub-only rules change (design 3.2.1
@@ -76,6 +76,19 @@ function matchesPullRequest(pr, number, base, head) {
 }
 
 
+const approvalIdentity = entry => [entry.listing, entry.license, entry.license_sha256].join(" ");
+
+// Approvals already recorded at the base commit, keyed by listing, license and
+// text digest. A missing or unreadable base file yields none, so every approval
+// in the candidate is then treated as new and checked.
+function baseApprovals(repository, base) {
+  try {
+    return new Set(parseLicenseApprovals(git(repository, ["show", base + ":" + approvalFile]).toString("utf8")).map(approvalIdentity));
+  } catch {
+    return new Set();
+  }
+}
+
 export function preflightContribution({ repository, base, head, maintenance = false, site = defaultSite }, inspect) {
   const report = { mode: maintenance ? "maintenance" : "contribution", base, head, verdict: "REFUSED", steps: {}, changes: [], categories: [], remaining: [] };
   const run = (name, action) => {
@@ -123,12 +136,16 @@ export function preflightContribution({ repository, base, head, maintenance = fa
       return { publishers: loaded.publishers.length, listings: loaded.items.length, histories: loaded.history.length };
     })) return report;
 
-    // List membership gates an approval only when it is admitted. Loading and
-    // generation do not recheck it, so a later list refresh cannot unload the tree.
+    // List membership gates an approval only when it is admitted: entries added or
+    // changed relative to the base. Loading and generation do not recheck it, and
+    // an unchanged entry whose identifier later left the list fails only at use
+    // time for its own listing, so it cannot block an unrelated approval.
     if (report.categories.includes("license-approval") && !run("license-approval-list", () => {
-      const outside = loaded.approvals.filter(entry => !osiApprovedLicenses().has(entry.license));
+      const admitted = baseApprovals(repository, base);
+      const added = loaded.approvals.filter(entry => !admitted.has(approvalIdentity(entry)));
+      const outside = added.filter(entry => !osiApprovedLicenses().has(entry.license));
       if (outside.length) throw new Error("license approval names a license outside the OSI-approved list: " + outside.map(entry => entry.listing + " " + entry.license).join(", "));
-      return loaded.approvals.length;
+      return added.length;
     })) return report;
 
     if (!run("bundle-signatures", () => loaded.items.filter(item => item.publisher).map(item => {
@@ -148,7 +165,7 @@ export function preflightContribution({ repository, base, head, maintenance = fa
       const listing = parseListing(readFileSync(item.listing_file, "utf8"));
       if (defaultLicenses.has(listing.license)) return [];
       const material = readLicenseMaterial(item.bundle_dir, listing.license, readBundleFiles(item.bundle_dir), {
-        approval: findLicenseApproval(loaded.approvals, communityListingKey(item.publisher.id, listing.bundle_name), listing.license),
+        approval: findLicenseApprovals(loaded.approvals, communityListingKey(item.publisher.id, listing.bundle_name), listing.license),
       });
       return [{ id: listing.id, license: listing.license, license_sha256: material.license.sha256 }];
     }))) return report;

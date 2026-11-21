@@ -323,9 +323,17 @@ test("generation lists a non-default OSI license only under an approval of the d
   assert.equal(record.listing.license, "MPL-2.0");
   assert.equal(record.license_material.license.text, text);
   assert.equal(record.license_material.license.sha256, approval.license_sha256);
+  // A staged replacement approval coexists with the current one, in either order.
+  const staged = { ...approval, license_sha256: sha256(text + "Revised.\n"), approved_in: "https://github.com/pipelab-org/pipelock-rules/pull/14" };
+  assert.equal(community([staged, approval]).license_material.license.sha256, approval.license_sha256);
+  assert.equal(community([approval, staged]).license_material.license.sha256, approval.license_sha256);
+  assert.throws(() => community([staged, { ...staged, license_sha256: sha256("other\n") }]), unapproved);
   // Text changed after approval.
   writeFileSync(delivered, text + "Edited.\n");
   assert.throws(() => community([approval]), unapproved);
+  writeFileSync(delivered, text + "Revised.\n");
+  assert.equal(community([approval, staged]).license_material.license.sha256, staged.license_sha256);
+  writeFileSync(delivered, text + "Edited.\n");
   writeFileSync(delivered, text);
   for (const license of ["Unknown-1.0", "GPL-3.0"]) {
     declare(license);

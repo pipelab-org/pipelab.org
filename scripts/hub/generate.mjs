@@ -20,7 +20,7 @@ import { toolingIdentity, jsonBytes, readMeasurement, assessMeasurement, assertR
 import { routeManifest } from "./route-manifest.mjs";
 import { bundleWorkload } from "./workload.mjs";
 import { readLicenseMaterial, licenseRecord, licenseDownloads, officialRoute, servedName, defaultLicenses } from "./license-delivery.mjs";
-import { communityListingKey, findLicenseApproval } from "./license-approvals.mjs";
+import { communityListingKey, findLicenseApprovals } from "./license-approvals.mjs";
 
 export function runHubcheck(binary, mode, request, { timeout = 120000 } = {}) {
   const output = execFileSync(binary, [mode], { input: JSON.stringify(request), encoding: "utf8", timeout, maxBuffer: 16 * 1024 * 1024, env: { ...process.env, GOMAXPROCS: "1" } });
@@ -202,7 +202,7 @@ function generateFromListings({ root, items, engine, binary, repository, config,
       // Hub-served packs deliver license and notices beside the signed pair.
       // A default license ignores approvals. Any other OSI license needs the
       // approval recorded in Rules for this publisher, bundle, license and text.
-      const approval = findLicenseApproval(approvals, communityListingKey(publisher.id, listing.bundle_name), listing.license);
+      const approval = findLicenseApprovals(approvals, communityListingKey(publisher.id, listing.bundle_name), listing.license);
       const material = readLicenseMaterial(item.bundle_dir, listing.license, pair, { approval });
       if (sha256(pair.bytes) !== record.bundle_sha256 || sha256(pair.signature) !== record.signature_sha256) {
         throw new Error("license delivery would alter signed bytes");

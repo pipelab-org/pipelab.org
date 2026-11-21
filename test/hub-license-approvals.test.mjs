@@ -8,13 +8,15 @@ import test from "node:test";
 import { stringify } from "yaml";
 import { preflightContribution } from "../scripts/hub/contribution-preflight.mjs";
 import { sha256, toolingIdentity } from "../scripts/hub/evidence.mjs";
-import { communityListingKey, findLicenseApproval, loadLicenseApprovals, osiApprovedLicenses, osiListFrom, parseLicenseApprovals } from "../scripts/hub/license-approvals.mjs";
+import * as approvalModule from "../scripts/hub/license-approvals.mjs";
+import { communityListingKey, loadLicenseApprovals, osiApprovedLicenses, osiListFrom, parseLicenseApprovals } from "../scripts/hub/license-approvals.mjs";
 import { defaultLicenses, readLicenseMaterial } from "../scripts/hub/license-delivery.mjs";
 import { acquireHubTree, assertHubOnly } from "../scripts/hub/source-tree.mjs";
 import { parseListing } from "../scripts/hub/validate.mjs";
 import { droppedReferenced, referencedLicenses, serialize } from "../scripts/hub/update-osi-licenses.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
+const findLicenseApprovals = (...args) => approvalModule.findLicenseApprovals(...args);
 const pullURL = "https://github.com/pipelab-org/pipelock-rules/pull/12";
 const mplText = "Mozilla Public License Version 2.0\n\nFixture text for an OSI-approved license outside the default set.\n";
 const entry = { listing: "acme/example-bundle", license: "MPL-2.0", license_sha256: sha256(mplText), approved_in: pullURL };
@@ -69,13 +71,13 @@ test("license approval entries are strict and bound to one listing", () => {
   // List membership is a use-time check: an approval whose identifier has left the
   // mutable OSI list still parses, so it cannot make the whole tree unloadable.
   for (const license of ["Unknown-1.0", "GPL-3.0"]) assert.deepEqual(parseLicenseApprovals(approvalsFile({ ...entry, license })), [{ ...entry, license }]);
-  bad(approvalsFile(entry, { ...entry, license: "GPL-3.0-only" }), /duplicate license approval/);
+  bad(approvalsFile(entry, { ...entry, approved_in: pullURL.replace("/12", "/13") }), /duplicate license approval/);
 
   assert.equal(communityListingKey("acme", "example-bundle"), entry.listing);
-  assert.equal(findLicenseApproval([entry], entry.listing, "MPL-2.0"), entry);
-  assert.equal(findLicenseApproval([entry], "acme/other-bundle", "MPL-2.0"), null);
-  assert.equal(findLicenseApproval([entry], entry.listing, "GPL-3.0-only"), null);
-  assert.equal(findLicenseApproval(undefined, entry.listing, "MPL-2.0"), null);
+  assert.deepEqual(findLicenseApprovals([entry], entry.listing, "MPL-2.0"), [entry]);
+  assert.deepEqual(findLicenseApprovals([entry], "acme/other-bundle", "MPL-2.0"), []);
+  assert.deepEqual(findLicenseApprovals([entry], entry.listing, "GPL-3.0-only"), []);
+  assert.deepEqual(findLicenseApprovals(undefined, entry.listing, "MPL-2.0"), []);
 });
 
 test("a missing approval file means no approvals; a malformed one refuses the tree", () => {
@@ -300,8 +302,8 @@ test("license approvals cannot transfer between ambiguous publisher and bundle p
   const otherPublisher = "acme", otherBundle = "tools--example-bundle";
   const approvedKey = communityListingKey(originalPublisher, originalBundle);
   const approved = parseLicenseApprovals(approvalsFile({ ...entry, listing: approvedKey }));
-  assert.equal(findLicenseApproval(approved, approvedKey, "MPL-2.0"), approved[0]);
-  assert.equal(findLicenseApproval(approved, communityListingKey(otherPublisher, otherBundle), "MPL-2.0"), null);
+  assert.deepEqual(findLicenseApprovals(approved, approvedKey, "MPL-2.0"), [approved[0]]);
+  assert.deepEqual(findLicenseApprovals(approved, communityListingKey(otherPublisher, otherBundle), "MPL-2.0"), []);
   const { directory, commit } = rules(t);
   const base = commit({ "hub/license-approvals.yaml": approvalsFile({ ...entry, listing: approvedKey }) });
   const files = pack("MPL-2.0", mplText);
@@ -427,4 +429,117 @@ test("preflight refuses a non-default license on an official bundle listing", t 
     assert.match(report.steps["source-parse"].evidence, /official bundle listing .*default license/, license);
   }
   assert.equal(check("MIT").verdict, "LOCAL-ELIGIBLE");
+});
+
+test("maintenance preflight checks only approvals added or changed against the base", t => {
+  const { directory, commit } = rules(t);
+  // "Unknown-1.0" stands for an identifier that has since left the OSI list.
+  const stale = { ...entry, listing: "acme/other-bundle", license: "Unknown-1.0" };
+  const base = commit({ "hub/license-approvals.yaml": approvalsFile(stale) });
+  const check = (from, changes) => preflightContribution({ repository: directory, base: from, head: commit({ "hub/license-approvals.yaml": approvalsFile(...changes) }), site: root, maintenance: true });
+
+  // An unrelated stale entry does not block a new approval for a current identifier.
+  const added = check(base, [stale, entry]);
+  assert.equal(added.verdict, "LOCAL-ELIGIBLE", JSON.stringify(added.steps));
+  assert.equal(added.steps["license-approval-list"].evidence, 1);
+  // Only the entries that differ from the base are held to the list.
+  const brandNew = check(base, [stale, entry, { ...entry, listing: "acme/third-bundle", license: "GPL-3.0" }]);
+  assert.equal(failed(brandNew), "license-approval-list");
+  assert.match(brandNew.steps["license-approval-list"].evidence, /acme\/third-bundle GPL-3\.0/);
+  assert.doesNotMatch(brandNew.steps["license-approval-list"].evidence, /Unknown-1\.0/);
+  // Changing the stale entry itself (new text digest) makes it a new approval and checks it.
+  const changed = check(base, [{ ...stale, license_sha256: sha256("other text\n") }]);
+  assert.equal(failed(changed), "license-approval-list");
+  assert.match(changed.steps["license-approval-list"].evidence, /acme\/other-bundle Unknown-1\.0/);
+  // Re-pointing the stale entry at another identifier that is itself off the list is refused too.
+  assert.equal(failed(check(base, [{ ...stale, license: "GPL-3.0" }])), "license-approval-list");
+  // The stale entry still fails at use time for its own listing.
+  const { dir, signed } = bundleDirectory(t, { LICENSE: mplText });
+  assert.throws(() => readLicenseMaterial(dir, "Unknown-1.0", signed, { approval: { ...stale, license_sha256: sha256(mplText) } }), /unsupported listing license/);
+});
+
+test("several approvals may coexist for one listing so a license text change can be staged", t => {
+  const replacementText = mplText + "Revised paragraph.\n";
+  const replacement = { ...entry, license_sha256: sha256(replacementText), approved_in: pullURL.replace("/12", "/14") };
+  const parsed = parseLicenseApprovals(approvalsFile(entry, replacement));
+  assert.deepEqual(parsed, [entry, replacement]);
+  // Another identifier for the same listing coexists as well.
+  const other = { ...entry, license: "GPL-3.0-only" };
+  assert.deepEqual(parseLicenseApprovals(approvalsFile(entry, replacement, other)), [entry, replacement, other]);
+  assert.deepEqual(findLicenseApprovals(parsed, entry.listing, "MPL-2.0"), [entry, replacement]);
+  // Exact duplicates stay refused whatever else differs, and the total cap holds.
+  assert.throws(() => parseLicenseApprovals(approvalsFile(entry, replacement, { ...entry })), /duplicate license approval/);
+  assert.throws(() => parseLicenseApprovals(approvalsFile(entry, entry)), /duplicate license approval/);
+  const many = count => approvalsFile(...Array.from({ length: count }, (_, index) => ({ ...entry, license_sha256: sha256("text " + index) })));
+  assert.equal(parseLicenseApprovals(many(1000)).length, 1000);
+  assert.throws(() => parseLicenseApprovals(many(1001)), /invalid license approval file/);
+
+  // Any entry that matches the delivered identifier and digest authorizes delivery.
+  const unapproved = /license is not approved for this listing or its text changed/;
+  for (const [text, label] of [[mplText, "old"], [replacementText, "new"]]) {
+    const { dir, signed } = bundleDirectory(t, { LICENSE: text });
+    assert.equal(readLicenseMaterial(dir, "MPL-2.0", signed, { approval: findLicenseApprovals(parsed, entry.listing, "MPL-2.0") }).license.text, text, label);
+  }
+  const unlisted = bundleDirectory(t, { LICENSE: mplText + "Unapproved edit.\n" });
+  assert.throws(() => readLicenseMaterial(unlisted.dir, "MPL-2.0", unlisted.signed, { approval: findLicenseApprovals(parsed, entry.listing, "MPL-2.0") }), unapproved);
+  assert.throws(() => readLicenseMaterial(unlisted.dir, "MPL-2.0", unlisted.signed, { approval: [] }), unapproved);
+
+  // The approval PR lands first, then the pack PR changes LICENSE, and preflight passes at each step.
+  const { directory, commit } = rules(t);
+  commit({ "hub/license-approvals.yaml": approvalsFile(entry) });
+  const published = commit(pack("MPL-2.0", mplText));
+  const staged = commit({ "hub/license-approvals.yaml": approvalsFile(entry, replacement) });
+  const maintenance = preflightContribution({ repository: directory, base: published, head: staged, site: root, maintenance: true });
+  assert.equal(maintenance.verdict, "LOCAL-ELIGIBLE", JSON.stringify(maintenance.steps));
+  const revised = commit({ [packDirectory + "LICENSE"]: replacementText });
+  const update = preflightContribution({ repository: directory, base: staged, head: revised, site: root });
+  assert.equal(update.verdict, "LOCAL-ELIGIBLE", JSON.stringify(update.steps));
+  assert.deepEqual(update.steps["license-approvals"].evidence, [{ id: "example-bundle", license: "MPL-2.0", license_sha256: replacement.license_sha256 }]);
+});
+
+test("withdrawn lifecycle records do not block an OSI list refresh", t => {
+  const dir = mkdtempSync(path.join(tmpdir(), "hub-osi-lifecycle-"));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const write = (file, value) => { mkdirSync(path.dirname(path.join(dir, file)), { recursive: true }); writeFileSync(path.join(dir, file), typeof value === "string" ? value : JSON.stringify(value)); };
+  const record = (name, license) => ({ id: "bundle--" + name, route: "/hub/community/acme/" + name + "/", publisher: "acme", badge: "community", license, license_sha256: "0".repeat(64) });
+  const removed = { type: "removed", at: "2026-11-17", reason_id: "1".repeat(32), reason_class: "retired", public_reason: "Retired.", bundle_sha256: "a".repeat(64), downloads: "retained" };
+  const cleared = { type: "reason-cleared", at: "2026-11-18", reason_id: "1".repeat(32) };
+  const restored = { type: "restored", at: "2026-11-19", public_note: "Back." };
+  const lifecycle = (listings, history) => write("data/hub/generated/lifecycle.json", { listings, history, routes: [] });
+  const blockers = rules => [...referencedLicenses({ root: dir, rules })].sort();
+  lifecycle([
+    record("withdrawn-one", "GPL-3.0"), record("restored-one", "EPL-2.0"), record("active-one", "Zlib"), record("no-history", "LGPL-2.1-only"),
+  ], [
+    { id: "bundle--withdrawn-one", events: [removed] },
+    { id: "bundle--restored-one", events: [removed, cleared, restored] },
+  ]);
+
+  // A withdrawn record trusts its pinned license, so it is not a blocker. Records that are
+  // active, restored or have no withdrawal history still are.
+  assert.deepEqual(blockers(), ["EPL-2.0", "LGPL-2.1-only", "Zlib"]);
+  // A withdrawn listing that later returns is active again and blocks the refresh once more.
+  lifecycle([record("withdrawn-one", "GPL-3.0")], [{ id: "bundle--withdrawn-one", events: [removed, cleared, restored] }]);
+  assert.deepEqual(blockers(), ["GPL-3.0"]);
+  // Clearing one of two open reasons does not restore the listing.
+  const second = { ...removed, reason_id: "2".repeat(32) };
+  lifecycle([record("withdrawn-one", "GPL-3.0")], [{ id: "bundle--withdrawn-one", events: [removed, second, cleared] }]);
+  assert.deepEqual(blockers(), []);
+  // Active listings in the catalog, and approvals in a Rules checkout, are still blockers.
+  write("data/hub/generated/listings.json", [{ listing: { id: "active-one", license: "Zlib" } }]);
+  write("rules/hub/license-approvals.yaml", approvalsFile({ ...entry, license: "GPL-3.0-only" }));
+  assert.deepEqual(blockers(), ["Zlib"]);
+  assert.deepEqual(blockers(path.join(dir, "rules")), ["GPL-3.0-only", "Zlib"]);
+
+  // The command goes ahead when only a withdrawn record names the dropped identifier. --check
+  // writes nothing, so it reports the difference from the committed list instead of refusing.
+  write("data/hub/generated/listings.json", []);
+  write("spdx.json", { licenseListVersion: "9.9", releaseDate: "2026-01-01T00:00:00Z", licenses: [{ licenseId: "MPL-2.0", isOsiApproved: true, isDeprecatedLicenseId: false }] });
+  const script = path.join(root, "scripts/hub/update-osi-licenses.mjs");
+  let failure;
+  try {
+    execFileSync("node", [script, "--check", "--root", dir, path.join(dir, "spdx.json")], { stdio: "pipe", encoding: "utf8" });
+  } catch (error) { failure = error; }
+  assert.ok(failure, "--check reports the committed list as different");
+  assert.doesNotMatch(failure.stderr, /would drop/);
+  assert.match(failure.stderr, /differs from the SPDX license list/);
 });

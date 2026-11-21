@@ -17,8 +17,10 @@ import { defaultLicenses } from "./license-delivery.mjs";
 // nothing, so it also notices a newer SPDX release.
 //
 // A refresh is refused, with nothing written, when it would drop a non-default
-// license that committed data still names: accepted listing records under
-// data/hub/generated and first-party listings under data/hub/first-party in
+// license that committed data still names: active listing records under
+// data/hub/generated (lifecycle records of withdrawn listings keep a pinned
+// license for retained downloads and are not counted, since delivery never
+// consults the list for them) and first-party listings under data/hub/first-party in
 // --root (default: this repository), and, with --rules, a Rules checkout's
 // hub/license-approvals.yaml and hub/listings. Rules content is not part of
 // this repository, so approvals can only be checked against a checkout the
@@ -48,11 +50,37 @@ function collectLicenses(value, found) {
   }
 }
 
+// Listing identities whose removal history ends withdrawn. Replays only the
+// state transitions: a removal opens the withdrawal, a restoration ends it, and
+// reason-cleared events never reinstate a listing on their own.
+function withdrawnListings(history) {
+  const withdrawn = new Set();
+  for (const log of Array.isArray(history) ? history : []) {
+    const last = Array.isArray(log?.events) ? log.events.findLast(event => event?.type === "removed" || event?.type === "restored") : undefined;
+    if (typeof log?.id === "string" && last?.type === "removed") withdrawn.add(log.id);
+  }
+  return withdrawn;
+}
+
+// A withdrawn listing's accepted record keeps its pinned license for retained
+// downloads. Retained delivery trusts that pin and never consults the list, so
+// the record is not a refresh blocker. Active and restored listings still are.
+function collectLifecycleLicenses(lifecycle, found) {
+  if (!lifecycle || typeof lifecycle !== "object" || Array.isArray(lifecycle)) return collectLicenses(lifecycle, found);
+  const withdrawn = withdrawnListings(lifecycle.history);
+  const { listings, ...rest } = lifecycle;
+  collectLicenses(rest, found);
+  collectLicenses(Array.isArray(listings) ? listings.filter(record => !withdrawn.has(record?.id)) : listings, found);
+}
+
 // Non-default license identifiers named by committed data. Default licenses use
 // the automatic path and never depend on the list.
 export function referencedLicenses({ root = repositoryRoot, rules } = {}) {
   const found = new Set();
-  for (const file of files(path.join(root, "data/hub/generated"), ".json")) collectLicenses(JSON.parse(readFileSync(file, "utf8")), found);
+  for (const file of files(path.join(root, "data/hub/generated"), ".json")) {
+    const value = JSON.parse(readFileSync(file, "utf8"));
+    if (path.basename(file) === "lifecycle.json") collectLifecycleLicenses(value, found); else collectLicenses(value, found);
+  }
   for (const file of files(path.join(root, "data/hub/first-party"), ".yaml")) collectLicenses(parse(readFileSync(file, "utf8"), { maxAliasCount: 0 }), found);
   if (rules) {
     const approvals = path.join(rules, "hub/license-approvals.yaml");

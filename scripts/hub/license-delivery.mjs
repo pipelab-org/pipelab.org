@@ -115,8 +115,9 @@ function readText(directory, name, required, fileName = name) {
 // A default license needs the complete canonical text and ignores `approval`.
 // Any other OSI-approved SPDX identifier is delivered only under a maintainer
 // approval ({ license, license_sha256 }, see license-approvals.mjs) naming the
-// same identifier and the SHA-256 of the delivered LICENSE bytes. No approval,
-// an unknown or deprecated identifier, or changed text is refused.
+// same identifier and the SHA-256 of the delivered LICENSE bytes. `approval` is
+// one entry or a list; any entry that matches both authorizes. No approval, an
+// unknown or deprecated identifier, or changed text is refused.
 //
 // `retained` serves a withdrawn listing whose accepted lifecycle record pins the
 // license and digest. That record was admitted under the list of its day, so
@@ -137,7 +138,7 @@ export function readLicenseMaterial(directory, license, signed, { served = false
   const notice = readText(directory, noticeFile, false, fileName(noticeFile));
   if (automatic) {
     if (!completeLicense(license, licenseText.text)) throw new Error("license text does not match the declared license");
-  } else if (!(approval && approval.license === license && approval.license_sha256 === licenseText.sha256)) {
+  } else if (![approval ?? []].flat().some(entry => entry?.license === license && entry.license_sha256 === licenseText.sha256)) {
     throw new Error("license is not approved for this listing or its text changed");
   }
   if (copyrightRequired.has(license) &&

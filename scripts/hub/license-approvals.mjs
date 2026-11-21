@@ -10,8 +10,10 @@ import { rulesRepository } from "./rules-acquisition.mjs";
 // under any other OSI-approved license is listed only when a maintainer has
 // recorded an approval in the Rules repository at hub/license-approvals.yaml.
 // The approval names the community listing, the SPDX identifier and the exact
-// bytes of the delivered LICENSE. Nothing here grants an approval; it only
-// verifies the committed record against what would be served.
+// bytes of the delivered LICENSE. A listing may hold several approvals, one per
+// identifier and text, so a revised text can be approved before the pack PR
+// replaces LICENSE. Nothing here grants an approval; it only verifies the
+// committed record against what would be served.
 
 export const osiListSource = "https://spdx.org/licenses/licenses.json";
 export const spdxId = /^[A-Za-z0-9][A-Za-z0-9.+-]{0,63}$/;
@@ -95,9 +97,12 @@ export function parseLicenseApprovals(source) {
         !approvalURL.test(entry.approved_in)) {
       throw new Error("invalid license approval entry");
     }
-    // One approval per community listing. A second entry could widen it.
-    if (seen.has(entry.listing)) throw new Error("duplicate license approval for a listing");
-    seen.add(entry.listing);
+    // A listing may carry several approvals so a license text change can be
+    // approved before the pack PR updates LICENSE. Each entry authorizes only its
+    // own identifier and digest; repeating one exactly adds nothing.
+    const identity = [entry.listing, entry.license, entry.license_sha256].join(" ");
+    if (seen.has(identity)) throw new Error("duplicate license approval for a listing, license and text");
+    seen.add(identity);
     // List membership is deliberately not checked here. The list is mutable
     // (SPDX deprecations, OSI status), so one approval that has left it must not
     // make the whole Rules tree unloadable. readLicenseMaterial checks membership
@@ -119,9 +124,9 @@ export function loadLicenseApprovals(directory) {
 // both names, so concatenating them with "--" is not an exact identity.
 export const communityListingKey = (publisherId, bundleName) => publisherId + "/" + bundleName;
 
-// The approval, if any, that covers this listing under this license. Matching
-// the digest to the delivered bytes is the caller's check (license-delivery).
-export function findLicenseApproval(approvals, listing, license) {
-  const matches = (approvals ?? []).filter(entry => entry.listing === listing && entry.license === license);
-  return matches.length === 1 ? matches[0] : null;
+// Every approval recorded for this listing under this license. Any one whose
+// digest equals the delivered bytes authorizes delivery; matching the digest is
+// the caller's check (license-delivery).
+export function findLicenseApprovals(approvals, listing, license) {
+  return (approvals ?? []).filter(entry => entry.listing === listing && entry.license === license);
 }
