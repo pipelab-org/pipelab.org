@@ -16,7 +16,9 @@ const workflows = {
 };
 
 export function readSiteMain(options) {
-  return readRemoteRefs(server + "/" + repository, [main], "invalid site main result", options).get(main);
+  return readRemoteRefs(server + "/" + repository, [main], "invalid site main result", {
+    ...options, unavailable: "site main unavailable from GitHub",
+  }).get(main);
 }
 
 // Design 3.2.1. Call from the trusted site checkout before reading any
@@ -33,12 +35,7 @@ export function admissionProducer({ mode, environment, root, engine }, readMain 
     throw new HubCheckFailure("producer context does not identify the expected site main workflow");
   }
 
-  let published;
-  try {
-    published = readMain();
-  } catch (cause) {
-    throw new HubUnavailable("site main unavailable from GitHub", { cause });
-  }
+  const published = readMain();
   if (published !== revision) throw new HubCheckFailure("producer revision differs from current site main");
   const tooling = assertSiteCheckoutIdentity(root, revision, engine);
   return { ref, sha: revision, workflow: workflow.path, run_id: runId, tooling_identity: tooling };

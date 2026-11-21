@@ -55,13 +55,9 @@ function pullRequest(number) {
   const pr = readRulesAPI("pulls/" + number, { fresh: true });
   const baseRef = "refs/heads/main";
   const headRef = `refs/pull/${number}/head`;
-  let tips;
-  try {
-    tips = readRemoteRefs(`https://github.com/${rulesRepository}`, [baseRef, headRef], "invalid rules ref result");
-  } catch (cause) {
-    if (cause.code === "ETIMEDOUT") throw new HubUnavailable("Rules pull request ref lookup timed out", { cause });
-    throw cause;
-  }
+  const tips = readRemoteRefs(`https://github.com/${rulesRepository}`, [baseRef, headRef], "invalid rules ref result", {
+    unavailable: "Rules pull request refs unavailable from GitHub",
+  });
   if (pr?.base?.sha !== tips.get(baseRef) || pr?.head?.sha !== tips.get(headRef)) {
     throw new RulesRefMismatch("pull request metadata differs from the published Rules refs");
   }

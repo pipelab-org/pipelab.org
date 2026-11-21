@@ -6,6 +6,7 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { admissionProducer, readSiteMain } from "../scripts/hub/admission-producer.mjs";
+import { HubCheckFailure, HubUnavailable } from "../scripts/hub/check-failure.mjs";
 
 function fixture(t) {
   const root = mkdtempSync(path.join(tmpdir(), "hub-producer-"));
@@ -49,11 +50,36 @@ test("site main lookup uses an isolated Git context and keeps the proxy", t => {
       assert.equal(options.env.GIT_DIR, undefined);
       assert.equal(options.env.GIT_CONFIG_COUNT, undefined);
       assert.equal(options.env.HTTPS_PROXY, proxy);
+      assert.equal(options.env.LC_ALL, "C");
       return revision + "\trefs/heads/main\n";
     },
   });
   assert.equal(tip, revision);
   assert.equal(existsSync(lookupDirectory), false);
+});
+
+test("remote ref lookup distinguishes transport failures from malformed evidence", () => {
+  const read = runGit => readSiteMain({ runGit });
+  const expectedRef = "a".repeat(40) + "\trefs/heads/main\n";
+  for (const bad of [
+    "malformed\n", expectedRef + expectedRef, expectedRef.replace("\n", "\t\n"),
+    "b".repeat(40) + "\trefs/heads/other\n",
+  ]) {
+    assert.throws(() => read(() => bad), error =>
+      error instanceof HubCheckFailure && !(error instanceof HubUnavailable) && /invalid site main result/.test(error.message));
+  }
+  for (const stderr of [
+    "fatal: unable to access 'https://github.com/example/rules/': Could not resolve host: github.com",
+    "fatal: unable to access 'https://github.com/example/rules/': Recv failure: Connection reset by peer",
+    "fatal: unable to access 'https://github.com/example/rules/': The requested URL returned error: 503",
+    "error: RPC failed; curl 56 Receive failure",
+  ]) {
+    assert.throws(() => read(() => { throw Object.assign(new Error("git failed"), { status: 128, stderr }); }), HubUnavailable);
+  }
+  for (const stderr of ["fatal: index-pack failed", "fatal: remote error: ref not found"]) {
+    assert.throws(() => read(() => { throw Object.assign(new Error("git failed"), { status: 128, stderr }); }), error =>
+      error instanceof HubCheckFailure && !(error instanceof HubUnavailable));
+  }
 });
 
 test("admission producer binds the current main workflow, exact checkout and tooling", t => {
@@ -150,7 +176,13 @@ test("hosted admission and sync return retryable status when site main cannot be
   const { root, write, environment } = fixture(t);
   const input = path.join(root, "input.json");
   write("input.json", JSON.stringify({ source: {} }));
-  writeFileSync(path.join(root, "git"), "#!/bin/sh\nprintf 'private transport details\\n' >&2\nexit 128\n", { mode: 0o755 });
+  writeFileSync(path.join(root, "git"), [
+    "#!/bin/sh",
+    `printf '%s\\n' "fatal: unable to access 'https://github.com/pipelab-org/pipelab.org/': Could not resolve host: github.com" >&2`,
+    "printf '%s\\n' 'private transport details' >&2",
+    "exit 128",
+    "",
+  ].join("\n"), { mode: 0o755 });
   const cli = (name, variables) => spawnSync(process.execPath, [
     fileURLToPath(new URL("../scripts/hub/" + name, import.meta.url)), input,
   ], {

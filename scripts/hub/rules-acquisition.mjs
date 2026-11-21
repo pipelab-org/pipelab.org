@@ -2,7 +2,7 @@ import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import path from "node:path";
 import { HubUnavailable } from "./check-failure.mjs";
-import { httpsGitEnvironment, readGit, readRemoteRefs } from "./git-source.mjs";
+import { httpsGitEnvironment, isGitTransportUnavailable, readGit, readRemoteRefs } from "./git-source.mjs";
 import { maxPolicyBlobBytes, policyBlobEntries } from "./policy-blobs.mjs";
 import { assertHubOnly, hubBlobEntries, maxSourceFileBytes } from "./source-tree.mjs";
 
@@ -11,11 +11,9 @@ const rulesURL = "https://github.com/" + rulesRepository;
 const rulesMainRef = "refs/heads/main";
 
 export function readRulesMain() {
-  try {
-    return readRemoteRefs(rulesURL, [rulesMainRef], "invalid Rules main ref result").get(rulesMainRef);
-  } catch (cause) {
-    throw new HubUnavailable("Rules main unavailable from GitHub", { cause });
-  }
+  return readRemoteRefs(rulesURL, [rulesMainRef], "invalid Rules main ref result", {
+    unavailable: "Rules main unavailable from GitHub",
+  }).get(rulesMainRef);
 }
 // Bound the initial Git metadata pack to the same size as GitHub's recursive
 // Trees API response. The selected blob fetch adds its declared payload size.
@@ -101,10 +99,10 @@ export function acquireRulesObjects(directory, { number, base, head }) {
         "-c", "fetch.fsckObjects=true", "-c", "fetch.unpackLimit=1",
         "-C", repository, "fetch", "--quiet", "--no-tags", "--no-write-fetch-head",
         "--no-auto-maintenance", "--no-recurse-submodules", "--filter=blob:none", "origin", ...args], {
-        ...gitOptions, input, stdio: [input === undefined ? "ignore" : "pipe", "pipe", "ignore"],
+        ...gitOptions, input, stdio: [input === undefined ? "ignore" : "pipe", "pipe", "pipe"],
       });
     } catch (cause) {
-      if (cause.code === "ETIMEDOUT") throw new HubUnavailable("Rules object fetch timed out", { cause });
+      if (isGitTransportUnavailable(cause)) throw new HubUnavailable("Rules objects unavailable from GitHub", { cause });
       throw new Error(failure, { cause });
     }
   };
