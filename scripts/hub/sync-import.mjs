@@ -5,6 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { HubCheckFailure, HubUnavailable } from "./check-failure.mjs";
 import { admissionProducer } from "./admission-producer.mjs";
+import { failedAcceptanceStep } from "./diagnostic.mjs";
 import { jsonBytes, sha256 } from "./evidence.mjs";
 import { prepareBoundCatalog, writeCatalog } from "./generate.mjs";
 import { acquireRulesObjects, readRulesMain } from "./rules-acquisition.mjs";
@@ -22,6 +23,13 @@ function fileInventory(directory, prefix = "") {
     const bytes = readFileSync(target);
     return [{ path: name, size: bytes.length, sha256: sha256(bytes) }];
   }).sort((a, b) => a.path.localeCompare(b.path));
+}
+
+// The refusal names the failed step and repeats its single line of evidence,
+// bounded and stripped of credential-shaped text. Raw output stays in the cause.
+export function acceptanceRefusal(stdout) {
+  const failed = failedAcceptanceStep(stdout);
+  return failed ? "routine Hub acceptance failed at step " + failed.step + ": " + failed.evidence : "routine Hub acceptance did not pass";
 }
 
 const run = promisify(runProcess);
@@ -73,15 +81,7 @@ async function verifyRoutineImport({ source, producer, rulesRepository, rulesMai
   try {
     await run("make", ["--silent", "hub-acceptance", "HUB_ACCEPTANCE_INPUT=" + input], options);
   } catch (cause) {
-    let step;
-    try {
-      const { steps } = JSON.parse(cause.stdout);
-      step = Object.keys(steps).find(key => /^(?:[1-9]|10)$/.test(key) && steps[key].status === "fail");
-    } catch {
-      // A failure before the acceptance report has no step number.
-    }
-    const reason = step ? "routine Hub acceptance failed at step " + step : "routine Hub acceptance did not pass";
-    throw new HubCheckFailure(reason, { cause });
+    throw new HubCheckFailure(acceptanceRefusal(cause.stdout), { cause });
   }
   const { stdout: tree } = await git("rev-parse", "HEAD^{tree}");
   return tree.trim();
