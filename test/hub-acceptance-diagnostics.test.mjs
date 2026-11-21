@@ -78,7 +78,9 @@ test("diagnostic lines are one bounded line without credentials", () => {
     assert.doesNotMatch(line, /ghp_|s3cr3t|hunter2|AKIA|MIIEvQ|abcdefghijklmnop|x-access-token:/);
   }
   const noisy = diagnosticLine("first‮line\u0000with\ttabs\r\nand more");
-  assert.equal(noisy, "first line with tabs and more");
+  assert.equal(noisy, "hidden-character diagnostic evidence withheld");
+  // Ordinary control characters still collapse to readable text.
+  assert.equal(diagnosticLine("first line\u0000with\ttabs\r\nand more"), "first line with tabs and more");
   assert.ok(diagnosticLine("y".repeat(5000)).length <= 600);
   assert.equal(diagnosticLine("y".repeat(5000)).slice(-1), "…");
   for (const missing of [undefined, null, 5, {}, "", " \n "]) assert.equal(diagnosticLine(missing), "no evidence recorded");
