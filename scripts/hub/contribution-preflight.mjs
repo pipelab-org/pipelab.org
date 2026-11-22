@@ -83,6 +83,7 @@ export function acknowledgesContributorTerms(body) {
   // Parse the description as CommonMark so code blocks, HTML blocks, comments
   // and indented code never count. Only a list item outside a block quote whose
   // first paragraph is plain text "[x] " followed by the exact line counts.
+  const lines = body.split(/\r?\n/);
   const walker = new commonmark.Parser().parse(body).walker();
   for (let event = walker.next(); event; event = walker.next()) {
     const node = event.node;
@@ -91,6 +92,9 @@ export function acknowledgesContributorTerms(body) {
     for (let parent = node.parent; parent; parent = parent.parent) quoted ||= parent.type === "block_quote";
     const paragraph = node.firstChild;
     if (quoted || paragraph?.type !== "paragraph") continue;
+    // The marker must be literal in the source: an escaped \[x] renders as text, not a checkbox.
+    const [line, column] = paragraph.sourcepos[0];
+    if (!/^\[[xX]\] /.test(lines[line - 1]?.slice(column - 1) ?? "")) continue;
     let text = "", plain = true;
     for (let child = paragraph.firstChild; child; child = child.next) {
       if (child.type === "text") text += child.literal;

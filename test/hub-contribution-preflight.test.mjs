@@ -566,7 +566,8 @@ test("contributor terms must be explicitly checked in the pull request", () => {
     "<!--" + "\n- [x] " + contributorTermsAcknowledgment + "\n-->", "<!-- - [x] " + contributorTermsAcknowledgment + " -->",
     "    - [x] " + contributorTermsAcknowledgment,
     "<pre>" + "\n- [x] " + contributorTermsAcknowledgment + "\n</pre>", "<div>" + "\n- [x] " + contributorTermsAcknowledgment,
-    "- [x] `" + contributorTermsAcknowledgment + "`", "- [x]  " + contributorTermsAcknowledgment + " and nothing else"]) {
+    "- [x] `" + contributorTermsAcknowledgment + "`",
+    "- \\[x] " + contributorTermsAcknowledgment, "- [x\\] " + contributorTermsAcknowledgment, "- [x]  " + contributorTermsAcknowledgment + " and nothing else"]) {
     assert.equal(acknowledgesContributorTerms(body), false, String(body));
   }
 });
