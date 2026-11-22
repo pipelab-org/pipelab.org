@@ -283,6 +283,8 @@ test("eligible Hub input must match the same open rules pull request and publish
   const checked = preflightPullRequest(input, () => original);
   assert.equal(checked.verdict, "LOCAL-ELIGIBLE");
   assert.equal(checked.steps["pull-request"].status, "pass");
+  assert.equal(checked.steps["pull-request"].evidence.contributor_terms.acknowledged, true);
+  assert.match(checked.steps["pull-request"].evidence.contributor_terms.body_sha256, /^[a-f0-9]{64}$/);
   assert.equal(checked.pull_request.head_tree, git("rev-parse", "HEAD^{tree}"));
 
   let candidateRan = false;
@@ -551,13 +553,20 @@ test("contributor terms must be explicitly checked in the pull request", () => {
   assert.equal(acknowledgesContributorTerms(termsBody), true);
   assert.equal(acknowledgesContributorTerms("- [X] " + contributorTermsAcknowledgment), true);
   assert.equal(acknowledgesContributorTerms("```" + "\ncode\n```" + "\n<!-- note -->" + "\n- [x] " + contributorTermsAcknowledgment), true);
+  for (const body of ["+ [x] " + contributorTermsAcknowledgment, "1. [x] " + contributorTermsAcknowledgment,
+    "```x```" + "\n\n- [x] " + contributorTermsAcknowledgment,
+    "The template uses `<!--` markers." + "\n\n- [x] " + contributorTermsAcknowledgment]) {
+    assert.equal(acknowledgesContributorTerms(body), true, body);
+  }
   for (const body of [undefined, null, "", "- [ ] " + contributorTermsAcknowledgment,
     "- [x] " + contributorTermsAcknowledgment.replace("Terms of Service", "terms"),
     "[x] " + contributorTermsAcknowledgment, contributorTermsAcknowledgment,
     "> - [x] " + contributorTermsAcknowledgment,
     "```" + "\n- [x] " + contributorTermsAcknowledgment + "\n```", "~~~" + "\n- [x] " + contributorTermsAcknowledgment + "\n~~~",
     "<!--" + "\n- [x] " + contributorTermsAcknowledgment + "\n-->", "<!-- - [x] " + contributorTermsAcknowledgment + " -->",
-    "    - [x] " + contributorTermsAcknowledgment, "- [x]  " + contributorTermsAcknowledgment + " and nothing else"]) {
+    "    - [x] " + contributorTermsAcknowledgment,
+    "<pre>" + "\n- [x] " + contributorTermsAcknowledgment + "\n</pre>", "<div>" + "\n- [x] " + contributorTermsAcknowledgment,
+    "- [x] `" + contributorTermsAcknowledgment + "`", "- [x]  " + contributorTermsAcknowledgment + " and nothing else"]) {
     assert.equal(acknowledgesContributorTerms(body), false, String(body));
   }
 });

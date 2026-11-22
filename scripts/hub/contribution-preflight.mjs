@@ -1,8 +1,10 @@
 import { readGit as git, readRemoteRefs } from "./git-source.mjs";
+import { createHash } from "node:crypto";
 import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import * as commonmark from "commonmark";
 import { HubUnavailable } from "./check-failure.mjs";
 import { acquireRulesObjects, readRulesAPI, rulesRepository } from "./rules-acquisition.mjs";
 import { loadAcquiredListings } from "./source-listings.mjs";
@@ -78,27 +80,25 @@ export const contributorTermsMissing = "the contributor terms checkbox in the pu
 
 export function acknowledgesContributorTerms(body) {
   if (typeof body !== "string") return false;
-  // Only a visible checked list item counts: lines inside fenced code blocks or
-  // HTML comments are not rendered as checkboxes, and four-space indentation is code.
-  let fence = null, comment = false;
-  for (const line of body.split(/\r?\n/)) {
-    if (comment) {
-      if (line.includes("-->")) comment = false;
-      continue;
+  // Parse the description as CommonMark so code blocks, HTML blocks, comments
+  // and indented code never count. Only a list item outside a block quote whose
+  // first paragraph is plain text "[x] " followed by the exact line counts.
+  const walker = new commonmark.Parser().parse(body).walker();
+  for (let event = walker.next(); event; event = walker.next()) {
+    const node = event.node;
+    if (!event.entering || node.type !== "item") continue;
+    let quoted = false;
+    for (let parent = node.parent; parent; parent = parent.parent) quoted ||= parent.type === "block_quote";
+    const paragraph = node.firstChild;
+    if (quoted || paragraph?.type !== "paragraph") continue;
+    let text = "", plain = true;
+    for (let child = paragraph.firstChild; child; child = child.next) {
+      if (child.type === "text") text += child.literal;
+      else if (child.type === "softbreak") text += " ";
+      else plain = false;
     }
-    const marker = /^ {0,3}(`{3,}|~{3,})/.exec(line)?.[1];
-    if (fence) {
-      if (marker && marker[0] === fence[0] && marker.length >= fence.length && line.trim() === marker) fence = null;
-      continue;
-    }
-    if (marker) {
-      fence = marker;
-      continue;
-    }
-    const open = line.lastIndexOf("<!--");
-    if (open !== -1 && !line.slice(open).includes("-->")) comment = true;
-    if (line.includes("<!--")) continue;
-    if (/^ {0,3}[-*] \[[xX]\] (.*)$/.exec(line)?.[1].trim() === contributorTermsAcknowledgment) return true;
+    const match = /^\[[xX]\] (.*)$/s.exec(text);
+    if (plain && match && match[1].trim() === contributorTermsAcknowledgment) return true;
   }
   return false;
 }
@@ -230,7 +230,9 @@ export function preflightPullRequest({ number, fetchRules = false, ...options },
     try {
       const pr = readPull(number);
       if (!matchesPullRequest(pr, number, base, head)) return "open pull request does not match the requested repository, base and head";
-      return acknowledgesContributorTerms(pr.body) ? null : contributorTermsMissing;
+      if (!acknowledgesContributorTerms(pr.body)) return contributorTermsMissing;
+      mismatch.agreement = { acknowledged: true, body_sha256: createHash("sha256").update(pr.body).digest("hex") };
+      return null;
     } catch (error) {
       if (error instanceof RulesRefMismatch || error instanceof HubUnavailable) return error;
       return "published Rules pull request could not be verified";
@@ -302,7 +304,7 @@ function inspectPullRequest(options, binding, mismatch, refused, inspect) {
       "pull request moved, closed or became unavailable during the check" };
     return report;
   }
-  report.steps["pull-request"] = { status: "pass", evidence: binding };
+  report.steps["pull-request"] = { status: "pass", evidence: { ...binding, contributor_terms: mismatch.agreement } };
   return report;
 }
 
