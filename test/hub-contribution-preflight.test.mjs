@@ -550,10 +550,14 @@ test("Rules PR acquisition fetches only selected blobs before offline preflight"
 test("contributor terms must be explicitly checked in the pull request", () => {
   assert.equal(acknowledgesContributorTerms(termsBody), true);
   assert.equal(acknowledgesContributorTerms("- [X] " + contributorTermsAcknowledgment), true);
+  assert.equal(acknowledgesContributorTerms("```" + "\ncode\n```" + "\n<!-- note -->" + "\n- [x] " + contributorTermsAcknowledgment), true);
   for (const body of [undefined, null, "", "- [ ] " + contributorTermsAcknowledgment,
     "- [x] " + contributorTermsAcknowledgment.replace("Terms of Service", "terms"),
     "[x] " + contributorTermsAcknowledgment, contributorTermsAcknowledgment,
-    "> - [x] " + contributorTermsAcknowledgment, "- [x]  " + contributorTermsAcknowledgment + " and nothing else"]) {
+    "> - [x] " + contributorTermsAcknowledgment,
+    "```" + "\n- [x] " + contributorTermsAcknowledgment + "\n```", "~~~" + "\n- [x] " + contributorTermsAcknowledgment + "\n~~~",
+    "<!--" + "\n- [x] " + contributorTermsAcknowledgment + "\n-->", "<!-- - [x] " + contributorTermsAcknowledgment + " -->",
+    "    - [x] " + contributorTermsAcknowledgment, "- [x]  " + contributorTermsAcknowledgment + " and nothing else"]) {
     assert.equal(acknowledgesContributorTerms(body), false, String(body));
   }
 });

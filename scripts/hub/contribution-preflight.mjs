@@ -77,8 +77,30 @@ export const contributorTermsAcknowledgment = "I agree to the PipeLab Terms of S
 export const contributorTermsMissing = "the contributor terms checkbox in the pull request description is not checked";
 
 export function acknowledgesContributorTerms(body) {
-  return typeof body === "string" && body.split(/\r?\n/).some(line =>
-    /^\s*[-*] \[[xX]\] (.*)$/.exec(line)?.[1].trim() === contributorTermsAcknowledgment);
+  if (typeof body !== "string") return false;
+  // Only a visible checked list item counts: lines inside fenced code blocks or
+  // HTML comments are not rendered as checkboxes, and four-space indentation is code.
+  let fence = null, comment = false;
+  for (const line of body.split(/\r?\n/)) {
+    if (comment) {
+      if (line.includes("-->")) comment = false;
+      continue;
+    }
+    const marker = /^ {0,3}(`{3,}|~{3,})/.exec(line)?.[1];
+    if (fence) {
+      if (marker && marker[0] === fence[0] && marker.length >= fence.length && line.trim() === marker) fence = null;
+      continue;
+    }
+    if (marker) {
+      fence = marker;
+      continue;
+    }
+    const open = line.lastIndexOf("<!--");
+    if (open !== -1 && !line.slice(open).includes("-->")) comment = true;
+    if (line.includes("<!--")) continue;
+    if (/^ {0,3}[-*] \[[xX]\] (.*)$/.exec(line)?.[1].trim() === contributorTermsAcknowledgment) return true;
+  }
+  return false;
 }
 
 function matchesPullRequest(pr, number, base, head) {
