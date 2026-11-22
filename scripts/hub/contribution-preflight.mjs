@@ -1,8 +1,10 @@
 import { readGit as git, readRemoteRefs } from "./git-source.mjs";
+import { createHash } from "node:crypto";
 import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import * as commonmark from "commonmark";
 import { HubUnavailable } from "./check-failure.mjs";
 import { acquireRulesObjects, readRulesAPI, rulesRepository } from "./rules-acquisition.mjs";
 import { loadAcquiredListings } from "./source-listings.mjs";
@@ -68,6 +70,41 @@ function pullRequest(number) {
     throw new RulesRefMismatch("pull request metadata differs from the published Rules refs");
   }
   return pr;
+}
+
+// Hub contributors may never visit pipelab.org, so admission requires their
+// explicit agreement in the pull request itself. The line must match exactly
+// and be checked; an unchecked or edited line is not agreement.
+export const contributorTermsAcknowledgment = "I agree to the PipeLab Terms of Service (https://pipelab.org/terms/) and Hub policies (https://pipelab.org/hub/policies/). I have the rights to submit this material, and the pack files keep their declared license.";
+export const contributorTermsMissing = "the contributor terms checkbox in the pull request description is not checked";
+
+export function acknowledgesContributorTerms(body) {
+  if (typeof body !== "string") return false;
+  // Parse the description as CommonMark so code blocks, HTML blocks, comments
+  // and indented code never count. Only a list item outside a block quote whose
+  // first paragraph is plain text "[x] " followed by the exact line counts.
+  const lines = body.split(/\r?\n/);
+  const walker = new commonmark.Parser().parse(body).walker();
+  for (let event = walker.next(); event; event = walker.next()) {
+    const node = event.node;
+    if (!event.entering || node.type !== "item") continue;
+    let quoted = false;
+    for (let parent = node.parent; parent; parent = parent.parent) quoted ||= parent.type === "block_quote";
+    const paragraph = node.firstChild;
+    if (quoted || paragraph?.type !== "paragraph") continue;
+    // The marker must be literal in the source: an escaped \[x] renders as text, not a checkbox.
+    const [line, column] = paragraph.sourcepos[0];
+    if (!/^\[[xX]\] /.test(lines[line - 1]?.slice(column - 1) ?? "")) continue;
+    let text = "", plain = true;
+    for (let child = paragraph.firstChild; child; child = child.next) {
+      if (child.type === "text") text += child.literal;
+      else if (child.type === "softbreak") text += " ";
+      else plain = false;
+    }
+    const match = /^\[[xX]\] (.*)$/s.exec(text);
+    if (plain && match && match[1].trim() === contributorTermsAcknowledgment) return true;
+  }
+  return false;
 }
 
 function matchesPullRequest(pr, number, base, head) {
@@ -195,8 +232,11 @@ export function preflightPullRequest({ number, fetchRules = false, ...options },
   }
   const mismatch = () => {
     try {
-      return matchesPullRequest(readPull(number), number, base, head) ? null :
-        "open pull request does not match the requested repository, base and head";
+      const pr = readPull(number);
+      if (!matchesPullRequest(pr, number, base, head)) return "open pull request does not match the requested repository, base and head";
+      if (!acknowledgesContributorTerms(pr.body)) return contributorTermsMissing;
+      mismatch.agreement = { acknowledged: true, body_sha256: createHash("sha256").update(pr.body).digest("hex") };
+      return null;
     } catch (error) {
       if (error instanceof RulesRefMismatch || error instanceof HubUnavailable) return error;
       return "published Rules pull request could not be verified";
@@ -264,10 +304,11 @@ function inspectPullRequest(options, binding, mismatch, refused, inspect) {
     report.verdict = "REFUSED";
     report.remaining = [];
     delete report.steps.candidate;
-    report.steps["pull-request"] = { status: "fail", evidence: "pull request moved, closed or became unavailable during the check" };
+    report.steps["pull-request"] = { status: "fail", evidence: final === contributorTermsMissing ? final :
+      "pull request moved, closed or became unavailable during the check" };
     return report;
   }
-  report.steps["pull-request"] = { status: "pass", evidence: binding };
+  report.steps["pull-request"] = { status: "pass", evidence: { ...binding, contributor_terms: mismatch.agreement } };
   return report;
 }
 
