@@ -70,6 +70,17 @@ function pullRequest(number) {
   return pr;
 }
 
+// Hub contributors may never visit pipelab.org, so admission requires their
+// explicit agreement in the pull request itself. The line must match exactly
+// and be checked; an unchecked or edited line is not agreement.
+export const contributorTermsAcknowledgment = "I agree to the PipeLab Terms of Service (https://pipelab.org/terms/) and Hub policies (https://pipelab.org/hub/policies/). I have the rights to submit this material, and the pack files keep their declared license.";
+export const contributorTermsMissing = "the contributor terms checkbox in the pull request description is not checked";
+
+export function acknowledgesContributorTerms(body) {
+  return typeof body === "string" && body.split(/\r?\n/).some(line =>
+    /^\s*[-*] \[[xX]\] (.*)$/.exec(line)?.[1].trim() === contributorTermsAcknowledgment);
+}
+
 function matchesPullRequest(pr, number, base, head) {
   return pr?.number === number && pr.state === "open" && pr.base?.repo?.full_name === rulesRepository &&
     pr.base.ref === "main" && pr.base.sha === base && pr.head?.sha === head;
@@ -195,8 +206,9 @@ export function preflightPullRequest({ number, fetchRules = false, ...options },
   }
   const mismatch = () => {
     try {
-      return matchesPullRequest(readPull(number), number, base, head) ? null :
-        "open pull request does not match the requested repository, base and head";
+      const pr = readPull(number);
+      if (!matchesPullRequest(pr, number, base, head)) return "open pull request does not match the requested repository, base and head";
+      return acknowledgesContributorTerms(pr.body) ? null : contributorTermsMissing;
     } catch (error) {
       if (error instanceof RulesRefMismatch || error instanceof HubUnavailable) return error;
       return "published Rules pull request could not be verified";
@@ -264,7 +276,8 @@ function inspectPullRequest(options, binding, mismatch, refused, inspect) {
     report.verdict = "REFUSED";
     report.remaining = [];
     delete report.steps.candidate;
-    report.steps["pull-request"] = { status: "fail", evidence: "pull request moved, closed or became unavailable during the check" };
+    report.steps["pull-request"] = { status: "fail", evidence: final === contributorTermsMissing ? final :
+      "pull request moved, closed or became unavailable during the check" };
     return report;
   }
   report.steps["pull-request"] = { status: "pass", evidence: binding };

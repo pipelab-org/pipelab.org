@@ -6,7 +6,9 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { stringify } from "yaml";
-import { preflightContribution, preflightPullRequest } from "../scripts/hub/contribution-preflight.mjs";
+import { acknowledgesContributorTerms, contributorTermsAcknowledgment, contributorTermsMissing, preflightContribution, preflightPullRequest } from "../scripts/hub/contribution-preflight.mjs";
+
+const termsBody = "## Hub contributions\n\n- [x] " + contributorTermsAcknowledgment + "\n";
 import { changedCandidatePacks } from "../scripts/hub/candidate-measurements.mjs";
 import { generateCatalog } from "../scripts/hub/generate.mjs";
 
@@ -236,7 +238,7 @@ test("an exact pull request on a stale base is refused before its files can qual
   git("checkout", "-q", "-b", "submission", common);
   const head = commit(files);
   const pr = { number: 2, state: "open", base: { ref: "main", sha: base,
-    repo: { full_name: "pipelab-org/pipelock-rules" } }, head: { sha: head } };
+    repo: { full_name: "pipelab-org/pipelock-rules" } }, head: { sha: head }, body: termsBody };
 
   const report = preflightPullRequest({ number: 2, repository: directory, base, head, site }, () => pr);
   assert.equal(report.verdict, "REFUSED");
@@ -251,7 +253,7 @@ test("pull request policy evidence identifies exact files without treating them 
   const base = commit({ "hub/README.md": "Guide.\n", [tracker]: "name: fixture\n" });
   const run = head => {
     const metadata = { number: 7, state: "open", base: { ref: "main", sha: base,
-      repo: { full_name: "pipelab-org/pipelock-rules" } }, head: { sha: head } };
+      repo: { full_name: "pipelab-org/pipelock-rules" } }, head: { sha: head }, body: termsBody };
     return preflightPullRequest({ number: 7, repository: directory, base, head, site }, () => metadata);
   };
 
@@ -277,7 +279,7 @@ test("eligible Hub input must match the same open rules pull request and publish
   const head = commit(files);
   const input = { number: 2, repository: directory, base, head, site };
   const original = { number: 2, state: "open", base: { ref: "main", sha: base,
-    repo: { full_name: "pipelab-org/pipelock-rules" } }, head: { sha: head } };
+    repo: { full_name: "pipelab-org/pipelock-rules" } }, head: { sha: head }, body: termsBody };
   const checked = preflightPullRequest(input, () => original);
   assert.equal(checked.verdict, "LOCAL-ELIGIBLE");
   assert.equal(checked.steps["pull-request"].status, "pass");
@@ -303,6 +305,16 @@ test("eligible Hub input must match the same open rules pull request and publish
   const wrongBase = { ...original, base: { ...original.base, ref: "release" } };
   assert.equal(failed(preflightPullRequest(input, () => wrongBase)), "pull-request");
   assert.equal(failed(preflightPullRequest({ ...input, number: 3 }, () => original)), "pull-request");
+
+  for (const body of [undefined, "- [ ] " + contributorTermsAcknowledgment]) {
+    const unagreed = preflightPullRequest(input, () => ({ ...original, body }));
+    assert.equal(unagreed.verdict, "REFUSED");
+    assert.equal(unagreed.steps["pull-request"].evidence, contributorTermsMissing);
+  }
+  let edits = 0;
+  const unchecked = preflightPullRequest(input, () => ++edits === 1 ? original : { ...original, body: "" });
+  assert.equal(unchecked.verdict, "REFUSED");
+  assert.equal(unchecked.steps["pull-request"].evidence, contributorTermsMissing);
 
   for (const end of [
     () => ({ ...original, head: { sha: "a".repeat(40) } }),
@@ -392,7 +404,7 @@ test("Rules PR acquisition fetches only selected blobs before offline preflight"
   });
 
   writeFileSync(path.join(directory, "pr.json"), JSON.stringify({ number: 2, state: "open",
-    base: { ref: "main", sha: base, repo: { full_name: "pipelab-org/pipelock-rules" } }, head: { sha: head } }));
+    base: { ref: "main", sha: base, repo: { full_name: "pipelab-org/pipelock-rules" } }, head: { sha: head }, body: termsBody }));
   writeFileSync(path.join(directory, "refs"), [
     base + "\trefs/heads/main", head + "\trefs/pull/2/head", "",
   ].join("\n"));
@@ -533,4 +545,15 @@ test("Rules PR acquisition fetches only selected blobs before offline preflight"
   assert.equal(moved.code, 1);
   assert.match(moved.report.steps["rules-acquisition"].evidence, /refs moved during acquisition/);
   assert.throws(() => readFileSync(wanted), { code: "ENOENT" });
+});
+
+test("contributor terms must be explicitly checked in the pull request", () => {
+  assert.equal(acknowledgesContributorTerms(termsBody), true);
+  assert.equal(acknowledgesContributorTerms("- [X] " + contributorTermsAcknowledgment), true);
+  for (const body of [undefined, null, "", "- [ ] " + contributorTermsAcknowledgment,
+    "- [x] " + contributorTermsAcknowledgment.replace("Terms of Service", "terms"),
+    "[x] " + contributorTermsAcknowledgment, contributorTermsAcknowledgment,
+    "> - [x] " + contributorTermsAcknowledgment, "- [x]  " + contributorTermsAcknowledgment + " and nothing else"]) {
+    assert.equal(acknowledgesContributorTerms(body), false, String(body));
+  }
 });
