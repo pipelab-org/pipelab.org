@@ -8,6 +8,8 @@ import { canonical, sha256 } from "./evidence.mjs";
 import { prepareBoundCatalog, writeCatalog } from "./generate.mjs";
 import { assertCatalogAssets } from "./catalog-assets.mjs";
 import { assertPublication } from "./parity.mjs";
+import { assertStagingSource } from "./staging-source.mjs";
+import { verifyStagingPublication } from "./staging-publication.mjs";
 import { publicationIdentity } from "./deployment-evidence.mjs";
 import { verifyRetrieval } from "./retrieval.mjs";
 import { assertSourceProgress, materializeGitTree } from "./source-tree.mjs";
@@ -49,14 +51,15 @@ export function fixtureTestEnvironment(source, home, environment = process.env, 
   };
 }
 
-function checkCheckout(root, expected) {
+export function checkCheckout(root, expected, mode = "routine") {
   if (!gitSHA.test(expected ?? "")) throw new Error("exact site candidate SHA required");
   const git = (...args) => readGit(root, args, { encoding: "utf8" }).trim();
   if (git("rev-parse", "HEAD") !== expected || git("status", "--porcelain=v1")) {
     throw new Error("site candidate must be an exact clean source checkout");
   }
-  if (toml(readFileSync(path.join(root, "data/hub/launch.toml"), "utf8")).open !== false) {
-    throw new Error("routine candidate must remain closed");
+  if (!["routine", "staging"].includes(mode)) throw new Error("unsupported acceptance mode");
+  if (toml(readFileSync(path.join(root, "data/hub/launch.toml"), "utf8")).open !== (mode === "staging")) {
+    throw new Error(mode === "routine" ? "routine candidate must remain closed" : "staging candidate must be committed open source");
   }
 }
 
@@ -78,13 +81,19 @@ export function assertClosedDiscovery(directory) {
   }
 }
 
-export async function routineAcceptance({ source, siteSHA, rulesSHA }, { readMain = readSiteMain } = {}) {
+export const routineAcceptance = (input, options) => runAcceptance(input, { ...options, mode: "routine" });
+export const stagingAcceptance = (input, options) => runAcceptance(input, { ...options, mode: "staging" });
+export const stagingBuildAcceptance = (input, options) => runAcceptance(input, { ...options, mode: "staging", buildOnly: true });
+
+async function runAcceptance({ source, siteSHA, rulesSHA, staging }, {
+  readMain = readSiteMain, mode, buildOnly = false, liveCheck = verifyStagingPublication, onBuilt,
+} = {}) {
   const report = {
-    mode: "routine",
+    mode: buildOnly ? "staging-build" : mode,
     candidate: { site_sha: siteSHA, rules_sha: rulesSHA, tooling_identity: null },
     deployment: null,
     steps: Object.fromEntries(Array.from({ length: 10 }, (_, i) => [
-      String(i + 1), { status: i === 8 ? "not-in-mode" : "fail", evidence: i === 8 ? null : notExecuted },
+      String(i + 1), { status: i === 8 && mode === "routine" ? "not-in-mode" : "fail", evidence: i === 8 && mode === "routine" ? null : notExecuted },
     ])),
     opening_eligible: false,
   };
@@ -94,8 +103,12 @@ export async function routineAcceptance({ source, siteSHA, rulesSHA }, { readMai
   try {
     const root = realpathSync(source.root);
     const verifierRoot = realpathSync(fileURLToPath(new URL("../../", import.meta.url)));
-    if (root !== verifierRoot) throw new Error("run Hub acceptance from the candidate checkout");
-    checkCheckout(root, siteSHA);
+    if (mode === "routine" && root !== verifierRoot) throw new Error("run Hub acceptance from the candidate checkout");
+    checkCheckout(root, siteSHA, mode);
+    if (mode === "staging") {
+      report.staging = assertStagingSource({ ...staging, root, stagingSHA: siteSHA });
+      if (staging.productionBaseSHA !== source.sourceBinding?.siteBase) throw new Error("staging production baseline differs from source binding");
+    }
     if (!gitSHA.test(rulesSHA ?? "") || source.sourceBinding?.rulesSHA !== rulesSHA) {
       throw new Error("exact rules source binding required");
     }
@@ -130,8 +143,11 @@ export async function routineAcceptance({ source, siteSHA, rulesSHA }, { readMai
       child("hugo", ["--gc", "--minify", "--cleanDestinationDir", "--destination", directory], { cwd: site, env: buildEnv });
       return directory;
     };
+    const launchFile = path.join(site, "data/hub/launch.toml");
+    const committedLaunch = readFileSync(launchFile);
+    if (mode === "staging") writeFileSync(launchFile, "open = false\n");
     const closed = build("closed");
-    writeFileSync(path.join(site, "data/hub/launch.toml"), "open = true\n");
+    writeFileSync(launchFile, mode === "staging" ? committedLaunch : "open = true\n");
     const open = build("open");
     pass(4, "Clean closed and open-overlay Hugo builds completed.");
 
@@ -141,7 +157,7 @@ export async function routineAcceptance({ source, siteSHA, rulesSHA }, { readMai
     try {
       testOutput = child(process.execPath, ["--test", "--test-reporter=tap", "test/hub-core.test.mjs", "test/hub-harness.test.mjs",
         "test/hub-source-tree.test.mjs", "test/hub-contribution-preflight.test.mjs", "test/hub-admission-producer.test.mjs",
-        "test/hub-policy-blobs.test.mjs", "test/hub-publication.test.mjs", "test/hub-catalog-assets.test.mjs", "test/hub-search.test.mjs"], options).toString("utf8");
+        "test/hub-policy-blobs.test.mjs", "test/hub-publication.test.mjs", "test/hub-staging.test.mjs", "test/hub-staging-live.test.mjs", "test/hub-catalog-assets.test.mjs", "test/hub-search.test.mjs"], options).toString("utf8");
     } catch (error) {
       throw new Error(diagnosticLine(fixtureFailureEvidence(error)));
     }
@@ -154,7 +170,7 @@ export async function routineAcceptance({ source, siteSHA, rulesSHA }, { readMai
 
     current = 6;
     assertPublication({ directory: closed, manifest, records, open: false });
-    const buildConfig = Buffer.from(canonical(Object.fromEntries(["hugo.toml", "wrangler.jsonc", "data/hub/launch.toml"]
+    const buildConfig = Buffer.from(canonical(Object.fromEntries(["hugo.toml", "wrangler.jsonc", "data/hub/launch.toml", "static/robots.txt", "static/_headers"]
       .map(name => [name, sha256(readFileSync(path.join(site, name)))]))));
     const buildInputs = { manifest, records, siteSHA, rulesSHA, buildConfig };
     const identity = publicationIdentity({ ...buildInputs, directory: open });
@@ -175,6 +191,13 @@ export async function routineAcceptance({ source, siteSHA, rulesSHA }, { readMai
     checkEvidence(build("repeated"));
     pass(8, { output_set_sha256: identity.output_set_sha256 });
 
+    if (mode === "staging" && !buildOnly) {
+      current = 9;
+      report.deployment = await liveCheck({ directory: withEvidence, manifest, records, identity, binary: source.pipelockBinary });
+      if (!report.deployment?.checked || !report.deployment?.denied) throw new Error("live staging checks incomplete");
+      pass(9, report.deployment);
+    }
+
     current = 10;
     for (const name of method.policies) {
       if (!manifest.entries.some(entry => entry.kind === "policy" && entry.route === "/hub/" + name + "/" && Object.keys(entry.facts).length)) {
@@ -182,7 +205,9 @@ export async function routineAcceptance({ source, siteSHA, rulesSHA }, { readMai
       }
     }
     assertCurrentBase();
+    checkCheckout(root, siteSHA, mode);
     pass(10, "Required policy routes are present and the site baseline is still current.");
+    if (onBuilt) await onBuilt({ directory: withEvidence, manifest, records, identity, report });
   } catch (error) {
     report.steps[current] = { status: "fail", evidence: error.message.split("\n", 1)[0] };
   } finally {
@@ -193,8 +218,9 @@ export async function routineAcceptance({ source, siteSHA, rulesSHA }, { readMai
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const input = process.argv[2];
-  if (process.argv.length !== 3) throw new Error("usage: acceptance.mjs ROUTINE_INPUT_JSON");
-  const report = await routineAcceptance(JSON.parse(readFileSync(input)));
+  if (process.argv.length !== 3) throw new Error("usage: acceptance.mjs INPUT_JSON");
+  const parsed = JSON.parse(readFileSync(input));
+  const report = await (parsed.mode === "staging" ? stagingAcceptance : routineAcceptance)(parsed);
   console.log(JSON.stringify(report, null, 2));
   if (Object.values(report.steps).some(step => step.status === "fail")) process.exitCode = 1;
 }

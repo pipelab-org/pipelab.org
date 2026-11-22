@@ -859,7 +859,7 @@ async function handleGitHubAdvisoryWebhook(request, env) {
   return Response.json({ ok: true, delivered: true });
 }
 
-export default {
+const apiWorker = {
   async fetch(request, env) {
     const url = new URL(request.url);
     const path = url.pathname;
@@ -899,5 +899,18 @@ export default {
 
     // Cloudflare serves static assets before invoking this API-only Worker.
     return new Response("Not Found", { status: 404 });
+  },
+};
+
+export default {
+  async fetch(request, env) {
+    if (new URL(request.url).hostname !== "hub-staging.pipelab.org") return apiWorker.fetch(request, env);
+    let response;
+    try { response = await apiWorker.fetch(request, env); }
+    catch { response = new Response("Service Unavailable", { status: 503 }); }
+    const protectedResponse = new Response(response.body, response);
+    protectedResponse.headers.set("X-Robots-Tag", "noindex, nofollow");
+    protectedResponse.headers.set("Cache-Control", "private, no-store");
+    return protectedResponse;
   },
 };
