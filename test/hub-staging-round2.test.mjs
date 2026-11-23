@@ -38,7 +38,10 @@ test("guard:close-full-manifest", async () => {
   const routes = ["/hub/otherwise-unlisted/", "/hub/otherwise-unlisted/index.html", "/hub/otherwise-unlisted/index.md", "/hub/otherwise-unlisted/bundle.yaml"];
   for (const route of routes) {
     const calls = [];
-    await assert.rejects(verifyStagingClosed({ manifest: manifest() }, closedOptions(calls, route)), /closed staging outputs unconfirmed/);
+    await assert.rejects(verifyStagingClosed({ manifest: manifest() }, closedOptions(calls, route)), error => {
+      assert.match(error.message, /closed version must be the static-only staging Worker/);
+      assert.match(stagingFailureLabel(error), /closed version must be the static-only staging Worker/); return true;
+    });
     assert.ok(calls.includes(route));
   }
   const calls = [], result = await verifyStagingClosed({ manifest: manifest() }, closedOptions(calls));

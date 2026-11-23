@@ -5,6 +5,7 @@ import { hugoBuildEnvironment } from "../scripts/hub/acceptance.mjs";
 import { stagingBuildEnvironment } from "../scripts/hub/staging-workflow.mjs";
 import { stagingFailureLabel } from "../scripts/hub/staging-diagnostics.mjs";
 import { wranglerEnvironment } from "../scripts/hub/staging-wrangler.mjs";
+import { normalizeHostname, STAGING_ORIGIN } from "../scripts/hub/staging-target.mjs";
 import worker from "../src/worker.js";
 
 const config = { compatibility_date: "2026-02-10", compatibility_flags: ["one", "two"] };
@@ -55,7 +56,8 @@ test("guard:staging-static-only", async () => {
   assert.equal((await worker.fetch(new Request("https://pipelab.org/api/contact", { method: "OPTIONS" }), env)).status, 204);
 });
 test("guard:additional-secret-names", () => {
-  const environment = { PATH: "/usr/bin", api_key_lower: "synthetic", lower_password: "synthetic" };
+  const environment = { PATH: "/usr/bin", api_key_lower: "synthetic", lower_password: "synthetic",
+    ...Object.fromEntries(["KEY_ID", "ACCESS_KEY", "PRIVATE_KEY", "CREDENTIAL", "CREDENTIALS", "PASSWD", "APIKEY", "NODE_OPTIONS"].map(name => [name.toLowerCase(), "synthetic"])) };
   for (const clean of [hugoBuildEnvironment, stagingBuildEnvironment, wranglerEnvironment]) assert.deepEqual(clean(environment), { PATH: "/usr/bin" });
 });
 test("guard:evidence-diagnostics", () => {
@@ -64,4 +66,20 @@ test("guard:evidence-diagnostics", () => {
   assert.equal(stagingFailureLabel(new AggregateError([missing], "closed staging post-activation checks failed")), "closure_postchecks:missing_evidence");
   assert.equal(stagingFailureLabel(new Error("non-finite or undefined evidence")), "evidence_format");
   assert.equal(stagingFailureLabel(new Error("staging version configuration differs")), "version_configuration");
+});
+
+test("guard:staging-host-normalization", async () => {
+  const hostname = new URL(STAGING_ORIGIN).hostname;
+  assert.equal(normalizeHostname(hostname.toUpperCase() + ".."), hostname);
+  const env = new Proxy({}, { get() { assert.fail("staging must never enter an API handler"); } });
+  for (const suffix of [".", "%2e", "..", "%2e%2e"]) {
+    for (const method of ["POST", "OPTIONS"]) {
+      const response = await worker.fetch(new Request("https://" + hostname.toUpperCase() + suffix + "/api/gh-advisory", { method }), env);
+      assert.equal(response.status, 404);
+      assert.equal(response.headers.get("cache-control"), "private, no-store");
+    }
+    assert.equal(routeTargetsStaging({ pattern: "https://" + hostname + suffix + "/*", script: "other" }), true);
+  }
+  assert.equal((await worker.fetch(new Request("https://pipelab.org./api/contact", { method: "OPTIONS" }), env)).status, 204);
+  assert.equal(routeTargetsStaging({ pattern: "www.pipelab.org../*", script: "other" }), false);
 });

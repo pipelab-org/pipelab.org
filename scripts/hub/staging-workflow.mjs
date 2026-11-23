@@ -32,7 +32,7 @@ export function assertBuildReport(report, stagingSHA) {
 }
 
 export function stagingBuildEnvironment(environment) {
-  return Object.fromEntries(Object.entries(environment).filter(([key]) => !/TOKEN|SECRET|CLIENT_ID|API_KEY|PASSWORD/i.test(key)));
+  return Object.fromEntries(Object.entries(environment).filter(([key]) => !/TOKEN|SECRET|CLIENT_ID|API_KEY|PASSWORD|KEY_ID|ACCESS_KEY|PRIVATE_KEY|CREDENTIALS?|PASSWD|APIKEY|NODE_OPTIONS/i.test(key)));
 }
 
 export async function prepareStagingVersion({ operation, directory, adapter, authorityConfig = authority,
@@ -86,6 +86,8 @@ async function build(destination) {
   const bundle = mkdtempSync(path.join(tmpdir(), "hub-bundle-"));
   try {
     cpSync(path.join(candidate, "src"), path.join(bundle, "src"), { recursive: true });
+    mkdirSync(path.join(bundle, "scripts/hub"), { recursive: true });
+    cpSync(path.join(candidate, "scripts/hub/staging-target.mjs"), path.join(bundle, "scripts/hub/staging-target.mjs"));
     symlinkSync(path.join(root, "node_modules"), path.join(bundle, "node_modules"), "dir");
     const bundlerConfig = { ...config, main: path.join(bundle, "src/worker.js"), assets: { directory: path.join(pkg, "assets") } };
     delete bundlerConfig.account_id;

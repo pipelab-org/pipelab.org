@@ -1,4 +1,5 @@
 import pg from "pg";
+import { normalizeHostname, STAGING_ORIGIN } from "../scripts/hub/staging-target.mjs";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -56,12 +57,6 @@ function contactSuccess(isForm) {
   return isForm
     ? contactRedirect("message-sent")
     : Response.json({ ok: true }, { status: 200, headers: CORS_HEADERS });
-}
-
-function normalizeHostname(hostname) {
-  return typeof hostname === "string"
-    ? hostname.trim().toLowerCase().replace(/\.$/, "")
-    : "";
 }
 
 function isAllowedTurnstileHostname(hostname) {
@@ -904,7 +899,7 @@ const apiWorker = {
 
 export default {
   async fetch(request, env) {
-    if (new URL(request.url).hostname !== "hub-staging.pipelab.org") return apiWorker.fetch(request, env);
+    if (normalizeHostname(new URL(request.url).hostname) !== normalizeHostname(new URL(STAGING_ORIGIN).hostname)) return apiWorker.fetch(request, env);
     return new Response("Not Found", { status: 404, headers: {
       "X-Robots-Tag": "noindex, nofollow",
       "Cache-Control": "private, no-store",

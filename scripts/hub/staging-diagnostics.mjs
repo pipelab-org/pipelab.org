@@ -10,7 +10,7 @@ export function stagingFailureLabel(error, fallback = "operation") {
     ["staging ledger source not configured", "ledger"], ["staging base must equal production main", "source"],
     ["staging alternate ingress is enabled or unverified", "ingress"],
     ["staging domain zone unavailable", "ingress"], ["complete closure manifest required", "closure_manifest"],
-    ["live closure check required", "closure_probe"], ["live closed staging outputs unconfirmed", "closure_probe"],
+    ["live closure check required", "closure_probe"], ["live closed staging outputs unconfirmed; closed version must be the static-only staging Worker", "closure_probe: closed version must be the static-only staging Worker"],
     ["staging version configuration differs", "version_configuration"],
     ["staging deployment evidence unavailable", "missing_evidence"], ["non-finite or undefined evidence", "evidence_format"], ["staging recovery failed", "closure"],
     ["Wrangler direct dependencies must use exact versions", "tooling_integrity"],

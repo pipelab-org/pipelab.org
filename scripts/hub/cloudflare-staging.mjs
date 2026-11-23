@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { canonical, sha256 } from "./evidence.mjs";
 import { curlRequest } from "./staging-http.mjs";
-import { assertStagingTarget, STAGING_ACCOUNT_ID, STAGING_WORKER, STAGING_ORIGIN, WRANGLER_VERSION } from "./staging-target.mjs";
+import { normalizeHostname, assertStagingTarget, STAGING_ACCOUNT_ID, STAGING_WORKER, STAGING_ORIGIN, WRANGLER_VERSION } from "./staging-target.mjs";
 
 import { assertStagingConfig } from "./staging-config.mjs";
 import { runPinnedWrangler } from "./staging-wrangler.mjs";
@@ -31,10 +31,10 @@ export function assertVersionConfig(resources, config) {
 // https://developers.cloudflare.com/workers/configuration/routing/routes/#matching-behavior
 export function routeTargetsStaging(route, worker = STAGING_WORKER) {
   if (!route || typeof route.pattern !== "string" || route.script?.toLowerCase?.() === worker.toLowerCase()) return true;
-  const host = route.pattern.toLowerCase().replace(/^https?:\/\//, "").split("/")[0].replace(/\.$/, "");
+  const host = normalizeHostname(route.pattern.replace(/^https?:\/\//i, "").split("/")[0]);
   if (!/^[a-z0-9.*-]+$/.test(host)) return true;
   const pattern = host.split("*").map(part => part.replace(/\./g, "\\.")).join(".*");
-  return new RegExp("^" + pattern + "$").test(new URL(STAGING_ORIGIN).hostname);
+  return new RegExp("^" + pattern + "$").test(normalizeHostname(new URL(STAGING_ORIGIN).hostname));
 }
 
 const receiptScope = "pipelab-hub-staging-upload/v1";
