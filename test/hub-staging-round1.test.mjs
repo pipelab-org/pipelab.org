@@ -86,6 +86,7 @@ test("live convergence retries until expected bytes and closure includes downloa
 });
 test("guard:convergence-deadline", { timeout: 1000 }, async () => {
   await assert.rejects(waitForStaging(() => new Promise(() => {}), { timeout: 10, interval: 1 }), /deadline expired/);
+  await assert.rejects(waitForStaging(() => { throw new Error("live closed staging outputs unconfirmed"); }, { timeout: 30, interval: 1 }), /live closed staging outputs unconfirmed/);
 });
 test("guard:wrangler-distribution-integrity", () => assert.throws(() => verifyWranglerArchive(Buffer.from("untrusted distribution")), /distribution integrity differs/));
 test("guard:staging-config-parity", () => {
