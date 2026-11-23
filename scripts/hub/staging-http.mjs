@@ -13,7 +13,7 @@ export function accessHeaders(environment = process.env) {
 // curl uses the configured HTTPS proxy. Configuration on stdin keeps credentials
 // out of command arguments, diagnostics and temporary files. Redirects stay local.
 export async function stagingRequest(route, { headers = {}, origin = STAGING_ORIGIN, signal } = {}) {
-  if (origin !== STAGING_ORIGIN || !/^\/[a-z0-9/_.-]+$/i.test(route) || route.split("/").some(part => part === "." || part === "..")) throw new Error("unexpected staging request target");
+  if (origin !== STAGING_ORIGIN || !/^\/[a-z0-9/_.-]*$/i.test(route) || route.split("/").some(part => part === "." || part === "..")) throw new Error("unexpected staging request target");
   return curlRequest(origin + route, { headers, signal });
 }
 

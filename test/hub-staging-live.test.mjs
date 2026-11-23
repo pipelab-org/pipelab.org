@@ -41,7 +41,7 @@ function publication(t) {
 
 test("live checks every representation, explicit mirrors and post-warming denial", async t => {
   const f = publication(t); const result = await verifyStagingPublication(f, { request: f.request, environment, install: async () => ({ checked: 1 }) });
-  assert.equal(result.checked, f.contents.size); assert.equal(result.denied, (f.contents.size + 1) * 4);
+  assert.equal(result.checked, f.contents.size); assert.equal(result.denied, (f.contents.size + 1) * 4 + 8);
   for (const route of f.contents.keys()) assert.ok(f.calls.some(call => call.route === route && call.authenticated), route);
   assert.equal(f.calls.at(-1).route, "/hub/build.json");
 });
@@ -80,6 +80,7 @@ printf 'fixture' > "$body"
   process.env.PATH = tools + ":" + savedPath;
   await assert.rejects(stagingRequest("/hub/", { origin: "https://other.example" }), /unexpected staging request target/);
   await assert.rejects(stagingRequest("/hub/../other"), /unexpected staging request target/);
+  assert.equal((await stagingRequest("/")).status, 200);
 });
 test("guard:live-identity", async t => {
   const f = publication(t); let builds = 0;
@@ -188,5 +189,13 @@ test("live HTML parity follows canonical directory bytes and validates file redi
   const request = async (route, options) => route === redirect && options.headers?.["CF-Access-Client-Id"] === environment.CF_ACCESS_CLIENT_ID ?
     { status: 301, headers: { location: "/hub/fixture/" }, body: Buffer.alloc(0) } : f.request(route, options);
   const result = await verifyStagingPublication(f, { request, environment, install: async () => ({ checked: 1 }) });
-  assert.equal(result.checked, f.contents.size); assert.equal(result.denied, (f.contents.size + 1) * 4);
+  assert.equal(result.checked, f.contents.size); assert.equal(result.denied, (f.contents.size + 1) * 4 + 8);
+});
+
+test("guard:publication-host-denial", async t => {
+  for (const exposed of ["/", "/api/results"]) {
+    const f = publication(t);
+    const request = async (route, options) => route === exposed && options.headers?.["CF-Access-Client-Id"] !== environment.CF_ACCESS_CLIENT_ID ? response("exposed host") : f.request(route, options);
+    await assert.rejects(verifyStagingPublication(f, { request, environment, install: async () => ({ checked: 1 }) }), /Access denial not established/);
+  }
 });

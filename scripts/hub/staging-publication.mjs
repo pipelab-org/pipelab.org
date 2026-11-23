@@ -41,7 +41,7 @@ export async function verifyStagingClosed({ manifest }, { request = stagingReque
       ["/hub/", "/hub/index.json", "/hub/build.json", schema].some(route => !manifest.entries.some(entry => entry.route === route && entry.ownership === "hub")) ||
       manifest.entries.some(entry => !["hub", "official-registry"].includes(entry.ownership) || !Array.isArray(entry.representations) || !entry.representations.length)) throw new Error("complete closure manifest required");
   const headers = accessHeaders(environment);
-  const routes = new Set(["/hub/", "/hub/index.md", "/hub/index.json", "/hub/build.json", schema,
+  const routes = new Set(["/api/results", "/hub/", "/hub/index.md", "/hub/index.json", "/hub/build.json", schema,
     ...manifest.entries.filter(entry => entry.ownership === "hub").flatMap(entry => [entry.route, ...representationPaths(entry).map(item => item.route)])]);
   await converge(async signal => {
     for (const route of routes) {
@@ -49,7 +49,7 @@ export async function verifyStagingClosed({ manifest }, { request = stagingReque
       if (response.status !== 404 || response.headers.location) throw new Error("live closed staging outputs unconfirmed");
     }
   });
-  const denialRoutes = new Set([...routes, ...manifest.entries.flatMap(entry => [entry.route, ...representationPaths(entry).map(item => item.route)])]);
+  const denialRoutes = new Set(["/", ...routes, ...manifest.entries.flatMap(entry => [entry.route, ...representationPaths(entry).map(item => item.route)])]);
   for (const route of denialRoutes) for (const credentials of [{}, { "CF-Access-Client-Id": "invalid", "CF-Access-Client-Secret": "invalid" }]) {
     assertDenied(await request(route, { headers: credentials }));
   }
@@ -71,6 +71,9 @@ export async function verifyStagingPublication({ directory, manifest, records, i
     const build = async signal => assertStagingResponse(await request("/hub/build.json", { headers, signal }), buildBytes);
     await converge(build);
     const denial = async () => {
+      for (const route of ["/", "/api/results"]) for (const credentials of [{}, { "CF-Access-Client-Id": "invalid", "CF-Access-Client-Secret": "invalid" }]) {
+        assertDenied(await request(route, { headers: credentials })); denied++;
+      }
       for (const { route, representation, entry } of representations) {
         const paths = representation === "html" ? [entry.route, route] : [route];
         for (const target of paths) for (const credentials of [{}, { "CF-Access-Client-Id": "invalid", "CF-Access-Client-Secret": "invalid" }]) {

@@ -30,6 +30,10 @@ export async function installWranglerDependencies(directory, metadata, { env, si
   await run("npm", ["install", "--ignore-scripts", "--no-audit", "--no-fund", "--package-lock=false"], { cwd: directory, env, signal });
 }
 
+export function wranglerEnvironment(environment) {
+  return Object.fromEntries(Object.entries(environment).filter(([key]) => !/TOKEN|SECRET|CLIENT_ID|API_KEY|PASSWORD|^NODE_OPTIONS$|^NODE_PATH$/i.test(key)));
+}
+
 export async function withPinnedWrangler(version, action, { request = curlRequest, environment = process.env, signal } = {}) {
   if (version !== WRANGLER_VERSION) throw new Error("unexpected Wrangler version");
   const scratch = mkdtempSync(path.join(tmpdir(), "hub-wrangler-"));
@@ -39,7 +43,7 @@ export async function withPinnedWrangler(version, action, { request = curlReques
     verifyWranglerArchive(response.body);
     const archive = path.join(scratch, "wrangler.tgz"); writeFileSync(archive, response.body);
     const unpacked = path.join(scratch, "unpacked"); mkdirSync(unpacked);
-    const env = Object.fromEntries(Object.entries(environment).filter(([key]) => !/TOKEN|SECRET|CLIENT_ID|^NODE_OPTIONS$|^NODE_PATH$/i.test(key)));
+    const env = wranglerEnvironment(environment);
     await execute("tar", ["-xzf", archive, "--no-same-owner", "--no-same-permissions", "-C", unpacked], { env, signal });
     const pkg = path.join(unpacked, "package"), metadata = JSON.parse(readFileSync(path.join(pkg, "package.json")));
     if (metadata.name !== "wrangler" || metadata.version !== WRANGLER_VERSION) throw new Error("Wrangler distribution identity differs");

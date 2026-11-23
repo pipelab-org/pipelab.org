@@ -12,6 +12,7 @@ export function stagingFailureLabel(error, fallback = "operation") {
     ["staging domain zone unavailable", "ingress"], ["complete closure manifest required", "closure_manifest"],
     ["live closure check required", "closure_probe"], ["live closed staging outputs unconfirmed", "closure_probe"],
     ["staging version configuration differs", "version_configuration"],
+    ["staging deployment evidence unavailable", "missing_evidence"], ["non-finite or undefined evidence", "evidence_format"], ["staging recovery failed", "closure"],
     ["Wrangler direct dependencies must use exact versions", "tooling_integrity"],
     ["staging custom domain or zone routes differ from target", "ingress"], ["staging ingress inventory unavailable", "ingress"],
     ["untrusted prepared staging artifact", "artifact_provenance"], ["prepared staging archive digest differs", "archive_digest"],
@@ -21,8 +22,9 @@ export function stagingFailureLabel(error, fallback = "operation") {
     ["staging hosting API failed", "hosting"], ["staging convergence deadline expired or cancelled", "live_convergence"],
     ["Hub withdrawal could not be confirmed", "closure"], ["direct staging deploy is disabled", "direct_deployment"],
   ]);
+  const label = (failure, other) => failure?.code === "ENOENT" ? "missing_evidence" : controls.get(failure?.message) ?? other;
   if (error instanceof AggregateError && error.message === "closed staging post-activation checks failed") {
-    return "closure_postchecks:" + [...new Set(error.errors.map(failure => controls.get(failure?.message) ?? "closure"))].join(",");
+    return "closure_postchecks:" + [...new Set(error.errors.map(failure => label(failure, "closure")))].join(",");
   }
-  return controls.get(error?.message) ?? fallback;
+  return label(error, fallback);
 }

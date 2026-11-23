@@ -14,9 +14,27 @@ const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
 const digest = /^[a-f0-9]{64}$/;
 // https://developers.cloudflare.com/api/resources/workers/subresources/scripts/subresources/versions/methods/get/
 export function assertVersionConfig(resources, config) {
-  if (canonical(resources?.bindings) !== canonical(config.vars) ||
-      resources?.script_runtime?.compatibility_date !== config.compatibility_date ||
-      canonical(resources?.script_runtime?.compatibility_flags) !== canonical(config.compatibility_flags)) throw new Error("staging version configuration differs");
+  const bindings = resources?.bindings, runtime = resources?.script_runtime;
+  const flags = (value = []) => {
+    if (!Array.isArray(value) || value.some(flag => typeof flag !== "string")) throw new Error("staging version configuration differs");
+    return [...new Set(value)].sort();
+  };
+  const expectedBindings = [];
+  const actualBindings = bindings && !Array.isArray(bindings) && typeof bindings === "object" && !Object.keys(bindings).length ? [] : bindings;
+  if (!Array.isArray(actualBindings) || canonical(actualBindings) !== canonical(expectedBindings) ||
+      !/^\d{4}-\d{2}-\d{2}$/.test(config.compatibility_date ?? "") ||
+      ![config.compatibility_date, config.compatibility_date + "T00:00:00Z"].includes(runtime?.compatibility_date) ||
+      canonical(flags(runtime?.compatibility_flags)) !== canonical(flags(config.compatibility_flags))) throw new Error("staging version configuration differs");
+}
+
+// Route paths do not narrow this host-wide staging policy.
+// https://developers.cloudflare.com/workers/configuration/routing/routes/#matching-behavior
+export function routeTargetsStaging(route, worker = STAGING_WORKER) {
+  if (!route || typeof route.pattern !== "string" || route.script?.toLowerCase?.() === worker.toLowerCase()) return true;
+  const host = route.pattern.toLowerCase().replace(/^https?:\/\//, "").split("/")[0].replace(/\.$/, "");
+  if (!/^[a-z0-9.*-]+$/.test(host)) return true;
+  const pattern = host.split("*").map(part => part.replace(/\./g, "\\.")).join(".*");
+  return new RegExp("^" + pattern + "$").test(new URL(STAGING_ORIGIN).hostname);
 }
 
 const receiptScope = "pipelab-hub-staging-upload/v1";
@@ -54,7 +72,7 @@ export function assertUploadCopy(directory, expectedDigest, account) {
 // Receipts originate in this trusted upload process. They cannot be imported as
 // unsigned candidate JSON. An operator may persist and sign one for a later run.
 export function createStagingAdapter({ account, worker = STAGING_WORKER, closedVersion, token,
-  verifyLiveVersion, verifyLiveClosed, request = curlRequest,
+  verifyLiveVersion, verifyLiveClosed, packageDirectory, request = curlRequest,
   wranglerVersion = WRANGLER_VERSION, run = (args, options) => runPinnedWrangler(WRANGLER_VERSION, args, options), signal }) {
   const target = () => {
     assertStagingTarget(account, worker);
@@ -114,6 +132,7 @@ export function createStagingAdapter({ account, worker = STAGING_WORKER, closedV
   const deployable = async (version, recovery = false) => {
     target();
     if (!uuid.test(version ?? "")) throw new Error("known closed version required");
+    // https://developers.cloudflare.com/api/resources/workers/subresources/scripts/subresources/versions/methods/list/
     // The deployable filter is authoritative and ignores pagination.
     const result = await api("/versions?deployable=true", "GET", undefined, recovery);
     if (!Array.isArray(result.items) || !result.items.some(item => item.id === version)) throw new Error("staging version outside deployable window");
@@ -128,14 +147,13 @@ export function createStagingAdapter({ account, worker = STAGING_WORKER, closedV
     const ingress = await api("/subdomain", "GET", undefined, recovery);
     if (ingress.enabled !== false || ingress.previews_enabled !== false) throw new Error("staging alternate ingress is enabled or unverified");
     const domains = await inventory(`accounts/${account}/workers/domains`, recovery, true);
-    const routes = await inventory(`accounts/${account}/workers/services/${worker}/environments/production/routes?show_zonename=true`, recovery);
-    if (!Array.isArray(domains) || !Array.isArray(routes)) throw new Error("staging ingress inventory unavailable");
+    const routes = await inventory(`accounts/${account}/workers/services/${worker}/environments/production/routes?show_zonename=true`, recovery, true);
     const bindings = domains.filter(domain => domain.service === worker);
     if (bindings.length !== 1 || bindings[0].hostname !== new URL(STAGING_ORIGIN).hostname || (bindings[0].environment !== undefined && bindings[0].environment !== "production") ||
         bindings[0].enabled !== true || bindings[0].previews_enabled !== false || routes.length !== 0) throw new Error("staging custom domain or zone routes differ from target");
     if (!/^[a-f0-9]{32}$/.test(bindings[0].zone_id ?? "")) throw new Error("staging domain zone unavailable");
     const zoneRoutes = await inventory(`zones/${bindings[0].zone_id}/workers/routes`, recovery);
-    if (zoneRoutes.some(route => !route || typeof route.pattern !== "string" || route.script === worker)) throw new Error("staging custom domain or zone routes differ from target");
+    if (zoneRoutes.some(route => routeTargetsStaging(route, worker))) throw new Error("staging custom domain or zone routes differ from target");
   };
   const activateVersion = async (version, recovery = false) => {
     target();
@@ -167,7 +185,7 @@ export function createStagingAdapter({ account, worker = STAGING_WORKER, closedV
       const before = packageDigest(directory);
       await assertIngress();
       await deployable(closedVersion);
-      const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => /^(?:PATH|HOME|HTTPS?_PROXY|ALL_PROXY|NO_PROXY|https?_proxy|all_proxy|no_proxy)$/.test(key)));
+      const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => /^(?:PATH|HOME|HTTPS?_PROXY|ALL_PROXY|NO_PROXY)$/i.test(key)));
       Object.assign(env, { CLOUDFLARE_ACCOUNT_ID: account, CLOUDFLARE_API_TOKEN: token, WRANGLER_SEND_METRICS: "false", CI: "true" });
       const work = mkdtempSync(path.join(tmpdir(), "hub-upload-"));
       const scratch = path.join(work, "package"), outputFile = path.join(work, "upload.ndjson");
@@ -206,10 +224,14 @@ export function createStagingAdapter({ account, worker = STAGING_WORKER, closedV
     },
     async readVersionArtifact(version) {
       const receipt = known(version);
+      if (!packageDirectory) throw new Error("staging deployment evidence unavailable");
+      const config = JSON.parse(readFileSync(path.join(packageDirectory, "deployment.json")));
+      assertDeployConfig(config, account);
+      if (packageDigest(packageDirectory) !== receipt.package_sha256) throw new Error("upload version or package changed");
       await deployable(closedVersion);
       await deployable(version);
       const remote = await api("/versions/" + version);
-      assertVersionConfig(remote.resources, { vars: {}, compatibility_date: "2026-02-10", compatibility_flags: ["nodejs_compat"] });
+      assertVersionConfig(remote.resources, config);
       if (remote.id !== version || remote.resources?.script?.etag !== receipt.version_script_etag) throw new Error("staging version identity differs");
       return receipt.package_sha256;
     },

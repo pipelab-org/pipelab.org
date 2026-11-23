@@ -32,7 +32,7 @@ export function assertBuildReport(report, stagingSHA) {
 }
 
 export function stagingBuildEnvironment(environment) {
-  return Object.fromEntries(Object.entries(environment).filter(([key]) => !/TOKEN|SECRET|CLIENT_ID/i.test(key)));
+  return Object.fromEntries(Object.entries(environment).filter(([key]) => !/TOKEN|SECRET|CLIENT_ID|API_KEY|PASSWORD/i.test(key)));
 }
 
 export async function prepareStagingVersion({ operation, directory, adapter, authorityConfig = authority,
@@ -113,7 +113,7 @@ export async function deployStaging(destination, operation, { adapterFactory = c
   const abort = new AbortController();
   const cancel = () => abort.abort();
   process.once("SIGINT", cancel); process.once("SIGTERM", cancel);
-  const adapter = adapterFactory({ account: process.env.CLOUDFLARE_ACCOUNT_ID, closedVersion: authority.closed_version, token: process.env.CLOUDFLARE_API_TOKEN, signal: abort.signal,
+  const adapter = adapterFactory({ packageDirectory: pkg, account: process.env.CLOUDFLARE_ACCOUNT_ID, closedVersion: authority.closed_version, token: process.env.CLOUDFLARE_API_TOKEN, signal: abort.signal,
     verifyLiveClosed: closed, verifyLiveVersion: async () => {
       await adapter.assertIngress();
       deployedEvidence = await verifyStagingPublication({ directory: path.join(pkg, "assets"), manifest, records, identity, binary: process.env.HUB_RELEASE_BIN });

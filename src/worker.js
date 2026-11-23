@@ -905,12 +905,9 @@ const apiWorker = {
 export default {
   async fetch(request, env) {
     if (new URL(request.url).hostname !== "hub-staging.pipelab.org") return apiWorker.fetch(request, env);
-    let response;
-    try { response = await apiWorker.fetch(request, env); }
-    catch { response = new Response("Service Unavailable", { status: 503 }); }
-    const protectedResponse = new Response(response.body, response);
-    protectedResponse.headers.set("X-Robots-Tag", "noindex, nofollow");
-    protectedResponse.headers.set("Cache-Control", "private, no-store");
-    return protectedResponse;
+    return new Response("Not Found", { status: 404, headers: {
+      "X-Robots-Tag": "noindex, nofollow",
+      "Cache-Control": "private, no-store",
+    } });
   },
 };

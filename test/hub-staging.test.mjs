@@ -46,14 +46,14 @@ process.once("exit", () => rmSync(isolated, { recursive: true, force: true }));
 const account = "a".repeat(32), closed = "00000000-0000-0000-0000-000000000001", version = "00000000-0000-0000-0000-000000000002";
 const key = generateKeyPairSync("ed25519"), publicKey = key.publicKey.export({ type: "spki", format: "der" });
 
-function fixture(t, changes = {}) {
+function fixture(t, changes = {}, factory = createStagingAdapter) {
   const directory = mkdtempSync(path.join(tmpdir(), "hub-package-"));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   mkdirSync(path.join(directory, "assets")); mkdirSync(path.join(directory, "worker"));
   writeFileSync(path.join(directory, "assets/index.html"), "closed fixture");
   writeFileSync(path.join(directory, "worker/worker.js"), "export default {};");
   const config = { name: "pipelab-org-hub-staging", account_id: account, main: "worker/worker.js", assets: { directory: "assets" },
-    routes: [{ pattern: "hub-staging.pipelab.org", custom_domain: true }], vars: {}, compatibility_date: "2026-02-10", compatibility_flags: ["nodejs_compat"], workers_dev: false, preview_urls: false };
+    routes: [{ pattern: "hub-staging.pipelab.org", custom_domain: true }], vars: {}, compatibility_date: "2026-02-10", compatibility_flags: ["nodejs_compat"], workers_dev: false, preview_urls: false, ...changes.config };
   writeFileSync(path.join(directory, "deployment.json"), canonical(config));
   const state = { active: closed, versions: [closed, version], ledger: sha256("current ledger"), failClose: false, ambiguous: false, ...changes };
   const calls = [];
@@ -78,17 +78,20 @@ function fixture(t, changes = {}) {
       if (state.failActivate && state.active === version) throw new Error("activation unavailable");
       result = { id: "deployment" };
     } else result = { deployments: [{ strategy: "percentage", versions: [{ version_id: state.active, percentage: state.ambiguous ? 50 : 100 }] }] };
-    return { status: 200, headers: {}, body: Buffer.from(JSON.stringify({ success: true, result, ...(url.includes("/workers/domains") ? { result_info: state.domainPages?.[new URL(url).searchParams.get("page") ?? "1"]?.info ?? state.domainInfo ?? { page: 1, per_page: 100, count: result.length, total_count: state.inventoryPartial ? result.length + 1 : result.length, total_pages: 1 } } : url.includes("/zones/") && state.zoneInfo ? { result_info: state.zoneInfo } : {}) })) };
+    const info = url.includes("/workers/domains") ? state.domainPages?.[new URL(url).searchParams.get("page") ?? "1"]?.info ?? state.domainInfo ?? { page: 1, per_page: 100, count: result.length, total_count: state.inventoryPartial ? result.length + 1 : result.length, total_pages: 1 } :
+      url.includes("/environments/") ? state.serviceInfo === false ? undefined : { page: 1, per_page: 100, count: result.length, total_count: result.length, total_pages: 1 } : state.zoneInfo;
+    return { status: 200, headers: {}, body: Buffer.from(JSON.stringify({ success: true, result, ...(info ? { result_info: info } : {}) })) };
   };
   const run = async (args, options) => {
     state.runCalls = (state.runCalls ?? 0) + 1;
+    state.inspectEnv?.(options.env);
     assert.deepEqual(args, ["versions", "upload", "--config", "deployment.json", "--name", "pipelab-org-hub-staging", "--no-bundle", "--strict"]);
     assert.equal(options.env.CLOUDFLARE_ACCOUNT_ID, account); assert.equal(options.env.CF_ACCESS_CLIENT_SECRET, undefined); assert.equal(options.env.CASE_LEDGER_TOKEN, undefined);
     if (state.mutate) writeFileSync(path.join(directory, "assets/index.html"), "changed during upload");
     writeFileSync(options.env.WRANGLER_OUTPUT_FILE_PATH, JSON.stringify({ type: "version-upload", version: 1, worker_name: state.uploadWorker ?? "pipelab-org-hub-staging", version_id: state.uploadId ?? version }) + "\n");
     return "untrusted console text";
   };
-  const adapter = createStagingAdapter({ account, closedVersion: closed, token: "synthetic-token", request, run,
+  const adapter = factory({ account, closedVersion: closed, packageDirectory: directory, token: "synthetic-token", request, run,
     verifyLiveClosed: async () => { calls.push({ liveClosed: true }); if (state.failLiveClose) throw new Error("closed outputs unconfirmed"); },
     verifyLiveVersion: async () => { if (state.hold) state.ledger = sha256("withdrawal"); if (state.failLive) throw new Error("live publication differs"); } });
   const approval = () => ({ version, publicKey, signature: sign(null, publicationClearancePayload(packageDigest(directory), sha256("current ledger")), key.privateKey) });
@@ -464,4 +467,60 @@ test("guard:close-confirmation", async t => {
   await assert.rejects(f.adapter.emergencyClose(), /ambiguous staging activation/);
   assert.equal(f.state.active, closed);
   assert.ok(!f.calls.some(call => call.url?.endsWith("/subdomain")));
+});
+
+test("guard:service-inventory-metadata", async t => {
+  const f = fixture(t, { serviceInfo: false });
+  await assert.rejects(f.adapter.upload(f.directory), /inventory incomplete/); assert.equal(f.state.runCalls ?? 0, 0);
+});
+test("version rereads use the package configuration for uploads and signed rollback", async t => {
+  const f = fixture(t, { bindings: [] }), receipt = await f.adapter.upload(f.directory);
+  f.state.runtime = { compatibility_date: f.config.compatibility_date + "T00:00:00Z", compatibility_flags: f.config.compatibility_flags };
+  assert.equal(await f.adapter.readVersionArtifact(version), packageDigest(f.directory));
+  const rollback = createStagingAdapter({ account, closedVersion: closed, packageDirectory: f.directory, token: "synthetic", request: f.request });
+  rollback.importSignedReceipt(receipt, sign(null, Buffer.from(canonical(receipt)), key.privateKey), publicKey);
+  assert.equal(await rollback.readVersionArtifact(version), packageDigest(f.directory));
+  writeFileSync(path.join(f.directory, "deployment.json"), canonical({ ...f.config, compatibility_date: "2026-01-01" }));
+  await assert.rejects(rollback.readVersionArtifact(version), /unexpected staging deployment configuration/);
+});
+test("guard:version-package-evidence", async t => {
+  const f = fixture(t), receipt = await f.adapter.upload(f.directory);
+  const rollback = createStagingAdapter({ account, closedVersion: closed, token: "synthetic", request: f.request });
+  rollback.importSignedReceipt(receipt, sign(null, Buffer.from(canonical(receipt)), key.privateKey), publicKey);
+  await assert.rejects(rollback.readVersionArtifact(version), /deployment evidence unavailable/);
+  writeFileSync(path.join(f.directory, "worker/worker.js"), "changed");
+  await assert.rejects(f.adapter.readVersionArtifact(version), /upload version or package changed/);
+});
+test("guard:cancellation-close-reported", async t => {
+  const f = fixture(t); await f.adapter.upload(f.directory);
+  const abort = new AbortController(); let closes = 0, release;
+  const adapter = { ...f.adapter, emergencyClose: async () => {
+    if (++closes === 2) await new Promise((resolve, reject) => { release = () => reject(new Error("cancellation close failed")); });
+    else await f.adapter.emergencyClose();
+  }, verifyLiveVersion: async () => abort.abort() };
+  const outcome = runStagingSession(f.approval(), { adapter, readCurrentLedgerRevision: f.ledger, signal: abort.signal }).then(value => ({ value }), error => ({ error }));
+  await new Promise(setImmediate);
+  try { assert.equal(closes, 2); } finally { release?.(); }
+  const { error } = await outcome;
+  assert.ok(error instanceof AggregateError);
+  assert.ok(error.errors.some(error => error.message === "cancellation close failed"));
+  assert.equal(closes, 3); assert.equal(f.state.active, closed);
+});
+
+test("guard:runtime-package-source", async t => {
+  const updated = isolatedTarget(account), adapterFile = path.join(updated, "scripts/hub/cloudflare-staging.mjs");
+  writeFileSync(adapterFile, readFileSync(adapterFile, "utf8").replace('compatibility_date: "2026-02-10"', 'compatibility_date: "2026-03-01"'));
+  const { createStagingAdapter: futureAdapter } = await import(pathToFileURL(adapterFile));
+  const f = fixture(t, { config: { compatibility_date: "2026-03-01" } }, futureAdapter), receipt = await f.adapter.upload(f.directory);
+  f.state.runtime = { compatibility_date: "2026-03-01T00:00:00Z", compatibility_flags: f.config.compatibility_flags };
+  assert.equal(await f.adapter.readVersionArtifact(version), receipt.package_sha256);
+  const rollback = futureAdapter({ account, closedVersion: closed, packageDirectory: f.directory, token: "synthetic", request: f.request });
+  rollback.importSignedReceipt(receipt, sign(null, Buffer.from(canonical(receipt)), key.privateKey), publicKey);
+  assert.equal(await rollback.readVersionArtifact(version), receipt.package_sha256);
+});
+test("guard:upload-environment-case", async t => {
+  const name = "HtTpS_PrOxY", old = process.env[name]; process.env[name] = "http://proxy.example";
+  t.after(() => { if (old === undefined) delete process.env[name]; else process.env[name] = old; });
+  const f = fixture(t, { inspectEnv: env => assert.equal(env[name], "http://proxy.example") });
+  await f.adapter.upload(f.directory);
 });

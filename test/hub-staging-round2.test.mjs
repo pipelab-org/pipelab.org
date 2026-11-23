@@ -42,7 +42,7 @@ test("guard:close-full-manifest", async () => {
     assert.ok(calls.includes(route));
   }
   const calls = [], result = await verifyStagingClosed({ manifest: manifest() }, closedOptions(calls));
-  assert.equal(result.checked, 10);
+  assert.equal(result.checked, 11);
   for (const route of routes) assert.equal(calls.filter(value => value === route).length, 3);
 });
 test("guard:close-workflow-manifest-download", () => {
@@ -80,4 +80,13 @@ test("guard:close-diagnostic-redaction", () => {
   const error = new AggregateError([new Error("staging alternate ingress is enabled or unverified"), new Error("synthetic-sensitive-diagnostic")], "closed staging post-activation checks failed");
   assert.equal(stagingFailureLabel(error), "closure_postchecks:ingress,closure");
   assert.doesNotMatch(stagingFailureLabel(error), /synthetic-sensitive/);
+});
+
+test("guard:closure-host-denial", async () => {
+  for (const exposed of ["/", "/api/results"]) {
+    const options = closedOptions([]), original = options.request;
+    options.request = async (route, options) => route === exposed && options.headers?.["CF-Access-Client-Id"] !== "synthetic" ?
+      { status: 200, headers: {}, body: Buffer.from("exposed host") } : original(route, options);
+    await assert.rejects(verifyStagingClosed({ manifest: manifest() }, options), /Access denial not established/);
+  }
 });

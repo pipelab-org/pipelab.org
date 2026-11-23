@@ -64,7 +64,7 @@ export function checkCheckout(root, expected, mode = "routine") {
 }
 
 export function hugoBuildEnvironment(environment = process.env) {
-  return Object.fromEntries(Object.entries(environment).filter(([key]) => !/^HUGO[_x]/i.test(key) && !/TOKEN|SECRET|CLIENT_ID/i.test(key)));
+  return Object.fromEntries(Object.entries(environment).filter(([key]) => !/^HUGO[_x]/i.test(key) && !/TOKEN|SECRET|CLIENT_ID|API_KEY|PASSWORD/i.test(key)));
 }
 
 function checkGenerated(root, catalog) {
