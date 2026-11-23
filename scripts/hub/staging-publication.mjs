@@ -36,17 +36,20 @@ export function assertHTMLRedirect(response, canonicalRoute) {
 }
 
 export async function verifyStagingClosed({ manifest }, { request = stagingRequest, environment = process.env, converge = waitForStaging } = {}) {
-  const headers = accessHeaders(environment);
   const schema = JSON.parse(readFileSync(new URL("./routes.json", import.meta.url))).schema;
+  if (manifest?.format !== 1 || !Array.isArray(manifest.entries) || !manifest.entries.length ||
+      ["/hub/", "/hub/index.json", "/hub/build.json", schema].some(route => !manifest.entries.some(entry => entry.route === route && entry.ownership === "hub")) ||
+      manifest.entries.some(entry => !["hub", "official-registry"].includes(entry.ownership) || !Array.isArray(entry.representations) || !entry.representations.length)) throw new Error("complete closure manifest required");
+  const headers = accessHeaders(environment);
   const routes = new Set(["/hub/", "/hub/index.md", "/hub/index.json", "/hub/build.json", schema,
-    ...(manifest?.entries ?? []).filter(entry => entry.ownership === "hub").flatMap(entry => [entry.route, ...representationPaths(entry).map(item => item.route)])]);
+    ...manifest.entries.filter(entry => entry.ownership === "hub").flatMap(entry => [entry.route, ...representationPaths(entry).map(item => item.route)])]);
   await converge(async signal => {
     for (const route of routes) {
       const response = await request(route, { headers, signal });
       if (response.status !== 404 || response.headers.location) throw new Error("live closed staging outputs unconfirmed");
     }
   });
-  const denialRoutes = new Set([...routes, ...(manifest?.entries ?? []).flatMap(entry => [entry.route, ...representationPaths(entry).map(item => item.route)])]);
+  const denialRoutes = new Set([...routes, ...manifest.entries.flatMap(entry => [entry.route, ...representationPaths(entry).map(item => item.route)])]);
   for (const route of denialRoutes) for (const credentials of [{}, { "CF-Access-Client-Id": "invalid", "CF-Access-Client-Secret": "invalid" }]) {
     assertDenied(await request(route, { headers: credentials }));
   }

@@ -1,5 +1,6 @@
+import { assertClearance } from "./deployment-evidence.mjs";
 import { execFileSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
@@ -28,6 +29,29 @@ export function assertBuildReport(report, stagingSHA) {
   if (report.mode !== "staging-build" || report.opening_eligible !== false || report.candidate?.site_sha !== stagingSHA ||
       report.staging?.staging_sha !== stagingSHA || Array.from({ length: 10 }, (_, index) => index + 1).filter(step => step !== 9).some(step => report.steps?.[step]?.status !== "pass") ||
       report.steps?.[9]?.status !== "fail") throw new Error("staging build acceptance incomplete");
+}
+
+export function stagingBuildEnvironment(environment) {
+  return Object.fromEntries(Object.entries(environment).filter(([key]) => !/TOKEN|SECRET|CLIENT_ID/i.test(key)));
+}
+
+export async function prepareStagingVersion({ operation, directory, adapter, authorityConfig = authority,
+  readCurrentLedgerRevision = createLedgerReader(authorityConfig), readClearance = createClearanceReader(authorityConfig) }) {
+  const publicKey = clearanceKey(authorityConfig), artifactSHA256 = packageDigest(directory);
+  const material = await readClearance(artifactSHA256), ledgerRevision = await readCurrentLedgerRevision();
+  assertClearanceLedger(material, ledgerRevision);
+  assertClearance({ artifactSHA256, ledgerRevision, signature: material.signature, publicKey });
+  await adapter.assertIngress();
+  let receipt;
+  if (operation === "rollback") {
+    receipt = material.receipt;
+    adapter.importSignedReceipt(receipt, material.receiptSignature, publicKey);
+    if (receipt.package_sha256 !== artifactSHA256 || receipt.worker_sha256 !== sha256(readFileSync(path.join(directory, "worker/worker.js")))) throw new Error("rollback receipt package differs");
+  } else {
+    await adapter.emergencyClose();
+    receipt = await adapter.upload(directory);
+  }
+  return { receipt, publicKey, signature: material.signature };
 }
 
 async function build(destination) {
@@ -66,18 +90,19 @@ async function build(destination) {
     const bundlerConfig = { ...config, main: path.join(bundle, "src/worker.js"), assets: { directory: path.join(pkg, "assets") } };
     delete bundlerConfig.account_id;
     write(path.join(bundle, "wrangler.json"), bundlerConfig);
-    const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => !/TOKEN|SECRET|CLIENT_ID/.test(key)));
+    const env = stagingBuildEnvironment(process.env);
     await runPinnedWrangler(WRANGLER_VERSION, ["versions", "upload", "--dry-run", "--config", path.join(bundle, "wrangler.json"), "--outdir", path.join(pkg, "worker")], { cwd: root, env });
   } finally { rmSync(bundle, { recursive: true, force: true }); }
   write(path.join(evidence, "package.json"), { package_sha256: packageDigest(pkg), candidate_sha: siteSHA });
 }
 
-async function deploy(destination, operation) {
+export async function deployStaging(destination, operation, { adapterFactory = createStagingAdapter } = {}) {
   assertStagingTarget(process.env.CLOUDFLARE_ACCOUNT_ID);
   const pkg = path.join(destination, "package"), evidence = path.join(destination, "evidence");
   let manifest, records, identity, buildReport, deployedEvidence;
-  if (existsSync(path.join(evidence, "manifest.json"))) manifest = read(path.join(evidence, "manifest.json"));
-  const closed = () => verifyStagingClosed({ manifest });
+  // Read closure evidence inside the callback, after closed activation. Missing
+  // or malformed evidence must never prevent the independent close attempt.
+  const closed = () => verifyStagingClosed({ manifest: manifest ?? read(path.join(evidence, "manifest.json")) });
   if (operation !== "close") {
     buildReport = read(path.join(evidence, "build-report.json"));
     assertBuildReport(buildReport, process.env.CANDIDATE_SHA);
@@ -88,28 +113,17 @@ async function deploy(destination, operation) {
   const abort = new AbortController();
   const cancel = () => abort.abort();
   process.once("SIGINT", cancel); process.once("SIGTERM", cancel);
-  const adapter = createStagingAdapter({ account: process.env.CLOUDFLARE_ACCOUNT_ID, closedVersion: authority.closed_version, token: process.env.CLOUDFLARE_API_TOKEN, signal: abort.signal,
+  const adapter = adapterFactory({ account: process.env.CLOUDFLARE_ACCOUNT_ID, closedVersion: authority.closed_version, token: process.env.CLOUDFLARE_API_TOKEN, signal: abort.signal,
     verifyLiveClosed: closed, verifyLiveVersion: async () => {
       await adapter.assertIngress();
       deployedEvidence = await verifyStagingPublication({ directory: path.join(pkg, "assets"), manifest, records, identity, binary: process.env.HUB_RELEASE_BIN });
     } });
   try {
     if (operation === "close") return await adapter.emergencyClose();
-    const publicKey = clearanceKey(authority), readCurrentLedgerRevision = createLedgerReader(authority);
-    const material = await createClearanceReader(authority)(packageDigest(pkg));
-    assertClearanceLedger(material, await readCurrentLedgerRevision());
-    await adapter.assertIngress();
-    let receipt;
-    if (operation === "rollback") {
-      receipt = material.receipt;
-      adapter.importSignedReceipt(receipt, material.receiptSignature, publicKey);
-      if (receipt.package_sha256 !== packageDigest(pkg) || receipt.worker_sha256 !== sha256(readFileSync(path.join(pkg, "worker/worker.js")))) throw new Error("rollback receipt package differs");
-    } else {
-      await adapter.emergencyClose();
-      receipt = await adapter.upload(pkg);
-      write(path.join(evidence, "upload-receipt.json"), receipt);
-    }
-    const result = await runStagingSession({ version: receipt.version, publicKey, signature: material.signature }, { adapter, readCurrentLedgerRevision, signal: abort.signal });
+    const readCurrentLedgerRevision = createLedgerReader(authority);
+    const { receipt, publicKey, signature } = await prepareStagingVersion({ operation, directory: pkg, adapter, readCurrentLedgerRevision });
+    if (operation !== "rollback") write(path.join(evidence, "upload-receipt.json"), receipt);
+    const result = await runStagingSession({ version: receipt.version, publicKey, signature }, { adapter, readCurrentLedgerRevision, signal: abort.signal });
     write(path.join(evidence, "acceptance.json"), { ...buildReport, mode: "staging", opening_eligible: false,
       steps: { ...buildReport.steps, 9: { status: "pass", evidence: deployedEvidence } }, deployment: { ...result, ...deployedEvidence } });
   } finally { process.removeListener("SIGINT", cancel); process.removeListener("SIGTERM", cancel); }
@@ -126,7 +140,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     } else if (operation === "check-environment") await verifyProtectedEnvironment();
     else if (operation === "check-target") assertStagingTarget(process.env.CLOUDFLARE_ACCOUNT_ID);
     else if (operation === "build") await build(path.resolve(destination));
-    else await deploy(path.resolve(destination), operation);
+    else await deployStaging(path.resolve(destination), operation);
   } catch (error) {
     // Report only fixed control labels, never candidate or remote diagnostics.
     console.error("Staging control refused: " + stagingFailureLabel(error));

@@ -20,6 +20,10 @@ import { verifyWranglerArchive } from "../scripts/hub/staging-wrangler.mjs";
 import { assertStagingConfig } from "../scripts/hub/staging-config.mjs";
 import { stagingFailureLabel } from "../scripts/hub/staging-workflow.mjs";
 
+const closureManifest = () => ({ format: 1, entries: [
+  { route: "/hub/", ownership: "hub", representations: ["html", "mirror"] },
+  ...["/hub/index.json", "/hub/build.json", "/schemas/pipelab-hub/listing-v1.json"].map(route => ({ route, ownership: "hub", representations: ["json"] })),
+] });
 const temporary = t => { const directory = mkdtempSync(path.join(tmpdir(), "hub-round-test-")); t.after(() => rmSync(directory, { recursive: true, force: true })); return directory; };
 const baseFiles = { "data/hub/launch.toml": "open = false\n", "hugo.toml": "baseURL = 'https://pipelab.org/'\n", "static/_headers": "/*\n  X-Frame-Options: DENY\n", "static/robots.txt": "User-agent: *\nAllow: /\n" };
 const writeFiles = (root, files) => { for (const [name, value] of Object.entries(files)) { const file = path.join(root, name); mkdirSync(path.dirname(file), { recursive: true }); writeFileSync(file, value); } };
@@ -73,7 +77,7 @@ test("guard:html-redirect", () => {
 test("live convergence retries until expected bytes and closure includes downloads", async () => {
   let attempts = 0;
   assert.equal(await waitForStaging(() => { if (++attempts < 3) throw new Error("propagating"); return "expected"; }, { timeout: 500, interval: 1 }), "expected");
-  const paths = [], manifest = { entries: [{ ownership: "hub", route: "/hub/removed/bundle.yaml", representations: ["raw"] }] };
+  const paths = [], manifest = closureManifest(); manifest.entries.push({ ownership: "hub", route: "/hub/removed/bundle.yaml", representations: ["raw"] });
   let old = true;
   const result = await verifyStagingClosed({ manifest }, { environment: { CF_ACCESS_CLIENT_ID: "synthetic", CF_ACCESS_CLIENT_SECRET: "synthetic" },
     request: async (route, options) => { paths.push(route); if (options.headers?.["CF-Access-Client-Id"] !== "synthetic") return { status: 403, headers: {}, body: Buffer.alloc(0) }; if (old) { old = false; return { status: 200, headers: {} }; } return { status: 404, headers: {} }; },
@@ -172,6 +176,6 @@ test("guard:environment-context", async () => {
 });
 
 test("guard:access-before-open", async () => {
-  await assert.rejects(verifyStagingClosed({}, { environment: { CF_ACCESS_CLIENT_ID: "synthetic", CF_ACCESS_CLIENT_SECRET: "synthetic" },
+  await assert.rejects(verifyStagingClosed({ manifest: closureManifest() }, { environment: { CF_ACCESS_CLIENT_ID: "synthetic", CF_ACCESS_CLIENT_SECRET: "synthetic" },
     request: async () => ({ status: 404, headers: {}, body: Buffer.from("closed") }), converge: check => check() }), /Access denial not established/);
 });

@@ -39,6 +39,7 @@ const { createStagingAdapter: unconfiguredAdapter } = await import(pathToFileURL
 const { assertStagingTarget } = await import(pathToFileURL(path.join(unconfigured, "scripts/hub/staging-target.mjs")));
 const { createStagingAdapter, packageDigest, assertDeployConfig, assertUploadCopy, runPinnedWrangler } = await import(pathToFileURL(path.join(isolated, "scripts/hub/cloudflare-staging.mjs")));
 const { publishClearedVersion, publicationClearancePayload } = await import(pathToFileURL(path.join(isolated, "scripts/hub/deployment-evidence.mjs")));
+const { deployStaging, prepareStagingVersion } = await import(pathToFileURL(path.join(isolated, "scripts/hub/staging-workflow.mjs")));
 const { runStagingSession } = await import(pathToFileURL(path.join(isolated, "scripts/hub/staging-session.mjs")));
 const { assertStagingTarget: configuredTarget } = await import(pathToFileURL(targetFile));
 process.once("exit", () => rmSync(isolated, { recursive: true, force: true }));
@@ -57,18 +58,19 @@ function fixture(t, changes = {}) {
   const state = { active: closed, versions: [closed, version], ledger: sha256("current ledger"), failClose: false, ambiguous: false, ...changes };
   const calls = [];
   const request = async (url, options) => {
-    assert.ok(url.startsWith(`https://api.cloudflare.com/client/v4/accounts/${account}/`));
+    assert.ok(url.startsWith(`https://api.cloudflare.com/client/v4/accounts/${account}/`) || url.startsWith("https://api.cloudflare.com/client/v4/zones/" + "b".repeat(32) + "/"));
     calls.push({ url, method: options.method });
     let result;
     if (state.inventoryUnavailable && url.endsWith("/workers/domains")) throw new Error("inventory unavailable");
-    if (url.endsWith("/workers/domains")) result = state.domains ?? [{ hostname: "hub-staging.pipelab.org", service: "pipelab-org-hub-staging", environment: "production" }];
+    if (url.includes("/workers/domains")) result = state.domainPages?.[new URL(url).searchParams.get("page") ?? "1"]?.items ?? state.domains ?? [{ hostname: "hub-staging.pipelab.org", service: "pipelab-org-hub-staging", environment: "production", enabled: true, previews_enabled: false, zone_id: "b".repeat(32), ...state.domain }];
+    else if (url.includes("/zones/")) result = state.zoneRoutes ?? [];
     else if (url.includes("/environments/production/routes?")) result = state.routes ?? [];
     else if (url.includes("/versions?")) {
       if (state.beforeCopy && !state.raced) { state.raced = true; state.beforeCopy(directory, config); }
       result = { items: state.versions.map(id => ({ id })) };
     }
     else if (url.endsWith("/subdomain")) result = { enabled: state.ingress ?? false, previews_enabled: false };
-    else if (url.includes("/versions/")) result = { id: state.wrongId ?? version, resources: { script: { etag: state.etag ?? "fixture-etag" } } };
+    else if (url.includes("/versions/")) result = { id: state.wrongId ?? version, resources: { script: { etag: state.etag ?? "fixture-etag" }, bindings: state.bindings ?? {}, script_runtime: state.runtime ?? { compatibility_date: config.compatibility_date, compatibility_flags: config.compatibility_flags } } };
     else if (options.method === "POST") {
       const deployment = JSON.parse(options.body); assert.equal(deployment.versions.length, 1); assert.equal(deployment.versions[0].percentage, 100);
       if (deployment.versions[0].version_id === closed && state.failClose) throw new Error("closure failed");
@@ -76,7 +78,7 @@ function fixture(t, changes = {}) {
       if (state.failActivate && state.active === version) throw new Error("activation unavailable");
       result = { id: "deployment" };
     } else result = { deployments: [{ strategy: "percentage", versions: [{ version_id: state.active, percentage: state.ambiguous ? 50 : 100 }] }] };
-    return { status: 200, headers: {}, body: Buffer.from(JSON.stringify({ success: true, result, ...(state.inventoryPartial && url.endsWith("/workers/domains") ? { result_info: { total_count: 2, total_pages: 2 } } : {}) })) };
+    return { status: 200, headers: {}, body: Buffer.from(JSON.stringify({ success: true, result, ...(url.includes("/workers/domains") ? { result_info: state.domainPages?.[new URL(url).searchParams.get("page") ?? "1"]?.info ?? state.domainInfo ?? { page: 1, per_page: 100, count: result.length, total_count: state.inventoryPartial ? result.length + 1 : result.length, total_pages: 1 } } : url.includes("/zones/") && state.zoneInfo ? { result_info: state.zoneInfo } : {}) })) };
   };
   const run = async (args, options) => {
     state.runCalls = (state.runCalls ?? 0) + 1;
@@ -87,11 +89,11 @@ function fixture(t, changes = {}) {
     return "untrusted console text";
   };
   const adapter = createStagingAdapter({ account, closedVersion: closed, token: "synthetic-token", request, run,
-    verifyLiveClosed: async () => { if (state.failLiveClose) throw new Error("closed outputs unconfirmed"); },
+    verifyLiveClosed: async () => { calls.push({ liveClosed: true }); if (state.failLiveClose) throw new Error("closed outputs unconfirmed"); },
     verifyLiveVersion: async () => { if (state.hold) state.ledger = sha256("withdrawal"); if (state.failLive) throw new Error("live publication differs"); } });
   const approval = () => ({ version, publicKey, signature: sign(null, publicationClearancePayload(packageDigest(directory), sha256("current ledger")), key.privateKey) });
   const ledger = async () => { if (state.unavailable) throw new Error("ledger unavailable"); return state.ledger; };
-  return { directory, config, state, calls, adapter, approval, ledger };
+  return { directory, config, state, calls, adapter, approval, ledger, request };
 }
 
 test("guard:account-configured", () => assert.throws(() => assertStagingTarget(account), /staging account id not configured/));
@@ -250,7 +252,7 @@ test("guard:hosting-response", async t => {
 });
 test("guard:live-check-required", async t => {
   const f = fixture(t); const receipt = await f.adapter.upload(f.directory);
-  const empty = createStagingAdapter({ account, closedVersion: closed, token: "synthetic" });
+  const empty = createStagingAdapter({ account, closedVersion: closed, token: "synthetic", request: f.request });
   empty.importSignedReceipt(receipt, sign(null, Buffer.from(canonical(receipt)), key.privateKey), publicKey);
   await assert.rejects(empty.verifyLiveVersion(version), /live publication check required/);
   await assert.rejects(empty.emergencyClose(), /live closure check required/);
@@ -351,4 +353,115 @@ test("guard:receipt-worker-digest", async t => {
 
 test("guard:ingress-complete", async t => {
   const f = fixture(t, { inventoryPartial: true }); await assert.rejects(f.adapter.upload(f.directory), /inventory incomplete/); assert.equal(f.state.runCalls ?? 0, 0);
+});
+
+
+for (const [name, domain] of [
+  ["domain-enabled", { enabled: false }],
+  ["domain-previews", { previews_enabled: true }],
+  ["domain-environment", { environment: "other" }],
+  ["domain-zone", { zone_id: undefined }],
+]) test("guard:" + name, async t => {
+  const f = fixture(t, { domain });
+  await assert.rejects(f.adapter.upload(f.directory), /custom domain or zone routes differ|domain zone unavailable/);
+  assert.equal(f.state.runCalls ?? 0, 0);
+});
+test("deprecated domain environment may be absent", async t => {
+  const f = fixture(t, { domain: { environment: undefined } });
+  await f.adapter.upload(f.directory); assert.equal(f.state.runCalls, 1);
+});
+test("domain inventory follows complete pagination", async t => {
+  const other = { hostname: "other.example", service: "other-worker" };
+  const target = { hostname: "hub-staging.pipelab.org", service: "pipelab-org-hub-staging", enabled: true, previews_enabled: false, zone_id: "b".repeat(32) };
+  const info = page => ({ page, per_page: 1, count: 1, total_count: 2, total_pages: 2 });
+  const f = fixture(t, { domainPages: { 1: { items: [other], info: info(1) }, 2: { items: [target], info: info(2) } } });
+  await f.adapter.upload(f.directory);
+  assert.ok(f.calls.some(call => call.url?.endsWith("/workers/domains?page=2")));
+  f.state.domainPages[2].items = [{ ...target, previews_enabled: true }];
+  await assert.rejects(f.adapter.upload(f.directory), /custom domain or zone routes differ/);
+});
+test("guard:domain-pagination-consistency", async t => {
+  const f = fixture(t, { domainPages: {
+    1: { items: [{ service: "other-worker" }], info: { page: 1, per_page: 1, count: 1, total_count: 3, total_pages: 2 } },
+    2: { items: [{ hostname: "hub-staging.pipelab.org", service: "pipelab-org-hub-staging", enabled: true, previews_enabled: false, zone_id: "b".repeat(32) }], info: { page: 2, per_page: 1, count: 1, total_count: 2, total_pages: 2 } },
+  } });
+  await assert.rejects(f.adapter.upload(f.directory), /inventory incomplete/); assert.equal(f.state.runCalls ?? 0, 0);
+});
+test("guard:zone-worker-route", async t => {
+  const f = fixture(t, { zoneRoutes: [{ pattern: "pipelab.org/*", script: "pipelab-org-hub-staging" }] });
+  await assert.rejects(f.adapter.upload(f.directory), /custom domain or zone routes differ/); assert.equal(f.state.runCalls ?? 0, 0);
+});
+test("guard:zone-route-pagination", async t => {
+  const f = fixture(t, { zoneInfo: { page: 1, per_page: 1, count: 0, total_count: 1, total_pages: 2 } });
+  await assert.rejects(f.adapter.upload(f.directory), /inventory incomplete/);
+  assert.equal(f.calls.filter(call => call.url?.includes("/zones/")).length, 1);
+});
+test("guard:close-ingress-independent", async t => {
+  const f = fixture(t, { active: version, ingress: true, failLiveClose: true });
+  await assert.rejects(f.adapter.emergencyClose(), error => {
+    assert.ok(error instanceof AggregateError);
+    assert.match(error.errors[0].message, /alternate ingress/);
+    assert.match(error.errors[1].message, /closed outputs unconfirmed/); return true;
+  });
+  assert.equal(f.state.active, closed);
+  const activation = f.calls.findIndex(call => call.method === "POST");
+  const confirmation = f.calls.findIndex((call, i) => i > activation && call.url?.endsWith("/deployments"));
+  const audit = f.calls.findIndex(call => call.url?.endsWith("/subdomain"));
+  assert.ok(activation >= 0 && confirmation > activation && audit > confirmation);
+  assert.ok(f.calls.some(call => call.liveClosed));
+});
+test("guard:close-missing-manifest-activates", async t => {
+  const f = fixture(t, { active: version }), saved = process.env.CLOUDFLARE_ACCOUNT_ID;
+  process.env.CLOUDFLARE_ACCOUNT_ID = account;
+  t.after(() => { if (saved === undefined) delete process.env.CLOUDFLARE_ACCOUNT_ID; else process.env.CLOUDFLARE_ACCOUNT_ID = saved; });
+  const destination = path.join(f.directory, "missing-artifact");
+  for (const malformed of [false, true]) {
+    f.state.active = version;
+    if (malformed) { mkdirSync(path.join(destination, "evidence"), { recursive: true }); writeFileSync(path.join(destination, "evidence/manifest.json"), "{"); }
+    await assert.rejects(deployStaging(destination, "close", { adapterFactory: options => createStagingAdapter({ ...options, token: "synthetic", closedVersion: closed, request: f.request }) }));
+    assert.equal(f.state.active, closed);
+    assert.ok(f.calls.some(call => call.url?.endsWith("/deployments") && call.method === "GET"));
+  }
+});
+for (const [name, change] of [
+  ["version-bindings", { bindings: { DATABASE: { type: "secret_text" } } }],
+  ["version-runtime-date", { runtime: { compatibility_date: "2026-01-01", compatibility_flags: ["nodejs_compat"] } }],
+  ["version-runtime-flags", { runtime: { compatibility_date: "2026-02-10", compatibility_flags: [] } }],
+]) test("guard:" + name, async t => {
+  const f = fixture(t, change);
+  await assert.rejects(f.adapter.upload(f.directory), /version configuration differs/);
+  assert.equal(f.state.active, closed);
+  delete f.state.bindings; delete f.state.runtime;
+  await f.adapter.upload(f.directory);
+  Object.assign(f.state, change);
+  await assert.rejects(f.adapter.readVersionArtifact(version), /version configuration differs/);
+});
+test("guard:clearance-before-upload", async t => {
+  const f = fixture(t), calls = [], digest = packageDigest(f.directory);
+  const authorityConfig = { clearance_public_key_der_base64: publicKey.toString("base64") };
+  const good = { ledgerRevision: sha256("current ledger"), signature: sign(null, publicationClearancePayload(digest, sha256("current ledger")), key.privateKey) };
+  const adapter = { assertIngress: async () => calls.push("ingress"), emergencyClose: async () => calls.push("close"), upload: async () => { calls.push("upload"); return { version }; } };
+  for (const signature of [Buffer.alloc(64), sign(null, publicationClearancePayload(sha256("other package"), good.ledgerRevision), key.privateKey)]) {
+    await assert.rejects(prepareStagingVersion({ operation: "publish", directory: f.directory, adapter, authorityConfig, readCurrentLedgerRevision: f.ledger, readClearance: async () => ({ ...good, signature }) }), /clearance does not match/);
+    assert.deepEqual(calls, []);
+  }
+  await prepareStagingVersion({ operation: "publish", directory: f.directory, adapter, authorityConfig, readCurrentLedgerRevision: f.ledger, readClearance: async () => good });
+  assert.deepEqual(calls, ["ingress", "close", "upload"]);
+});
+
+test("guard:domain-pagination-metadata", async t => {
+  const f = fixture(t, { domainInfo: { page: 1, per_page: 100, count: 2, total_count: 1, total_pages: 1 } });
+  await assert.rejects(f.adapter.upload(f.directory), /inventory incomplete/); assert.equal(f.state.runCalls ?? 0, 0);
+});
+test("guard:domain-pagination-duplicates", async t => {
+  const items = [{ service: "other-worker" }], info = page => ({ page, per_page: 1, count: 1, total_count: 2, total_pages: 2 });
+  const f = fixture(t, { domainPages: { 1: { items, info: info(1) }, 2: { items, info: info(2) } } });
+  await assert.rejects(f.adapter.upload(f.directory), /inventory incomplete/); assert.equal(f.state.runCalls ?? 0, 0);
+});
+
+test("guard:close-confirmation", async t => {
+  const f = fixture(t, { active: version, ambiguous: true });
+  await assert.rejects(f.adapter.emergencyClose(), /ambiguous staging activation/);
+  assert.equal(f.state.active, closed);
+  assert.ok(!f.calls.some(call => call.url?.endsWith("/subdomain")));
 });

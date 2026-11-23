@@ -19,6 +19,17 @@ const execute = (command, args, options) => new Promise((resolve, reject) => {
   });
 });
 
+// The verified distribution owns these direct dependencies; ranges must not
+// silently turn an exact release into a different direct dependency version.
+// https://docs.npmjs.com/cli/v11/configuring-npm/package-json#dependencies
+export async function installWranglerDependencies(directory, metadata, { env, signal, run = execute } = {}) {
+  const groups = [metadata.dependencies, metadata.optionalDependencies ?? {}];
+  if (groups.some(group => !group || typeof group !== "object" || Array.isArray(group) ||
+      Object.values(group).some(version => typeof version !== "string" || !/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/.test(version)))) throw new Error("Wrangler direct dependencies must use exact versions");
+  writeFileSync(path.join(directory, "package.json"), JSON.stringify({ private: true, dependencies: metadata.dependencies, optionalDependencies: metadata.optionalDependencies }));
+  await run("npm", ["install", "--ignore-scripts", "--no-audit", "--no-fund", "--package-lock=false"], { cwd: directory, env, signal });
+}
+
 export async function withPinnedWrangler(version, action, { request = curlRequest, environment = process.env, signal } = {}) {
   if (version !== WRANGLER_VERSION) throw new Error("unexpected Wrangler version");
   const scratch = mkdtempSync(path.join(tmpdir(), "hub-wrangler-"));
@@ -32,8 +43,7 @@ export async function withPinnedWrangler(version, action, { request = curlReques
     await execute("tar", ["-xzf", archive, "--no-same-owner", "--no-same-permissions", "-C", unpacked], { env, signal });
     const pkg = path.join(unpacked, "package"), metadata = JSON.parse(readFileSync(path.join(pkg, "package.json")));
     if (metadata.name !== "wrangler" || metadata.version !== WRANGLER_VERSION) throw new Error("Wrangler distribution identity differs");
-    writeFileSync(path.join(unpacked, "package.json"), JSON.stringify({ private: true, dependencies: metadata.dependencies, optionalDependencies: metadata.optionalDependencies }));
-    await execute("npm", ["install", "--ignore-scripts", "--no-audit", "--no-fund", "--package-lock=false"], { cwd: unpacked, env, signal });
+    await installWranglerDependencies(unpacked, metadata, { env, signal });
     return await action(path.join(pkg, "bin/wrangler.js"));
   } finally { rmSync(scratch, { recursive: true, force: true }); }
 }

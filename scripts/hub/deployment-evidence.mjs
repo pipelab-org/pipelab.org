@@ -50,7 +50,7 @@ export function publicationClearancePayload(artifactSHA256, ledgerRevision) {
   }));
 }
 
-function assertClearance({ artifactSHA256, ledgerRevision, signature, publicKey }) {
+export function assertClearance({ artifactSHA256, ledgerRevision, signature, publicKey }) {
   const payload = publicationClearancePayload(artifactSHA256, ledgerRevision);
   if (!Buffer.isBuffer(publicKey) || !Buffer.isBuffer(signature) || signature.length !== 64) {
     throw new Error("Ed25519 clearance signature and trusted public key required");

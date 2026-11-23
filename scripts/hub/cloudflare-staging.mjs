@@ -12,6 +12,13 @@ export { runPinnedWrangler } from "./staging-wrangler.mjs";
 
 const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
 const digest = /^[a-f0-9]{64}$/;
+// https://developers.cloudflare.com/api/resources/workers/subresources/scripts/subresources/versions/methods/get/
+export function assertVersionConfig(resources, config) {
+  if (canonical(resources?.bindings) !== canonical(config.vars) ||
+      resources?.script_runtime?.compatibility_date !== config.compatibility_date ||
+      canonical(resources?.script_runtime?.compatibility_flags) !== canonical(config.compatibility_flags)) throw new Error("staging version configuration differs");
+}
+
 const receiptScope = "pipelab-hub-staging-upload/v1";
 
 export function packageDigest(directory) {
@@ -60,18 +67,48 @@ export function createStagingAdapter({ account, worker = STAGING_WORKER, closedV
     if (!uuid.test(version ?? "") || !receipts.has(version)) throw new Error("unknown staging version or upload receipt");
     return receipts.get(version);
   };
-  const accountAPI = async (resource, method = "GET", body, recovery = false) => {
+  const hostingAPI = async (resource, method = "GET", body, recovery = false) => {
     target();
     if (!token || /[\r\n\0]/.test(token)) throw new Error("staging deployment token unavailable");
-    const response = await request(`https://api.cloudflare.com/client/v4/accounts/${account}/${resource}`, {
+    const response = await request(`https://api.cloudflare.com/client/v4/${resource}`, {
       headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" }, method,
       ...(body === undefined ? {} : { body: JSON.stringify(body) }), signal: recovery ? undefined : signal,
     });
     if (response.status !== 200 || response.headers.location) throw new Error("staging hosting API failed");
     let value; try { value = JSON.parse(response.body); } catch { throw new Error("invalid staging hosting API response"); }
     if (value.success !== true || value.result === undefined) throw new Error("staging hosting API did not confirm success");
-    if (Array.isArray(value.result) && value.result_info && (value.result_info.total_pages > 1 || value.result_info.total_count !== undefined && value.result_info.total_count !== value.result.length)) throw new Error("staging hosting inventory incomplete");
-    return value.result;
+    return value;
+  };
+  const accountAPI = async (resource, ...options) => (await hostingAPI(`accounts/${account}/${resource}`, ...options)).result;
+  // https://developers.cloudflare.com/api/resources/workers/subresources/domains/methods/list/
+  // Domains use page metadata. Zone routes are documented as an unpaginated
+  // array; if metadata is returned, require and follow a complete page set.
+  const inventory = async (resource, recovery, paginated = false) => {
+    const items = [], seen = new Set();
+    let page = 1, expected;
+    for (;;) {
+      const value = await hostingAPI(resource + (page === 1 ? "" : `${resource.includes("?") ? "&" : "?"}page=${page}`), "GET", undefined, recovery);
+      if (!Array.isArray(value.result)) throw new Error("staging ingress inventory unavailable");
+      const info = value.result_info;
+      if (!info && !paginated && page === 1) return value.result;
+      if (!info || info.page !== page || info.count !== value.result.length ||
+          !Number.isSafeInteger(info.per_page) || info.per_page < 1 || info.count > info.per_page ||
+          !Number.isSafeInteger(info.total_pages) || info.total_pages < 1 ||
+          !Number.isSafeInteger(info.total_count) || info.total_count < 0 ||
+          (expected && (info.total_pages !== expected.total_pages || info.total_count !== expected.total_count))) throw new Error("staging hosting inventory incomplete");
+      expected = info;
+      for (const item of value.result) {
+        const identity = canonical(item);
+        if (seen.has(identity)) throw new Error("staging hosting inventory incomplete");
+        seen.add(identity); items.push(item);
+      }
+      if (page === info.total_pages) {
+        if (items.length !== info.total_count) throw new Error("staging hosting inventory incomplete");
+        return items;
+      }
+      if (!info.count || items.length >= info.total_count) throw new Error("staging hosting inventory incomplete");
+      page++;
+    }
   };
   const api = (suffix, ...options) => accountAPI(`workers/scripts/${worker}${suffix}`, ...options);
   const deployable = async (version, recovery = false) => {
@@ -90,25 +127,35 @@ export function createStagingAdapter({ account, worker = STAGING_WORKER, closedV
   const assertIngress = async (recovery = false) => {
     const ingress = await api("/subdomain", "GET", undefined, recovery);
     if (ingress.enabled !== false || ingress.previews_enabled !== false) throw new Error("staging alternate ingress is enabled or unverified");
-    const domains = await accountAPI("workers/domains", "GET", undefined, recovery);
-    const routes = await accountAPI(`workers/services/${worker}/environments/production/routes?show_zonename=true`, "GET", undefined, recovery);
+    const domains = await inventory(`accounts/${account}/workers/domains`, recovery, true);
+    const routes = await inventory(`accounts/${account}/workers/services/${worker}/environments/production/routes?show_zonename=true`, recovery);
     if (!Array.isArray(domains) || !Array.isArray(routes)) throw new Error("staging ingress inventory unavailable");
     const bindings = domains.filter(domain => domain.service === worker);
-    if (bindings.length !== 1 || bindings[0].hostname !== new URL(STAGING_ORIGIN).hostname || bindings[0].environment !== "production" || routes.length !== 0) throw new Error("staging custom domain or zone routes differ from target");
+    if (bindings.length !== 1 || bindings[0].hostname !== new URL(STAGING_ORIGIN).hostname || (bindings[0].environment !== undefined && bindings[0].environment !== "production") ||
+        bindings[0].enabled !== true || bindings[0].previews_enabled !== false || routes.length !== 0) throw new Error("staging custom domain or zone routes differ from target");
+    if (!/^[a-f0-9]{32}$/.test(bindings[0].zone_id ?? "")) throw new Error("staging domain zone unavailable");
+    const zoneRoutes = await inventory(`zones/${bindings[0].zone_id}/workers/routes`, recovery);
+    if (zoneRoutes.some(route => !route || typeof route.pattern !== "string" || route.script === worker)) throw new Error("staging custom domain or zone routes differ from target");
   };
   const activateVersion = async (version, recovery = false) => {
     target();
     if (version !== closedVersion) known(version);
-    await assertIngress(recovery);
+    if (!recovery || version !== closedVersion) await assertIngress(recovery);
     await deployable(version, recovery);
     await api("/deployments", "POST", { strategy: "percentage", versions: [{ version_id: version, percentage: 100 }] }, recovery);
   };
   const emergencyClose = async () => {
     target();
-    if (typeof verifyLiveClosed !== "function") throw new Error("live closure check required");
     await activateVersion(closedVersion, true);
     if (await readActiveVersion(true) !== closedVersion) throw new Error("closed staging activation unconfirmed");
-    await verifyLiveClosed();
+    const failures = [];
+    try { await assertIngress(true); } catch (error) { failures.push(error); }
+    try {
+      if (typeof verifyLiveClosed !== "function") throw new Error("live closure check required");
+      await verifyLiveClosed();
+    } catch (error) { failures.push(error); }
+    if (failures.length === 1) throw failures[0];
+    if (failures.length) throw new AggregateError(failures, "closed staging post-activation checks failed");
   };
   return Object.freeze({
     closedVersion, readActiveVersion, activateVersion, emergencyClose,
@@ -141,6 +188,7 @@ export function createStagingAdapter({ account, worker = STAGING_WORKER, closedV
       } finally { rmSync(work, { recursive: true, force: true }); }
       if (packageDigest(directory) !== before) throw new Error("upload version or package changed");
       const version = await api("/versions/" + upload.version_id);
+      assertVersionConfig(version.resources, JSON.parse(readFileSync(path.join(directory, "deployment.json"))));
       if (version.id !== upload.version_id || typeof version.resources?.script?.etag !== "string" || !version.resources.script.etag) throw new Error("upload identity not confirmed");
       const receipt = Object.freeze({ scope: receiptScope, account, worker, version: upload.version_id, package_sha256: before,
         worker_sha256: workerSHA256, version_script_etag: version.resources.script.etag });
@@ -161,6 +209,7 @@ export function createStagingAdapter({ account, worker = STAGING_WORKER, closedV
       await deployable(closedVersion);
       await deployable(version);
       const remote = await api("/versions/" + version);
+      assertVersionConfig(remote.resources, { vars: {}, compatibility_date: "2026-02-10", compatibility_flags: ["nodejs_compat"] });
       if (remote.id !== version || remote.resources?.script?.etag !== receipt.version_script_etag) throw new Error("staging version identity differs");
       return receipt.package_sha256;
     },
