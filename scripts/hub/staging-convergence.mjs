@@ -13,7 +13,11 @@ export async function waitForStaging(check, { timeout = commandTimeout, interval
     return await Promise.race([stopped, (async () => {
       while (!combined.aborted) {
         try { return await check(combined); }
-        catch (failure) { lastFailure = failure; await delay(interval, undefined, { signal: combined }); }
+        catch (failure) {
+          // A rejection caused by the deadline itself must not hide the last control failure.
+          if (!combined.aborted) lastFailure = failure;
+          await delay(interval, undefined, { signal: combined });
+        }
       }
       throw new Error("staging convergence deadline expired or cancelled");
     })()]);
