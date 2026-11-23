@@ -17,9 +17,10 @@ export async function stagingRequest(route, { headers = {}, origin = STAGING_ORI
   return curlRequest(origin + route, { headers, signal });
 }
 
-export async function curlRequest(url, { headers = {}, signal, method = "GET", body } = {}) {
+export async function curlRequest(url, { headers = {}, signal, method = "GET", body, output, maxBytes = 16777216 } = {}) {
   const parsed = new URL(url);
   if (parsed.protocol !== "https:" || parsed.username || parsed.password || parsed.hash) throw new Error("HTTPS request required");
+  if (!Number.isSafeInteger(maxBytes) || maxBytes < 1) throw new Error("invalid HTTPS download bound");
   const scratch = mkdtempSync(path.join(tmpdir(), "hub-http-"));
   try {
     const config = ["url = " + JSON.stringify(url), "request = " + JSON.stringify(method), ...(body === undefined ? [] : ["data = " + JSON.stringify(body)]), ...Object.entries(headers).map(([key, value]) => {
@@ -28,7 +29,7 @@ export async function curlRequest(url, { headers = {}, signal, method = "GET", b
     })].join("\n") + "\n";
     await new Promise((resolve, reject) => {
       const child = spawn("curl", ["-q", "--config", "-", "--silent", "--fail-with-body", "--proto", "=https", "--max-time", "30",
-        "--max-filesize", "16777216", "--dump-header", path.join(scratch, "headers"), "--output", path.join(scratch, "body")],
+        "--max-filesize", String(maxBytes), "--dump-header", path.join(scratch, "headers"), "--output", output ?? path.join(scratch, "body")],
       { stdio: ["pipe", "ignore", "ignore"], signal });
       child.on("error", () => reject(new Error("staging HTTPS request unavailable")));
       child.on("close", code => code === 0 || code === 22 ? resolve() : reject(new Error("staging HTTPS request failed")));
@@ -42,6 +43,6 @@ export async function curlRequest(url, { headers = {}, signal, method = "GET", b
       const colon = line.indexOf(":");
       return [line.slice(0, colon).toLowerCase(), line.slice(colon + 1).trim()];
     }));
-    return { status: Number(match[1]), headers: responseHeaders, body: readFileSync(path.join(scratch, "body")) };
+    return { status: Number(match[1]), headers: responseHeaders, ...(output ? { file: output } : { body: readFileSync(path.join(scratch, "body")) }) };
   } finally { rmSync(scratch, { recursive: true, force: true }); }
 }

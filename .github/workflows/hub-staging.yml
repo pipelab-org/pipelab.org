@@ -22,15 +22,6 @@ on:
       package_artifact_id:
         description: Immutable artifact ID from that prepare run
         type: string
-      clearance_signature:
-        description: Offline Ed25519 clearance signature, base64
-        type: string
-      upload_receipt:
-        description: Signed upload receipt JSON for rollback
-        type: string
-      receipt_signature:
-        description: Offline receipt signature for rollback, base64
-        type: string
 
 permissions:
   contents: read
@@ -39,6 +30,7 @@ permissions:
 concurrency:
   group: hub-staging-publication
   cancel-in-progress: false
+  queue: max
 
 jobs:
   build:
@@ -143,14 +135,17 @@ jobs:
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
         run: node scripts/hub/staging-workflow.mjs check-target "$RUNNER_TEMP/staging-artifact"
-      - if: ${{ inputs.operation != 'close' }}
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
-        with:
-          artifact-ids: ${{ needs.artifact.outputs.artifact_id }}
-          run-id: ${{ inputs.package_run_id }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          path: ${{ runner.temp }}/staging-artifact
-          merge-multiple: true
+      - name: Verify deployment environment protection
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/hub/staging-workflow.mjs check-environment "$RUNNER_TEMP/staging-artifact"
+      - name: Download and verify the complete prepared archive
+        if: ${{ inputs.operation != 'close' }}
+        env:
+          PACKAGE_ARTIFACT_ID: ${{ needs.artifact.outputs.artifact_id }}
+          PACKAGE_RUN_ID: ${{ inputs.package_run_id }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/hub/staging-artifact.mjs download "$RUNNER_TEMP/staging-artifact"
       - name: Prepare pinned CLI for live installation checks
         if: ${{ inputs.operation != 'close' }}
         run: |
@@ -172,9 +167,6 @@ jobs:
           CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
           CASE_LEDGER_TOKEN: ${{ secrets.CASE_LEDGER_TOKEN }}
           CANDIDATE_SHA: ${{ inputs.candidate_sha }}
-          CLEARANCE_SIGNATURE: ${{ inputs.clearance_signature }}
-          UPLOAD_RECEIPT: ${{ inputs.upload_receipt }}
-          RECEIPT_SIGNATURE: ${{ inputs.receipt_signature }}
           OPERATION: ${{ inputs.operation }}
           HUB_RELEASE_BIN: ${{ runner.temp }}/pipelock
         run: node scripts/hub/staging-workflow.mjs "$OPERATION" "$RUNNER_TEMP/staging-artifact"

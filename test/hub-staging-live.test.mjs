@@ -182,3 +182,11 @@ test("guard:installed-name", t => {
   assert.doesNotThrow(() => assertInstalledBundle(input)); mkdirSync(path.join(rules, "unexpected-bundle"));
   assert.throws(() => assertInstalledBundle(input), /installed bundle names differ/);
 });
+
+test("live HTML parity follows canonical directory bytes and validates file redirects", async t => {
+  const f = publication(t), redirect = "/hub/fixture/index.html";
+  const request = async (route, options) => route === redirect && options.headers?.["CF-Access-Client-Id"] === environment.CF_ACCESS_CLIENT_ID ?
+    { status: 301, headers: { location: "/hub/fixture/" }, body: Buffer.alloc(0) } : f.request(route, options);
+  const result = await verifyStagingPublication(f, { request, environment, install: async () => ({ checked: 1 }) });
+  assert.equal(result.checked, f.contents.size); assert.equal(result.denied, (f.contents.size + 1) * 4);
+});

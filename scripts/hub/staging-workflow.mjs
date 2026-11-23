@@ -1,17 +1,19 @@
 import { execFileSync } from "node:child_process";
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { stagingBuildAcceptance } from "./acceptance.mjs";
 import { assertDeployConfig, createStagingAdapter, packageDigest } from "./cloudflare-staging.mjs";
-import { clearanceKey, createLedgerReader } from "./staging-authority.mjs";
+import { clearanceKey, createLedgerReader, createClearanceReader, assertClearanceLedger } from "./staging-authority.mjs";
 import { runStagingSession } from "./staging-session.mjs";
-import { verifyStagingPublication } from "./staging-publication.mjs";
-import { accessHeaders, stagingRequest } from "./staging-http.mjs";
+import { verifyStagingClosed, verifyStagingPublication } from "./staging-publication.mjs";
 import { assertStagingTarget, STAGING_ACCOUNT_ID, STAGING_WORKER, WRANGLER_VERSION } from "./staging-target.mjs";
-import { canonical } from "./evidence.mjs";
-import { representationPaths } from "./parity.mjs";
+import { stagingFailureLabel } from "./staging-diagnostics.mjs";
+import { assertStagingConfig } from "./staging-config.mjs";
+import { runPinnedWrangler } from "./staging-wrangler.mjs";
+import { verifyProtectedEnvironment } from "./staging-environment.mjs";
+import { canonical, sha256 } from "./evidence.mjs";
 
 
 const root = path.resolve(import.meta.dirname, "../..");
@@ -20,6 +22,8 @@ const write = (file, value) => writeFileSync(file, canonical(value) + "\n");
 const authority = read(new URL("./staging-authority.json", import.meta.url));
 const sha = /^[a-f0-9]{40}$/;
 
+export { stagingFailureLabel } from "./staging-diagnostics.mjs";
+
 export function assertBuildReport(report, stagingSHA) {
   if (report.mode !== "staging-build" || report.opening_eligible !== false || report.candidate?.site_sha !== stagingSHA ||
       report.staging?.staging_sha !== stagingSHA || Array.from({ length: 10 }, (_, index) => index + 1).filter(step => step !== 9).some(step => report.steps?.[step]?.status !== "pass") ||
@@ -27,6 +31,7 @@ export function assertBuildReport(report, stagingSHA) {
 }
 
 async function build(destination) {
+  assertStagingConfig();
   const { CANDIDATE_SHA: siteSHA, BASE_SHA: baseSHA, GITHUB_SHA: mainSHA, RUNNER_TEMP: scratch } = process.env;
   if (![siteSHA, baseSHA, mainSHA].every(value => sha.test(value ?? ""))) throw new Error("exact source SHAs required");
   const candidate = path.join(root, "candidate");
@@ -62,7 +67,7 @@ async function build(destination) {
     delete bundlerConfig.account_id;
     write(path.join(bundle, "wrangler.json"), bundlerConfig);
     const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => !/TOKEN|SECRET|CLIENT_ID/.test(key)));
-    execFileSync("npx", ["--yes", "wrangler@" + WRANGLER_VERSION, "versions", "upload", "--dry-run", "--config", path.join(bundle, "wrangler.json"), "--outdir", path.join(pkg, "worker")], { cwd: root, env, stdio: "ignore", timeout: 120_000 });
+    await runPinnedWrangler(WRANGLER_VERSION, ["versions", "upload", "--dry-run", "--config", path.join(bundle, "wrangler.json"), "--outdir", path.join(pkg, "worker")], { cwd: root, env });
   } finally { rmSync(bundle, { recursive: true, force: true }); }
   write(path.join(evidence, "package.json"), { package_sha256: packageDigest(pkg), candidate_sha: siteSHA });
 }
@@ -70,17 +75,9 @@ async function build(destination) {
 async function deploy(destination, operation) {
   assertStagingTarget(process.env.CLOUDFLARE_ACCOUNT_ID);
   const pkg = path.join(destination, "package"), evidence = path.join(destination, "evidence");
-  const headers = accessHeaders();
-  const closed = async () => {
-    const schema = read(new URL("./routes.json", import.meta.url)).schema;
-    const routes = new Set(["/hub/", "/hub/index.md", "/hub/index.json", "/hub/build.json", schema,
-      ...(manifest?.entries ?? []).filter(entry => entry.ownership === "hub").flatMap(entry => [entry.route, ...representationPaths(entry).map(item => item.route)])]);
-    for (const route of routes) {
-      const result = await stagingRequest(route, { headers });
-      if (result.status !== 404 || result.headers.location) throw new Error("live closed staging outputs unconfirmed");
-    }
-  };
   let manifest, records, identity, buildReport, deployedEvidence;
+  if (existsSync(path.join(evidence, "manifest.json"))) manifest = read(path.join(evidence, "manifest.json"));
+  const closed = () => verifyStagingClosed({ manifest });
   if (operation !== "close") {
     buildReport = read(path.join(evidence, "build-report.json"));
     assertBuildReport(buildReport, process.env.CANDIDATE_SHA);
@@ -99,19 +96,20 @@ async function deploy(destination, operation) {
   try {
     if (operation === "close") return await adapter.emergencyClose();
     const publicKey = clearanceKey(authority), readCurrentLedgerRevision = createLedgerReader(authority);
-    await readCurrentLedgerRevision();
+    const material = await createClearanceReader(authority)(packageDigest(pkg));
+    assertClearanceLedger(material, await readCurrentLedgerRevision());
     await adapter.assertIngress();
     let receipt;
     if (operation === "rollback") {
-      receipt = JSON.parse(process.env.UPLOAD_RECEIPT ?? "");
-      adapter.importSignedReceipt(receipt, Buffer.from(process.env.RECEIPT_SIGNATURE ?? "", "base64"), publicKey);
-      if (receipt.package_sha256 !== packageDigest(pkg)) throw new Error("rollback receipt package differs");
+      receipt = material.receipt;
+      adapter.importSignedReceipt(receipt, material.receiptSignature, publicKey);
+      if (receipt.package_sha256 !== packageDigest(pkg) || receipt.worker_sha256 !== sha256(readFileSync(path.join(pkg, "worker/worker.js")))) throw new Error("rollback receipt package differs");
     } else {
       await adapter.emergencyClose();
       receipt = await adapter.upload(pkg);
       write(path.join(evidence, "upload-receipt.json"), receipt);
     }
-    const result = await runStagingSession({ version: receipt.version, publicKey, signature: Buffer.from(process.env.CLEARANCE_SIGNATURE ?? "", "base64") }, { adapter, readCurrentLedgerRevision, signal: abort.signal });
+    const result = await runStagingSession({ version: receipt.version, publicKey, signature: material.signature }, { adapter, readCurrentLedgerRevision, signal: abort.signal });
     write(path.join(evidence, "acceptance.json"), { ...buildReport, mode: "staging", opening_eligible: false,
       steps: { ...buildReport.steps, 9: { status: "pass", evidence: deployedEvidence } }, deployment: { ...result, ...deployedEvidence } });
   } finally { process.removeListener("SIGINT", cancel); process.removeListener("SIGTERM", cancel); }
@@ -120,16 +118,18 @@ async function deploy(destination, operation) {
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const [operation, destination] = process.argv.slice(2);
   try {
-    if (!destination || !["build", "publish", "rollback", "close", "check-target", "check-wrangler"].includes(operation)) throw new Error("usage: staging-workflow.mjs build|publish|rollback|close|check-target DIRECTORY");
+    if (operation === "refuse-direct-deploy") throw new Error("direct staging deploy is disabled");
+    if (!destination || !["build", "publish", "rollback", "close", "check-target", "check-wrangler", "check-environment"].includes(operation)) throw new Error("usage: staging-workflow.mjs build|publish|rollback|close|check-target DIRECTORY");
     if (operation === "check-wrangler") {
-      const version = execFileSync("npx", ["--yes", "wrangler@" + WRANGLER_VERSION, "--version"], { cwd: root, encoding: "utf8", timeout: 120_000, stdio: ["ignore", "pipe", "ignore"] }).trim();
+      const version = (await runPinnedWrangler(WRANGLER_VERSION, ["--version"], { cwd: root })).trim();
       if (version !== WRANGLER_VERSION) throw new Error("unexpected Wrangler version");
-    } else if (operation === "check-target") assertStagingTarget(process.env.CLOUDFLARE_ACCOUNT_ID);
+    } else if (operation === "check-environment") await verifyProtectedEnvironment();
+    else if (operation === "check-target") assertStagingTarget(process.env.CLOUDFLARE_ACCOUNT_ID);
     else if (operation === "build") await build(path.resolve(destination));
     else await deploy(path.resolve(destination), operation);
-  } catch {
-    // Candidate files and remote error bodies must never become secret-job logs.
-    console.error("Staging operation refused or failed; verify target, authority, clearance and live evidence.");
+  } catch (error) {
+    // Report only fixed control labels, never candidate or remote diagnostics.
+    console.error("Staging control refused: " + stagingFailureLabel(error));
     process.exitCode = 1;
   }
 }

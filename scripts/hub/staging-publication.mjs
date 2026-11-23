@@ -4,11 +4,14 @@ import { tmpdir } from "node:os";
 import { canonical } from "./evidence.mjs";
 import { assertPublication, representationPaths } from "./parity.mjs";
 import { accessHeaders, stagingRequest } from "./staging-http.mjs";
+import { waitForStaging } from "./staging-convergence.mjs";
+import { STAGING_ORIGIN } from "./staging-target.mjs";
 import { verifyStagingInstalls } from "./staging-forwarder.mjs";
 
 export function assertStagingResponse(response, expected) {
   if (response.status !== 200 || response.headers.location || !response.body.equals(expected)) throw new Error("staging representation bytes or status differ");
-  if (!/(?:^|[,\s])noindex(?:[,\s]|$)/i.test(response.headers["x-robots-tag"] ?? "") ||
+  if (!/(?:^|[,\s])nofollow(?:[,\s]|$)/i.test(response.headers["x-robots-tag"] ?? "") ||
+      !/(?:^|[,\s])noindex(?:[,\s]|$)/i.test(response.headers["x-robots-tag"] ?? "") ||
       !/\bprivate\b/i.test(response.headers["cache-control"] ?? "") || !/\bno-store\b/i.test(response.headers["cache-control"] ?? "") ||
       /\b(?:public|s-maxage|max-age)\b/i.test(response.headers["cache-control"] ?? "") ||
       response.headers["x-content-type-options"] !== "nosniff" || !response.headers["content-security-policy"] ||
@@ -18,12 +21,40 @@ export function assertStagingResponse(response, expected) {
 export function assertDenied(response, expected) {
   if (expected && response.body.equals(expected)) throw new Error("staging denial contains protected bytes");
   // Access may redirect to login. Redirects establish denial only, never publication.
-  if (![401, 403, 302, 303, 307].includes(response.status) || response.status >= 300 && response.status < 400 &&
-      !/^https:\/\/[^/]+\.cloudflareaccess\.com\//.test(response.headers.location ?? "")) throw new Error("staging Access denial not established");
+  if (![401, 403, 302, 303, 307].includes(response.status)) throw new Error("staging Access denial not established");
+  if (response.status >= 300 && response.status < 400) {
+    let login;
+    try { login = new URL(response.headers.location); } catch { throw new Error("staging Access denial not established"); }
+    if (login.protocol !== "https:" || login.username || login.password || !login.hostname.endsWith(".cloudflareaccess.com")) throw new Error("staging Access denial not established");
+  }
+}
+
+export function assertHTMLRedirect(response, canonicalRoute) {
+  let target;
+  try { target = new URL(response.headers.location, STAGING_ORIGIN); } catch { throw new Error("invalid staging HTML redirect"); }
+  if (![301, 302, 307, 308].includes(response.status) || target.origin !== STAGING_ORIGIN || target.pathname !== canonicalRoute || target.search || target.hash || target.username || target.password) throw new Error("invalid staging HTML redirect");
+}
+
+export async function verifyStagingClosed({ manifest }, { request = stagingRequest, environment = process.env, converge = waitForStaging } = {}) {
+  const headers = accessHeaders(environment);
+  const schema = JSON.parse(readFileSync(new URL("./routes.json", import.meta.url))).schema;
+  const routes = new Set(["/hub/", "/hub/index.md", "/hub/index.json", "/hub/build.json", schema,
+    ...(manifest?.entries ?? []).filter(entry => entry.ownership === "hub").flatMap(entry => [entry.route, ...representationPaths(entry).map(item => item.route)])]);
+  await converge(async signal => {
+    for (const route of routes) {
+      const response = await request(route, { headers, signal });
+      if (response.status !== 404 || response.headers.location) throw new Error("live closed staging outputs unconfirmed");
+    }
+  });
+  const denialRoutes = new Set([...routes, ...(manifest?.entries ?? []).flatMap(entry => [entry.route, ...representationPaths(entry).map(item => item.route)])]);
+  for (const route of denialRoutes) for (const credentials of [{}, { "CF-Access-Client-Id": "invalid", "CF-Access-Client-Secret": "invalid" }]) {
+    assertDenied(await request(route, { headers: credentials }));
+  }
+  return { checked: routes.size, denied: denialRoutes.size * 2 };
 }
 
 export async function verifyStagingPublication({ directory, manifest, records, identity, binary }, {
-  request = stagingRequest, environment = process.env, install = verifyStagingInstalls,
+  request = stagingRequest, environment = process.env, install = verifyStagingInstalls, converge = waitForStaging,
 } = {}) {
   const headers = accessHeaders(environment);
   assertPublication({ directory, manifest, records, open: true });
@@ -34,8 +65,8 @@ export async function verifyStagingPublication({ directory, manifest, records, i
   try {
     const buildBytes = readFileSync(path.join(directory, "hub/build.json"));
     if (canonical(JSON.parse(buildBytes)) !== canonical(identity)) throw new Error("expected build identity differs");
-    const build = async () => assertStagingResponse(await request("/hub/build.json", { headers }), buildBytes);
-    await build();
+    const build = async signal => assertStagingResponse(await request("/hub/build.json", { headers, signal }), buildBytes);
+    await converge(build);
     const denial = async () => {
       for (const { route, representation, entry } of representations) {
         const paths = representation === "html" ? [entry.route, route] : [route];
@@ -47,9 +78,16 @@ export async function verifyStagingPublication({ directory, manifest, records, i
     await denial();
     for (const { route, representation, entry } of representations) {
       const expected = readFileSync(path.join(directory, route.slice(1)));
-      const response = await request(route, { headers });
-      assertStagingResponse(response, expected);
-      if (representation === "html") assertStagingResponse(await request(entry.route, { headers }), expected);
+      let response;
+      await converge(async signal => {
+        response = await request(representation === "html" ? entry.route : route, { headers, signal });
+        assertStagingResponse(response, expected);
+      });
+      if (representation === "html") {
+        const explicit = await request(route, { headers });
+        if (explicit.status === 200) assertStagingResponse(explicit, expected);
+        else assertHTMLRedirect(explicit, entry.route);
+      }
       const destination = path.join(scratch, route.slice(1)); mkdirSync(path.dirname(destination), { recursive: true });
       writeFileSync(destination, response.body); checked++;
     }

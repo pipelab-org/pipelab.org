@@ -11,19 +11,39 @@ export function clearanceKey(config) {
   return bytes;
 }
 
-export function createLedgerReader(config, { token = process.env.CASE_LEDGER_TOKEN, request = curlRequest } = {}) {
-  return async () => {
-    const { repository, path: file, ref } = config.ledger ?? {};
-    if (!repository || !file || !ref) throw new Error("staging ledger source not configured");
-    if (!/^[a-z0-9_.-]+\/[a-z0-9_.-]+$/i.test(repository) || !/^[a-z0-9/_.-]+$/i.test(file) ||
-        file.split("/").some(part => !part || part === "." || part === "..") || !/^[a-z0-9/_.-]+$/i.test(ref) || !token) throw new Error("staging ledger authority unavailable");
-    try {
-      const response = await request(`https://api.github.com/repos/${repository}/contents/${file}?ref=${encodeURIComponent(ref)}`, {
-        headers: { Authorization: "Bearer " + token, Accept: "application/vnd.github.raw+json", "X-GitHub-Api-Version": "2022-11-28", "Cache-Control": "no-cache", "User-Agent": "pipelab-hub-staging" },
-      });
-      if (response.status !== 200 || response.headers.location || !response.body.length ||
-          !/^(?:application\/vnd\.github\.raw(?:\+json)?|text\/plain|application\/octet-stream)(?:;|$)/i.test(response.headers["content-type"] ?? "")) throw new Error();
-      return sha256(response.body);
-    } catch { throw new Error("staging ledger authority unavailable"); }
+async function readCaseFile(config, file, { token = process.env.CASE_LEDGER_TOKEN, request = curlRequest } = {}) {
+  const { repository, ref } = config.ledger ?? {};
+  if (!repository || !file || !ref) throw new Error("staging ledger source not configured");
+  if (!/^[a-z0-9_.-]+\/[a-z0-9_.-]+$/i.test(repository) || !/^[a-z0-9/_.-]+$/i.test(file) ||
+      file.split("/").some(part => !part || part === "." || part === "..") || !/^[a-z0-9/_.-]+$/i.test(ref) || !token) throw new Error("staging ledger authority unavailable");
+  try {
+    const response = await request(`https://api.github.com/repos/${repository}/contents/${file}?ref=${encodeURIComponent(ref)}`, {
+      headers: { Authorization: "Bearer " + token, Accept: "application/vnd.github.raw+json", "X-GitHub-Api-Version": "2022-11-28", "Cache-Control": "no-cache", "User-Agent": "pipelab-hub-staging" },
+    });
+    if (response.status !== 200 || response.headers.location || !response.body.length ||
+        !/^(?:application\/vnd\.github\.raw(?:\+json)?|text\/plain|application\/octet-stream)(?:;|$)/i.test(response.headers["content-type"] ?? "")) throw new Error();
+    return response.body;
+  } catch { throw new Error("staging ledger authority unavailable"); }
+}
+
+export function createLedgerReader(config, options) {
+  return async () => sha256(await readCaseFile(config, config.ledger?.path, options));
+}
+
+export function createClearanceReader(config, options) {
+  return async packageSHA256 => {
+    if (!/^[a-f0-9]{64}$/.test(packageSHA256 ?? "") || !config.clearance_directory) throw new Error("staging private clearance source not configured");
+    const bytes = await readCaseFile(config, config.clearance_directory + "/" + packageSHA256 + ".json", options);
+    let record;
+    try { record = JSON.parse(bytes); } catch { throw new Error("staging private clearance malformed"); }
+    if (record.format !== 1 || record.package_sha256 !== packageSHA256 || !/^[a-f0-9]{64}$/.test(record.ledger_revision ?? "")) throw new Error("staging private clearance binding differs");
+    const signature = Buffer.from(record.clearance_signature_base64 ?? "", "base64");
+    if (signature.length !== 64 || signature.toString("base64") !== record.clearance_signature_base64) throw new Error("staging private clearance signature malformed");
+    return { signature, ledgerRevision: record.ledger_revision, receipt: record.upload_receipt,
+      receiptSignature: Buffer.from(record.receipt_signature_base64 ?? "", "base64") };
   };
+}
+
+export function assertClearanceLedger(material, currentRevision) {
+  if (material.ledgerRevision !== currentRevision) throw new Error("staging private clearance ledger differs");
 }

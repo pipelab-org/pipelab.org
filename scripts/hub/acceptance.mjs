@@ -63,6 +63,10 @@ export function checkCheckout(root, expected, mode = "routine") {
   }
 }
 
+export function hugoBuildEnvironment(environment = process.env) {
+  return Object.fromEntries(Object.entries(environment).filter(([key]) => !/^HUGO[_x]/i.test(key) && !/TOKEN|SECRET|CLIENT_ID/i.test(key)));
+}
+
 function checkGenerated(root, catalog) {
   const generated = path.join(root, "data/hub/generated");
   if (canonical(readdirSync(generated).sort()) !== canonical(Object.keys(catalog).sort())) {
@@ -137,7 +141,7 @@ async function runAcceptance({ source, siteSHA, rulesSHA, staging }, {
     pass(3, "Regenerated records and staged asset set match the candidate.");
     current = 4;
     // Build the committed site's configuration without ambient Hugo overrides.
-    const buildEnv = Object.fromEntries(Object.entries(process.env).filter(([key]) => !/^HUGO[_x]/i.test(key)));
+    const buildEnv = hugoBuildEnvironment();
     const build = name => {
       const directory = path.join(temporary, name);
       child("hugo", ["--gc", "--minify", "--cleanDestinationDir", "--destination", directory], { cwd: site, env: buildEnv });
@@ -157,7 +161,7 @@ async function runAcceptance({ source, siteSHA, rulesSHA, staging }, {
     try {
       testOutput = child(process.execPath, ["--test", "--test-reporter=tap", "test/hub-core.test.mjs", "test/hub-harness.test.mjs",
         "test/hub-source-tree.test.mjs", "test/hub-contribution-preflight.test.mjs", "test/hub-admission-producer.test.mjs",
-        "test/hub-policy-blobs.test.mjs", "test/hub-publication.test.mjs", "test/hub-staging.test.mjs", "test/hub-staging-live.test.mjs", "test/hub-catalog-assets.test.mjs", "test/hub-search.test.mjs"], options).toString("utf8");
+        "test/hub-policy-blobs.test.mjs", "test/hub-publication.test.mjs", "test/hub-staging.test.mjs", "test/hub-staging-live.test.mjs", "test/hub-staging-round1.test.mjs", "test/hub-catalog-assets.test.mjs", "test/hub-search.test.mjs"], options).toString("utf8");
     } catch (error) {
       throw new Error(diagnosticLine(fixtureFailureEvidence(error)));
     }
@@ -170,7 +174,7 @@ async function runAcceptance({ source, siteSHA, rulesSHA, staging }, {
 
     current = 6;
     assertPublication({ directory: closed, manifest, records, open: false });
-    const buildConfig = Buffer.from(canonical(Object.fromEntries(["hugo.toml", "wrangler.jsonc", "data/hub/launch.toml", "static/robots.txt", "static/_headers"]
+    const buildConfig = Buffer.from(canonical(Object.fromEntries(["hugo.toml", "wrangler.jsonc", "data/hub/launch.toml", ...(mode === "staging" ? ["static/robots.txt", "static/_headers"] : [])]
       .map(name => [name, sha256(readFileSync(path.join(site, name)))]))));
     const buildInputs = { manifest, records, siteSHA, rulesSHA, buildConfig };
     const identity = publicationIdentity({ ...buildInputs, directory: open });

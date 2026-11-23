@@ -4,11 +4,10 @@ import { generateKeyPairSync, sign } from "node:crypto";
 import { chmodSync, cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
 import test from "node:test";
 import { parse as yaml } from "yaml";
-import { createStagingAdapter as unconfiguredAdapter } from "../scripts/hub/cloudflare-staging.mjs";
-import { assertStagingTarget } from "../scripts/hub/staging-target.mjs";
 import { assertStagingSource, stagingOverlay } from "../scripts/hub/staging-source.mjs";
 import { checkCheckout, stagingAcceptance, routineAcceptance } from "../scripts/hub/acceptance.mjs";
 import { createLedgerReader, clearanceKey } from "../scripts/hub/staging-authority.mjs";
@@ -16,13 +15,29 @@ import { assertPreparedArtifact } from "../scripts/hub/staging-artifact.mjs";
 import { assertBuildReport } from "../scripts/hub/staging-workflow.mjs";
 import { canonical, sha256 } from "../scripts/hub/evidence.mjs";
 
-const isolated = mkdtempSync(path.join(tmpdir(), "hub-adapter-test-"));
-mkdirSync(path.join(isolated, "scripts"));
-cpSync(new URL("../scripts/hub", import.meta.url), path.join(isolated, "scripts/hub"), { recursive: true });
-symlinkSync(new URL("../node_modules", import.meta.url), path.join(isolated, "node_modules"), "dir");
+let dependencies = path.dirname(createRequire(import.meta.url).resolve("parse5"));
+while (path.basename(dependencies) !== "node_modules") {
+  const parent = path.dirname(dependencies);
+  if (parent === dependencies) throw new Error("installed test dependencies unavailable");
+  dependencies = parent;
+}
+function isolatedTarget(value) {
+  const directory = mkdtempSync(path.join(tmpdir(), "hub-adapter-test-"));
+  mkdirSync(path.join(directory, "scripts"));
+  cpSync(new URL("../scripts/hub", import.meta.url), path.join(directory, "scripts/hub"), { recursive: true });
+  cpSync(new URL("../wrangler.jsonc", import.meta.url), path.join(directory, "wrangler.jsonc"));
+  symlinkSync(dependencies, path.join(directory, "node_modules"), "dir");
+  const targetFile = path.join(directory, "scripts/hub/staging-target.mjs");
+  writeFileSync(targetFile, readFileSync(targetFile, "utf8").replace(/STAGING_ACCOUNT_ID = "[^"]*"/, "STAGING_ACCOUNT_ID = " + JSON.stringify(value)));
+  process.once("exit", () => rmSync(directory, { recursive: true, force: true }));
+  return directory;
+}
+const isolated = isolatedTarget("a".repeat(32));
+const unconfigured = isolatedTarget("");
 const targetFile = path.join(isolated, "scripts/hub/staging-target.mjs");
-writeFileSync(targetFile, readFileSync(targetFile, "utf8").replace('STAGING_ACCOUNT_ID = ""', 'STAGING_ACCOUNT_ID = "' + "a".repeat(32) + '"'));
-const { createStagingAdapter, packageDigest, assertDeployConfig, runPinnedWrangler } = await import(pathToFileURL(path.join(isolated, "scripts/hub/cloudflare-staging.mjs")));
+const { createStagingAdapter: unconfiguredAdapter } = await import(pathToFileURL(path.join(unconfigured, "scripts/hub/cloudflare-staging.mjs")));
+const { assertStagingTarget } = await import(pathToFileURL(path.join(unconfigured, "scripts/hub/staging-target.mjs")));
+const { createStagingAdapter, packageDigest, assertDeployConfig, assertUploadCopy, runPinnedWrangler } = await import(pathToFileURL(path.join(isolated, "scripts/hub/cloudflare-staging.mjs")));
 const { publishClearedVersion, publicationClearancePayload } = await import(pathToFileURL(path.join(isolated, "scripts/hub/deployment-evidence.mjs")));
 const { runStagingSession } = await import(pathToFileURL(path.join(isolated, "scripts/hub/staging-session.mjs")));
 const { assertStagingTarget: configuredTarget } = await import(pathToFileURL(targetFile));
@@ -42,12 +57,18 @@ function fixture(t, changes = {}) {
   const state = { active: closed, versions: [closed, version], ledger: sha256("current ledger"), failClose: false, ambiguous: false, ...changes };
   const calls = [];
   const request = async (url, options) => {
-    assert.ok(url.startsWith(`https://api.cloudflare.com/client/v4/accounts/${account}/workers/scripts/pipelab-org-hub-staging/`));
+    assert.ok(url.startsWith(`https://api.cloudflare.com/client/v4/accounts/${account}/`));
     calls.push({ url, method: options.method });
     let result;
-    if (url.includes("/versions?")) result = { items: state.versions.map(id => ({ id })) };
+    if (state.inventoryUnavailable && url.endsWith("/workers/domains")) throw new Error("inventory unavailable");
+    if (url.endsWith("/workers/domains")) result = state.domains ?? [{ hostname: "hub-staging.pipelab.org", service: "pipelab-org-hub-staging", environment: "production" }];
+    else if (url.includes("/environments/production/routes?")) result = state.routes ?? [];
+    else if (url.includes("/versions?")) {
+      if (state.beforeCopy && !state.raced) { state.raced = true; state.beforeCopy(directory, config); }
+      result = { items: state.versions.map(id => ({ id })) };
+    }
     else if (url.endsWith("/subdomain")) result = { enabled: state.ingress ?? false, previews_enabled: false };
-    else if (url.includes("/versions/")) result = { id: state.wrongId ?? version };
+    else if (url.includes("/versions/")) result = { id: state.wrongId ?? version, resources: { script: { etag: state.etag ?? "fixture-etag" } } };
     else if (options.method === "POST") {
       const deployment = JSON.parse(options.body); assert.equal(deployment.versions.length, 1); assert.equal(deployment.versions[0].percentage, 100);
       if (deployment.versions[0].version_id === closed && state.failClose) throw new Error("closure failed");
@@ -55,13 +76,15 @@ function fixture(t, changes = {}) {
       if (state.failActivate && state.active === version) throw new Error("activation unavailable");
       result = { id: "deployment" };
     } else result = { deployments: [{ strategy: "percentage", versions: [{ version_id: state.active, percentage: state.ambiguous ? 50 : 100 }] }] };
-    return { status: 200, headers: {}, body: Buffer.from(JSON.stringify({ success: true, result })) };
+    return { status: 200, headers: {}, body: Buffer.from(JSON.stringify({ success: true, result, ...(state.inventoryPartial && url.endsWith("/workers/domains") ? { result_info: { total_count: 2, total_pages: 2 } } : {}) })) };
   };
   const run = async (args, options) => {
-    assert.deepEqual(args, ["versions", "upload", "--config", "deployment.json", "--no-bundle", "--strict"]);
+    state.runCalls = (state.runCalls ?? 0) + 1;
+    assert.deepEqual(args, ["versions", "upload", "--config", "deployment.json", "--name", "pipelab-org-hub-staging", "--no-bundle", "--strict"]);
     assert.equal(options.env.CLOUDFLARE_ACCOUNT_ID, account); assert.equal(options.env.CF_ACCESS_CLIENT_SECRET, undefined); assert.equal(options.env.CASE_LEDGER_TOKEN, undefined);
     if (state.mutate) writeFileSync(path.join(directory, "assets/index.html"), "changed during upload");
-    return "Worker Version ID: " + (state.uploadId ?? version);
+    writeFileSync(options.env.WRANGLER_OUTPUT_FILE_PATH, JSON.stringify({ type: "version-upload", version: 1, worker_name: state.uploadWorker ?? "pipelab-org-hub-staging", version_id: state.uploadId ?? version }) + "\n");
+    return "untrusted console text";
   };
   const adapter = createStagingAdapter({ account, closedVersion: closed, token: "synthetic-token", request, run,
     verifyLiveClosed: async () => { if (state.failLiveClose) throw new Error("closed outputs unconfirmed"); },
@@ -104,7 +127,7 @@ test("trusted upload binds receipt and activates at 100 percent with live checks
   assert.equal(result.version, version); assert.equal(f.state.active, version);
 });
 test("guard:upload-package-stable", async t => { const f = fixture(t, { mutate: true }); await assert.rejects(f.adapter.upload(f.directory), /upload version or package changed/); });
-test("guard:upload-id", async t => { const f = fixture(t, { uploadId: "not-a-version" }); await assert.rejects(f.adapter.upload(f.directory), /upload version or package changed/); });
+test("guard:upload-id", async t => { const f = fixture(t, { uploadId: "not-a-version" }); await assert.rejects(f.adapter.upload(f.directory), /untrusted Wrangler upload result/); });
 test("guard:remote-version-id", async t => { const f = fixture(t, { wrongId: closed }); await assert.rejects(f.adapter.upload(f.directory), /upload identity not confirmed/); });
 test("guard:closed-deployable", async t => { const f = fixture(t, { versions: [version] }); await assert.rejects(f.adapter.upload(f.directory), /outside deployable window/); });
 test("guard:ingress-disabled", async t => { const f = fixture(t, { ingress: true }); await assert.rejects(f.adapter.assertIngress(), /alternate ingress/); });
@@ -235,13 +258,14 @@ test("guard:live-check-required", async t => {
 
 test("guard:artifact-provenance", () => {
   const workflowSHA = "a".repeat(40), expected = { artifactID: "7", runID: "8", workflowSHA };
-  const artifact = { id: 7, name: "hub-staging-package-1", expired: false, digest: "sha256:" + "b".repeat(64), workflow_run: { id: 8, head_branch: "main", head_sha: workflowSHA } };
+  const artifact = { id: 7, name: "hub-staging-package-1", expired: false, size_in_bytes: 100, digest: "sha256:" + "b".repeat(64), workflow_run: { id: 8, head_branch: "main", head_sha: workflowSHA } };
   const run = { id: 8, run_attempt: 1, repository: { full_name: "pipelab-org/pipelab.org" }, head_branch: "main", head_sha: workflowSHA, event: "workflow_dispatch", path: ".github/workflows/hub-staging.yml", status: "completed", conclusion: "success" };
   assert.equal(assertPreparedArtifact({ artifact, run }, expected), "7");
   for (const change of [{ head_branch: "feature" }, { conclusion: "failure" }, { head_sha: "c".repeat(40) }, { path: "untrusted.yml" }]) {
     assert.throws(() => assertPreparedArtifact({ artifact, run: { ...run, ...change } }, expected), /untrusted prepared staging artifact/);
   }
   assert.throws(() => assertPreparedArtifact({ artifact: { ...artifact, expired: true }, run }, expected), /untrusted prepared staging artifact/);
+  assert.throws(() => assertPreparedArtifact({ artifact: { ...artifact, size_in_bytes: 0 }, run }, expected), /untrusted prepared staging artifact/);
 });
 
 test("unconfigured adapter refuses every operation before any network call", async () => {
@@ -266,6 +290,65 @@ test("workflow uses the committed Wrangler pin", () => {
   const workflow = readFileSync(new URL("../.github/workflows/hub-staging.yml", import.meta.url), "utf8");
   assert.ok(workflow.includes("staging-workflow.mjs check-wrangler"));
   const implementation = readFileSync(new URL("../scripts/hub/staging-workflow.mjs", import.meta.url), "utf8");
-  assert.ok(implementation.includes('"wrangler@" + WRANGLER_VERSION'));
+  assert.ok(implementation.includes("runPinnedWrangler(WRANGLER_VERSION"));
   assert.doesNotMatch(implementation, /wrangler@[0-9]/);
+});
+
+
+test("guard:ingress-domains", async t => {
+  const f = fixture(t, { domains: [{ hostname: "other.example", service: "pipelab-org-hub-staging", environment: "production" }] });
+  await assert.rejects(f.adapter.upload(f.directory), /custom domain or zone routes differ/);
+  assert.equal(f.state.runCalls ?? 0, 0);
+});
+test("guard:ingress-routes", async t => {
+  const f = fixture(t); await f.adapter.upload(f.directory);
+  f.state.routes = [{ pattern: "other.example/*", script: "pipelab-org-hub-staging" }];
+  await assert.rejects(f.adapter.activateVersion(version), /custom domain or zone routes differ/);
+  assert.equal(f.state.active, closed);
+});
+test("guard:copied-config", t => {
+  const f = fixture(t); writeFileSync(path.join(f.directory, "deployment.json"), JSON.stringify({ ...f.config, vars: { unexpected: "value" } }));
+  assert.throws(() => assertUploadCopy(f.directory, packageDigest(f.directory), account), /unexpected staging deployment configuration/);
+});
+test("guard:copied-digest", t => {
+  const f = fixture(t), expected = packageDigest(f.directory); writeFileSync(path.join(f.directory, "assets/index.html"), "changed");
+  assert.throws(() => assertUploadCopy(f.directory, expected, account), /upload version or package changed/);
+});
+test("source mutation during hosting reads never reaches Wrangler", async t => {
+  const f = fixture(t, { beforeCopy: directory => writeFileSync(path.join(directory, "worker/worker.js"), "changed during await") });
+  await assert.rejects(f.adapter.upload(f.directory), /upload version or package changed/); assert.equal(f.state.runCalls ?? 0, 0);
+});
+test("guard:structured-upload-worker", async t => {
+  const f = fixture(t, { uploadWorker: "pipelab-org" }); await assert.rejects(f.adapter.upload(f.directory), /untrusted Wrangler upload result/);
+});
+test("guard:version-metadata", async t => {
+  const f = fixture(t); const receipt = await f.adapter.upload(f.directory);
+  assert.equal(receipt.worker_sha256, sha256(readFileSync(path.join(f.directory, "worker/worker.js"))));
+  f.state.etag = "changed-version-metadata";
+  await assert.rejects(f.adapter.readVersionArtifact(version), /staging version identity differs/);
+});
+test("nested candidate resolves dependencies and isolates both account states", t => {
+  const root = mkdtempSync(path.join(tmpdir(), "hub-nested-test-")); t.after(() => rmSync(root, { recursive: true, force: true }));
+  const candidate = path.join(root, "candidate"); mkdirSync(path.join(candidate, "test"), { recursive: true }); mkdirSync(path.join(candidate, "scripts"));
+  cpSync(new URL("../scripts/hub", import.meta.url), path.join(candidate, "scripts/hub"), { recursive: true });
+  cpSync(new URL("../wrangler.jsonc", import.meta.url), path.join(candidate, "wrangler.jsonc"));
+  cpSync(new URL("./hub-staging.test.mjs", import.meta.url), path.join(candidate, "test/hub-staging.test.mjs"));
+  const target = path.join(candidate, "scripts/hub/staging-target.mjs");
+  writeFileSync(target, readFileSync(target, "utf8").replace(/STAGING_ACCOUNT_ID = "[^"]*"/, 'STAGING_ACCOUNT_ID = "' + "b".repeat(32) + '"'));
+  symlinkSync(dependencies, path.join(root, "node_modules"), "dir");
+  const environment = { ...process.env }; delete environment.NODE_TEST_CONTEXT;
+  const output = execFileSync(process.execPath, ["--test", "--test-reporter=tap", "--test-name-pattern=guard:account-configured|guard:target-exact|unconfigured adapter", "test/hub-staging.test.mjs"], { cwd: candidate, env: environment, timeout: 15_000, stdio: "pipe", encoding: "utf8" });
+  assert.match(output, /^# tests 3$/m); assert.match(output, /^# pass 3$/m); assert.match(output, /^# skipped 0$/m);
+});
+
+test("guard:ingress-inventory-unavailable", async t => {
+  const f = fixture(t, { inventoryUnavailable: true }); await assert.rejects(f.adapter.upload(f.directory), /inventory unavailable/); assert.equal(f.state.runCalls ?? 0, 0);
+});
+test("guard:receipt-worker-digest", async t => {
+  const f = fixture(t), receipt = { ...await f.adapter.upload(f.directory), version: "00000000-0000-0000-0000-000000000003", worker_sha256: "invalid" };
+  assert.throws(() => f.adapter.importSignedReceipt(receipt, sign(null, Buffer.from(canonical(receipt)), key.privateKey), publicKey), /untrusted upload receipt/);
+});
+
+test("guard:ingress-complete", async t => {
+  const f = fixture(t, { inventoryPartial: true }); await assert.rejects(f.adapter.upload(f.directory), /inventory incomplete/); assert.equal(f.state.runCalls ?? 0, 0);
 });

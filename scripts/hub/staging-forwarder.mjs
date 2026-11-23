@@ -4,6 +4,7 @@ import { createServer } from "node:https";
 import { mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { tmpdir } from "node:os";
+import { rootCertificates, getCACertificates } from "node:tls";
 import { stringify } from "yaml";
 import { representationPaths } from "./parity.mjs";
 import { canonical, sha256 } from "./evidence.mjs";
@@ -74,6 +75,23 @@ export function assertInstalledBundle({ rules, directory, bundle, signature, exp
   }
 }
 
+export function installEnvironment({ home, ca, official = false, environment = process.env }) {
+  const env = Object.fromEntries(Object.entries(environment).filter(([name]) => /^(?:PATH|HTTPS?_PROXY|ALL_PROXY|NO_PROXY|https?_proxy|all_proxy|no_proxy|SSL_CERT_FILE|SSL_CERT_DIR)$/.test(name)));
+  Object.assign(env, { HOME: home, XDG_CONFIG_HOME: home, PIPELOCK_HOME: home });
+  if (ca && !official) {
+    const trusted = new Set([...rootCertificates, ...getCACertificates("system")]);
+    if (env.SSL_CERT_FILE) trusted.add(readFileSync(env.SSL_CERT_FILE, "utf8"));
+    trusted.add(readFileSync(ca, "utf8"));
+    const combined = path.join(home, "install-ca.pem");
+    writeFileSync(combined, [...trusted].join("\n") + "\n", { mode: 0o600 });
+    env.SSL_CERT_FILE = combined;
+    delete env.SSL_CERT_DIR;
+  }
+  const noProxy = [env.NO_PROXY, env.no_proxy, "127.0.0.1", "localhost"].filter(Boolean).join(",");
+  env.NO_PROXY = noProxy; env.no_proxy = noProxy;
+  return env;
+}
+
 export async function verifyStagingInstalls({ binary, directory, manifest, records, request = stagingRequest, headers = accessHeaders() }) {
   binary = pinnedRelease(binary);
   const bundles = records.filter(record => record.listing.type === "bundle");
@@ -88,14 +106,11 @@ export async function verifyStagingInstalls({ binary, directory, manifest, recor
         if (!bundle || !signature) throw new Error("complete manifest bundle pair required");
         const home = path.join(scratch, String(index)); mkdirSync(home);
         const rules = path.join(home, "rules"); mkdirSync(rules);
-        const trust = path.join(home, "trust"); mkdirSync(trust);
         const config = path.join(home, "config.yaml");
         const key = record.listing.signer_fingerprint;
         if (record.badge !== "official" && (typeof key !== "string" || !key)) throw new Error("community signing key unavailable");
         writeFileSync(config, stringify({ rules: { rules_dir: rules, trusted_keys: key ? [{ name: "staging-publisher", public_key: key }] : [] } }));
-        const env = Object.fromEntries(Object.entries(process.env).filter(([name]) => /^(?:PATH|HTTPS?_PROXY|ALL_PROXY|NO_PROXY|https?_proxy|all_proxy|no_proxy)$/.test(name)));
-        Object.assign(env, { HOME: home, XDG_CONFIG_HOME: home, PIPELOCK_HOME: home, SSL_CERT_DIR: trust });
-        if (ca) env.SSL_CERT_FILE = ca;
+        const env = installEnvironment({ home, ca, official: record.badge === "official" });
         const source = record.badge === "official" ? [record.listing.bundle_name] : ["--source", origin + bundle.route];
         await install(binary, ["rules", "install", ...source, "--rules-dir", rules, "--config", config, "--home", home], { cwd: home, env, signal });
         assertInstalledBundle({ rules, directory, bundle, signature, expectedName: record.listing.bundle_name });

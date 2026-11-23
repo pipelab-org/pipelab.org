@@ -1,4 +1,6 @@
 export const WRANGLER_VERSION = "4.166.0";
+export const WRANGLER_DIST_INTEGRITY = "sha512-qMz0sHGXqEC0Va8T6dAaG0ggp9tCcuHHYMUQzRKbtZg6+MPAPb6oBu1757IaeugNJHPAz+twHiA+zDyXWQLsLw==";
+export const STAGING_DIRECT_BUILD_COMMAND = "node scripts/hub/staging-workflow.mjs refuse-direct-deploy";
 // Filled by the staging operator after account verification. Empty fails closed.
 export const STAGING_ACCOUNT_ID = "";
 export const STAGING_WORKER = "pipelab-org-hub-staging";

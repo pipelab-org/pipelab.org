@@ -14,8 +14,10 @@ export function stagingOverlay(files) {
   if (toml(files["data/hub/launch.toml"]).open !== false) throw new Error("staging base must be closed");
   const hugo = files["hugo.toml"];
   if ((hugo.match(/^baseURL\s*=/gm) ?? []).length !== 1) throw new Error("one source baseURL required");
+  const launch = files["data/hub/launch.toml"].replace(/^open[ \t]*=[ \t]*false(?:[ \t]*(?:#[^\r\n]*)?)?$/m, "open = true");
+  if (toml(launch).open !== true) throw new Error("staging overlay must open the Hub");
   return {
-    "data/hub/launch.toml": files["data/hub/launch.toml"].replace(/^open\s*=\s*false\s*$/m, "open = true"),
+    "data/hub/launch.toml": launch,
     "hugo.toml": hugo.replace(/^baseURL\s*=.*$/m, `baseURL = '${STAGING_ORIGIN}/'`),
     "static/robots.txt": "User-agent: *\nDisallow: /\n",
     // Remove narrower cache and robot directives before setting the global rule.
@@ -26,12 +28,13 @@ export function stagingOverlay(files) {
 
 export function assertStagingSource({ root, baseSHA, productionBaseSHA, stagingSHA }) {
   if (![baseSHA, productionBaseSHA, stagingSHA].every(value => fullSHA.test(value ?? ""))) throw new Error("exact staging and base SHAs required");
+  if (baseSHA !== productionBaseSHA) throw new Error("staging base must equal production main");
   const git = (...args) => readGit(root, args).toString();
   if (git("rev-parse", "HEAD").trim() !== stagingSHA || git("status", "--porcelain=v1")) throw new Error("staging source must be exact and clean");
   for (const [base, head] of [[productionBaseSHA, baseSHA], [baseSHA, stagingSHA]]) git("merge-base", "--is-ancestor", base, head);
-  const changed = git("diff", "--name-only", "--no-renames", baseSHA, stagingSHA).trim().split("\n").sort();
+  const changed = git("diff", "--name-only", "--no-renames", productionBaseSHA, stagingSHA).trim().split("\n").sort();
   if (canonical(changed) !== canonical(stagingFiles)) throw new Error("staging revision must contain only the reviewed staging delta");
-  const before = Object.fromEntries(stagingFiles.map(name => [name, git("show", `${baseSHA}:${name}`)]));
+  const before = Object.fromEntries(stagingFiles.map(name => [name, git("show", `${productionBaseSHA}:${name}`)]));
   const expected = stagingOverlay(before);
   const delta = stagingFiles.map(name => {
     const after = readFileSync(path.join(root, name), "utf8");
