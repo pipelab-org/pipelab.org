@@ -12,5 +12,15 @@
   // delivery target harder to see and audit.
   "vars": {
     "TELEGRAM_ADVISORY_CHAT_ID": "-5558674979"
+  },
+  "env": {
+    "staging": {
+      "name": "pipelab-org-hub-staging",
+      "build": { "command": "node scripts/hub/staging-workflow.mjs refuse-direct-deploy" },
+      "workers_dev": false,
+      "preview_urls": false,
+      "routes": [{ "pattern": "hub-staging.pipelab.org", "custom_domain": true }],
+      "vars": {}
+    }
   }
 }

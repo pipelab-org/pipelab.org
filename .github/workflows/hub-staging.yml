@@ -1,0 +1,191 @@
+name: Hub protected staging
+
+on:
+  workflow_dispatch:
+    inputs:
+      candidate_sha:
+        description: Full reviewed staging source SHA
+        required: true
+        type: string
+      base_sha:
+        description: Full reviewed closed source SHA before the staging delta
+        required: true
+        type: string
+      operation:
+        description: Staging operation
+        type: choice
+        options: [prepare, publish, rollback, close]
+        default: prepare
+      package_run_id:
+        description: Successful prepare workflow run ID
+        type: string
+      package_artifact_id:
+        description: Immutable artifact ID from that prepare run
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: hub-staging-publication
+  cancel-in-progress: false
+  queue: max
+
+jobs:
+  build:
+    if: ${{ inputs.operation == 'prepare' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    outputs:
+      artifact_id: ${{ steps.artifact.outputs.artifact-id }}
+    steps:
+      - name: Require trusted main and exact commits
+        env:
+          REPOSITORY: ${{ github.repository }}
+          REF: ${{ github.ref }}
+          CANDIDATE_SHA: ${{ inputs.candidate_sha }}
+          BASE_SHA: ${{ inputs.base_sha }}
+        run: |
+          test "$REPOSITORY" = pipelab-org/pipelab.org
+          test "$REF" = refs/heads/main
+          [[ "$CANDIDATE_SHA" =~ ^[a-f0-9]{40}$ ]]
+          [[ "$BASE_SHA" =~ ^[a-f0-9]{40}$ ]]
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: ./.github/actions/hub-toolchain
+        with:
+          mode: staging
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          ref: ${{ inputs.candidate_sha }}
+          path: candidate
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Prepare the committed Wrangler pin
+        run: node scripts/hub/staging-workflow.mjs check-wrangler "$RUNNER_TEMP/staging-artifact"
+      - name: Build and validate without deployment secrets
+        env:
+          CANDIDATE_SHA: ${{ inputs.candidate_sha }}
+          BASE_SHA: ${{ inputs.base_sha }}
+        run: node scripts/hub/staging-workflow.mjs build "$RUNNER_TEMP/staging-artifact"
+      - id: artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: hub-staging-package-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/staging-artifact
+          if-no-files-found: error
+          retention-days: 7
+
+  artifact:
+    if: ${{ inputs.operation == 'publish' || inputs.operation == 'rollback' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      artifact_id: ${{ steps.provenance.outputs.artifact_id }}
+    steps:
+      - name: Require trusted main
+        env:
+          REPOSITORY: ${{ github.repository }}
+          REF: ${{ github.ref }}
+        run: |
+          test "$REPOSITORY" = pipelab-org/pipelab.org
+          test "$REF" = refs/heads/main
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version: 24.21.0
+      - run: npm ci --ignore-scripts
+      - id: provenance
+        name: Verify immutable prepare-run provenance
+        env:
+          PACKAGE_ARTIFACT_ID: ${{ inputs.package_artifact_id }}
+          PACKAGE_RUN_ID: ${{ inputs.package_run_id }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/hub/staging-artifact.mjs
+
+  deploy:
+    needs: [build, artifact]
+    if: ${{ always() && !cancelled() && (needs.artifact.result == 'success' || inputs.operation == 'close') }}
+    environment: hub-staging
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Require trusted main
+        env:
+          REPOSITORY: ${{ github.repository }}
+          REF: ${{ github.ref }}
+        run: |
+          test "$REPOSITORY" = pipelab-org/pipelab.org
+          test "$REF" = refs/heads/main
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version: 24.21.0
+      - run: npm ci --ignore-scripts
+      - name: Check the committed staging target
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+        run: node scripts/hub/staging-workflow.mjs check-target "$RUNNER_TEMP/staging-artifact"
+      - name: Verify deployment environment protection
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/hub/staging-workflow.mjs check-environment "$RUNNER_TEMP/staging-artifact"
+      - name: Download and verify the complete prepared archive
+        continue-on-error: ${{ inputs.operation == 'close' }}
+        env:
+          PACKAGE_ARTIFACT_ID: ${{ needs.artifact.outputs.artifact_id || inputs.package_artifact_id }}
+          PACKAGE_RUN_ID: ${{ inputs.package_run_id }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/hub/staging-artifact.mjs download "$RUNNER_TEMP/staging-artifact"
+      - name: Prepare pinned CLI for live installation checks
+        if: ${{ inputs.operation != 'close' }}
+        run: |
+          release="$(jq -er '.version' scripts/hub/retrieval-pin.json)"
+          asset="$(jq -er '.asset' scripts/hub/retrieval-pin.json)"
+          digest="$(jq -er '.archive_sha256' scripts/hub/retrieval-pin.json)"
+          curl -q --fail --silent --show-error --location --proto '=https' --proto-redir '=https' \
+            "https://github.com/pipelab-org/pipelock/releases/download/v$release/$asset" -o "$RUNNER_TEMP/release.tar.gz"
+          printf '%s  %s\n' "$digest" "$RUNNER_TEMP/release.tar.gz" | sha256sum --check --status
+          tar -xzf "$RUNNER_TEMP/release.tar.gz" -C "$RUNNER_TEMP" pipelock
+      - name: Prepare the committed Wrangler pin
+        if: ${{ inputs.operation != 'close' }}
+        run: node scripts/hub/staging-workflow.mjs check-wrangler "$RUNNER_TEMP/staging-artifact"
+      - id: publication
+        name: Publish or withdraw the staging version
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
+          CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
+          CASE_LEDGER_TOKEN: ${{ secrets.CASE_LEDGER_TOKEN }}
+          CANDIDATE_SHA: ${{ inputs.candidate_sha }}
+          OPERATION: ${{ inputs.operation }}
+          HUB_RELEASE_BIN: ${{ runner.temp }}/pipelock
+        run: node scripts/hub/staging-workflow.mjs "$OPERATION" "$RUNNER_TEMP/staging-artifact"
+      - name: Recover closed staging after failure or cancellation
+        if: ${{ always() && steps.publication.outcome != 'success' }}
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
+          CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
+        run: node scripts/hub/staging-workflow.mjs close "$RUNNER_TEMP/staging-artifact"
+      - name: Retain upload receipt and completed acceptance
+        if: ${{ always() && inputs.operation != 'close' && steps.publication.outcome != 'skipped' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: hub-staging-publication-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/staging-artifact/evidence/upload-receipt.json
+            ${{ runner.temp }}/staging-artifact/evidence/acceptance.json
+          if-no-files-found: warn
+          retention-days: 30

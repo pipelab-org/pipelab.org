@@ -147,6 +147,10 @@ The hub adapter adds pages only when `open` in the repository file `data/hub/lau
 
 Opening requires a reviewed, committed change to that file. There is no staging configuration overlay for the switch. A staging build needs its own reviewed source revision containing `open = true`, together with access restrictions covering all hub outputs. An environment variable cannot substitute for that source change.
 
+Protected staging uses the separate Worker at `hub-staging.pipelab.org`. It requires committed staging source, restricted access, noindex directives and private/no-store responses. Staging acceptance checks published representations and never grants production opening eligibility.
+
+
+
 `scripts/hub/schema/listing-v1.json` and `scripts/hub/validate.mjs` define the structural, text, and URL contract. The copy in `assets/hub/schema/` must match it byte for byte. This is metadata validation, not signature verification, compatibility assessment, or admission. The later admission pipeline supplies trusted normalized records at `data/hub/generated/listings.json`: an array of `{listing, evidence_present, link_hosts}` objects, with `listing` holding normalized validated metadata. Only confirmed local evidence may set `evidence_present`. Build `link_hosts` with `describeLinks(listing.links)` so punycode links show both host spellings; missing or mismatched decoded host metadata fails the build.
 
 Hub values stay under `Params.hub`; descriptions use fixed text, listing type, and ID. Hub templates escape plain text directly, serialize JSON with `jsonify`, and escape Markdown through dedicated partials. They never run contributor text through Goldmark or the shared fact-token processor. The transitive template lint runs in the site audit. Browser search, verification badges, config assessment, and publication checks belong to their respective pipelines.

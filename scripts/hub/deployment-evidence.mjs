@@ -50,7 +50,7 @@ export function publicationClearancePayload(artifactSHA256, ledgerRevision) {
   }));
 }
 
-function assertClearance({ artifactSHA256, ledgerRevision, signature, publicKey }) {
+export function assertClearance({ artifactSHA256, ledgerRevision, signature, publicKey }) {
   const payload = publicationClearancePayload(artifactSHA256, ledgerRevision);
   if (!Buffer.isBuffer(publicKey) || !Buffer.isBuffer(signature) || signature.length !== 64) {
     throw new Error("Ed25519 clearance signature and trusted public key required");
@@ -81,10 +81,12 @@ export async function verifyPublicationClearance({ artifact, ledgerRevision, sig
 // Use the same function to activate an older version.
 export async function publishClearedVersion({ version, signature, publicKey }, {
   readCurrentLedgerRevision, readVersionArtifact, activateVersion, readActiveVersion, closedVersion,
+  assertClosedDeployable, verifyLiveVersion, emergencyClose,
 }) {
   if (typeof version !== "string" || !version || typeof closedVersion !== "string" || !closedVersion || version === closedVersion) {
     throw new Error("distinct immutable Hub and closed version identities required");
   }
+  if (assertClosedDeployable) await assertClosedDeployable();
   const artifactSHA256 = await readVersionArtifact(version);
   const ledgerRevision = await readCurrentLedgerRevision();
   assertClearance({ artifactSHA256, ledgerRevision, signature, publicKey });
@@ -92,6 +94,7 @@ export async function publishClearedVersion({ version, signature, publicKey }, {
   try {
     await activateVersion(version);
     if (await readActiveVersion() !== version) throw new Error("Hub version activation could not be confirmed");
+    if (verifyLiveVersion) await verifyLiveVersion(version);
     if (await readCurrentLedgerRevision() !== ledgerRevision) {
       throw new Error("private case record changed during publication");
     }
@@ -99,8 +102,11 @@ export async function publishClearedVersion({ version, signature, publicKey }, {
     // If activation failed ambiguously or a new hold arrived, the hosting
     // adapter restores the standing closed version. It needs no ledger access.
     try {
-      await activateVersion(closedVersion);
-      if (await readActiveVersion() !== closedVersion) throw new Error("closed version activation could not be confirmed");
+      if (emergencyClose) await emergencyClose();
+      else {
+        await activateVersion(closedVersion);
+        if (await readActiveVersion() !== closedVersion) throw new Error("closed version activation could not be confirmed");
+      }
     } catch (withdrawalFailure) {
       throw new AggregateError([failure, withdrawalFailure], "Hub withdrawal could not be confirmed");
     }

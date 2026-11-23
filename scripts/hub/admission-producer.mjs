@@ -10,6 +10,7 @@ const server = "https://github.com";
 const main = "refs/heads/main";
 const sha = /^[a-f0-9]{40}$/;
 const workflows = {
+  staging: { path: ".github/workflows/hub-staging.yml", events: ["workflow_dispatch"] },
   preflight: { path: ".github/workflows/hub-rules-preflight.yml", events: ["workflow_dispatch"] },
   admission: { path: ".github/workflows/hub-admission.yml", events: ["workflow_dispatch"] },
   sync: { path: ".github/workflows/sync-pipelab-hub.yml", events: ["schedule", "workflow_dispatch"] },
