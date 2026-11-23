@@ -11,3 +11,8 @@ export function assertStagingTarget(account, worker = STAGING_WORKER) {
   if (account !== STAGING_ACCOUNT_ID || worker !== STAGING_WORKER) throw new Error("unexpected staging account or Worker");
   return { account, worker };
 }
+
+// Canonical host comparison for request hostnames and route host patterns.
+export function normalizeHostname(hostname) {
+  return typeof hostname === "string" ? hostname.trim().toLowerCase().replace(/\.+$/, "") : "";
+}

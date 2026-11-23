@@ -31,7 +31,7 @@ export async function installWranglerDependencies(directory, metadata, { env, si
 }
 
 export function wranglerEnvironment(environment) {
-  return Object.fromEntries(Object.entries(environment).filter(([key]) => !/TOKEN|SECRET|CLIENT_ID|API_KEY|PASSWORD|^NODE_OPTIONS$|^NODE_PATH$/i.test(key)));
+  return Object.fromEntries(Object.entries(environment).filter(([key]) => !/TOKEN|SECRET|CLIENT_ID|API_KEY|PASSWORD|KEY_ID|ACCESS_KEY|PRIVATE_KEY|CREDENTIALS?|PASSWD|APIKEY|NODE_OPTIONS|^NODE_PATH$/i.test(key)));
 }
 
 export async function withPinnedWrangler(version, action, { request = curlRequest, environment = process.env, signal } = {}) {

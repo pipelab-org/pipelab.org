@@ -46,7 +46,7 @@ export async function verifyStagingClosed({ manifest }, { request = stagingReque
   await converge(async signal => {
     for (const route of routes) {
       const response = await request(route, { headers, signal });
-      if (response.status !== 404 || response.headers.location) throw new Error("live closed staging outputs unconfirmed");
+      if (response.status !== 404 || response.headers.location) throw new Error("live closed staging outputs unconfirmed; closed version must be the static-only staging Worker");
     }
   });
   const denialRoutes = new Set(["/", ...routes, ...manifest.entries.flatMap(entry => [entry.route, ...representationPaths(entry).map(item => item.route)])]);

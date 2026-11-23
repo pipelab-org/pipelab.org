@@ -12,6 +12,8 @@ import { assertStagingSource, stagingOverlay } from "../scripts/hub/staging-sour
 import { checkCheckout, stagingAcceptance, routineAcceptance } from "../scripts/hub/acceptance.mjs";
 import { createLedgerReader, clearanceKey } from "../scripts/hub/staging-authority.mjs";
 import { assertPreparedArtifact } from "../scripts/hub/staging-artifact.mjs";
+import { assertStagingConfig } from "../scripts/hub/staging-config.mjs";
+import { STAGING_ORIGIN, STAGING_WORKER } from "../scripts/hub/staging-target.mjs";
 import { assertBuildReport } from "../scripts/hub/staging-workflow.mjs";
 import { canonical, sha256 } from "../scripts/hub/evidence.mjs";
 
@@ -523,4 +525,15 @@ test("guard:upload-environment-case", async t => {
   t.after(() => { if (old === undefined) delete process.env[name]; else process.env[name] = old; });
   const f = fixture(t, { inspectEnv: env => assert.equal(env[name], "http://proxy.example") });
   await f.adapter.upload(f.directory);
+});
+
+test("guard:deployment-config-parity", () => {
+  const source = assertStagingConfig(), staging = source.env.staging;
+  assert.equal(staging.name, STAGING_WORKER);
+  assert.deepEqual(staging.routes, [{ pattern: new URL(STAGING_ORIGIN).hostname, custom_domain: true }]);
+  assert.doesNotThrow(() => assertDeployConfig({
+    name: staging.name, account_id: account, main: "worker/worker.js", assets: { directory: "assets" },
+    routes: staging.routes, vars: staging.vars, workers_dev: staging.workers_dev, preview_urls: staging.preview_urls,
+    compatibility_date: source.compatibility_date, compatibility_flags: source.compatibility_flags,
+  }, account));
 });
