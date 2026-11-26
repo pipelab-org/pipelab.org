@@ -19,15 +19,38 @@ const execute = (command, args, options) => new Promise((resolve, reject) => {
   });
 });
 
+const DEPENDENCY_LOCK = new URL("./wrangler-dependencies.lock.json", import.meta.url);
+const sortedEntries = group => JSON.stringify(Object.entries(group ?? {}).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));
+
+// The committed lockfile binds every transitive dependency of the verified
+// distribution to an exact registry tarball and SHA-512 integrity. `npm ci`
+// installs only what the lockfile names, verifies each tarball against it and
+// fails when package.json and the lockfile disagree.
+// https://docs.npmjs.com/cli/v11/commands/npm-ci
+// https://docs.npmjs.com/cli/v11/configuring-npm/package-lock-json
+export function assertWranglerDependencyLock(lock, metadata) {
+  const root = lock?.packages?.[""];
+  if (lock?.lockfileVersion !== 3 || !root || sortedEntries(root.dependencies) !== sortedEntries(metadata.dependencies) ||
+      sortedEntries(root.optionalDependencies) !== sortedEntries(metadata.optionalDependencies)) throw new Error("Wrangler dependency lock does not match the verified distribution");
+  for (const [key, entry] of Object.entries(lock.packages)) {
+    if (key === "") continue;
+    if (!key.startsWith("node_modules/") || entry.link || typeof entry.integrity !== "string" || !entry.integrity.startsWith("sha512-") ||
+        typeof entry.resolved !== "string" || !entry.resolved.startsWith("https://registry.npmjs.org/")) throw new Error("Wrangler dependency lock entry is not a pinned registry tarball");
+  }
+}
+
 // The verified distribution owns these direct dependencies; ranges must not
 // silently turn an exact release into a different direct dependency version.
 // https://docs.npmjs.com/cli/v11/configuring-npm/package-json#dependencies
-export async function installWranglerDependencies(directory, metadata, { env, signal, run = execute } = {}) {
+export async function installWranglerDependencies(directory, metadata, { env, signal, run = execute, lockText = readFileSync(DEPENDENCY_LOCK, "utf8") } = {}) {
   const groups = [metadata.dependencies, metadata.optionalDependencies ?? {}];
   if (groups.some(group => !group || typeof group !== "object" || Array.isArray(group) ||
       Object.values(group).some(version => typeof version !== "string" || !/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/.test(version)))) throw new Error("Wrangler direct dependencies must use exact versions");
-  writeFileSync(path.join(directory, "package.json"), JSON.stringify({ private: true, dependencies: metadata.dependencies, optionalDependencies: metadata.optionalDependencies }));
-  await run("npm", ["install", "--ignore-scripts", "--no-audit", "--no-fund", "--package-lock=false"], { cwd: directory, env, signal });
+  const lock = JSON.parse(lockText);
+  assertWranglerDependencyLock(lock, metadata);
+  writeFileSync(path.join(directory, "package.json"), JSON.stringify({ name: lock.name, private: true, dependencies: metadata.dependencies, optionalDependencies: metadata.optionalDependencies }));
+  writeFileSync(path.join(directory, "package-lock.json"), lockText);
+  await run("npm", ["ci", "--ignore-scripts", "--no-audit", "--no-fund"], { cwd: directory, env, signal });
 }
 
 export function wranglerEnvironment(environment) {
