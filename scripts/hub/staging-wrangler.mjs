@@ -1,6 +1,6 @@
 import { execFile } from "node:child_process";
 import { createHash, timingSafeEqual } from "node:crypto";
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { curlRequest } from "./staging-http.mjs";
@@ -19,15 +19,53 @@ const execute = (command, args, options) => new Promise((resolve, reject) => {
   });
 });
 
+const DEPENDENCY_LOCK = new URL("./wrangler-dependencies.lock.json", import.meta.url);
+const sortedEntries = group => JSON.stringify(Object.entries(group ?? {}).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));
+
+// The committed lockfile binds every transitive dependency of the verified
+// distribution to an exact registry tarball and SHA-512 integrity. npm ci
+// checks the resolved dependency graph against this lock before installation.
+// https://docs.npmjs.com/cli/v11/commands/npm-ci
+// https://docs.npmjs.com/cli/v11/configuring-npm/package-lock-json
+export function assertWranglerDependencyLock(lock, metadata) {
+  const root = lock?.packages?.[""];
+  if (lock?.lockfileVersion !== 3 || !root || sortedEntries(root.dependencies) !== sortedEntries(metadata.dependencies) ||
+      sortedEntries(root.optionalDependencies) !== sortedEntries(metadata.optionalDependencies)) throw new Error("Wrangler dependency lock does not match the verified distribution");
+  for (const [key, entry] of Object.entries(lock.packages)) {
+    if (key === "") continue;
+    if (!key.startsWith("node_modules/") || entry.link || typeof entry.integrity !== "string" || !/^sha512-[A-Za-z0-9+/]{85}[AQgw]==$/.test(entry.integrity) ||
+        typeof entry.resolved !== "string" || !entry.resolved.startsWith("https://registry.npmjs.org/")) throw new Error("Wrangler dependency lock entry is not a pinned registry tarball");
+  }
+}
+
+function assertWranglerNativeDependencies(directory, metadata, packages) {
+  // npm can exit successfully after an optional tarball fails verification.
+  // esbuild and workerd publish their host binaries as optional dependencies.
+  for (const name of ["esbuild", "workerd"]) {
+    if (!Object.hasOwn(metadata.dependencies, name)) continue;
+    const parent = `node_modules/${name}`;
+    const candidates = Object.keys(packages[parent]?.optionalDependencies ?? {}).map(dependency => {
+      const nested = `${parent}/node_modules/${dependency}`;
+      return Object.hasOwn(packages, nested) ? nested : `node_modules/${dependency}`;
+    });
+    const native = candidates.find(key => packages[key]?.os?.includes(process.platform) && packages[key]?.cpu?.includes(process.arch));
+    if (!native || !existsSync(path.join(directory, native, "package.json"))) throw new Error("Wrangler locked native dependency unavailable");
+  }
+}
+
 // The verified distribution owns these direct dependencies; ranges must not
 // silently turn an exact release into a different direct dependency version.
 // https://docs.npmjs.com/cli/v11/configuring-npm/package-json#dependencies
-export async function installWranglerDependencies(directory, metadata, { env, signal, run = execute } = {}) {
+export async function installWranglerDependencies(directory, metadata, { env, signal, run = execute, lockText = readFileSync(DEPENDENCY_LOCK, "utf8") } = {}) {
   const groups = [metadata.dependencies, metadata.optionalDependencies ?? {}];
   if (groups.some(group => !group || typeof group !== "object" || Array.isArray(group) ||
       Object.values(group).some(version => typeof version !== "string" || !/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/.test(version)))) throw new Error("Wrangler direct dependencies must use exact versions");
-  writeFileSync(path.join(directory, "package.json"), JSON.stringify({ private: true, dependencies: metadata.dependencies, optionalDependencies: metadata.optionalDependencies }));
-  await run("npm", ["install", "--ignore-scripts", "--no-audit", "--no-fund", "--package-lock=false"], { cwd: directory, env, signal });
+  const lock = JSON.parse(lockText);
+  assertWranglerDependencyLock(lock, metadata);
+  writeFileSync(path.join(directory, "package.json"), JSON.stringify({ name: lock.name, private: true, dependencies: metadata.dependencies, optionalDependencies: metadata.optionalDependencies }));
+  writeFileSync(path.join(directory, "package-lock.json"), lockText);
+  await run("npm", ["ci", "--ignore-scripts", "--no-audit", "--no-fund", "--include=optional", "--replace-registry-host=never"], { cwd: directory, env, signal });
+  assertWranglerNativeDependencies(directory, metadata, lock.packages);
 }
 
 export function wranglerEnvironment(environment) {

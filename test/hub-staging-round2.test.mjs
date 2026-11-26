@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -7,7 +7,7 @@ import { parse as yaml } from "yaml";
 import { verifyStagingClosed } from "../scripts/hub/staging-publication.mjs";
 import { stagingFailureLabel } from "../scripts/hub/staging-diagnostics.mjs";
 import { stagingBuildEnvironment } from "../scripts/hub/staging-workflow.mjs";
-import { installWranglerDependencies } from "../scripts/hub/staging-wrangler.mjs";
+import { assertWranglerDependencyLock, installWranglerDependencies } from "../scripts/hub/staging-wrangler.mjs";
 
 const manifest = () => ({ format: 1, entries: [
   { route: "/hub/", ownership: "hub", representations: ["html", "mirror"] },
@@ -61,22 +61,83 @@ test("guard:dry-run-secret-environment", () => {
   assert.deepEqual(stagingBuildEnvironment({ PATH: "/usr/bin", HTTPS_PROXY: "http://proxy.example", lower_token: "synthetic", lower_secret: "synthetic", cf_access_client_id: "synthetic" }),
     { PATH: "/usr/bin", HTTPS_PROXY: "http://proxy.example" });
 });
+const fixtureIntegrity = "sha512-" + Buffer.alloc(64).toString("base64");
+const fixtureLock = (metadata, extra = {}) => ({ name: "hub-wrangler-dependencies", lockfileVersion: 3, requires: true, packages: {
+  "": { name: "hub-wrangler-dependencies", dependencies: metadata.dependencies, optionalDependencies: metadata.optionalDependencies },
+  "node_modules/fixture": { version: "1.2.3", resolved: "https://registry.npmjs.org/fixture/-/fixture-1.2.3.tgz", integrity: fixtureIntegrity },
+  ...extra,
+} });
 test("guard:wrangler-exact-direct-dependencies", async t => {
   const directory = mkdtempSync(path.join(tmpdir(), "hub-dependency-test-"));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   const metadata = { dependencies: { fixture: "1.2.3" }, optionalDependencies: { optional: "2.0.0-beta.1" } };
+  const lockText = JSON.stringify(fixtureLock(metadata));
   let calls = 0;
   const run = async (command, args, options) => {
     calls++;
-    assert.equal(command, "npm"); assert.deepEqual(args, ["install", "--ignore-scripts", "--no-audit", "--no-fund", "--package-lock=false"]);
+    assert.equal(command, "npm"); assert.deepEqual(args, ["ci", "--ignore-scripts", "--no-audit", "--no-fund", "--include=optional", "--replace-registry-host=never"]);
     assert.equal(options.cwd, directory);
-    assert.deepEqual(JSON.parse(readFileSync(path.join(directory, "package.json"))), { private: true, ...metadata });
+    assert.deepEqual(JSON.parse(readFileSync(path.join(directory, "package.json"))), { name: "hub-wrangler-dependencies", private: true, ...metadata });
+    assert.equal(readFileSync(path.join(directory, "package-lock.json"), "utf8"), lockText);
   };
-  await installWranglerDependencies(directory, metadata, { run }); assert.equal(calls, 1);
+  await installWranglerDependencies(directory, metadata, { run, lockText }); assert.equal(calls, 1);
   for (const dependency of ["^1.2.3", "latest"]) {
-    await assert.rejects(installWranglerDependencies(directory, { ...metadata, dependencies: { fixture: dependency } }, { run: async () => { calls++; } }), /direct dependencies must use exact versions/);
+    await assert.rejects(installWranglerDependencies(directory, { ...metadata, dependencies: { fixture: dependency } }, { run: async () => { calls++; }, lockText }), /direct dependencies must use exact versions/);
     assert.equal(calls, 1);
   }
+});
+test("guard:wrangler-dependency-lock-binds-every-package", async t => {
+  const metadata = { dependencies: { fixture: "1.2.3" }, optionalDependencies: { optional: "2.0.0-beta.1" } };
+  assert.doesNotThrow(() => assertWranglerDependencyLock(fixtureLock(metadata), metadata));
+  const refused = [
+    [{ ...fixtureLock(metadata), lockfileVersion: 2 }, /does not match/],
+    [fixtureLock({ ...metadata, dependencies: { fixture: "1.2.4" } }), /does not match/],
+    [fixtureLock({ ...metadata, optionalDependencies: {} }), /does not match/],
+    [fixtureLock(metadata, { "node_modules/unpinned": { version: "1.0.0", resolved: "https://registry.npmjs.org/unpinned/-/unpinned-1.0.0.tgz" } }), /pinned registry tarball/],
+    [fixtureLock(metadata, { "node_modules/weak": { version: "1.0.0", resolved: "https://registry.npmjs.org/weak/-/weak-1.0.0.tgz", integrity: "sha1-AAAA" } }), /pinned registry tarball/],
+    [fixtureLock(metadata, { "node_modules/truncated": { version: "1.0.0", resolved: "https://registry.npmjs.org/truncated/-/truncated-1.0.0.tgz", integrity: "sha512-AAAA" } }), /pinned registry tarball/],
+    [fixtureLock(metadata, { "node_modules/elsewhere": { version: "1.0.0", resolved: "https://registry.npmjs.org.example.invalid/elsewhere-1.0.0.tgz", integrity: fixtureIntegrity } }), /pinned registry tarball/],
+    [fixtureLock(metadata, { "node_modules/linked": { link: true, resolved: "../linked" } }), /pinned registry tarball/],
+    [fixtureLock(metadata, { "outside/path": { version: "1.0.0", resolved: "https://registry.npmjs.org/x/-/x-1.0.0.tgz", integrity: fixtureIntegrity } }), /pinned registry tarball/],
+  ];
+  for (const [lock, pattern] of refused) assert.throws(() => assertWranglerDependencyLock(lock, metadata), pattern);
+  let calls = 0;
+  const directory = mkdtempSync(path.join(tmpdir(), "hub-dependency-refusal-"));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  await assert.rejects(installWranglerDependencies(directory, metadata,
+    { run: async () => { calls++; }, lockText: JSON.stringify(refused[1][0]) }), /does not match/);
+  assert.equal(calls, 0);
+});
+test("guard:wrangler-npm-success-requires-host-binaries", async t => {
+  const directory = mkdtempSync(path.join(tmpdir(), "hub-native-refusal-"));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  const metadata = { dependencies: { esbuild: "1.2.3", workerd: "1.2.3" } };
+  const packages = {};
+  for (const name of Object.keys(metadata.dependencies)) {
+    const entry = { version: "1.2.3", resolved: `https://registry.npmjs.org/${name}/-/${name}-1.2.3.tgz`, integrity: fixtureIntegrity };
+    packages[`node_modules/${name}`] = { ...entry, optionalDependencies: { [`${name}-native`]: entry.version } };
+    packages[`node_modules/${name}-native`] = { ...entry, os: [process.platform], cpu: [process.arch] };
+  }
+  const options = { run: async () => {}, lockText: JSON.stringify(fixtureLock(metadata, packages)) };
+  for (const name of Object.keys(metadata.dependencies)) {
+    await assert.rejects(installWranglerDependencies(directory, metadata, options), /locked native dependency unavailable/);
+    const installed = path.join(directory, "node_modules", `${name}-native`);
+    mkdirSync(installed, { recursive: true });
+    writeFileSync(path.join(installed, "package.json"), "{}");
+  }
+  await installWranglerDependencies(directory, metadata, options);
+});
+test("guard:wrangler-committed-lock-matches-pinned-release", () => {
+  // Direct dependencies of wrangler 4.166.0 (registry package.json of the pinned, integrity-checked archive).
+  const metadata = {
+    dependencies: { "@cspotcode/source-map-support": "0.8.1", "@types/yargs": "17.0.24", cloudflare: "5.2.0", "devtools-protocol": "0.0.1182435",
+      esbuild: "0.28.2", "path-to-regexp": "6.3.0", undici: "7.30.2", unenv: "2.0.0-rc.24", workerd: "1.20261119.1",
+      "@cloudflare/kv-asset-handler": "0.5.1", "@cloudflare/unenv-preset": "2.16.2", "@cloudflare/workers-utils": "0.56.0", miniflare: "5.20261119.0-beta" },
+    optionalDependencies: { fsevents: "2.3.3" },
+  };
+  const lock = JSON.parse(readFileSync(new URL("../scripts/hub/wrangler-dependencies.lock.json", import.meta.url), "utf8"));
+  assertWranglerDependencyLock(lock, metadata);
+  assert.ok(Object.keys(lock.packages).length > 100);
 });
 
 test("guard:close-diagnostic-redaction", () => {
