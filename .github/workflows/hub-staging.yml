@@ -133,9 +133,11 @@ jobs:
       - run: npm ci --ignore-scripts
       - name: Check the committed staging target
         env:
-          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          HUB_STAGING_CLOSED_VERSION: ${{ secrets.HUB_STAGING_CLOSED_VERSION }}
         run: node scripts/hub/staging-workflow.mjs check-target "$RUNNER_TEMP/staging-artifact"
-      - name: Verify deployment environment protection
+      - id: protection
+        name: Verify deployment environment protection
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: node scripts/hub/staging-workflow.mjs check-environment "$RUNNER_TEMP/staging-artifact"
@@ -160,32 +162,47 @@ jobs:
         if: ${{ inputs.operation != 'close' }}
         run: node scripts/hub/staging-workflow.mjs check-wrangler "$RUNNER_TEMP/staging-artifact"
       - id: publication
-        name: Publish or withdraw the staging version
+        if: ${{ inputs.operation == 'publish' || inputs.operation == 'rollback' }}
+        name: Publish or roll back the staging version
         env:
-          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          HUB_STAGING_CLOSED_VERSION: ${{ secrets.HUB_STAGING_CLOSED_VERSION }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
           CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
           CASE_LEDGER_TOKEN: ${{ secrets.CASE_LEDGER_TOKEN }}
+          HUB_STAGING_LEDGER_REPOSITORY: ${{ secrets.HUB_STAGING_LEDGER_REPOSITORY }}
+          HUB_STAGING_LEDGER_NONCE: ${{ secrets.HUB_STAGING_LEDGER_NONCE }}
           CANDIDATE_SHA: ${{ inputs.candidate_sha }}
           OPERATION: ${{ inputs.operation }}
           HUB_RELEASE_BIN: ${{ runner.temp }}/pipelock
         run: node scripts/hub/staging-workflow.mjs "$OPERATION" "$RUNNER_TEMP/staging-artifact"
-      - name: Recover closed staging after failure or cancellation
-        if: ${{ always() && steps.publication.outcome != 'success' }}
+      - id: close
+        if: ${{ inputs.operation == 'close' }}
+        name: Withdraw the staging version
         env:
-          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          HUB_STAGING_CLOSED_VERSION: ${{ secrets.HUB_STAGING_CLOSED_VERSION }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
           CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
         run: node scripts/hub/staging-workflow.mjs close "$RUNNER_TEMP/staging-artifact"
-      - name: Retain upload receipt and completed acceptance
+      - name: Recover closed staging after failure or cancellation
+        if: ${{ always() && steps.protection.outcome == 'success' && steps.publication.outcome != 'success' && steps.close.outcome != 'success' }}
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          HUB_STAGING_CLOSED_VERSION: ${{ secrets.HUB_STAGING_CLOSED_VERSION }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
+          CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
+        run: node scripts/hub/staging-workflow.mjs close "$RUNNER_TEMP/staging-artifact"
+      - name: Retain encrypted receipt and public acceptance summary
         if: ${{ always() && inputs.operation != 'close' && steps.publication.outcome != 'skipped' }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: hub-staging-publication-${{ github.run_attempt }}
           path: |
-            ${{ runner.temp }}/staging-artifact/evidence/upload-receipt.json
-            ${{ runner.temp }}/staging-artifact/evidence/acceptance.json
+            ${{ runner.temp }}/hub-staging-publication/upload-receipt.jwe
+            ${{ runner.temp }}/hub-staging-publication/acceptance.json
           if-no-files-found: warn
           retention-days: 30

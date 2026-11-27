@@ -1,10 +1,10 @@
 import { createPublicKey, verify } from "node:crypto";
-import { cpSync, lstatSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import { cpSync, lstatSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { canonical, sha256 } from "./evidence.mjs";
 import { curlRequest } from "./staging-http.mjs";
-import { normalizeHostname, assertStagingTarget, STAGING_ACCOUNT_ID, STAGING_WORKER, STAGING_ORIGIN, WRANGLER_VERSION } from "./staging-target.mjs";
+import { normalizeHostname, assertStagingTarget, requireStagingAccountCommitment, STAGING_WORKER, STAGING_ORIGIN, WRANGLER_VERSION } from "./staging-target.mjs";
 
 import { assertStagingConfig } from "./staging-config.mjs";
 import { runPinnedWrangler } from "./staging-wrangler.mjs";
@@ -56,12 +56,20 @@ export function packageDigest(directory) {
   return sha256(canonical({ scope: "pipelab-hub-staging-package/v1", files }));
 }
 
-export function assertDeployConfig(config, account) {
-  assertStagingTarget(account, config.name);
-  const expected = { name: STAGING_WORKER, account_id: STAGING_ACCOUNT_ID, main: "worker/worker.js", assets: { directory: "assets" },
+export function stagingPackageConfig() {
+  return { name: STAGING_WORKER, account_sha256: requireStagingAccountCommitment(), main: "worker/worker.js", assets: { directory: "assets" },
     routes: [{ pattern: "hub-staging.pipelab.org", custom_domain: true }], vars: {},
     compatibility_date: "2026-02-10", compatibility_flags: ["nodejs_compat"], workers_dev: false, preview_urls: false };
-  if (canonical(config) !== canonical(expected)) throw new Error("unexpected staging deployment configuration");
+}
+
+export function assertDeployConfig(config, account) {
+  assertStagingTarget(account, config.name);
+  if (canonical(config) !== canonical(stagingPackageConfig())) throw new Error("unexpected staging deployment configuration");
+}
+
+export function stagingWranglerConfig(config, directory) {
+  const { account_sha256, ...wrangler } = config;
+  return { ...wrangler, main: path.join(directory, config.main), assets: { directory: path.join(directory, config.assets.directory) } };
 }
 
 export function assertUploadCopy(directory, expectedDigest, account) {
@@ -195,7 +203,10 @@ export function createStagingAdapter({ account, worker = STAGING_WORKER, closedV
         cpSync(directory, scratch, { recursive: true });
         assertUploadCopy(scratch, before, account);
         workerSHA256 = sha256(readFileSync(path.join(scratch, "worker/worker.js")));
-        await run(["versions", "upload", "--config", "deployment.json", "--name", worker, "--no-bundle", "--strict"], { cwd: scratch, env, signal });
+        const config = JSON.parse(readFileSync(path.join(scratch, "deployment.json")));
+        const wrangler = path.join(work, "wrangler.json");
+        writeFileSync(wrangler, canonical(stagingWranglerConfig(config, scratch)), { flag: "wx", mode: 0o600 });
+        await run(["versions", "upload", "--config", wrangler, "--name", worker, "--no-bundle", "--strict"], { cwd: scratch, env, signal });
         const records = readFileSync(outputFile, "utf8").trim().split("\n").map(line => JSON.parse(line)).filter(record => record.type === "version-upload");
         if (records.length !== 1 || records[0].version !== 1 || records[0].worker_name !== worker || !uuid.test(records[0].version_id ?? "") || records[0].preview_url || records[0].preview_alias_url) throw new Error("untrusted Wrangler upload result");
         upload = records[0];

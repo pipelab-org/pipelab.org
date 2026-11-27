@@ -5,11 +5,12 @@ import path from "node:path";
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { stagingBuildAcceptance } from "./acceptance.mjs";
-import { assertDeployConfig, createStagingAdapter, packageDigest } from "./cloudflare-staging.mjs";
-import { clearanceKey, createLedgerReader, createClearanceReader, assertClearanceLedger } from "./staging-authority.mjs";
+import { assertDeployConfig, createStagingAdapter, packageDigest, stagingPackageConfig, stagingWranglerConfig } from "./cloudflare-staging.mjs";
+import { clearanceKey, createLedgerReader, createClearanceReader, assertClearanceLedger, protectedClosedVersion, protectedLedgerConfig } from "./staging-authority.mjs";
 import { runStagingSession } from "./staging-session.mjs";
 import { verifyStagingClosed, verifyStagingPublication } from "./staging-publication.mjs";
-import { assertStagingTarget, STAGING_ACCOUNT_ID, STAGING_WORKER, WRANGLER_VERSION } from "./staging-target.mjs";
+import { assertStagingTarget, WRANGLER_VERSION } from "./staging-target.mjs";
+import { encryptStagingReceipt, receiptEncryptionKey } from "./staging-receipt.mjs";
 import { stagingFailureLabel } from "./staging-diagnostics.mjs";
 import { assertStagingConfig } from "./staging-config.mjs";
 import { runPinnedWrangler } from "./staging-wrangler.mjs";
@@ -32,7 +33,7 @@ export function assertBuildReport(report, stagingSHA) {
 }
 
 export function stagingBuildEnvironment(environment) {
-  return Object.fromEntries(Object.entries(environment).filter(([key]) => !/TOKEN|SECRET|CLIENT_ID|API_KEY|PASSWORD|KEY_ID|ACCESS_KEY|PRIVATE_KEY|CREDENTIALS?|PASSWD|APIKEY|NODE_OPTIONS/i.test(key)));
+  return Object.fromEntries(Object.entries(environment).filter(([key]) => !/TOKEN|SECRET|CLIENT_ID|API_KEY|PASSWORD|KEY_ID|ACCESS_KEY|PRIVATE_KEY|CREDENTIALS?|PASSWD|APIKEY|NODE_OPTIONS|CLOUDFLARE_ACCOUNT_ID|HUB_STAGING_/i.test(key)));
 }
 
 export async function prepareStagingVersion({ operation, directory, adapter, authorityConfig = authority,
@@ -56,6 +57,7 @@ export async function prepareStagingVersion({ operation, directory, adapter, aut
 
 async function build(destination) {
   assertStagingConfig();
+  const config = stagingPackageConfig();
   const { CANDIDATE_SHA: siteSHA, BASE_SHA: baseSHA, GITHUB_SHA: mainSHA, RUNNER_TEMP: scratch } = process.env;
   if (![siteSHA, baseSHA, mainSHA].every(value => sha.test(value ?? ""))) throw new Error("exact source SHAs required");
   const candidate = path.join(root, "candidate");
@@ -80,8 +82,6 @@ async function build(destination) {
   } });
   assertBuildReport(report, siteSHA);
   write(path.join(evidence, "build-report.json"), report);
-  const config = { name: STAGING_WORKER, account_id: STAGING_ACCOUNT_ID, main: "worker/worker.js", assets: { directory: "assets" },
-    routes: [{ pattern: "hub-staging.pipelab.org", custom_domain: true }], vars: {}, compatibility_date: "2026-02-10", compatibility_flags: ["nodejs_compat"], workers_dev: false, preview_urls: false };
   write(path.join(pkg, "deployment.json"), config);
   const bundle = mkdtempSync(path.join(tmpdir(), "hub-bundle-"));
   try {
@@ -89,8 +89,7 @@ async function build(destination) {
     mkdirSync(path.join(bundle, "scripts/hub"), { recursive: true });
     cpSync(path.join(candidate, "scripts/hub/staging-target.mjs"), path.join(bundle, "scripts/hub/staging-target.mjs"));
     symlinkSync(path.join(root, "node_modules"), path.join(bundle, "node_modules"), "dir");
-    const bundlerConfig = { ...config, main: path.join(bundle, "src/worker.js"), assets: { directory: path.join(pkg, "assets") } };
-    delete bundlerConfig.account_id;
+    const bundlerConfig = { ...stagingWranglerConfig(config, pkg), main: path.join(bundle, "src/worker.js") };
     write(path.join(bundle, "wrangler.json"), bundlerConfig);
     const env = stagingBuildEnvironment(process.env);
     await runPinnedWrangler(WRANGLER_VERSION, ["versions", "upload", "--dry-run", "--config", path.join(bundle, "wrangler.json"), "--outdir", path.join(pkg, "worker")], { cwd: root, env });
@@ -98,36 +97,51 @@ async function build(destination) {
   write(path.join(evidence, "package.json"), { package_sha256: packageDigest(pkg), candidate_sha: siteSHA });
 }
 
-export async function deployStaging(destination, operation, { adapterFactory = createStagingAdapter } = {}) {
-  assertStagingTarget(process.env.CLOUDFLARE_ACCOUNT_ID);
+export async function deployStaging(destination, operation, { adapterFactory = createStagingAdapter, authorityConfig = authority,
+  environment = process.env, ledgerOptions } = {}) {
+  if (!["publish", "rollback", "close"].includes(operation)) throw new Error("invalid staging operation");
+  const account = environment.CLOUDFLARE_ACCOUNT_ID;
+  assertStagingTarget(account);
+  const closedVersion = protectedClosedVersion(authorityConfig, environment);
   const pkg = path.join(destination, "package"), evidence = path.join(destination, "evidence");
-  let manifest, records, identity, buildReport, deployedEvidence;
+  let manifest, records, identity, buildReport, ledgerConfig, output, encryptionKey;
   // Read closure evidence inside the callback, after closed activation. Missing
   // or malformed evidence must never prevent the independent close attempt.
   const closed = () => verifyStagingClosed({ manifest: manifest ?? read(path.join(evidence, "manifest.json")) });
   if (operation !== "close") {
     buildReport = read(path.join(evidence, "build-report.json"));
-    assertBuildReport(buildReport, process.env.CANDIDATE_SHA);
+    if (typeof environment.CANDIDATE_SHA !== "string" || !sha.test(environment.CANDIDATE_SHA)) throw new Error("exact source SHAs required");
+    assertBuildReport(buildReport, environment.CANDIDATE_SHA);
     if (packageDigest(pkg) !== read(path.join(evidence, "package.json")).package_sha256) throw new Error("staging package digest differs");
-    assertDeployConfig(read(path.join(pkg, "deployment.json")), process.env.CLOUDFLARE_ACCOUNT_ID);
+    assertDeployConfig(read(path.join(pkg, "deployment.json")), account);
     manifest = read(path.join(evidence, "manifest.json")); records = read(path.join(evidence, "records.json")); identity = read(path.join(evidence, "identity.json"));
+    ledgerConfig = protectedLedgerConfig(authorityConfig, environment);
+    if (operation === "publish") encryptionKey = receiptEncryptionKey(authorityConfig);
+    if (!environment.RUNNER_TEMP || !path.isAbsolute(environment.RUNNER_TEMP)) throw new Error("staging output directory unavailable");
+    output = path.join(environment.RUNNER_TEMP, "hub-staging-publication");
+    // Never publish any output supplied by the prepared archive or a previous attempt.
+    mkdirSync(output, { mode: 0o700 });
   }
   const abort = new AbortController();
   const cancel = () => abort.abort();
   process.once("SIGINT", cancel); process.once("SIGTERM", cancel);
-  const adapter = adapterFactory({ packageDirectory: pkg, account: process.env.CLOUDFLARE_ACCOUNT_ID, closedVersion: authority.closed_version, token: process.env.CLOUDFLARE_API_TOKEN, signal: abort.signal,
-    verifyLiveClosed: closed, verifyLiveVersion: async () => {
-      await adapter.assertIngress();
-      deployedEvidence = await verifyStagingPublication({ directory: path.join(pkg, "assets"), manifest, records, identity, binary: process.env.HUB_RELEASE_BIN });
-    } });
   try {
+    const adapter = adapterFactory({ packageDirectory: pkg, account, closedVersion, token: environment.CLOUDFLARE_API_TOKEN, signal: abort.signal,
+      verifyLiveClosed: closed, verifyLiveVersion: async () => {
+        await adapter.assertIngress();
+        await verifyStagingPublication({ directory: path.join(pkg, "assets"), manifest, records, identity, binary: environment.HUB_RELEASE_BIN });
+      } });
     if (operation === "close") return await adapter.emergencyClose();
-    const readCurrentLedgerRevision = createLedgerReader(authority);
-    const { receipt, publicKey, signature } = await prepareStagingVersion({ operation, directory: pkg, adapter, readCurrentLedgerRevision });
-    if (operation !== "rollback") write(path.join(evidence, "upload-receipt.json"), receipt);
+    const options = { token: environment.CASE_LEDGER_TOKEN ?? "", ...ledgerOptions };
+    const readCurrentLedgerRevision = createLedgerReader(ledgerConfig, options);
+    const readClearance = createClearanceReader(ledgerConfig, options);
+    const { receipt, publicKey, signature } = await prepareStagingVersion({ operation, directory: pkg, adapter, authorityConfig: ledgerConfig, readCurrentLedgerRevision, readClearance });
+    if (operation === "publish") {
+      writeFileSync(path.join(output, "upload-receipt.jwe"), encryptStagingReceipt(receipt, encryptionKey) + "\n", { flag: "wx", mode: 0o600 });
+    }
     const result = await runStagingSession({ version: receipt.version, publicKey, signature }, { adapter, readCurrentLedgerRevision, signal: abort.signal });
-    write(path.join(evidence, "acceptance.json"), { ...buildReport, mode: "staging", opening_eligible: false,
-      steps: { ...buildReport.steps, 9: { status: "pass", evidence: deployedEvidence } }, deployment: { ...result, ...deployedEvidence } });
+    write(path.join(output, "acceptance.json"), { mode: "staging", opening_eligible: false,
+      candidate_sha: environment.CANDIDATE_SHA, package_sha256: result.artifact_sha256 });
   } finally { process.removeListener("SIGINT", cancel); process.removeListener("SIGTERM", cancel); }
 }
 
@@ -140,7 +154,10 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       const version = (await runPinnedWrangler(WRANGLER_VERSION, ["--version"], { cwd: root })).trim();
       if (version !== WRANGLER_VERSION) throw new Error("unexpected Wrangler version");
     } else if (operation === "check-environment") await verifyProtectedEnvironment();
-    else if (operation === "check-target") assertStagingTarget(process.env.CLOUDFLARE_ACCOUNT_ID);
+    else if (operation === "check-target") {
+      assertStagingTarget(process.env.CLOUDFLARE_ACCOUNT_ID);
+      protectedClosedVersion(authority, process.env);
+    }
     else if (operation === "build") await build(path.resolve(destination));
     else await deployStaging(path.resolve(destination), operation);
   } catch (error) {
