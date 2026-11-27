@@ -11,9 +11,9 @@
 // IndexNow spec: https://www.indexnow.org/documentation
 //
 // Usage:
-//   node scripts/indexnow-submit.mjs                 # submit all sitemap URLs
-//   node scripts/indexnow-submit.mjs urls.txt        # submit URLs from file (one per line)
-//   echo "https://..." | node scripts/indexnow-submit.mjs -  # submit URLs from stdin
+//   npm run indexnow:submit -- urls.txt  # one URL per line
+//   npm run indexnow:submit -- - < urls.txt
+//   node scripts/indexnow-submit.mjs urls.txt
 //
 // The host key is read from `static/bd2aa46ad5df4155a5f847081c21637f.txt`
 // in the repo so the script and the served key file cannot drift.
@@ -31,12 +31,16 @@ const KEY = "bd2aa46ad5df4155a5f847081c21637f";
 const KEY_PATH = path.join(repoRoot, "static", `${KEY}.txt`);
 const KEY_LOCATION = `https://${HOST}/${KEY}.txt`;
 const ENDPOINT = "https://api.indexnow.org/indexnow";
-const SITEMAP = `https://${HOST}/sitemap.xml`;
 const BATCH_SIZE = 1000; // IndexNow caps each request at 10000 URLs; we batch smaller.
 
 function fail(msg, code = 1) {
   console.error(`indexnow-submit: ${msg}`);
   process.exit(code);
+}
+
+const [urlSource, ...extraArgs] = process.argv.slice(2);
+if (!urlSource || extraArgs.length > 0) {
+  fail("usage: npm run indexnow:submit -- <urls.txt or -> (pass one URL file or - for stdin)");
 }
 
 if (!existsSync(KEY_PATH)) {
@@ -48,14 +52,6 @@ if (keyFromFile !== KEY) {
   fail(
     `host key mismatch: file ${KEY_PATH} has "${keyFromFile}" but script expects "${KEY}"`,
   );
-}
-
-async function fetchSitemapUrls() {
-  const res = await fetch(SITEMAP);
-  if (!res.ok) fail(`sitemap fetch returned HTTP ${res.status}`);
-  const xml = await res.text();
-  const matches = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)];
-  return matches.map((m) => m[1]);
 }
 
 async function readUrlsFromFile(file) {
@@ -73,16 +69,6 @@ async function readUrlsFromStdin() {
     .split("\n")
     .map((l) => l.trim())
     .filter((l) => l && !l.startsWith("#"));
-}
-
-async function getUrls() {
-  const arg = process.argv[2];
-  if (!arg) {
-    console.log(`indexnow-submit: no URL list provided, reading sitemap ${SITEMAP}`);
-    return fetchSitemapUrls();
-  }
-  if (arg === "-") return readUrlsFromStdin();
-  return readUrlsFromFile(arg);
 }
 
 function chunk(arr, size) {
@@ -154,7 +140,8 @@ async function submitBatch(urls) {
 }
 
 async function main() {
-  const urls = validateUrls(await getUrls());
+  const input = urlSource === "-" ? await readUrlsFromStdin() : await readUrlsFromFile(urlSource);
+  const urls = validateUrls(input);
   if (urls.length === 0) fail("no URLs to submit");
 
   console.log(`indexnow-submit: submitting ${urls.length} URL(s) for ${HOST}`);
