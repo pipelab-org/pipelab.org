@@ -1,6 +1,6 @@
 import { assertClearance } from "./deployment-evidence.mjs";
 import { execFileSync } from "node:child_process";
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { appendFileSync, cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
@@ -9,11 +9,12 @@ import { assertDeployConfig, createStagingAdapter, packageDigest, stagingPackage
 import { clearanceKey, createLedgerReader, createClearanceReader, assertClearanceLedger, protectedClosedVersion, protectedLedgerConfig } from "./staging-authority.mjs";
 import { runStagingSession } from "./staging-session.mjs";
 import { verifyStagingClosed, verifyStagingPublication } from "./staging-publication.mjs";
-import { assertStagingTarget, WRANGLER_VERSION } from "./staging-target.mjs";
+import { WRANGLER_VERSION } from "./staging-target.mjs";
+import { assertStagingTarget } from "./staging-account.mjs";
 import { encryptStagingReceipt, receiptEncryptionKey } from "./staging-receipt.mjs";
 import { stagingFailureLabel } from "./staging-diagnostics.mjs";
 import { assertStagingConfig } from "./staging-config.mjs";
-import { runPinnedWrangler } from "./staging-wrangler.mjs";
+import { runPinnedWrangler, wranglerEnvironment } from "./staging-wrangler.mjs";
 import { verifyProtectedEnvironment } from "./staging-environment.mjs";
 import { canonical, sha256 } from "./evidence.mjs";
 
@@ -32,8 +33,12 @@ export function assertBuildReport(report, stagingSHA) {
       report.steps?.[9]?.status !== "fail") throw new Error("staging build acceptance incomplete");
 }
 
-export function stagingBuildEnvironment(environment) {
-  return Object.fromEntries(Object.entries(environment).filter(([key]) => !/TOKEN|SECRET|CLIENT_ID|API_KEY|PASSWORD|KEY_ID|ACCESS_KEY|PRIVATE_KEY|CREDENTIALS?|PASSWD|APIKEY|NODE_OPTIONS|CLOUDFLARE_ACCOUNT_ID|HUB_STAGING_/i.test(key)));
+export const stagingBuildEnvironment = wranglerEnvironment;
+
+function retainOutput(directory, name, filename, content, githubOutput) {
+  const file = path.join(directory, filename);
+  writeFileSync(file, content, { flag: "wx", mode: 0o600 });
+  appendFileSync(githubOutput, name + "=" + file + "\n");
 }
 
 export async function prepareStagingVersion({ operation, directory, adapter, authorityConfig = authority,
@@ -117,10 +122,10 @@ export async function deployStaging(destination, operation, { adapterFactory = c
     manifest = read(path.join(evidence, "manifest.json")); records = read(path.join(evidence, "records.json")); identity = read(path.join(evidence, "identity.json"));
     ledgerConfig = protectedLedgerConfig(authorityConfig, environment);
     if (operation === "publish") encryptionKey = receiptEncryptionKey(authorityConfig);
-    if (!environment.RUNNER_TEMP || !path.isAbsolute(environment.RUNNER_TEMP)) throw new Error("staging output directory unavailable");
-    output = path.join(environment.RUNNER_TEMP, "hub-staging-publication");
-    // Never publish any output supplied by the prepared archive or a previous attempt.
-    mkdirSync(output, { mode: 0o700 });
+    if (![environment.RUNNER_TEMP, environment.GITHUB_OUTPUT].every(value => typeof value === "string" && path.isAbsolute(value) && !/[\r\n]/.test(value))) {
+      throw new Error("staging output directory or transport unavailable");
+    }
+    output = mkdtempSync(path.join(environment.RUNNER_TEMP, "hub-staging-publication-"));
   }
   const abort = new AbortController();
   const cancel = () => abort.abort();
@@ -137,11 +142,11 @@ export async function deployStaging(destination, operation, { adapterFactory = c
     const readClearance = createClearanceReader(ledgerConfig, options);
     const { receipt, publicKey, signature } = await prepareStagingVersion({ operation, directory: pkg, adapter, authorityConfig: ledgerConfig, readCurrentLedgerRevision, readClearance });
     if (operation === "publish") {
-      writeFileSync(path.join(output, "upload-receipt.jwe"), encryptStagingReceipt(receipt, encryptionKey) + "\n", { flag: "wx", mode: 0o600 });
+      retainOutput(output, "receipt_path", "upload-receipt.jwe", encryptStagingReceipt(receipt, encryptionKey) + "\n", environment.GITHUB_OUTPUT);
     }
     const result = await runStagingSession({ version: receipt.version, publicKey, signature }, { adapter, readCurrentLedgerRevision, signal: abort.signal });
-    write(path.join(output, "acceptance.json"), { mode: "staging", opening_eligible: false,
-      candidate_sha: environment.CANDIDATE_SHA, package_sha256: result.artifact_sha256 });
+    const acceptance = { mode: "staging", opening_eligible: false, candidate_sha: environment.CANDIDATE_SHA, package_sha256: result.artifact_sha256 };
+    retainOutput(output, "acceptance_path", "acceptance.json", canonical(acceptance) + "\n", environment.GITHUB_OUTPUT);
   } finally { process.removeListener("SIGINT", cancel); process.removeListener("SIGTERM", cancel); }
 }
 

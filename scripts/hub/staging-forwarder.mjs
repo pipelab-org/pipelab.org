@@ -1,3 +1,4 @@
+import { stagingToolEnvironment } from "./staging-tool-environment.mjs";
 import { execFileSync, spawn } from "node:child_process";
 import { once } from "node:events";
 import { createServer } from "node:https";
@@ -22,7 +23,7 @@ export async function withBundleForwarder({ manifest, request = stagingRequest, 
   const stop = () => { abort.abort(); server?.closeAllConnections(); server?.close(); };
   process.once("SIGINT", stop); process.once("SIGTERM", stop);
   try {
-    const openssl = (...args) => execFileSync("openssl", args, { cwd: scratch, timeout: 10_000, stdio: "ignore" });
+    const openssl = (...args) => execFileSync("openssl", args, { cwd: scratch, timeout: 10_000, stdio: "ignore", env: stagingToolEnvironment(process.env) });
     openssl("req", "-x509", "-newkey", "rsa:2048", "-nodes", "-keyout", "ca.key", "-out", "ca.pem", "-days", "1", "-subj", "/CN=Hub temporary install CA", "-addext", "basicConstraints=critical,CA:TRUE");
     openssl("req", "-newkey", "rsa:2048", "-nodes", "-keyout", "server.key", "-out", "server.csr", "-subj", "/CN=127.0.0.1");
     writeFileSync(path.join(scratch, "extensions"), "subjectAltName=IP:127.0.0.1\nextendedKeyUsage=serverAuth\nbasicConstraints=critical,CA:FALSE\n");

@@ -10,7 +10,8 @@ import test from "node:test";
 import { sha256 } from "../scripts/hub/evidence.mjs";
 import { publicationClearancePayload } from "../scripts/hub/deployment-evidence.mjs";
 import { createClearanceReader, createLedgerReader } from "../scripts/hub/staging-authority.mjs";
-import { STAGING_WORKER, stagingAccountCommitment } from "../scripts/hub/staging-target.mjs";
+import { stagingAccountCommitment } from "../scripts/hub/staging-account.mjs";
+import { STAGING_WORKER } from "../scripts/hub/staging-target.mjs";
 import { isolatedTarget } from "./hub-staging-fixture.mjs";
 const account = "a".repeat(32);
 const isolated = isolatedTarget(account);
@@ -241,7 +242,7 @@ test("fails closed: records written by anyone else during or after signing are n
 test("the signer has no code path that replaces, moves or deletes files", () => {
   const source = readFileSync(new URL("../scripts/hub/staging-clearance.mjs", import.meta.url), "utf8");
   assert.doesNotMatch(source, /\b(rename|unlink|rm|rmdir|link|copyFile|truncate|ftruncate|open)(Sync)?\(/);
-  assert.deepEqual(source.match(/writeFileSync\([^)]*\)/g), ['writeFileSync(file, bytes, { flag: "wx" })']);
+  assert.deepEqual(source.match(/writeFileSync\([^)]*\)/g), ['writeFileSync(file, bytes, { flag: "wx", mode: 0o600 })']);
 });
 
 test("fails closed: unencrypted, wrong-passphrase or empty-passphrase keys never sign", async t => {
@@ -324,7 +325,7 @@ test("fails closed: hidden prompt refuses non-terminals and cancellation", { tim
 test("fails closed: the CLI refuses piped stdin and passphrase environment variables", { timeout: 40000 }, t => {
   const w = workspace(t), copy = path.join(w.root, "signer");
   mkdirSync(copy);
-  for (const file of ["staging-clearance.mjs", "staging-target.mjs"]) copyFileSync(new URL("../scripts/hub/" + file, import.meta.url), path.join(copy, file));
+  for (const file of ["staging-clearance.mjs", "staging-target.mjs", "staging-account.mjs"]) copyFileSync(new URL("../scripts/hub/" + file, import.meta.url), path.join(copy, file));
   writeFileSync(path.join(copy, "staging-authority.json"), JSON.stringify(authority));
   const run = spawnSync(process.execPath, [path.join(copy, "staging-clearance.mjs"), "--key", path.join(w.root, "operator.pem"), "--package-sha256", w.digest, "--ledger", path.join(w.root, "cases.json"), "--out", w.out],
     { input: PASS + "\n", env: { ...process.env, PASSPHRASE: PASS, CLEARANCE_PASSPHRASE: PASS }, encoding: "utf8", timeout: 30000 });

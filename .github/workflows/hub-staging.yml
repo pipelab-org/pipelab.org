@@ -196,13 +196,19 @@ jobs:
           CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
           CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
         run: node scripts/hub/staging-workflow.mjs close "$RUNNER_TEMP/staging-artifact"
-      - name: Retain encrypted receipt and public acceptance summary
-        if: ${{ always() && inputs.operation != 'close' && steps.publication.outcome != 'skipped' }}
+      - name: Retain encrypted receipt
+        if: ${{ always() && steps.publication.outputs.receipt_path != '' }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: hub-staging-publication-${{ github.run_attempt }}
-          path: |
-            ${{ runner.temp }}/hub-staging-publication/upload-receipt.jwe
-            ${{ runner.temp }}/hub-staging-publication/acceptance.json
-          if-no-files-found: warn
+          name: hub-staging-receipt-${{ github.run_attempt }}
+          path: ${{ steps.publication.outputs.receipt_path }}
+          if-no-files-found: error
+          retention-days: 30
+      - name: Retain public acceptance summary
+        if: ${{ always() && steps.publication.outputs.acceptance_path != '' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: hub-staging-acceptance-${{ github.run_attempt }}
+          path: ${{ steps.publication.outputs.acceptance_path }}
+          if-no-files-found: error
           retention-days: 30

@@ -3,6 +3,8 @@ import { createHash, timingSafeEqual } from "node:crypto";
 import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { stagingToolEnvironment as wranglerEnvironment } from "./staging-tool-environment.mjs";
+export { stagingToolEnvironment as wranglerEnvironment } from "./staging-tool-environment.mjs";
 import { curlRequest } from "./staging-http.mjs";
 import { WRANGLER_VERSION, WRANGLER_DIST_INTEGRITY } from "./staging-target.mjs";
 import { commandTimeout } from "./release-binary.mjs";
@@ -68,8 +70,10 @@ export async function installWranglerDependencies(directory, metadata, { env, si
   assertWranglerNativeDependencies(directory, metadata, lock.packages);
 }
 
-export function wranglerEnvironment(environment) {
-  return Object.fromEntries(Object.entries(environment).filter(([key]) => !/TOKEN|SECRET|CLIENT_ID|API_KEY|PASSWORD|KEY_ID|ACCESS_KEY|PRIVATE_KEY|CREDENTIALS?|PASSWD|APIKEY|NODE_OPTIONS|^NODE_PATH$/i.test(key)));
+export function wranglerUploadEnvironment(environment) {
+  return { ...wranglerEnvironment(environment),
+    ...Object.fromEntries(Object.entries(environment).filter(([key]) =>
+      ["CLOUDFLARE_ACCOUNT_ID", "CLOUDFLARE_API_TOKEN", "WRANGLER_OUTPUT_FILE_PATH", "WRANGLER_SEND_METRICS", "CI"].includes(key))) };
 }
 
 export async function withPinnedWrangler(version, action, { request = curlRequest, environment = process.env, signal } = {}) {
@@ -92,5 +96,7 @@ export async function withPinnedWrangler(version, action, { request = curlReques
 
 export function runPinnedWrangler(version, args, { cwd, env = process.env, signal } = {}) {
   if (version !== WRANGLER_VERSION) throw new Error("unexpected Wrangler version");
-  return withPinnedWrangler(version, cli => execute(process.execPath, [cli, ...args], { cwd, env, signal }), { environment: env, signal });
+  const uploads = args[0] === "versions" && args[1] === "upload" && !args.includes("--dry-run");
+  const commandEnv = uploads ? wranglerUploadEnvironment(env) : wranglerEnvironment(env);
+  return withPinnedWrangler(version, cli => execute(process.execPath, [cli, ...args], { cwd, env: commandEnv, signal }), { environment: env, signal });
 }

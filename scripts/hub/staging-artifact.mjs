@@ -1,3 +1,4 @@
+import { stagingToolEnvironment } from "./staging-tool-environment.mjs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
@@ -61,7 +62,7 @@ export async function downloadPreparedArtifact(destination, { environment = proc
     if (response.status !== 200 || response.headers.location) throw new Error("prepared staging archive download refused");
     await assertArchiveFileDigest(archive, artifact.digest);
     const extracted = path.join(scratch, "extracted"); mkdirSync(extracted);
-    execFileSync("python3", [fileURLToPath(new URL("./extract-staging-archive.py", import.meta.url)), archive, extracted], { timeout: 120_000, stdio: "ignore" });
+    execFileSync("python3", [fileURLToPath(new URL("./extract-staging-archive.py", import.meta.url)), archive, extracted], { timeout: 120_000, stdio: "ignore", env: stagingToolEnvironment(process.env) });
     mkdirSync(path.dirname(path.resolve(destination)), { recursive: true });
     renameSync(extracted, destination);
     return artifact;

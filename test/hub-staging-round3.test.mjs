@@ -4,7 +4,7 @@ import { assertVersionConfig, routeTargetsStaging } from "../scripts/hub/cloudfl
 import { hugoBuildEnvironment } from "../scripts/hub/acceptance.mjs";
 import { stagingBuildEnvironment } from "../scripts/hub/staging-workflow.mjs";
 import { stagingFailureLabel } from "../scripts/hub/staging-diagnostics.mjs";
-import { wranglerEnvironment } from "../scripts/hub/staging-wrangler.mjs";
+import { wranglerEnvironment, wranglerUploadEnvironment } from "../scripts/hub/staging-wrangler.mjs";
 import { normalizeHostname, STAGING_ORIGIN } from "../scripts/hub/staging-target.mjs";
 import worker from "../src/worker.js";
 
@@ -59,6 +59,15 @@ test("guard:additional-secret-names", () => {
   const environment = { PATH: "/usr/bin", api_key_lower: "synthetic", lower_password: "synthetic",
     ...Object.fromEntries(["KEY_ID", "ACCESS_KEY", "PRIVATE_KEY", "CREDENTIAL", "CREDENTIALS", "PASSWD", "APIKEY", "NODE_OPTIONS"].map(name => [name.toLowerCase(), "synthetic"])) };
   for (const clean of [hugoBuildEnvironment, stagingBuildEnvironment, wranglerEnvironment]) assert.deepEqual(clean(environment), { PATH: "/usr/bin" });
+});
+test("only the Wrangler upload receives its specific deployment settings", () => {
+  const clean = { PATH: "/usr/bin", HtTpS_PrOxY: "http://fixture.invalid" };
+  const upload = { CLOUDFLARE_ACCOUNT_ID: "synthetic", CLOUDFLARE_API_TOKEN: "synthetic", WRANGLER_OUTPUT_FILE_PATH: "/fixture" };
+  const protectedSet = { ...clean, ...upload, HUB_STAGING_CLOSED_VERSION: "synthetic", HUB_STAGING_LEDGER_REPOSITORY: "synthetic",
+    HUB_STAGING_LEDGER_NONCE: "synthetic", CASE_LEDGER_TOKEN: "synthetic", NODE_PATH: "/fixture" };
+  assert.deepEqual(stagingBuildEnvironment(protectedSet), clean);
+  assert.deepEqual(wranglerEnvironment(protectedSet), clean);
+  assert.deepEqual(wranglerUploadEnvironment(protectedSet), { ...clean, ...upload });
 });
 test("guard:evidence-diagnostics", () => {
   assert.equal(stagingFailureLabel(Object.assign(new Error("sensitive path"), { code: "ENOENT" })), "missing_evidence");

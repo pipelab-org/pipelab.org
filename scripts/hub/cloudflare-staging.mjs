@@ -4,10 +4,11 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { canonical, sha256 } from "./evidence.mjs";
 import { curlRequest } from "./staging-http.mjs";
-import { normalizeHostname, assertStagingTarget, requireStagingAccountCommitment, STAGING_WORKER, STAGING_ORIGIN, WRANGLER_VERSION } from "./staging-target.mjs";
+import { normalizeHostname, STAGING_WORKER, STAGING_ORIGIN, WRANGLER_VERSION } from "./staging-target.mjs";
+import { assertStagingTarget, requireStagingAccountCommitment } from "./staging-account.mjs";
 
 import { assertStagingConfig } from "./staging-config.mjs";
-import { runPinnedWrangler } from "./staging-wrangler.mjs";
+import { runPinnedWrangler, wranglerEnvironment } from "./staging-wrangler.mjs";
 export { runPinnedWrangler } from "./staging-wrangler.mjs";
 
 const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
@@ -193,7 +194,7 @@ export function createStagingAdapter({ account, worker = STAGING_WORKER, closedV
       const before = packageDigest(directory);
       await assertIngress();
       await deployable(closedVersion);
-      const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => /^(?:PATH|HOME|HTTPS?_PROXY|ALL_PROXY|NO_PROXY)$/i.test(key)));
+      const env = wranglerEnvironment(process.env);
       Object.assign(env, { CLOUDFLARE_ACCOUNT_ID: account, CLOUDFLARE_API_TOKEN: token, WRANGLER_SEND_METRICS: "false", CI: "true" });
       const work = mkdtempSync(path.join(tmpdir(), "hub-upload-"));
       const scratch = path.join(work, "package"), outputFile = path.join(work, "upload.ndjson");

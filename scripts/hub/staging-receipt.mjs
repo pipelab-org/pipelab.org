@@ -4,13 +4,15 @@ import { canonical } from "./evidence.mjs";
 // JWE Compact Serialization (RFC 7516) with RSA-OAEP-256 and A256GCM (RFC 7518).
 const header = Buffer.from('{"alg":"RSA-OAEP-256","enc":"A256GCM"}').toString("base64url");
 
+const isReceiptKey = key => key?.type === "public" && key.asymmetricKeyType === "rsa" && key.asymmetricKeyDetails.modulusLength >= 2048;
+
 export function receiptEncryptionKey(config) {
-  const encoded = config.receipt_encryption_public_key_der_base64;
+  const encoded = config?.receipt_encryption_public_key_der_base64;
   if (typeof encoded !== "string" || !encoded) throw new Error("staging receipt encryption key not configured");
   try {
     const der = Buffer.from(encoded, "base64");
     const key = createPublicKey({ key: der, format: "der", type: "spki" });
-    if (key.asymmetricKeyType !== "rsa" || key.asymmetricKeyDetails.modulusLength < 2048 ||
+    if (!isReceiptKey(key) ||
         der.toString("base64") !== encoded || !key.export({ format: "der", type: "spki" }).equals(der)) throw new Error();
     return key;
   } catch {
@@ -19,6 +21,7 @@ export function receiptEncryptionKey(config) {
 }
 
 export function encryptStagingReceipt(receipt, key) {
+  if (!isReceiptKey(key)) throw new Error("staging receipt encryption requires a public RSA key of at least 2048 bits");
   const secret = randomBytes(32), iv = randomBytes(12);
   try {
     const wrapped = publicEncrypt({ key, padding: constants.RSA_PKCS1_OAEP_PADDING, oaepHash: "sha256" }, secret);

@@ -14,7 +14,8 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
-import { matchesStagingAccount, STAGING_WORKER } from "./staging-target.mjs";
+import { STAGING_WORKER } from "./staging-target.mjs";
+import { matchesStagingAccount, requireStagingAccountCommitment } from "./staging-account.mjs";
 
 // These must stay byte-identical to deployment-evidence.mjs and
 // cloudflare-staging.mjs. The clearance tests pin both.
@@ -55,6 +56,7 @@ export function ledgerRevision(bytes) {
 }
 
 export function assertReceipt(receipt, packageSHA256) {
+  requireStagingAccountCommitment();
   if (!receipt || typeof receipt !== "object" || Array.isArray(receipt) || canonical(Object.keys(receipt).sort()) !== canonical(RECEIPT_FIELDS)) {
     throw new Error("upload receipt fields differ");
   }
@@ -67,7 +69,7 @@ export function assertReceipt(receipt, packageSHA256) {
 }
 
 export function clearancePayload(packageSHA256, revision) {
-  if (!digest.test(packageSHA256 ?? "") || !digest.test(revision ?? "")) throw new Error("package digest and ledger revision required");
+  if (typeof packageSHA256 !== "string" || !digest.test(packageSHA256) || typeof revision !== "string" || !digest.test(revision)) throw new Error("package digest and ledger revision required");
   return Buffer.from(canonical({ scope: CLEARANCE_SCOPE, artifact_sha256: packageSHA256, ledger_revision: revision }));
 }
 
@@ -156,7 +158,7 @@ export function signClearance({ privateKey, publicKey, packageSHA256, ledgerByte
 // An interrupted write can leave an incomplete file; the next run refuses it
 // until the operator inspects and removes it.
 export function writeRecord(file, bytes) {
-  try { writeFileSync(file, bytes, { flag: "wx" }); } catch (error) {
+  try { writeFileSync(file, bytes, { flag: "wx", mode: 0o600 }); } catch (error) {
     if (error.code === "EEXIST") throw new Error("a clearance record appeared while signing; it was left unchanged; inspect and preserve it before re-signing");
     throw error;
   }
@@ -195,7 +197,7 @@ export async function main(argv, { authority, log = console.log, readPassphrase 
     try { privateKey = loadPrivateKey(keyText, passphrase); } finally { if (Buffer.isBuffer(passphrase)) passphrase.fill(0); }
   }
   const { record } = signClearance({ privateKey, publicKey, packageSHA256, ledgerBytes, receipt });
-  mkdirSync(out, { recursive: true });
+  mkdirSync(out, { recursive: true, mode: 0o700 });
   writeRecord(file, Buffer.from(JSON.stringify(record, null, 2) + "\n"));
   log(receipt ? "wrote staging clearance with rollback receipt" : "wrote staging clearance");
   return file;

@@ -19,7 +19,7 @@ export function protectedClosedVersion(config, environment) {
 export function protectedLedgerConfig(config, environment) {
   const repository = environment.HUB_STAGING_LEDGER_REPOSITORY, nonce = environment.HUB_STAGING_LEDGER_NONCE;
   if (typeof repository !== "string" || !/^[a-z0-9_.-]+\/[a-z0-9_.-]+$/i.test(repository) || typeof nonce !== "string" ||
-      !digest.test(nonce) || ledgerRepositoryCommitment(repository, nonce) !== config.ledger?.repository_sha256) {
+      !digest.test(nonce) || repository.split("/").some(part => part === "." || part === "..") || ledgerRepositoryCommitment(repository, nonce) !== config.ledger?.repository_sha256) {
     throw new Error("staging ledger source does not match reviewed configuration");
   }
   return { ...config, ledger: { ...config.ledger, repository } };

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { constants, createDecipheriv, generateKeyPairSync, privateDecrypt, sign } from "node:crypto";
-import { chmodSync, cpSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { chmodSync, cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -12,7 +12,8 @@ import { checkCheckout, stagingAcceptance, routineAcceptance } from "../scripts/
 import { createLedgerReader, clearanceKey, closedVersionCommitment, ledgerRepositoryCommitment, protectedClosedVersion, protectedLedgerConfig } from "../scripts/hub/staging-authority.mjs";
 import { assertPreparedArtifact } from "../scripts/hub/staging-artifact.mjs";
 import { assertStagingConfig } from "../scripts/hub/staging-config.mjs";
-import { STAGING_ORIGIN, STAGING_WORKER, stagingAccountCommitment } from "../scripts/hub/staging-target.mjs";
+import { stagingAccountCommitment } from "../scripts/hub/staging-account.mjs";
+import { STAGING_ORIGIN, STAGING_WORKER } from "../scripts/hub/staging-target.mjs";
 import { assertBuildReport } from "../scripts/hub/staging-workflow.mjs";
 import { encryptStagingReceipt, receiptEncryptionKey } from "../scripts/hub/staging-receipt.mjs";
 import { canonical, sha256 } from "../scripts/hub/evidence.mjs";
@@ -21,9 +22,9 @@ import { dependencies, isolatedTarget } from "./hub-staging-fixture.mjs";
 
 const isolated = isolatedTarget("a".repeat(32));
 const unconfigured = isolatedTarget("");
-const targetFile = path.join(isolated, "scripts/hub/staging-target.mjs");
+const targetFile = path.join(isolated, "scripts/hub/staging-account.mjs");
 const { createStagingAdapter: unconfiguredAdapter } = await import(pathToFileURL(path.join(unconfigured, "scripts/hub/cloudflare-staging.mjs")));
-const { assertStagingTarget } = await import(pathToFileURL(path.join(unconfigured, "scripts/hub/staging-target.mjs")));
+const { assertStagingTarget } = await import(pathToFileURL(path.join(unconfigured, "scripts/hub/staging-account.mjs")));
 const { createStagingAdapter, packageDigest, assertDeployConfig, assertUploadCopy, runPinnedWrangler } = await import(pathToFileURL(path.join(isolated, "scripts/hub/cloudflare-staging.mjs")));
 const { publishClearedVersion, publicationClearancePayload } = await import(pathToFileURL(path.join(isolated, "scripts/hub/deployment-evidence.mjs")));
 const { deployStaging, prepareStagingVersion } = await import(pathToFileURL(path.join(isolated, "scripts/hub/staging-workflow.mjs")));
@@ -102,6 +103,8 @@ test("guard:config-exact", t => {
   assert.doesNotThrow(() => assertDeployConfig(config, account));
   assert.throws(() => assertDeployConfig({ ...config, vars: { production: "value" } }, account), /unexpected staging deployment/);
   assert.throws(() => assertDeployConfig({ ...config, preview_urls: true }, account), /unexpected staging deployment/);
+  const { account_sha256, ...legacy } = config;
+  assert.throws(() => assertDeployConfig({ ...legacy, account_id: account }, account), /unexpected staging deployment/);
 });
 test("package digest covers Worker, every asset and deployment configuration", t => {
   const { directory } = fixture(t); const original = packageDigest(directory);
@@ -236,11 +239,15 @@ test("workflow separates candidate builds from trusted deployment code", () => {
     assert.ok(step.env.HUB_STAGING_CLOSED_VERSION);
     assert.doesNotMatch(JSON.stringify(step.env), /LEDGER/);
   }
-  const artifact = deploy.find(step => step.uses?.startsWith("actions/upload-artifact@"));
-  assert.deepEqual(artifact.with.path.trim().split("\n"), [
-    "${{ runner.temp }}/hub-staging-publication/upload-receipt.jwe",
-    "${{ runner.temp }}/hub-staging-publication/acceptance.json",
+  const artifacts = deploy.filter(step => step.uses?.startsWith("actions/upload-artifact@"));
+  assert.deepEqual(artifacts.map(step => step.with.path), [
+    "${{ steps.publication.outputs.receipt_path }}",
+    "${{ steps.publication.outputs.acceptance_path }}",
   ]);
+  for (const [artifact, output] of artifacts.map((step, i) => [step, ["receipt_path", "acceptance_path"][i]])) {
+    assert.equal(artifact.if, "${{ always() && steps.publication.outputs." + output + " != '' }}");
+    assert.equal(artifact.with["if-no-files-found"], "error");
+  }
   assert.doesNotMatch(JSON.stringify(deploy), /vars\.CLOUDFLARE_ACCOUNT_ID|upload-receipt\.json/);
 });
 
@@ -285,18 +292,27 @@ test("encrypted receipt requires the operator key and rejects altered ciphertext
   assert.equal(readEncryptedReceipt(envelope), canonical(receipt) + "\n");
   assert.doesNotMatch(envelope, new RegExp(account + "|" + version));
   assert.notEqual(encryptStagingReceipt(receipt, encryptionKey), envelope);
-  assert.throws(() => readEncryptedReceipt(envelope, key.privateKey));
-  const segments = envelope.split(".");
-  const tag = Buffer.from(segments[4], "base64url");
-  tag[0] ^= 1;
-  segments[4] = tag.toString("base64url");
-  assert.throws(() => readEncryptedReceipt(segments.join(".")), /authenticate/i);
+  const outsider = generateKeyPairSync("rsa", { modulusLength: 2048 });
+  assert.throws(() => readEncryptedReceipt(envelope, outsider.privateKey));
+  for (let index = 0; index < 5; index++) {
+    const segments = envelope.split(".");
+    const bytes = Buffer.from(segments[index], "base64url");
+    bytes[0] ^= 1;
+    segments[index] = index === 0 ? Buffer.from('{"enc":"A256GCM","alg":"RSA-OAEP-256"}').toString("base64url") : bytes.toString("base64url");
+    assert.throws(() => readEncryptedReceipt(segments.join(".")));
+  }
   assert.throws(() => receiptEncryptionKey({}), /not configured/);
   assert.throws(() => receiptEncryptionKey({ receipt_encryption_public_key_der_base64: publicKey.toString("base64") }), /canonical RSA/);
+  const weak = generateKeyPairSync("rsa", { modulusLength: 1024 }).publicKey;
+  const weakDer = weak.export({ format: "der", type: "spki" }).toString("base64");
+  assert.throws(() => receiptEncryptionKey({ receipt_encryption_public_key_der_base64: weakDer }), /canonical RSA/);
+  assert.throws(() => receiptEncryptionKey({ receipt_encryption_public_key_der_base64: receiptAuthority.receipt_encryption_public_key_der_base64 + "\n" }), /canonical RSA/);
+  assert.throws(() => encryptStagingReceipt(receipt, weak), /public RSA/);
+  assert.throws(() => encryptStagingReceipt(receipt, receiver.privateKey), /public RSA/);
 });
 
-test("publish writes only encrypted receipt and safe acceptance outside the prepared artifact", async t => {
-  const f = fixture(t);
+for (const mode of ["publish", "post-upload failure", "rollback"]) test("staging artifact output provenance on " + mode, async t => {
+  const f = fixture(t, { failLive: mode === "post-upload failure" });
   const scratch = mkdtempSync(path.join(tmpdir(), "hub-private-output-"));
   t.after(() => rmSync(scratch, { recursive: true, force: true }));
   const destination = path.join(scratch, "prepared"), evidence = path.join(destination, "evidence"), pkg = path.join(destination, "package");
@@ -314,21 +330,46 @@ test("publish writes only encrypted receipt and safe acceptance outside the prep
     clearance_signature_base64: sign(null, publicationClearancePayload(digest, sha256(ledger)), key.privateKey).toString("base64") };
   const request = async url => ({ status: 200, headers: { "content-type": "text/plain" },
     body: url.endsWith("cases.json?ref=main") ? ledger : Buffer.from(canonical(clearance)) });
-  const environment = { ...protectedValues, CANDIDATE_SHA: candidate, RUNNER_TEMP: scratch };
+  const outputsFile = path.join(scratch, "outputs");
+  writeFileSync(outputsFile, "");
+  const previous = path.join(scratch, "hub-staging-publication");
+  mkdirSync(previous);
+  writeFileSync(path.join(previous, "upload-receipt.jwe"), "old fixture");
+  const environment = { ...protectedValues, CANDIDATE_SHA: candidate, RUNNER_TEMP: scratch, GITHUB_OUTPUT: outputsFile };
   const properties = { environment, ledgerOptions: { request }, adapterFactory: () => f.adapter };
-  await assert.rejects(deployStaging(destination, "publish", { ...properties, authorityConfig: { ...receiptAuthority, receipt_encryption_public_key_der_base64: "" } }), /key not configured/);
-  assert.deepEqual(f.calls, []);
-  await deployStaging(destination, "publish", { ...properties, authorityConfig: receiptAuthority });
-  const output = path.join(scratch, "hub-staging-publication");
-  assert.deepEqual(readdirSync(output).sort(), ["acceptance.json", "upload-receipt.jwe"]);
-  const encrypted = readFileSync(path.join(output, "upload-receipt.jwe"), "utf8");
-  const acceptance = readFileSync(path.join(output, "acceptance.json"), "utf8");
-  assert.equal(JSON.parse(readEncryptedReceipt(encrypted)).version, version);
+  const noKey = { ...receiptAuthority, receipt_encryption_public_key_der_base64: "" };
+  if (mode === "rollback") {
+    await assert.rejects(deployStaging(destination, "publish", { ...properties, authorityConfig: noKey }), /key not configured/);
+    await assert.rejects(deployStaging(destination, "rollback", { ...properties, authorityConfig: noKey,
+      environment: { ...environment, GITHUB_OUTPUT: "" } }), /transport unavailable/);
+    assert.deepEqual(f.calls, []);
+    assert.equal(readFileSync(outputsFile, "utf8"), "");
+    const receipt = await f.adapter.upload(f.directory);
+    clearance.upload_receipt = receipt;
+    clearance.receipt_signature_base64 = sign(null, Buffer.from(canonical(receipt)), key.privateKey).toString("base64");
+    await deployStaging(destination, "rollback", { ...properties, authorityConfig: noKey });
+  } else if (mode === "post-upload failure") {
+    await assert.rejects(deployStaging(destination, "publish", { ...properties, authorityConfig: receiptAuthority }), /live publication differs/);
+    assert.equal(f.state.active, closed);
+  } else {
+    await deployStaging(destination, "publish", { ...properties, authorityConfig: receiptAuthority });
+  }
+  const outputs = Object.fromEntries(readFileSync(outputsFile, "utf8").trim().split("\n").map(line => line.split("=")));
+  const expected = mode === "publish" ? ["acceptance_path", "receipt_path"] : [mode === "rollback" ? "acceptance_path" : "receipt_path"];
+  assert.deepEqual(Object.keys(outputs).sort(), expected);
+  for (const target of Object.values(outputs)) {
+    assert.match(path.basename(path.dirname(target)), /^hub-staging-publication-/);
+    assert.equal(path.dirname(path.dirname(target)), scratch);
+  }
+  const encrypted = outputs.receipt_path ? readFileSync(outputs.receipt_path, "utf8") : "";
+  const acceptance = outputs.acceptance_path ? readFileSync(outputs.acceptance_path, "utf8") : "";
+  if (encrypted) assert.equal(JSON.parse(readEncryptedReceipt(encrypted)).version, version);
   for (const privateValue of [account, version, closed, ledgerRepository, sha256(ledger)]) {
     assert.ok(!encrypted.includes(privateValue) && !acceptance.includes(privateValue));
   }
-  assert.deepEqual(JSON.parse(acceptance), { mode: "staging", opening_eligible: false, candidate_sha: candidate, package_sha256: digest });
+  if (acceptance) assert.deepEqual(JSON.parse(acceptance), { mode: "staging", opening_eligible: false, candidate_sha: candidate, package_sha256: digest });
   assert.equal(readFileSync(path.join(evidence, "upload-receipt.json"), "utf8"), '{"candidate_supplied":true}');
+  assert.equal(readFileSync(path.join(previous, "upload-receipt.jwe"), "utf8"), "old fixture");
 });
 
 test("staging Worker responses are private and noindex", async () => {
@@ -433,7 +474,7 @@ test("nested candidate resolves dependencies and isolates both account states", 
   cpSync(new URL("../wrangler.jsonc", import.meta.url), path.join(candidate, "wrangler.jsonc"));
   cpSync(new URL("./hub-staging.test.mjs", import.meta.url), path.join(candidate, "test/hub-staging.test.mjs"));
   cpSync(new URL("./hub-staging-fixture.mjs", import.meta.url), path.join(candidate, "test/hub-staging-fixture.mjs"));
-  const target = path.join(candidate, "scripts/hub/staging-target.mjs");
+  const target = path.join(candidate, "scripts/hub/staging-account.mjs");
   writeFileSync(target, readFileSync(target, "utf8").replace(/STAGING_ACCOUNT_SHA256 = "[^"]*"/, 'STAGING_ACCOUNT_SHA256 = "' + stagingAccountCommitment("b".repeat(32)) + '"'));
   symlinkSync(dependencies, path.join(root, "node_modules"), "dir");
   const environment = { ...process.env }; delete environment.NODE_TEST_CONTEXT;

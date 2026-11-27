@@ -2,6 +2,7 @@ import { spawn } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { stagingToolEnvironment } from "./staging-tool-environment.mjs";
 import { STAGING_ORIGIN } from "./staging-target.mjs";
 
 export function accessHeaders(environment = process.env) {
@@ -30,7 +31,7 @@ export async function curlRequest(url, { headers = {}, signal, method = "GET", b
     await new Promise((resolve, reject) => {
       const child = spawn("curl", ["-q", "--config", "-", "--silent", "--fail-with-body", "--proto", "=https", "--max-time", "30",
         "--max-filesize", String(maxBytes), "--dump-header", path.join(scratch, "headers"), "--output", output ?? path.join(scratch, "body")],
-      { stdio: ["pipe", "ignore", "ignore"], signal });
+      { stdio: ["pipe", "ignore", "ignore"], env: stagingToolEnvironment(process.env), signal });
       child.on("error", () => reject(new Error("staging HTTPS request unavailable")));
       child.on("close", code => code === 0 || code === 22 ? resolve() : reject(new Error("staging HTTPS request failed")));
       child.stdin.on("error", () => {});
