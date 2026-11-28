@@ -25,9 +25,11 @@ export async function verifyProtectedEnvironment({ environment = process.env, re
       if (response?.status === 200) {
         try { return JSON.parse(response.body); } catch { break; }
       }
-      if (!backoff || (response && ![408, 429, 500, 502, 503, 504].includes(response.status))) break;
-      // A throttling window longer than the retry budget requires another run.
       const retryAfter = response?.headers["retry-after"];
+      const retryable = !response || [408, 429, 500, 502, 503, 504].includes(response.status) ||
+        (response.status === 403 && retryAfter !== undefined);
+      if (!backoff || !retryable) break;
+      // A throttling window longer than the retry budget requires another run.
       if (retryAfter !== undefined && (!/^\d+$/.test(retryAfter) || Number(retryAfter) * 1000 > backoff)) break;
       await pause(backoff);
     }

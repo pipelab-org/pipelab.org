@@ -118,20 +118,22 @@ const githubResponse = (status, body, headers = {}) => ({ status, headers, body:
 
 test("guard:environment-metadata-reads-recover-from-transient-failures", async () => {
   const calls = [], pauses = [];
-  const responses = [new Error("staging HTTPS request failed"), githubResponse(503), githubResponse(200, policy()), githubResponse(429), githubResponse(200, branches())];
+  const responses = [new Error("staging HTTPS request failed"), githubResponse(503), githubResponse(200, policy()),
+    githubResponse(429), githubResponse(403, undefined, { "retry-after": "2" }), githubResponse(200, branches())];
   await verifyProtectedEnvironment({ environment: githubEnvironment, pause: async ms => { pauses.push(ms); }, request: async url => {
     calls.push(new URL(url).pathname.split("/").at(-1));
     const response = responses.shift();
     if (response instanceof Error) throw response;
     return response;
   } });
-  assert.deepEqual(calls, ["hub-staging", "hub-staging", "hub-staging", "deployment-branch-policies", "deployment-branch-policies"]);
-  assert.deepEqual(pauses, [1000, 2000, 1000]);
+  assert.deepEqual(calls, ["hub-staging", "hub-staging", "hub-staging", "deployment-branch-policies", "deployment-branch-policies", "deployment-branch-policies"]);
+  assert.deepEqual(pauses, [1000, 2000, 1000, 2000]);
 });
 
 test("guard:environment-unavailable-or-drifted-still-refuses", async () => {
   for (const [response, expectedAttempts] of [
     [githubResponse(403, policy()), 1],
+    [githubResponse(403, undefined, { "retry-after": "60" }), 1],
     [githubResponse(404), 1],
     [githubResponse(503, undefined, { location: "https://example.invalid" }), 1],
     [githubResponse(429, undefined, { "retry-after": "60" }), 1],
