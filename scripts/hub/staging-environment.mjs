@@ -1,3 +1,4 @@
+import { setTimeout as delay } from "node:timers/promises";
 import { curlRequest } from "./staging-http.mjs";
 
 export function assertEnvironmentPolicy(environment, policies) {
@@ -7,14 +8,30 @@ export function assertEnvironmentPolicy(environment, policies) {
       policies.total_count !== 1 || policies.branch_policies?.length !== 1 || policies.branch_policies[0].name !== "main" || policies.branch_policies[0].type !== "branch") throw new Error("staging environment protection differs");
 }
 
-export async function verifyProtectedEnvironment({ environment = process.env, request = curlRequest } = {}) {
+export async function verifyProtectedEnvironment({ environment = process.env, request = curlRequest, pause = delay } = {}) {
   if (environment.GITHUB_REPOSITORY !== "pipelab-org/pipelab.org" || environment.GITHUB_REF !== "refs/heads/main" || !environment.GITHUB_TOKEN) throw new Error("staging environment authority unavailable");
   const get = async suffix => {
-    const response = await request("https://api.github.com/repos/pipelab-org/pipelab.org/environments/hub-staging" + suffix, {
+    const url = "https://api.github.com/repos/pipelab-org/pipelab.org/environments/hub-staging" + suffix;
+    const options = {
       headers: { Authorization: "Bearer " + environment.GITHUB_TOKEN, Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28", "User-Agent": "pipelab-hub-staging", "Cache-Control": "no-cache" },
-    });
-    if (response.status !== 200 || response.headers.location) throw new Error("staging environment authority unavailable");
-    try { return JSON.parse(response.body); } catch { throw new Error("staging environment authority unavailable"); }
+    };
+    // Retry the read, while still requiring fresh positive proof before any write.
+    for (const backoff of [1000, 2000, 0]) {
+      const response = await request(url, options).catch(error => {
+        if (error.message !== "staging HTTPS request failed") throw error;
+        return null;
+      });
+      if (response?.headers.location) break;
+      if (response?.status === 200) {
+        try { return JSON.parse(response.body); } catch { break; }
+      }
+      if (!backoff || (response && ![408, 429, 500, 502, 503, 504].includes(response.status))) break;
+      // A throttling window longer than the retry budget requires another run.
+      const retryAfter = response?.headers["retry-after"];
+      if (retryAfter !== undefined && (!/^\d+$/.test(retryAfter) || Number(retryAfter) * 1000 > backoff)) break;
+      await pause(backoff);
+    }
+    throw new Error("staging environment authority unavailable");
   };
   assertEnvironmentPolicy(await get(""), await get("/deployment-branch-policies?per_page=100"));
 }
