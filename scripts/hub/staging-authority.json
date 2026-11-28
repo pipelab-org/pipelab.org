@@ -1,8 +1,9 @@
 {
   "clearance_public_key_der_base64": "",
-  "closed_version": "",
+  "closed_version_sha256": "",
+  "receipt_encryption_public_key_der_base64": "",
   "ledger": {
-    "repository": "",
+    "repository_sha256": "",
     "path": "",
     "ref": ""
   },

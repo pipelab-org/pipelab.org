@@ -1,6 +1,29 @@
 import { createPublicKey } from "node:crypto";
-import { sha256 } from "./evidence.mjs";
+import { canonical, sha256 } from "./evidence.mjs";
 import { curlRequest } from "./staging-http.mjs";
+
+const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
+const digest = /^[a-f0-9]{64}$/;
+
+export const closedVersionCommitment = value => sha256("hub-staging-closed-version/v1\0" + value);
+export const ledgerRepositoryCommitment = (repository, nonce) => sha256(canonical(["hub-staging-ledger-repository/v1", repository, nonce]));
+
+export function protectedClosedVersion(config, environment) {
+  const value = environment.HUB_STAGING_CLOSED_VERSION;
+  if (typeof value !== "string" || !uuid.test(value) || closedVersionCommitment(value) !== config.closed_version_sha256) {
+    throw new Error("staging closed version does not match reviewed configuration");
+  }
+  return value;
+}
+
+export function protectedLedgerConfig(config, environment) {
+  const repository = environment.HUB_STAGING_LEDGER_REPOSITORY, nonce = environment.HUB_STAGING_LEDGER_NONCE;
+  if (typeof repository !== "string" || !/^[a-z0-9_.-]+\/[a-z0-9_.-]+$/i.test(repository) || typeof nonce !== "string" ||
+      !digest.test(nonce) || repository.split("/").some(part => part === "." || part === "..") || ledgerRepositoryCommitment(repository, nonce) !== config.ledger?.repository_sha256) {
+    throw new Error("staging ledger source does not match reviewed configuration");
+  }
+  return { ...config, ledger: { ...config.ledger, repository } };
+}
 
 export function clearanceKey(config) {
   const encoded = config.clearance_public_key_der_base64;
